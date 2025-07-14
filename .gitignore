@@ -1,0 +1,13 @@
+# Project environment files
+.env
+
+# Python-Virtual Environments
+.venv
+.python-version
+
+# Python-Coverage
+.coverage
+coverage.xml
+
+# VS Code
+/.vscode/settings.json
