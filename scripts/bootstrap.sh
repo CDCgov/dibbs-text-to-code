@@ -30,3 +30,6 @@ source .venv/bin/activate
 echo "Installing the development requirements..."
 pip install --upgrade pip > /dev/null
 pip install '.[dev]' > /dev/null
+# Install pre-commit hooks
+echo "Installing pre-commit hooks..."
+pre-commit install
