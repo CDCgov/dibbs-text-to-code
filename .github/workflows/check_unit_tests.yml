@@ -28,40 +28,15 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          pytest --cov=dibbs_text_to_code tests/unit
-          mv .coverage coverage-${{ matrix.database }}.dat
+          pytest --cov=dibbs_text_to_code
 
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.database }}
-          path: coverage-${{ matrix.database }}.dat
-
-  coverage:
-    runs-on: ubuntu-latest
-    needs: pytest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: coverage_artifacts
-          pattern: coverage-*
-          merge-multiple: true
-
-      - name: Combine coverage reports
+      - name: Generate coverage report
         run: |
-          pip install coverage
-          cd coverage_artifacts
-          coverage combine coverage-*.dat
-          coverage xml -o combined_coverage.xml
+          coverage xml -o coverage.xml
 
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage_artifacts/combined_coverage.xml
+          files: coverage.xml
           verbose: true
