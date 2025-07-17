@@ -28,7 +28,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          pytest --cov=recordlinker tests/unit
+          pytest --cov=dibbs_text_to_code tests/unit
           mv .coverage coverage-${{ matrix.database }}.dat
 
       - name: Upload coverage artifact
