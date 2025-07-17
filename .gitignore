@@ -7,6 +7,7 @@ build/
 
 # Log file
 *.log
+
 # Project environment files
 .env
 
@@ -18,5 +19,6 @@ build/
 .coverage
 coverage.xml
 
-# VS Code
+# Editor settings
 /.vscode/settings.json
+.exrc
