@@ -21,11 +21,20 @@
 
 ### Pre-requisites
 
-🚧 Under Construction 🚧
+- Python 3.11 or higher
+- [Docker](https://docs.docker.com/get-docker/)
 
 ### Setup
 
-🚧 Under Construction 🚧
+Set up a Python virtual environment and install the required development dependencies:
+NOTE: Sourcing the script is recommended over simply executing the script. This allows
+the virtual environment to stay active in your shell.
+
+```bash
+source scripts/bootstrap.sh
+```
+
+Note: If you are running in WSL on a Windows machine, will need to run the bootstrap file directly with `./scripts/bootstrap.sh` and then activate the virtual environment by running `source .venv/bin/activate`.
 
 ### Testing
 
