@@ -1,0 +1,29 @@
+name: "post ready pull to slack"
+
+on:
+    pull_request_target:
+      branches: [main]
+      types:
+        - opened
+        - reopened
+        - ready_for_review
+
+jobs:
+  slack-ready-for-review:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
+
+    steps:
+      - name: Send GitHub trigger payload to Slack
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":pr-open: Pull request ready for review by ${{ github.event.pull_request.user.login }}\n\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>",
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":pr-open: Pull request ready for review by ${{ github.event.pull_request.user.login }}\n\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+

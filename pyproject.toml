@@ -1,0 +1,98 @@
+[project]
+name = "dibbs-text-to-code"
+dynamic = ["version"]
+description = ""
+authors = [
+    { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
+    { name = "Brandon Mader", email = "brandon@skylight.digital" },
+    { name = "Eric Buckley", email = "ericbuckley@skylight.digital" },
+    { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
+]
+license = { file = "LICENSE" }
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic-settings",
+]
+
+[project.optional-dependencies]
+dev = [
+    # development-only dependencies here
+    "ruff",
+    "ty",
+    "pre-commit",
+    # Testing
+    "pytest",
+    "pytest-cov",
+    "pytest-env",
+]
+prod = [
+    # List any additional production-only dependencies here
+]
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools-scm[toml]>=6.0.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools_scm]
+write_to = "src/dibbs_text_to_code/_version.py"
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
+fallback_version = "0.0.0"
+
+[tool.ruff]
+exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
+line-length = 100
+indent-width = 4
+target-version = "py311"
+show-fixes = true
+
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+] # Defaults
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["D"]
+"tests/*.py" = [
+    "D102",
+    "D103",
+] # Ignore the public docstring rules in test files
+
+[tool.ruff.lint.isort]
+# The following settings reduce the number of changes from reorder-python-imports
+force-single-line = true
+order-by-type = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["src", "tests/unit"]
+filterwarnings = [
+    "ignore:typing.io is deprecated, import directly from typing instead:DeprecationWarning",
+]
+
+[tool.coverage.run]
+omit = [
+    # Omit the generated version file from coverage
+    "src/dibbs_text_to_code/_version.py",
+]
+
+[tool.ty.src]
+# Set the directory to check
+include = ["src/"]
