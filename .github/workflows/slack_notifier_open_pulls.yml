@@ -1,0 +1,52 @@
+name: "post open pulls to slack"
+
+on:
+  schedule:
+    # Run weekdays at 13:00 Eastern / 10:00 Pacific
+    - cron: "0 17 * * 1-5"
+
+jobs:
+  list-open-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: read
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v4
+
+    - name: List open pull requests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPO: ${{ github.repository }}
+      run: >
+        PR_LIST=$(scripts/open_pulls.sh)
+
+        MSG=":code-review: Open Pull Requests\n\n"
+
+        while IFS= read -r line; do
+          MSG+="$line\n"
+        done < <(echo "$PR_LIST" | jq -r '.[] | " - <\(.html_url)|\(.title)> opened by \(.user) \(.time_since) days ago"')
+
+        echo "MSG=$MSG" >> $GITHUB_ENV
+          # Check if PR_LIST is empty and set a flag
+        if [ "$PR_LIST" == "[]" ]; then
+          echo "SHOULD_POST_TO_SLACK=false" >> $GITHUB_ENV
+        else
+          echo "SHOULD_POST_TO_SLACK=true" >> $GITHUB_ENV
+        fi
+
+    - name: Post to Slack
+      uses: slackapi/slack-github-action@v2.1.1
+      if: ${{ env.SHOULD_POST_TO_SLACK == 'true' }}
+      with:
+        webhook: ${{ env.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+        payload: |
+          text: "${{ env.MSG }}",
+          blocks:
+            - type: "section"
+              text:
+                type: "mrkdwn"
+                text: "${{ env.MSG }}"
