@@ -44,7 +44,7 @@ jobs:
         webhook: ${{ env.SLACK_WEBHOOK_URL }}
         webhook-type: incoming-webhook
         payload: |
-          text: "${{ env.MSG }}",
+          text: "${{ env.MSG }}"
           blocks:
             - type: "section"
               text:
