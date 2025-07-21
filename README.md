@@ -1,5 +1,8 @@
 # DIBBs Text to Code
 
+[![codecov](https://codecov.io/github/CDCgov/dibbs-text-to-code/graph/badge.svg)](https://codecov.io/github/CDCgov/dibbs-text-to-code)
+[![python](https://img.shields.io/badge/python-3.11%2B-yellow)](https://docs.python.org/3.11/)
+
 **General disclaimer** This repository was created for use by CDC programs to collaborate on public health related projects in support of the [CDC mission](https://www.cdc.gov/about/cdc/#cdc_about_cio_mission-our-mission). GitHub is not hosted by the CDC, but is a third party website used by CDC and its partners to share information and collaborate on software. CDC use of GitHub does not imply an endorsement of any one particular service, product, or enterprise.
 
 ## Related documents
@@ -21,11 +24,20 @@
 
 ### Pre-requisites
 
-🚧 Under Construction 🚧
+- Python 3.11 or higher
+- [Docker](https://docs.docker.com/get-docker/)
 
 ### Setup
 
-🚧 Under Construction 🚧
+Set up a Python virtual environment and install the required development dependencies:
+NOTE: Sourcing the script is recommended over simply executing the script. This allows
+the virtual environment to stay active in your shell.
+
+```bash
+source scripts/bootstrap.sh
+```
+
+Note: If you are running in on a Windows machine, will need to run the bootstrap file directly with `./scripts/bootstrap.sh` and then activate the virtual environment by running `.\.venv\Scripts\Activate.ps1`.
 
 ### Testing
 

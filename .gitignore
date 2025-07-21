@@ -1,3 +1,13 @@
+# Build output
+target/
+*.class
+*_version.py
+*.egg-info
+build/
+
+# Log file
+*.log
+
 # Project environment files
 .env
 
@@ -5,9 +15,14 @@
 .venv
 .python-version
 
+# Python Cache
+__pycache__/
+.pytest_cache/
+
 # Python-Coverage
 .coverage
 coverage.xml
 
-# VS Code
+# Editor settings
 /.vscode/settings.json
+.exrc
