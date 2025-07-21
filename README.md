@@ -37,7 +37,7 @@ the virtual environment to stay active in your shell.
 source scripts/bootstrap.sh
 ```
 
-Note: If you are running in WSL on a Windows machine, will need to run the bootstrap file directly with `./scripts/bootstrap.sh` and then activate the virtual environment by running `source .venv/bin/activate`.
+Note: If you are running in on a Windows machine, will need to run the bootstrap file directly with `./scripts/bootstrap.sh` and then activate the virtual environment by running `.\.venv\Scripts\Activate.ps1`.
 
 ### Testing
 
