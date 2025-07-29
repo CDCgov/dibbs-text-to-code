@@ -26,6 +26,7 @@
 
 - Python 3.11 or higher
 - [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/) [optional]
 
 ### Setup
 
@@ -37,15 +38,91 @@ the virtual environment to stay active in your shell.
 source scripts/bootstrap.sh
 ```
 
-Note: If you are running in on a Windows machine, will need to run the bootstrap file directly with `./scripts/bootstrap.sh` and then activate the virtual environment by running `.\.venv\Scripts\Activate.ps1`.
+**NOTE:** If you are running in on a Windows machine, will need to run the bootstrap
+file directly with `./scripts/bootstrap.sh` and then activate the virtual environment
+by running `.\.venv\Scripts\Activate.ps1`.
 
-### Testing
+### Build and Verify
 
-🚧 Under Construction 🚧
+Use the following to build the lambda image and verify that its accepting requests:
+(*requires Docker Compose*)
 
-### Running code formatting checks
+```sh
+docker compose up -d
+curl -XPOST "http://localhost:8080/2015-03-31/functions/function/invocations" -d '{"input": "test"}'
+docker compose down
+```
 
-🚧 Under Construction 🚧
+## Quality Assurance
+
+**NOTE:** By default, pre-commit hooks are installed to run type, linting and formatting
+checks on each commit. These hooks will attempt to automatically fix any lint and
+formatting issues encountered, however failed type checks will result in a failed commit.
+To force a commit without running the pre-commit hooks, use the following command:
+
+```sh
+git commit --no-verify
+```
+
+### Unit tests
+
+To run all the unit tests, use the following command:
+
+```sh
+pytest
+```
+
+To run a single unit test, use the following command:
+
+```sh
+pytest tests/unit/test_utils.py::test_function
+```
+
+### Type checks
+
+To run type checks, use the following command:
+
+```sh
+ty check
+```
+
+To type check a specific file, use the following command:
+
+```sh
+ty check path/to/file.py
+```
+
+### Linting
+
+To run linting checks, use the following command:
+
+```sh
+ruff check
+```
+
+To lint a specific file, use the following command:
+
+```sh
+ruff check path/to/file.py
+```
+
+### Formatting
+
+To run code formatting, use the following command:
+
+```sh
+ruff format
+```
+
+To format a specific file, use the following command:
+
+```sh
+ruff format path/to/file.py
+```
+
+## Releases
+
+See the [Releases](docs/releases.md) page for details.
 
 ## Standard Notices
 

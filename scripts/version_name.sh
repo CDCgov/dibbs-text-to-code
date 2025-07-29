@@ -5,10 +5,10 @@
 #
 # Usage: scripts/version_name.sh
 #
-# The format of the tag is vM.m.b or vM.m.b-rc.Z, where:
+# The format of the tag is vM.m.p or vM.m.p-rc.Z, where:
 # - M is the major version
 # - m is the minor version
-# - b is the bugfix version
+# - p is the patch/bugfix version
 # - Z is the number of commits on main since the last tag
 
 HEAD_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null)
