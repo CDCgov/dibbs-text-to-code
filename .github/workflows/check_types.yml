@@ -27,4 +27,4 @@ jobs:
 
       - name: Run type checks
         run: |
-          ty check
+          ty check --python=$(which python)
