@@ -11,6 +11,6 @@ repos:
         name: ty check
         description: "Run 'ty check' for extremely fast Python type checking"
         entry: ty check
-        language: python
+        language: system
         types_or: [python, pyi, jupyter]
         require_serial: true
