@@ -1,7 +1,16 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3  # Ruff version.
+    rev: v0.12.3  # Ruff version
     hooks:
-      - id: ruff-check # Run the linter.
+      - id: ruff-check # Run the linter
         args: [ --fix ]
-      - id: ruff-format  # Run the formatter.
+      - id: ruff-format  # Run the formatter
+  - repo: local
+    hooks:
+      - id: ty-check # Run the type checker
+        name: ty check
+        description: "Run 'ty check' for extremely fast Python type checking"
+        entry: ty check
+        language: python
+        types_or: [python, pyi, jupyter]
+        require_serial: true
