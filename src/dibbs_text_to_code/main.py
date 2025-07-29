@@ -6,4 +6,4 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context):
     """
     Text to Code lambda entry point
     """
-    print("DIBBS Text to Code")
+    return {"message": "DIBBS Text to Code!", "event": event}
