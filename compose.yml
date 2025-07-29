@@ -1,0 +1,10 @@
+services:
+  lambda:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./src:/var/task/src
+    healthcheck:
+      test: [ "CMD", "curl", "-sf", "http://localhost:8080/2015-03-31/functions/function/invocations", "-XPOST", "-d", "{}" ]
