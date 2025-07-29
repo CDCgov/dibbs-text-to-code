@@ -8,6 +8,14 @@ build/
 # Log file
 *.log
 
+# Temporary files
+*.swp
+*~
+*.bak
+tmp/
+temp/
+*.tmp
+
 # Project environment files
 .env
 
@@ -26,3 +34,6 @@ coverage.xml
 # Editor settings
 /.vscode/settings.json
 .exrc
+
+# macOS
+**/.DS_Store
