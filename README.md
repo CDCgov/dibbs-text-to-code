@@ -55,10 +55,10 @@ docker compose down
 
 ## Quality Assurance
 
-**NOTE:** By default, pre-commit hooks are installed to run type, linting and formatting
-checks on each commit. These hooks will attempt to automatically fix any lint and
-formatting issues encountered, however failed type checks will result in a failed commit.
-To force a commit without running the pre-commit hooks, use the following command:
+**NOTE:** By default, pre-commit hooks are installed to run linting and formatting
+checks on each commit. These hooks will attempt to automatically fix any issues
+encountered. To force a commit without running the pre-commit hooks, use the
+following command:
 
 ```sh
 git commit --no-verify
