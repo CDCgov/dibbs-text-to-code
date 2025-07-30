@@ -41,7 +41,7 @@ jobs:
       uses: slackapi/slack-github-action@v2.1.1
       if: ${{ env.SHOULD_POST_TO_SLACK == 'true' }}
       with:
-        webhook: ${{ env.SLACK_WEBHOOK_URL }}
+        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
         webhook-type: incoming-webhook
         payload: |
           text: "${{ env.MSG }}"
