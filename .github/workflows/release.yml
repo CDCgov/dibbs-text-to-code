@@ -6,6 +6,11 @@ name: "release"
 #   - building and pushing of a new Docker image to ghcr.io [package]
 #   - create a published release [release]
 #   - post the release info to Slack [release]
+#
+#   NOTE: This workflow is dependent on the scripts/version_name.sh script.
+#   This script needs to generate a version number that starts with "v".
+#   This can either be the current version or a future version, depending
+#   on how the project versioning is handled.
 
 on:
   push:
@@ -48,11 +53,15 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          # We are building this image to be compatible with an AWS Lambda execution
+          # environment, thus we need to explicitly build for linux/amd64 and set 
+          # provenance to false.
+          # https://docs.aws.amazon.com/lambda/latest/dg/python-image.html#python-image-instructions
           platforms: linux/amd64
-          push: true
           provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          push: true
           tags: |
             ghcr.io/${{ env.PACKAGE_NAME }}:latest
             ghcr.io/${{ env.PACKAGE_NAME }}:${{ env.NEXT_TAG }}
