@@ -9,7 +9,7 @@ script can introduce randomized case changes and typos.
 
 Usage:
     ./synthetic_lab_results.py <number_of_rows>
-    ./synthetic_lab_results.py 1000 --case-rate 0.5 --typo-rate 0.1
+    ./synthetic_lab_results.py 1000 --change-case 0.5 --introduce-typo 0.1
 
 To view all options and usage details:
     ./synthetic_lab_results.py --help
