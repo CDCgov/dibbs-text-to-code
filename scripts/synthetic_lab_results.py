@@ -32,6 +32,7 @@ positive_words = [
     "1+",
     "true",
     "confirmed",
+    "not negative",
 ]
 negative_words = [
     "negative",
@@ -44,6 +45,9 @@ negative_words = [
     "false",
     "0",
     "no value",
+    "not found",
+    "not present",
+    "not positive",
 ]
 
 
