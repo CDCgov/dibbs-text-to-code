@@ -86,9 +86,9 @@ def probability_float(x):
     try:
         x = float(x)
     except ValueError:
-        raise argparse.ArgumentTypeError(f"{x} not a floating-point literal")
+        raise argparse.ArgumentTypeError(f"'{x}' not a floating-point literal")
     if x < 0.0 or x > 1.0:
-        raise argparse.ArgumentTypeError(f"{x} not in range [0.0, 1.0]")
+        raise argparse.ArgumentTypeError(f"'{x}' not in range [0.0, 1.0]")
     return x
 
 
@@ -99,20 +99,29 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate synthetic lab result words with labels (1=positive, 2=negative)."
     )
-    parser.add_argument("num_rows", type=int, help="Number of rows to generate.")
+    parser.add_argument("num_rows", type=int, help="Number of rows to generate")
     parser.add_argument(
-        "--change-case", type=probability_float, default=0.5, help="Probability of changing case."
+        "--output",
+        type=argparse.FileType("w"),
+        default=sys.stdout,
+        help="File to write output to (default: STDOUT)",
+    )
+    parser.add_argument(
+        "--change-case",
+        type=probability_float,
+        default=0.5,
+        help="Probability of changing case (default: 0.5)",
     )
     parser.add_argument(
         "--introduce-typo",
         type=probability_float,
         default=0.1,
-        help="Probability of introducing a typo.",
+        help="Probability of introducing a typo (default: 0.1)",
     )
     args = parser.parse_args()
 
     count = args.num_rows
-    writer = csv.writer(sys.stdout)
+    writer = csv.writer(args.output)
     writer.writerow(["word", "label"])
 
     all_words = [(w, 1) for w in positive_words] + [(w, 2) for w in negative_words]
