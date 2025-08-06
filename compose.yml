@@ -3,8 +3,22 @@ services:
     build:
       context: .
     ports:
-      - "8080:8080"
+      - "8083:8080"
     volumes:
       - ./src:/var/task/src
+    networks:
+      - dibbs-refiner-ttc
     healthcheck:
-      test: [ "CMD", "curl", "-sf", "http://localhost:8080/2015-03-31/functions/function/invocations", "-XPOST", "-d", "{}" ]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://localhost:8083/2015-03-31/functions/function/invocations",
+          "-XPOST",
+          "-d",
+          "{}",
+        ]
+networks:
+  dibbs-refiner-ttc:
+    external: true
