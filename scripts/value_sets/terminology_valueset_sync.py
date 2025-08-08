@@ -64,7 +64,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
         next_url_call = loinc_codes.get("ResponseSummary").get("Next")
         if next_url_call is None:
             break
-    
+
     return loinc_rows
 
 
