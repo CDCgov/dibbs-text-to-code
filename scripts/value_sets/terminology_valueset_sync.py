@@ -10,13 +10,21 @@ LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&count=500
 HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
+UMLS_SNOMED_LAB_VALUES_URL = "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/362981000/descendants"
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
+UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
 CSV_DIRECTORY = "assets/"
+
+
+def get_umls_snomed_lab_values():  # noqa: D103
+    #params = {"apiKey": UMLS_API_KEY}
+    None
+
 
 
 def get_hl7_lab_interp():  # noqa: D103
@@ -151,4 +159,5 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
 if __name__ == "__main__":
     # get_loinc_lab_orders()
     # get_loinc_lab_results()
-    get_hl7_lab_interp()
+    # get_hl7_lab_interp()
+    get_umls_snomed_lab_values()
