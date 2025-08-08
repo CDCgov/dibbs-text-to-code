@@ -7,6 +7,9 @@ import requests
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
 LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&count=500"
 LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&count=500"
+HL7_LAB_INTERP_URL = (
+    "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
+)
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -14,6 +17,31 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 
 # CSV file settings
 CSV_DIRECTORY = "assets/"
+
+
+def get_hl7_lab_interp():  # noqa: D103
+    hl7_filename = "hl7_lab_interp.csv"
+    hl7_response = requests.get(HL7_LAB_INTERP_URL)
+
+    if hl7_response.status_code != 200:
+        print(
+            f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}"
+        )
+        return
+    hl7_codes = hl7_response.json().get("compose").get("include")[0].get("concept")
+
+    if hl7_codes is not None:
+        record_count = hl7_response.json().get("expansion").get("total")
+        print(f"HL7 Lab Interpretation Record Count: {record_count}")
+
+        # replace 'display' key with 'text
+        key_replacements = {"display": "text"}
+        for hl7_row in hl7_codes:
+            for old_key, new_key in key_replacements.items():
+                if old_key in hl7_row:
+                    hl7_row[new_key] = hl7_row[old_key]
+                    del hl7_row[old_key]
+        save_valueset_csv_file(hl7_filename, hl7_codes)
 
 
 def get_loinc_lab_orders():  # noqa: D103
@@ -121,5 +149,6 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
 
 
 if __name__ == "__main__":
-    get_loinc_lab_orders()
-    get_loinc_lab_results()
+    # get_loinc_lab_orders()
+    # get_loinc_lab_results()
+    get_hl7_lab_interp()
