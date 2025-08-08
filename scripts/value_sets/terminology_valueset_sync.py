@@ -16,7 +16,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 CSV_DIRECTORY = "assets/"
 
 
-def get_loinc_lab_orders():
+def get_loinc_lab_orders():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_ORDER_SUFFIX
     loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
 
@@ -54,7 +54,7 @@ def get_loinc_lab_orders():
     save_valueset_csv_file(loinc_filename, loinc_order_rows)
 
 
-def process_loinc_results(loinc_results, loinc_order_rows) -> dict:
+def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
     if len(loinc_results) == 0:
         print("NO RESULTS TO PROCESS!")
         return loinc_order_rows
@@ -65,7 +65,7 @@ def process_loinc_results(loinc_results, loinc_order_rows) -> dict:
     return loinc_order_rows
 
 
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:  # noqa: D103
     result_code = loinc_result.get("LOINC_NUM")
     if loinc_result.get("SHORTNAME") is not None:
         result_row = {"code": result_code, "text": loinc_result.get("SHORTNAME")}
@@ -81,7 +81,7 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:
     return loinc_order_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict):
+def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
     if not filename.strip():
         print("No filename supplied.  Failed to save CSV file!")
         return
