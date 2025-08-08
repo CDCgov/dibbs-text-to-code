@@ -18,40 +18,54 @@ CSV_DIRECTORY = "assets/"
 
 def get_loinc_lab_orders():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_ORDER_SUFFIX
-    loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
-
     loinc_filename = "loinc_lab_orders.csv"
+    loinc_vs_type = "Lab Orders"
+    loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
+    save_valueset_csv_file(loinc_filename, loinc_order_rows)
+
+
+def get_loinc_lab_results():  # noqa: D103
+    api_url = LOINC_BASE_URL + LOINC_LAB_RESULT_SUFFIX
+    loinc_filename = "loinc_lab_result.csv"
+    loinc_vs_type = "Lab Results"
+    loinc_result_rows = process_loinc_valueset(api_url, loinc_vs_type)
+
+    save_valueset_csv_file(loinc_filename, loinc_result_rows)
+
+
+def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
+    loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != 200:
         print(
-            f"ERROR Retrieving LOINC ORDER CODES: {loinc_response.status_code}: {loinc_response.text}"
+            f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
         )
         return
 
-    loinc_orders = loinc_response.json()
-    loinc_order_rows = []
+    loinc_codes = loinc_response.json()
+    loinc_rows = []
 
-    record_count = loinc_orders["ResponseSummary"]["RecordsFound"]
-    print(f"Record Count: {record_count}")
-    current_row_count = loinc_orders["ResponseSummary"]["RowsReturned"]
-    next_url_call = loinc_orders["ResponseSummary"]["Next"]
+    record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
+    print(f"{loinc_valueset_type} Record Count: {record_count}")
+    current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
+    next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
     while current_row_count > 0 or next_url_call is None:
-        loinc_order_rows = process_loinc_results(loinc_orders["Results"], loinc_order_rows)
+        loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
 
         next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
         if next_loinc_response.status_code != 200:
             print(
-                f"ERROR Retrieving LOINC ORDER CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
+                f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
             )
             return
-        loinc_orders = next_loinc_response.json()
-        current_row_count = loinc_orders["ResponseSummary"]["RowsReturned"]
-        next_url_call = loinc_orders.get("ResponseSummary").get("Next")
+        loinc_codes = next_loinc_response.json()
+        current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
+        next_url_call = loinc_codes.get("ResponseSummary").get("Next")
         if next_url_call is None:
             break
-
-    save_valueset_csv_file(loinc_filename, loinc_order_rows)
+    
+    return loinc_rows
 
 
 def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
@@ -108,3 +122,4 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
 
 if __name__ == "__main__":
     get_loinc_lab_orders()
+    get_loinc_lab_results()
