@@ -1,7 +1,7 @@
-import requests
 import csv
 import os
-import json
+
+import requests
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
