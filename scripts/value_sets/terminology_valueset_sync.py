@@ -1,5 +1,23 @@
 #!/usr/bin/env python
 
+"""This script provides the ability to pull down various medical terminology
+valusets required for processing eICR data, specifically adding codes to
+different data elements within an eICR message, such as Lab Order Name or
+Lab Result Interpretation.
+
+Current Available Valuesets:
+    - Lab Orders (Lab Name (Ordering)) - LOINC
+    - Lab Observations (Lab Name (Resulting)) - LOINC
+    - Lab Result Value - SNOMED
+    - Lab Result Interpretation - HL7 Observation Interpretations
+
+Requirements:
+    - SNOMED - requires an UMLS API KEY stored in an environment variable "UMLS_API_KEY"
+    - LOINC - requires a LOINC username and password stored in environment variables:
+        - LOINC_USERNAME
+        - LOINC_PWD
+"""
+
 import argparse
 import csv
 import os
@@ -28,6 +46,8 @@ CSV_DIRECTORY = "tmp/"
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
     # params = {"apiKey": UMLS_API_KEY}
     None
 
@@ -77,6 +97,10 @@ def get_loinc_lab_results():  # noqa: D103
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
+    if LOINC_USERNAME is None or LOINC_PWD is None:
+        raise KeyError(
+            "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
+        )
     loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != 200:
         print(
