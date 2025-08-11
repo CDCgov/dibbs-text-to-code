@@ -10,9 +10,12 @@ authors = [
 ]
 license = { file = "LICENSE" }
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "boto3",
+    "scikit-learn",
+    "spacy",
+    "sentence-transformers",
     "pydantic-settings",
     # Typing
     "aws-lambda-typing",

@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.13
+FROM public.ecr.aws/lambda/python:3.12
 
 LABEL org.opencontainers.image.source=https://github.com/CDCgov/dibbs-text-to-code
 LABEL org.opencontainers.image.licenses=Apache-2.0
