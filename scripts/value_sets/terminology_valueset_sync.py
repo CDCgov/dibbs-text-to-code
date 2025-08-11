@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import csv
 import os
 import sys
@@ -161,8 +162,26 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
+def main(all_vs: bool, lab_orders: bool, lab_obs: bool, lab_results: bool, lab_interp: bool):  # noqa: D103
+    if all_vs or lab_orders:
+        get_loinc_lab_orders()
+    if all_vs or lab_obs:
+        get_loinc_lab_results()
+    if all_vs or lab_results:
+        get_umls_snomed_lab_values()
+    if all_vs or lab_interp:
+        get_hl7_lab_interp()
+
+
 if __name__ == "__main__":
-    get_loinc_lab_orders()
-    get_loinc_lab_results()
-    get_hl7_lab_interp()
-    # get_umls_snomed_lab_values()
+    parser = argparse.ArgumentParser(
+        description="A script to pull down various Medical Terminology Value Set Codes and Texts, specify which sets."
+    )
+    parser.add_argument("--lab_orders", action="store_true", help="For Loinc Lab Orders")
+    parser.add_argument("--lab_obs", action="store_true", help="For Loinc Lab Observations")
+    parser.add_argument("--lab_results", action="store_true", help="For Snomed Lab Results")
+    parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
+    parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
+
+    args = parser.parse_args()
+    main(args.all, args.lab_orders, args.lab_obs, args.lab_results, args.lab_interp)
