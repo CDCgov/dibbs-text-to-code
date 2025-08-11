@@ -40,7 +40,7 @@ def get_hl7_lab_interp():  # noqa: D103
             f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}",
             file=sys.stderr,
         )
-        return
+        sys.exit(1)
     hl7_codes = hl7_response.json().get("compose").get("include")[0].get("concept")
 
     if hl7_codes is not None:
