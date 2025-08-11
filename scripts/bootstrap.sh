@@ -63,7 +63,7 @@ pip install spacy==3.8.6 > /dev/null
 $python_cmd -m spacy download en_core_web_sm > /dev/null
 echo "Installing remaining development requirements..."
 pip install '.[dev]' > /dev/null
-# pip install spacy-lookups-data > /dev/null
+pip install spacy-lookups-data > /dev/null
 
 # Install pre-commit hooks
 echo "Installing pre-commit hooks..."
