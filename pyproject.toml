@@ -24,6 +24,7 @@ dev = [
     "ruff",
     "ty",
     "pre-commit",
+    "requests",
     # Testing
     "pytest",
     "pytest-cov",

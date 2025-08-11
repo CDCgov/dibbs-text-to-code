@@ -2,13 +2,14 @@
 
 import csv
 import os
+import sys
 
 import requests
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
-LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&count=500"
-LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&count=500"
+LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
+LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
 HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
@@ -22,7 +23,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
-CSV_DIRECTORY = "assets/"
+CSV_DIRECTORY = "tmp/"
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
@@ -36,7 +37,8 @@ def get_hl7_lab_interp():  # noqa: D103
 
     if hl7_response.status_code != 200:
         print(
-            f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}", file=sys.stderr
+            f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}",
+            file=sys.stderr,
         )
         return
     hl7_codes = hl7_response.json().get("compose").get("include")[0].get("concept")
@@ -160,7 +162,7 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
 
 
 if __name__ == "__main__":
-    # get_loinc_lab_orders()
-    # get_loinc_lab_results()
-    # get_hl7_lab_interp()
-    get_umls_snomed_lab_values()
+    get_loinc_lab_orders()
+    get_loinc_lab_results()
+    get_hl7_lab_interp()
+    # get_umls_snomed_lab_values()
