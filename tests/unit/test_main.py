@@ -27,14 +27,23 @@ class TestHandler:
                 "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": key}}
             }
             records.append({"body": json.dumps(s3_event)})
-        # Create SQS event and fake context
-        sqs_event = {"Records": records}
-        fake_context = {}
+        # Create event and fake context
+        event = {"Records": records}
+        context = {}
 
-        result = main.handler(sqs_event, fake_context)
+        result = main.handler(event, context)
 
         assert result["file_contents"] == expected_contents
         assert len(result["file_contents"]) == num_records
+
+    def test_handler_no_records(self):
+        event = {"Records": []}
+        context = {}
+
+        result = main.handler(event, context)
+
+        assert result["file_contents"] == []
+        assert len(result["file_contents"]) == 0
 
 
 class TestCreateS3Client:
