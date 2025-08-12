@@ -57,7 +57,10 @@ def get_umls_snomed_lab_values():  # noqa: D103
     snomed_rows = []
 
     while umls_response.status_code == 200:
-        print(f"Processing SNOMED page {page_num}")
+        # NOTE: the UMLS responses are a bit slow
+        #  you can use the print statement below to get a
+        #  better idea of the progress if needed.
+        # print(f"Processing SNOMED page {page_num}")
         umls_results = umls_response.json().get("result")
 
         for result in umls_results:
