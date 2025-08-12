@@ -10,9 +10,22 @@ authors = [
 ]
 license = { file = "LICENSE" }
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "boto3",
+    # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
+    # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
+    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x 
+    # to ensure compatibility across all hardware.
+    # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
+    # versions and rely on spacy and sentence-transformers to manage their own dependencies.
+    "torch==2.2.2",
+    "numpy < 2",
+    "spacy",
+    "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz",
+    "spacy-lookups-data",
+    "sentence-transformers",
+    "scikit-learn",
     "pydantic-settings",
     # Typing
     "aws-lambda-typing",
