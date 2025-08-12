@@ -52,9 +52,9 @@ else
 fi
 
 # Pip installation, and more importantly, purging the cache
-# Spacy and Thinc require very careful numpy pinning to compile,
-# so we can't risk pulling in a cached dependency
-$python_cmd -m pip install --upgrade pip > /dev/null
+# Numpy versioning can cause crashes when compiling against,
+# so this specifically uses the versions pip decides are safe
+$python_cmd -m pip install --upgrade pip
 pip cache purge > /dev/null
 
 # Install the development requirements
@@ -63,4 +63,4 @@ pip install '.[dev]' > /dev/null
 
 # Install pre-commit hooks
 echo "Installing pre-commit hooks..."
-pre-commit install
+pre-commit install > /dev/null

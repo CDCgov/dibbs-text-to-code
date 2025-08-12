@@ -13,7 +13,9 @@ readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "boto3",
-    "spacy >=3.8, <3.9",
+    "torch==2.2.2",
+    "numpy < 2",
+    "spacy",
     "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz",
     "spacy-lookups-data",
     "sentence-transformers",
