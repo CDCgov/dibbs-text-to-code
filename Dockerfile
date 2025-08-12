@@ -10,10 +10,16 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 # Initialize the dibbs_text_to_code directory
 RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/dibbs_text_to_code"
 
+# Install build tools for compiling C++ extensions
+RUN microdnf install -y gcc-c++ make && microdnf clean all
+
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
 COPY ./pyproject.toml ${LAMBDA_TASK_ROOT}/pyproject.toml
 RUN pip install --no-cache-dir "$(printf '%s' ".[${ENVIRONMENT}]")"
+# Improve Lambda startup time by validating SpaCy models upfront,
+# which preloads necessary libraries during build
+RUN python -m spacy validate
 
 # Copy over the rest of the code
 COPY ./src ${LAMBDA_TASK_ROOT}/src
