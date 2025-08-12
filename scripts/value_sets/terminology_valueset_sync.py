@@ -12,7 +12,8 @@ Current Available Valuesets:
     - Lab Result Interpretation - HL7 Observation Interpretations
 
 Requirements:
-    - SNOMED - requires an UMLS API KEY stored in an environment variable "UMLS_API_KEY"
+    - SNOMED - requires an UMLS API KEY stored in an environment variable:
+        - UMLS_API_KEY
     - LOINC - requires a LOINC username and password stored in environment variables:
         - LOINC_USERNAME
         - LOINC_PWD
@@ -33,7 +34,7 @@ HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
 UMLS_SNOMED_LAB_VALUES_URL = (
-    "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/362981000/descendants"
+    "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
 
 # Get Terminology Usernames and Passwords
@@ -48,8 +49,31 @@ CSV_DIRECTORY = "tmp/"
 def get_umls_snomed_lab_values():  # noqa: D103
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
-    # params = {"apiKey": UMLS_API_KEY}
-    None
+    snomed_filename = "snomed_lab_value.csv"
+    page_num = 1
+    params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num}
+    umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
+    snomed_row_count = 0
+    snomed_rows = []
+
+    while umls_response.status_code == 200:
+        print(f"Processing SNOMED page {page_num}")
+        umls_results = umls_response.json().get("result")
+
+        for result in umls_results:
+            snomed_code = result.get("ui")
+            snomed_text = result.get("name")
+            if snomed_code and snomed_text:
+                result_row = {"code": snomed_code, "text": snomed_text}
+                snomed_rows.append(result_row)
+                snomed_row_count += 1
+
+        page_num += 1
+        params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num}
+        umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
+
+    print(f"{snomed_row_count} Codes Extracted")
+    save_valueset_csv_file(snomed_filename, snomed_rows)
 
 
 def get_hl7_lab_interp():  # noqa: D103
@@ -106,7 +130,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
         print(
             f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
         )
-        return
+        return None
 
     loinc_codes = loinc_response.json()
     loinc_rows = []
@@ -186,12 +210,12 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
-def main(all_vs: bool, lab_orders: bool, lab_obs: bool, lab_results: bool, lab_interp: bool):  # noqa: D103
+def main(all_vs: bool, lab_orders: bool, lab_obs: bool, lab_values: bool, lab_interp: bool):  # noqa: D103
     if all_vs or lab_orders:
         get_loinc_lab_orders()
     if all_vs or lab_obs:
         get_loinc_lab_results()
-    if all_vs or lab_results:
+    if all_vs or lab_values:
         get_umls_snomed_lab_values()
     if all_vs or lab_interp:
         get_hl7_lab_interp()
@@ -203,9 +227,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--lab_orders", action="store_true", help="For Loinc Lab Orders")
     parser.add_argument("--lab_obs", action="store_true", help="For Loinc Lab Observations")
-    parser.add_argument("--lab_results", action="store_true", help="For Snomed Lab Results")
+    parser.add_argument("--lab_values", action="store_true", help="For Snomed Lab Result Values")
     parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
 
     args = parser.parse_args()
-    main(args.all, args.lab_orders, args.lab_obs, args.lab_results, args.lab_interp)
+    main(args.all, args.lab_orders, args.lab_obs, args.lab_values, args.lab_interp)
