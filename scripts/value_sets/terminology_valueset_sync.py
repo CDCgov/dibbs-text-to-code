@@ -6,7 +6,7 @@ different data elements within an eICR message, such as Lab Order Name or
 Lab Result Interpretation.
 
 Current Available Valuesets:
-    - Lab Name (Ordering & Resulting) - LOINC
+    - Lab Names (Ordering & Resulting) - LOINC
     - Lab Orders - LOINC
     - Lab Observations - LOINC
     - Lab Result Value - SNOMED
