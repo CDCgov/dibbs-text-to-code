@@ -3,9 +3,8 @@ import os
 
 import boto3
 from aws_lambda_typing import context as lambda_context
+from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
-
-from dibbs_text_to_code import schemas
 
 
 def create_s3_client() -> BaseClient:
@@ -14,19 +13,11 @@ def create_s3_client() -> BaseClient:
     """
     endpoint_url = os.getenv("S3_ENDPOINT_URL")
     region_name = os.getenv("AWS_REGION")
-    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-    return boto3.client(
-        "s3",
-        endpoint_url=endpoint_url,
-        region_name=region_name,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-    )
+    return boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
 
 
-def get_file_content_from_s3_event(event: schemas.EventBridgeEvent) -> bytes:
+def get_file_content_from_s3_event(event: lambda_events.EventBridgeEvent) -> bytes:
     """
     Extracts the file content from an S3 event triggered by a Lambda function.
     """
@@ -40,7 +31,7 @@ def get_file_content_from_s3_event(event: schemas.EventBridgeEvent) -> bytes:
     return response["Body"].read()
 
 
-def handler(event: schemas.EventBridgeEvent, context: lambda_context.Context):
+def handler(event: lambda_events.EventBridgeEvent, context: lambda_context.Context):
     """
     Text to Code lambda entry point
     """
