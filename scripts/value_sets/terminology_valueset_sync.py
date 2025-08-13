@@ -6,8 +6,9 @@ different data elements within an eICR message, such as Lab Order Name or
 Lab Result Interpretation.
 
 Current Available Valuesets:
-    - Lab Orders (Lab Name (Ordering)) - LOINC
-    - Lab Observations (Lab Name (Resulting)) - LOINC
+    - Lab Name (Ordering & Resulting) - LOINC
+    - Lab Orders - LOINC
+    - Lab Observations - LOINC
     - Lab Result Value - SNOMED
     - Lab Result Interpretation - HL7 Observation Interpretations
 
@@ -30,6 +31,7 @@ import requests
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
 LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
 LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
+LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
 HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
@@ -103,6 +105,15 @@ def get_hl7_lab_interp():  # noqa: D103
                     hl7_row[new_key] = hl7_row[old_key]
                     del hl7_row[old_key]
         save_valueset_csv_file(hl7_filename, hl7_codes)
+
+
+def get_loinc_lab_names():  # noqa: D103
+    api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
+    loinc_filename = "loinc_lab_names.csv"
+    loinc_vs_type = "Lab Names"
+    loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
+
+    save_valueset_csv_file(loinc_filename, loinc_order_rows)
 
 
 def get_loinc_lab_orders():  # noqa: D103
@@ -213,7 +224,14 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
-def main(all_vs: bool, lab_orders: bool, lab_obs: bool, lab_values: bool, lab_interp: bool):  # noqa: D103
+def main(  # noqa: D103
+    all_vs: bool,
+    lab_orders: bool,
+    lab_obs: bool,
+    lab_values: bool,
+    lab_interp: bool,
+    lab_names: bool,
+):  # noqa: D103
     if all_vs or lab_orders:
         get_loinc_lab_orders()
     if all_vs or lab_obs:
@@ -222,11 +240,16 @@ def main(all_vs: bool, lab_orders: bool, lab_obs: bool, lab_values: bool, lab_in
         get_umls_snomed_lab_values()
     if all_vs or lab_interp:
         get_hl7_lab_interp()
+    if all_vs or lab_names:
+        get_loinc_lab_names()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="A script to pull down various Medical Terminology Value Set Codes and Texts, specify which sets."
+    )
+    parser.add_argument(
+        "--lab_names", action="store_true", help="For ALL Loinc Lab Names both Ordering & Resulting"
     )
     parser.add_argument("--lab_orders", action="store_true", help="For Loinc Lab Orders")
     parser.add_argument("--lab_obs", action="store_true", help="For Loinc Lab Observations")
@@ -235,4 +258,4 @@ if __name__ == "__main__":
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
 
     args = parser.parse_args()
-    main(args.all, args.lab_orders, args.lab_obs, args.lab_values, args.lab_interp)
+    main(args.all, args.lab_orders, args.lab_obs, args.lab_values, args.lab_interp, args.lab_names)
