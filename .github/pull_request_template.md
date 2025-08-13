@@ -4,7 +4,7 @@
 
 ## Related Issues
 
-[Link any related issues or tasks from your project management system.]
+Closes #[Link any related issues or tasks from your project management system.]
 
 ## Additional Notes
 
