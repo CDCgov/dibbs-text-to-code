@@ -42,6 +42,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-env",
+    "moto",
 ]
 prod = [
     # List any additional production-only dependencies here
