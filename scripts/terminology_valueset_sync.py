@@ -53,7 +53,8 @@ def get_umls_snomed_lab_values():  # noqa: D103
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
     snomed_filename = "snomed_lab_value.csv"
     page_num = 1
-    params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": 500}
+    page_size = 500
+    params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": page_size}
     umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
     snomed_row_count = 0
     snomed_rows = []
@@ -74,7 +75,7 @@ def get_umls_snomed_lab_values():  # noqa: D103
                 snomed_row_count += 1
 
         page_num += 1
-        params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num}
+        params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": page_size}
         umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
 
     print(f"{snomed_row_count} Codes Extracted")
