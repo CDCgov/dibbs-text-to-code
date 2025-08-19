@@ -197,6 +197,24 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     #  from as well.  ie. TermDescriptions [], FormalName, and DisplayName.
     #  Will leave these out for now.
 
+    # Adding additional fields to extract terms from to help supplement
+    # data for learning in our models
+    # NOTE: We can change/remove these additional fields later or even
+    #  make them configurable
+
+    # More human centered name for the concept
+    if loinc_result.get("DisplayName") is not None:
+        result_row = {"code": result_code, "text": loinc_result.get("DisplayName")}
+        loinc_order_rows.append(result_row)
+    # Paragraph of information concerning the concept/code/term in question
+    if loinc_result.get("DefinitionDescription") is not None:
+        result_row = {"code": result_code, "text": loinc_result.get("DefinitionDescription")}
+        loinc_order_rows.append(result_row)
+    # ';' separated list of related terms to the concept/code/term in question
+    if loinc_result.get("RELATEDNAMES2") is not None:
+        result_row = {"code": result_code, "text": loinc_result.get("RELATEDNAMES2")}
+        loinc_order_rows.append(result_row)
+
     return loinc_order_rows
 
 
