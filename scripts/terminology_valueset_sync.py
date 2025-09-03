@@ -44,6 +44,9 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
+# LOINC Text Keys
+LOINC_SKIP_TEXT = "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration in an ontological view. Additionally, it can be used to communicate a laboratory order, either alone or in combination with specimen or other information in the order. It may NOT be used to report back the measured patient value. https://lo.inc/ce2mb6"
+
 # CSV file settings
 CSV_DIRECTORY = "tmp/"
 
