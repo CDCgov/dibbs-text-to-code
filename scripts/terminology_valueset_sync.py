@@ -29,11 +29,9 @@ import requests
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
-LOINC_LAB_ORDER_SUFFIX = "query=status:active+orderobs:Order+OR+orderobs:Both&rows=500"
-LOINC_LAB_RESULT_SUFFIX = "query=status:active+orderobs:Observation+OR+orderobs:Both&rows=500"
-LOINC_LAB_NAMES_SUFFIX = (
-    "query=status:active+orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
-)
+LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
+LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
+LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
 HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
