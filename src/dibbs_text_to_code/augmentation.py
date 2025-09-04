@@ -7,7 +7,13 @@ def scramble_word_order(
     min_perms: int = 1,
 ) -> str:
     """
-    Scrambles the order of words in the input text.
+    Scrambles the order of words in the input text by moving a specified
+    number of words to new positions.
+
+    :param text: The input text to scramble.
+    :param max_perms: The maximum number of words to move.
+    :param min_perms: The minimum number of words to move.
+    :return: The text with words scrambled.
     """
     words = text.split()
     if len(words) < 2:
