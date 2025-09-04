@@ -35,7 +35,7 @@ def get_word_count(text: str) -> int:
         return 0
 
     pattern = r"\b[WORD_SEPARATORS]*[a-zA-Z0-9\-\'\(\)\+]+[WORD_SEPARATORS]*\b"
-    print(f"WORDS: {re.findall(pattern, text)}")
+    # print(f"WORDS: {re.findall(pattern, text)}")
     return len(re.findall(pattern, text))
 
 

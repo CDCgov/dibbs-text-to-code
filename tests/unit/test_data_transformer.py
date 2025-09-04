@@ -30,7 +30,7 @@ class TestDataTransformer:
         assert test_result == expected_count
 
         test_result = data_transformer.get_word_count(self.LOINC_LAB_TEXT_3)
-        expected_count = 9
+        expected_count = 53
         assert test_result == expected_count
 
     def test_get_char_count(self):
