@@ -29,9 +29,11 @@ import requests
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
-LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
-LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
-LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
+LOINC_LAB_ORDER_SUFFIX = "query=status:active+orderobs:Order+OR+orderobs:Both&rows=500"
+LOINC_LAB_RESULT_SUFFIX = "query=status:active+orderobs:Observation+OR+orderobs:Both&rows=500"
+LOINC_LAB_NAMES_SUFFIX = (
+    "query=status:active+orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
+)
 HL7_LAB_INTERP_URL = (
     "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
 )
@@ -192,10 +194,6 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     if loinc_result.get("LONG_COMMON_NAME") is not None:
         result_row = {"code": result_code, "text": loinc_result.get("LONG_COMMON_NAME")}
         loinc_order_rows.append(result_row)
-
-    # NOTE: There are other fields that have additional descriptions that we can pull
-    #  from as well.  ie. TermDescriptions [], FormalName, and DisplayName.
-    #  Will leave these out for now.
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
