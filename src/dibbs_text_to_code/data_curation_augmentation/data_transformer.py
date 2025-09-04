@@ -27,7 +27,7 @@ Should have unit tests.
 # separated this out into it's own function for
 # potential use later in other functions as
 # well as to be able to test it separately
-def get_words(text: str) -> list:
+def get_words(text: str) -> list[str]:
     """
     Gets the word count of the passed in string.
     """
@@ -79,6 +79,7 @@ def random_char_word_deletion(
     word_count = len(words_from_text)
     print(f"COUNTS: CHAR: {char_count} WORD: {word_count}")
 
+    # If the number of deletions chosen exceeds num_words * max_deletes_per_word, excess deletions should be skipped.
     if max_deletions_per_word > 0 and (deletion_count > (max_deletions_per_word * word_count)):
         deletion_count = max_deletions_per_word * word_count
 
