@@ -16,7 +16,7 @@ def scramble_word_order(
     # Ensure max_perms does not exceed the number of words
     num_perms = min(random.randint(min_perms, max_perms), len(words) - 1)
 
-    # Select unique indices to permute
+    # Select unique indices to scramble
     indices_to_move = sorted(random.sample(range(len(words)), num_perms), reverse=True)
 
     for idx in indices_to_move:
