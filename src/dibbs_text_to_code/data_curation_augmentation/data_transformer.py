@@ -32,7 +32,7 @@ def get_words(text: str) -> list[str]:
     Gets the word count of the passed in string.
     """
     if not text:
-        return 0
+        return []
 
     pattern = r"\b[WORD_SEPARATORS]*[a-zA-Z0-9\-\'\(\)\+]+[WORD_SEPARATORS]*\b"
     # print(f"WORDS: {re.findall(pattern, text)}")

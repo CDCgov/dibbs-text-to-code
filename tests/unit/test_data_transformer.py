@@ -33,6 +33,10 @@ class TestDataTransformer:
         expected_count = 53
         assert len(test_result) == expected_count
 
+        test_result = data_transformer.get_words("")
+        expected_count = 0
+        assert len(test_result) == expected_count
+
     def test_get_char_count(self):
         text = "HERE IS my TEST09: string       yes  ,crud,blah,test    "
         expected_count = 36
