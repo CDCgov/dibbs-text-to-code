@@ -27,7 +27,7 @@ Should have unit tests.
 # separated this out into it's own function for
 # potential use later in other functions as
 # well as to be able to test it separately
-def get_word_count(text: str) -> int:
+def get_words(text: str) -> list:
     """
     Gets the word count of the passed in string.
     """
@@ -36,7 +36,7 @@ def get_word_count(text: str) -> int:
 
     pattern = r"\b[WORD_SEPARATORS]*[a-zA-Z0-9\-\'\(\)\+]+[WORD_SEPARATORS]*\b"
     # print(f"WORDS: {re.findall(pattern, text)}")
-    return len(re.findall(pattern, text))
+    return re.findall(pattern, text)
 
 
 # separated this out into it's own function for
@@ -75,7 +75,8 @@ def random_char_word_deletion(
     char_count = get_char_count(text_to_modify)
     if deletion_count > char_count:
         deletion_count = char_count / 10
-    word_count = get_word_count(text_to_modify)
+    words_from_text = get_words(text_to_modify)
+    word_count = len(words_from_text)
     print(f"COUNTS: CHAR: {char_count} WORD: {word_count}")
 
     if max_deletions_per_word > 0 and (deletion_count > (max_deletions_per_word * word_count)):
