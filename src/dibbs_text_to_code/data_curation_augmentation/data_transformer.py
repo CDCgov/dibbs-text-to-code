@@ -73,14 +73,37 @@ def random_char_word_deletion(
         return text_to_modify
 
     char_count = get_char_count(text_to_modify)
+
+    # Ensure the number of deletions is smaller than
+    # the actual number of characters
+    # do only 10% of the total character count if larger
     if deletion_count > char_count:
         deletion_count = char_count / 10
     words_from_text = get_words(text_to_modify)
     word_count = len(words_from_text)
-    print(f"COUNTS: CHAR: {char_count} WORD: {word_count}")
+    # print(f"COUNTS: CHAR: {char_count} WORD: {word_count}")
 
     # If the number of deletions chosen exceeds num_words * max_deletes_per_word, excess deletions should be skipped.
     if max_deletions_per_word > 0 and (deletion_count > (max_deletions_per_word * word_count)):
         deletion_count = max_deletions_per_word * word_count
 
+    if method == "char":
+        char_indices = [i for i, char in enumerate(text_to_modify) if char not in (" ", ",")]
+        print(f"CHAR COUNTS: {char_count} & {len(char_indices)}")
+        indices_to_delete = random.sample(char_indices, deletion_count)
+        modified_text = delete_characters_from_text(text_to_modify, indices_to_delete)
+
     return modified_text
+
+
+def delete_characters_from_text(text: str, indices_to_delete: list[int]) -> str:
+    """
+    This function randomly deletes characters from a text string.
+    """
+    if not text or len(indices_to_delete) <= 0:
+        return text
+
+    indices_to_delete_set = set(indices_to_delete)
+
+    result_chars = [char for i, char in enumerate(text) if i not in indices_to_delete_set]
+    return "".join(result_chars)

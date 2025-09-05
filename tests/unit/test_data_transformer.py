@@ -67,4 +67,4 @@ class TestDataTransformer:
         test_string = "HERE IS my TEST09: string     yes  ,crud,blah,test    "
 
         mod_string = data_transformer.random_char_word_deletion(test_string, 1, 5, 2, "char")
-        assert mod_string == test_string
+        assert mod_string != test_string
