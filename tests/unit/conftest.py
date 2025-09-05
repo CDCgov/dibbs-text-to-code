@@ -1,4 +1,5 @@
 import os
+import random
 
 import boto3
 import moto
@@ -26,3 +27,8 @@ def moto_setup(monkeypatch):
         s3.bucket_name = bucket_name
 
         yield s3
+
+
+@pytest.fixture(autouse=True)
+def fixed_random_seed():
+    random.seed(42)
