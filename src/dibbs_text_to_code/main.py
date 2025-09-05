@@ -6,7 +6,7 @@ from aws_lambda_typing import events as lambda_events
 from .s3_handler import get_file_content_from_s3_event
 
 
-def handler(event: lambda_events.EventBridgeEvent, context: lambda_context.Context):
+def handler(event: lambda_events.SQSEvent, context: lambda_context.Context):
     """
     Text to Code lambda entry point
     """
