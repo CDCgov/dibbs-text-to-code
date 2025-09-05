@@ -26,6 +26,10 @@ import os
 import sys
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -223,6 +227,9 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print("Empty file contents!  Failed to save CSV!")
         return
 
+    if not os.path.exists(CSV_DIRECTORY):
+        os.makedirs(CSV_DIRECTORY)
+
     try:
         full_file_path = os.path.join(CSV_DIRECTORY, filename)
         csv_headers = contents[0].keys()
@@ -247,15 +254,21 @@ def main(  # noqa: D103
     lab_interp: bool,
     lab_names: bool,
 ):  # noqa: D103
+    print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
+        print("Getting LOINC Lab Orders...")
         get_loinc_lab_orders()
     if all_vs or lab_obs:
+        print("Getting LOINC Lab Observations...")
         get_loinc_lab_results()
     if all_vs or lab_values:
+        print("Getting SNOMED Lab Result Values...")
         get_umls_snomed_lab_values()
     if all_vs or lab_interp:
+        print("Getting HL7 Lab Result Interpretations...")
         get_hl7_lab_interp()
     if all_vs or lab_names:
+        print("Getting LOINC Lab Names...")
         get_loinc_lab_names()
 
 
