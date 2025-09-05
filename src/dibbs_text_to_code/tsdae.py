@@ -82,7 +82,7 @@ def _line_is_citation(line: str) -> bool:
     """
     format_1 = re.search(r"\d{4} [A-Za-z]{3}(\s\d+)?;\d+\(\d+\):\d+-\d+\.", line)
     format_2 = re.search(r"\d{4};\s?\d*(\(\d+\))?:\d*-\d*", line)
-    return format_1 or format_2
+    return format_1 is not None or format_2 is not None
 
 
 def _line_starts_with_loinc_code(line: str) -> Union[re.Match, None]:
