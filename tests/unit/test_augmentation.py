@@ -36,7 +36,7 @@ class TestScrambleWordOrder:
             "Blood",
             ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"],
             3,
-            "Blood",
+            "Erythrocytes Blood Volume fraction",
         ),
         # No LOINC names
         ("Hematocrit of Blood", [], 3, "Hematocrit of Blood"),
@@ -45,7 +45,7 @@ class TestScrambleWordOrder:
             "Hematocrit [Volume Fraction] of Blood by calculation",
             ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"],
             5,
-            "Erythrocytes Hematocrit [Volume Fraction] of Calculation Blood by calculation",
+            "Erythrocytes Hematocrit [Volume Fraction] of Volume fraction Blood by calculation",
         ),
     ],
 )

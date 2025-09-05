@@ -49,13 +49,13 @@ def insert_loinc_related_names(
         return text
 
     # Ensure num_inserts does not exceed the number of loinc_names
-    max_possible_inserts = min(len(loinc_names), len(words), max_inserts)
-    if max_possible_inserts < min_inserts:
-        return text
-    num_inserts = random.randint(min_inserts, max_possible_inserts)
+    # max_possible_inserts = min(len(loinc_names), len(words), max_inserts)
+    # if max_possible_inserts < min_inserts:
+    #     return text
+    num_inserts = random.randint(min_inserts, min(len(loinc_names), max_inserts))
 
-    # Select unique indices to insert at
-    indices_to_insert = sorted(random.sample(range(len(words)), num_inserts), reverse=True)
+    # Select indices to insert at (can repeat)
+    indices_to_insert = [random.randrange(len(words) + 1) for _ in range(num_inserts)]
 
     # Select unique LOINC names to insert
     loinc_names_to_insert = random.sample(loinc_names, num_inserts)
