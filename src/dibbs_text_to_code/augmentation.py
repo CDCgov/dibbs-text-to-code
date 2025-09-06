@@ -53,17 +53,20 @@ def random_char_deletion(
         return text
 
     deletion_count = random.randint(min_deletions, max_deletions)
+    print(f"DCOUNT: {deletion_count}")
 
     words = text.split()
     words_details = {}
     delete_indices = []
     for i, word in enumerate(words):
-        for x in re.finditer(word, text):
-            indexes = {"word": x.group, "start": x.start(), "end": x.end}
+        for m in re.finditer(word, text):
+            indexes = {"word": m.group(), "start": m.start(), "end": m.end() - 1}
             words_details[i] = indexes
 
     if method == "word":
-        word_to_modify = random.randint(0, len(words))
+        print(f"LW: {len(words)}")
+        word_to_modify = random.randint(0, len(words) - 1)
+        print(f"WM: {word_to_modify}")
         word_detail = words_details[word_to_modify]
         delete_indices = get_delete_indices(word_detail, deletion_count, max_deletions_per_word)
 
@@ -71,16 +74,22 @@ def random_char_deletion(
         total_deletes = deletion_count
         words_modified = []
 
-        while total_deletes > 0 or len(words_modified) < words:
+        while total_deletes > 0:
+            if len(words_modified) == len(words) or len(delete_indices) == deletion_count:
+                break
+            print(f"Total DELS: {total_deletes}")
             word_delete_count = random.randint(1, total_deletes)
-            total_deletes = total_deletes - word_delete_count
-            word_to_modify = random.randint(0, len(words))
+            print(f"WORD DEL: {word_delete_count}")
+            word_to_modify = random.randint(0, len(words) - 1)
             while word_to_modify in words_modified:
-                word_to_modify = random.randint(0, len(words))
+                word_to_modify = random.randint(0, len(words) - 1)
             words_modified.append(word_to_modify)
             word_detail = words_details[word_to_modify]
-            delete_indices.append(get_delete_indices(word_detail, word_delete_count, max_deletions))
+            delete_indices.extend(get_delete_indices(word_detail, word_delete_count, max_deletions))
+            total_deletes = total_deletes - word_delete_count
+            # print(f"WORDS MOD LIST: {words_modified}")
 
+    print(f"DEL INDS: {delete_indices}")
     result_chars = [char for i, char in enumerate(text) if i not in delete_indices]
     return "".join(result_chars)
 
@@ -89,24 +98,28 @@ def get_delete_indices(word_details: dict, delete_count: int, max_deletes: int) 
     """
     Gets the indexes of the characters that are to be deleted with some rules
     """
+    actual_word = word_details.get("word")
 
     if max_deletes > 0 and delete_count > max_deletes:
         sample_count = max_deletes
     else:
         sample_count = delete_count
 
-    if sample_count > len(word_details.get("word")):
-        sample_count = len(word_details.get("word"))
+    if sample_count > len(actual_word):
+        sample_count = len(actual_word)
 
     word_start = word_details.get("start")
     word_end = word_details.get("end")
+    print(f"WORD: {actual_word}, START: {word_start}, END: {word_end}")
 
     delete_indices = []
     # loop through this for delete count
     for i in (1, sample_count):
         delete_index = random.randint(word_start, word_end)
+        print(f"DEL INDEXA: {delete_index}")
         while delete_index in delete_indices:
             delete_index = random.randint(word_start, word_end)
-        delete_indices.append(random.randint(word_start, word_end))
+        print(f"DEL INDEXB: {delete_index}")
+        delete_indices.append(delete_index)
 
     return delete_indices

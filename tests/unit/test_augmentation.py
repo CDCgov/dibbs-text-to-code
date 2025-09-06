@@ -24,3 +24,19 @@ class TestScrambleWordOrder:
     def test_scramble_word_order(self, text, max_perms, expected):
         result = augmentation.scramble_word_order(text, max_perms=max_perms)
         assert result == expected
+
+
+class TestCharDeletion:
+    def test_random_char_deletion(self):
+        test_string = "HERE IS my TEST09: string       yes  crudblahtest    "
+        result = augmentation.random_char_deletion(test_string, 3, 8, 2, "char")
+        print(f"STR {len(test_string)}: {test_string}")
+        print(f"HERE {len(result)}: {result}")
+        assert test_string != result
+
+    def test_random_char_deletion_word(self):
+        test_string = "HERE IS my TEST09: string       yes  crudblahtest    "
+        result = augmentation.random_char_deletion(test_string, 1, 2, 2, "word")
+        print(f"STR {len(test_string)}: {test_string}")
+        print(f"HERE {len(result)}: {result}")
+        assert 1 == 2
