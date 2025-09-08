@@ -49,9 +49,6 @@ def insert_loinc_related_names(
         return text
 
     # Ensure num_inserts does not exceed the number of loinc_names
-    # max_possible_inserts = min(len(loinc_names), len(words), max_inserts)
-    # if max_possible_inserts < min_inserts:
-    #     return text
     num_inserts = random.randint(min_inserts, min(len(loinc_names), max_inserts))
 
     # Select indices to insert at (can repeat)
