@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
 LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
