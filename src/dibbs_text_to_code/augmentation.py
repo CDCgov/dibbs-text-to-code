@@ -65,9 +65,15 @@ def random_char_deletion(
     :return: The text with words scrambled.
     """
 
-    # no deletion number passed in or incorrect mode selected
+    # if incorrect deletion number range passed in
+    # or incorrect mode selected
     # return the original string
-    if min_deletions <= 0 or max_deletions <= 0 or method not in DELETE_METHODS:
+    if (
+        min_deletions < 0
+        or min_deletions > max_deletions
+        or max_deletions <= 0
+        or method not in DELETE_METHODS
+    ):
         # TODO: log some info here?
         return text
 
@@ -142,6 +148,8 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     related to maximum deletes per word.
     """
     actual_word = word_details.get("word")
+    if not actual_word:
+        return []
 
     # ensure the number of deletes for this word
     # does not exceed max deletes per word.
