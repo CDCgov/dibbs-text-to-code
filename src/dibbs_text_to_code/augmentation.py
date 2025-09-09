@@ -199,15 +199,16 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     # Keep getting random characters from word
     # to delete until number of deletes (sample_count) is reached
     while len(delete_indices) < sample_count:
-        delete_index = random.randint(word_start, word_end)
-        # print(f"DEL IND (Initial): {delete_index}")
-        my_count = 0
-        # ensure that index hasn't already been selected for delete
-        while delete_index in delete_indices:
-            # print(f"DEL IND (LOOP) {my_count}: {delete_index}")
-            delete_index = random.randint(word_start, word_end)
-            my_count = my_count + 1
-        delete_indices.append(delete_index)
+        if word_start and word_end:
+            delete_index = random.randint(int(word_start), int(word_end))
+            # print(f"DEL IND (Initial): {delete_index}")
+            my_count = 0
+            # ensure that index hasn't already been selected for delete
+            while delete_index in delete_indices:
+                # print(f"DEL IND (LOOP) {my_count}: {delete_index}")
+                delete_index = random.randint(word_start, word_end)
+                my_count = my_count + 1
+            delete_indices.append(delete_index)
 
         # print(f"IND LIST: {delete_indices}")
     # print(f"FINAL IND LIST: {delete_indices}")
