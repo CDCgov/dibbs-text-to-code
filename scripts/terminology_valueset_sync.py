@@ -26,6 +26,10 @@ import os
 import sys
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Set Terminology URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -33,7 +37,7 @@ LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
 LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
 LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
 HL7_LAB_INTERP_URL = (
-    "https://www.fhir.org/guides/stats2/valueset-us.nlm.vsac-2.16.840.1.113883.1.11.78.json"
+    "https://terminology.hl7.org/2.1.0/CodeSystem-v3-ObservationInterpretation.json"
 )
 UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
@@ -90,6 +94,7 @@ def get_umls_snomed_lab_values():  # noqa: D103
 def get_hl7_lab_interp():  # noqa: D103
     hl7_filename = "hl7_lab_interp.csv"
     hl7_response = requests.get(HL7_LAB_INTERP_URL)
+    hl7_rows = []
 
     if hl7_response.status_code != 200:
         print(
@@ -97,20 +102,27 @@ def get_hl7_lab_interp():  # noqa: D103
             file=sys.stderr,
         )
         sys.exit(1)
-    hl7_codes = hl7_response.json().get("compose").get("include")[0].get("concept")
+    hl7_codes = hl7_response.json().get("concept")
 
     if hl7_codes is not None:
-        record_count = hl7_response.json().get("expansion").get("total")
+        record_count = len(hl7_codes)
         print(f"HL7 Lab Interpretation Record Count: {record_count}")
 
-        # replace 'display' key with 'text
-        key_replacements = {"display": "text"}
         for hl7_row in hl7_codes:
-            for old_key, new_key in key_replacements.items():
-                if old_key in hl7_row:
-                    hl7_row[new_key] = hl7_row[old_key]
-                    del hl7_row[old_key]
-        save_valueset_csv_file(hl7_filename, hl7_codes)
+            hl7_code = hl7_row.get("code")
+            hl7_text = hl7_row.get("display")
+            # NOTE: we can add back in the definition as description, but there are some
+            # special character filtering we may need to do and some of the
+            # data in this field could clutter things up
+            # hl7_desc = hl7_row.get("definition")
+            if (
+                hl7_code
+                and not hl7_code.startswith(("_", "Observation", "OBX", "ReactivityObs"))
+                and hl7_text
+            ):
+                result_row = {"code": hl7_code, "text": hl7_text}
+                hl7_rows.append(result_row)
+        save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
 def get_loinc_lab_names():  # noqa: D103
@@ -191,12 +203,11 @@ def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D10
 
 def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:  # noqa: D103
     result_code = loinc_result.get("LOINC_NUM")
+    result_row = {"code": result_code}
     if loinc_result.get("SHORTNAME") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("SHORTNAME")}
-        loinc_order_rows.append(result_row)
+        result_row["short_name"] = loinc_result.get("SHORTNAME")
     if loinc_result.get("LONG_COMMON_NAME") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("LONG_COMMON_NAME")}
-        loinc_order_rows.append(result_row)
+        result_row["long_name"] = loinc_result.get("LONG_COMMON_NAME")
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
@@ -205,16 +216,15 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
 
     # More human centered name for the concept
     if loinc_result.get("DisplayName") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("DisplayName")}
-        loinc_order_rows.append(result_row)
+        result_row["display_name"] = loinc_result.get("DisplayName")
     # Paragraph of information concerning the concept/code/term in question
     if loinc_result.get("DefinitionDescription") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("DefinitionDescription")}
-        loinc_order_rows.append(result_row)
+        result_row["definition_desc"] = loinc_result.get("DefinitionDescription")
     # ';' separated list of related terms to the concept/code/term in question
     if loinc_result.get("RELATEDNAMES2") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("RELATEDNAMES2")}
-        loinc_order_rows.append(result_row)
+        result_row["related_names"] = loinc_result.get("RELATEDNAMES2")
+
+    loinc_order_rows.append(result_row)
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
@@ -247,12 +257,15 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print("Empty file contents!  Failed to save CSV!")
         return
 
+    if not os.path.exists(CSV_DIRECTORY):
+        os.makedirs(CSV_DIRECTORY)
+
     try:
         full_file_path = os.path.join(CSV_DIRECTORY, filename)
         csv_headers = contents[0].keys()
 
         with open(full_file_path, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, csv_headers)
+            writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
             writer.writeheader()
             writer.writerows(contents)
         print(f"CSV File successfully saved as {full_file_path}")
@@ -271,15 +284,21 @@ def main(  # noqa: D103
     lab_interp: bool,
     lab_names: bool,
 ):  # noqa: D103
+    print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
+        print("Getting LOINC Lab Orders...")
         get_loinc_lab_orders()
     if all_vs or lab_obs:
+        print("Getting LOINC Lab Observations...")
         get_loinc_lab_results()
     if all_vs or lab_values:
+        print("Getting SNOMED Lab Result Values...")
         get_umls_snomed_lab_values()
     if all_vs or lab_interp:
+        print("Getting HL7 Lab Result Interpretations...")
         get_hl7_lab_interp()
     if all_vs or lab_names:
+        print("Getting LOINC Lab Names...")
         get_loinc_lab_names()
 
 

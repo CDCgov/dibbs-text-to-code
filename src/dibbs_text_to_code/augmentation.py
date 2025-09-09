@@ -213,3 +213,35 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     # print(f"FINAL IND LIST: {delete_indices}")
 
     return delete_indices
+
+
+def insert_loinc_related_names(
+    text: str, loinc_names: list[str], max_inserts: int, min_inserts: int = 1
+) -> str:
+    """
+    Inserts 1 or more LOINC related names into the input text at random positions.
+
+    :param text: The input text to modify.
+    :param loinc_names: A list of LOINC related names to insert.
+    :param num_inserts: The number of LOINC names to insert.
+    :return: The text with LOINC related name(s) inserted.
+    """
+    words = text.split()
+    if not loinc_names or len(words) < 1:
+        return text
+
+    # Ensure num_inserts does not exceed the number of loinc_names
+    num_inserts = random.randint(min_inserts, min(len(loinc_names), max_inserts))
+
+    # Select indices to insert at (can repeat)
+    indices_to_insert = [random.randrange(len(words) + 1) for _ in range(num_inserts)]
+
+    # Select unique LOINC names to insert
+    loinc_names_to_insert = random.sample(loinc_names, num_inserts)
+
+    for _ in range(num_inserts):
+        name_to_insert = loinc_names_to_insert.pop()
+        idx_to_insert = indices_to_insert.pop()
+        words.insert(idx_to_insert, name_to_insert)
+
+    return " ".join(words)
