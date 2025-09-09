@@ -1,0 +1,10 @@
+{
+    0: {'word': '5-Hydroxytryptophan', 'start': 0, 'end': 18
+    },
+    1: {'word': 'e', 'start': 41, 'end': 41
+    },
+    2: {'word': 'in', 'start': 39, 'end': 40
+    },
+    3: {'word': 'Urine', 'start': 37, 'end': 41
+    }
+}

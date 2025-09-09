@@ -27,16 +27,43 @@ class TestScrambleWordOrder:
 
 
 class TestCharDeletion:
+    LOINC_LAB_TEXT_1 = "5-Hydroxytryptophan [Measurement] in Urine"
+    LOINC_LAB_TEXT_2 = "6-oxo-piperidine-2-carboxylate and 6(R+S)-oxo-propylpiperidine-2-carboxylate panel - Urine and Serum or Plasma"
+    LOINC_LAB_TEXT_3 = "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration in an ontological view. Additionally, it can be used to communicate a laboratory order, either alone or in combination with specimen or other information in the order. It may NOT be used to report back the measured patient value."
+
+    def test_random_deletion_bad_min(self):
+        result = augmentation.random_char_deletion(self.LOINC_LAB_TEXT_1, -1, 10, 1, "char")
+        assert result == self.LOINC_LAB_TEXT_1
+
+    def test_randcom_deletion_bad_max(self):
+        result = augmentation.random_char_deletion(self.LOINC_LAB_TEXT_2, 1, 0, 1, "char")
+        assert result == self.LOINC_LAB_TEXT_2
+
+    def test_random_deletion_bad_method(self):
+        result = augmentation.random_char_deletion(self.LOINC_LAB_TEXT_3, 1, 10, 2, "test")
+        assert result == self.LOINC_LAB_TEXT_3
+
     def test_random_char_deletion(self):
-        test_string = "HERE IS my TEST09: string       yes  crudblahtest    "
+        test_string = self.LOINC_LAB_TEXT_1
+        expected_result = "5-Hydrotryptophan [easuremen] n rine"
         result = augmentation.random_char_deletion(test_string, 3, 8, 2, "char")
-        print(f"STR {len(test_string)}: {test_string}")
-        print(f"HERE {len(result)}: {result}")
-        assert test_string != result
+        assert result == expected_result
+
+        test_string = self.LOINC_LAB_TEXT_3
+        expected_result = "This term is intended to collate similar measurements for the C SNOMED CT Collaboration in an ontological view. Additionally, it can be usd to cmmunicate a laboratory order, either alone or in combination with specimen or other information in the order. It may NOT be used to report back the measured patient value."
+        result = augmentation.random_char_deletion(test_string, 3, 15, 4, "char")
+        assert result == expected_result
 
     def test_random_char_deletion_word(self):
-        test_string = "HERE IS my TEST09: string       yes  crudblahtest    "
+        test_string = self.LOINC_LAB_TEXT_2
+        expected_result = "6-oxo-piperidine-2-carbxylate and 6(R+S)-oxo-propylpiperidine-2-carboxylate panel - Urine and Serum or Plasma"
         result = augmentation.random_char_deletion(test_string, 1, 2, 2, "word")
-        print(f"STR {len(test_string)}: {test_string}")
-        print(f"HERE {len(result)}: {result}")
-        assert 1 == 2
+        assert len(test_string) == len(result) + 1
+        assert result == expected_result
+
+    def test_random_char_deletion_word_gt_max(self):
+        test_string = self.LOINC_LAB_TEXT_2
+        expected_result = "6-oxo-piperidine-2-carboxylate  6(R+S)-oxo-propylpiperidine-2-carboxylate panel - Urine and Serum or Plasma"
+        result = augmentation.random_char_deletion(test_string, 4, 10, 3, "word")
+        assert len(test_string) == len(result) + 3
+        assert result == expected_result
