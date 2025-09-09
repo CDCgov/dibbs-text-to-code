@@ -173,21 +173,21 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     # does not exceed max deletes per word.
     # If it does just use the max delete per word
     # as the ceiling of deletes.
-    print(f"DEL COUNT (BEFORE): {delete_count}")
-    print(f"DEL MAX: {max_deletes}")
+    # print(f"DEL COUNT (BEFORE): {delete_count}")
+    # print(f"DEL MAX: {max_deletes}")
 
     if max_deletes > 0 and delete_count > max_deletes:
         sample_count = max_deletes
     else:
         sample_count = delete_count
-    print(f"DEL COUNT (after): {sample_count}")
+    # print(f"DEL COUNT (after): {sample_count}")
 
     # if number of deletes exceeds the length of
     # the word selected, just delete the whole word
     # TODO: Should we limit this or will this work?
     if sample_count > len(actual_word):
         sample_count = len(actual_word)
-    print(f"DEL COUNT (after2): {sample_count}")
+    # print(f"DEL COUNT (after2): {sample_count}")
 
     # get indices of word within input text
     # ensures if repeating words in text that
@@ -199,16 +199,15 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     # Keep getting random characters from word
     # to delete until number of deletes (sample_count) is reached
     while len(delete_indices) < sample_count:
-        if word_start and word_end:
-            delete_index = random.randint(int(word_start), int(word_end))
-            # print(f"DEL IND (Initial): {delete_index}")
-            my_count = 0
-            # ensure that index hasn't already been selected for delete
-            while delete_index in delete_indices:
-                # print(f"DEL IND (LOOP) {my_count}: {delete_index}")
-                delete_index = random.randint(word_start, word_end)
-                my_count = my_count + 1
-            delete_indices.append(delete_index)
+        delete_index = random.randint(int(word_start), int(word_end))
+        # print(f"DEL IND (Initial): {delete_index}")
+        my_count = 0
+        # ensure that index hasn't already been selected for delete
+        while delete_index in delete_indices:
+            # print(f"DEL IND (LOOP) {my_count}: {delete_index}")
+            delete_index = random.randint(word_start, word_end)
+            my_count = my_count + 1
+        delete_indices.append(delete_index)
 
         # print(f"IND LIST: {delete_indices}")
     # print(f"FINAL IND LIST: {delete_indices}")
