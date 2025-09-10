@@ -58,8 +58,8 @@ def random_char_deletion(
         per word in the input text.  If the random number of deletes exceeds
         this input, the excess deletes will be ignored. The default is 0.
     :param method: Two methods can be chosen.
-        word - delete random characters from a random word in the input text.
-        char - delete random characters from randomly selected words in the
+        word - pick a single word and delete up to `max_deletions_per_word` chars from it.
+        char - spread deletions across random words, respecting `max_deletions_per_word`.
             input text.
         The default is set to 'char'
     :return: The text with words scrambled.
