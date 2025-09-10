@@ -140,7 +140,7 @@ def predict_and_evaluate_validation_set(
         # Check if correct answer is in the returned search results
         correct_in_top_k = False
         for h in hits:
-            mapped_sentence = standard_loinc_names[h["corpus_id"]]
+            mapped_sentence = standard_loinc_names[h["corpus_id"]]  # ty: ignore
             if mapped_sentence == correct_code:
                 correct_in_top_k = True
                 break
