@@ -1,7 +1,6 @@
 import random
 import re
-
-DELETE_METHODS = ["char", "word"]
+import typing
 
 
 def scramble_word_order(
@@ -38,10 +37,10 @@ def scramble_word_order(
 
 def random_char_deletion(
     text: str,
-    min_deletions: int,
-    max_deletions: int,
+    min_deletions: int = 1,
+    max_deletions: int = 1,
     max_deletions_per_word: int = 0,
-    method: str = "char",
+    method: typing.Literal["char", "word"] = "char",
 ) -> str:
     """
     This function randomly deletes characters from a string.  Two modes can be
@@ -65,24 +64,15 @@ def random_char_deletion(
     :return: The text with words scrambled.
     """
 
-    # if incorrect deletion number range passed in
-    # or incorrect mode selected
-    # return the original string
-    if (
-        min_deletions < 0
-        or min_deletions > max_deletions
-        or max_deletions <= 0
-        or method not in DELETE_METHODS
-    ):
-        # TODO: log some info here?
+    if min_deletions < 0 or max_deletions < 1:
         return text
-
-    # get random number of deletes within specified range
-    deletion_count = random.randint(min_deletions, max_deletions)
 
     words = text.split()
     words_details = {}
     delete_indices = []
+
+    # get random number of deletes within specified range
+    deletion_count = min(random.randint(min_deletions, max_deletions), len(words) - 1)
 
     # get indexes of start and end of each word
     # within given string and store them in dict
@@ -157,15 +147,15 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     # If it does just use the max delete per word
     # as the ceiling of deletes.
     if max_deletes > 0 and delete_count > max_deletes:
-        sample_count = max_deletes
+        final_delete_count = max_deletes
     else:
-        sample_count = delete_count
+        final_delete_count = delete_count
 
     # if number of deletes exceeds the length of
     # the word selected, just delete the whole word
     # TODO: Should we limit this or will this work?
-    if sample_count > len(actual_word):
-        sample_count = len(actual_word)
+    if final_delete_count > len(actual_word):
+        final_delete_count = len(actual_word)
 
     # get indices of word within input text
     # ensures if repeating words in text that
@@ -176,15 +166,11 @@ def _get_delete_indices(word_details: dict, delete_count: int, max_deletes: int)
     delete_indices = []
     # Keep getting random characters from word
     # to delete until number of deletes (sample_count) is reached
-    while len(delete_indices) < sample_count:
-        # added int() here because of the ty check on our repo
+    while len(delete_indices) < final_delete_count:
         delete_index = random.randint(int(word_start), int(word_end))
-        my_count = 0
         # ensure that index hasn't already been selected for delete
         while delete_index in delete_indices:
-            # added int() here because of the ty check on our repo
             delete_index = random.randint(int(word_start), int(word_end))
-            my_count = my_count + 1
         delete_indices.append(delete_index)
 
     return delete_indices
