@@ -115,7 +115,7 @@ def random_char_deletion(
     return " ".join(words)
 
 
-def _delete_chars_from_word(word: str, delete_count: int, max_deletes: int) -> list[int]:
+def _delete_chars_from_word(word: str, delete_count: int, max_deletes: int) -> str:
     """
     Deletes random character indices of the input word under the
     max_deletes specified per word.
