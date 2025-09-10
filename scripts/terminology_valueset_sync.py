@@ -48,11 +48,6 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
-# LOINC Text Keys
-LOINC_SKIP_TEXT = (
-    "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
-)
-
 # CSV file settings
 CSV_DIRECTORY = "tmp/"
 
@@ -225,25 +220,6 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
         result_row["related_names"] = loinc_result.get("RELATEDNAMES2")
 
     loinc_order_rows.append(result_row)
-
-    # Adding additional fields to extract terms from to help supplement
-    # data for learning in our models
-    # NOTE: We can change/remove these additional fields later or even
-    #  make them configurable
-
-    # More human centered name for the concept
-    if loinc_result.get("DisplayName") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("DisplayName")}
-        loinc_order_rows.append(result_row)
-    # Paragraph of information concerning the concept/code/term in question
-    if loinc_result.get("DefinitionDescription") is not None:
-        if not loinc_result.get("DefinitionDescription").startswith(LOINC_SKIP_TEXT):
-            result_row = {"code": result_code, "text": loinc_result.get("DefinitionDescription")}
-            loinc_order_rows.append(result_row)
-    # ';' separated list of related terms to the concept/code/term in question
-    if loinc_result.get("RELATEDNAMES2") is not None:
-        result_row = {"code": result_code, "text": loinc_result.get("RELATEDNAMES2")}
-        loinc_order_rows.append(result_row)
 
     return loinc_order_rows
 
