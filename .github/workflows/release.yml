@@ -7,7 +7,7 @@ name: "release"
 #   - create a published release [release]
 #   - post the release info to Slack [release]
 #
-#   NOTE: This workflow is dependent on the scripts/version_name.sh script.
+#   NOTE: This workflow is dependent on the dev_scripts/version_name.sh script.
 #   This script needs to generate a version number that starts with "v".
 #   This can either be the current version or a future version, depending
 #   on how the project versioning is handled.
@@ -33,7 +33,7 @@ jobs:
 
       - name: Next tag
         run: |
-          next_tag=$(scripts/version_name.sh)
+          next_tag=$(dev_scripts/version_name.sh)
           echo "Next tag: $next_tag"
           echo "NEXT_TAG=$next_tag" >> $GITHUB_ENV
 
@@ -84,7 +84,7 @@ jobs:
 
       - name: Next tag
         run: |
-          next_tag=$(scripts/version_name.sh)
+          next_tag=$(dev_scripts/version_name.sh)
           echo "Next tag: $next_tag"
           echo "NEXT_TAG=$next_tag" >> $GITHUB_ENV
           # If a version tag triggered, then its NOT a draft release
