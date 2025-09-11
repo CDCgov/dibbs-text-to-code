@@ -1,5 +1,7 @@
 import random
+import re
 import typing
+from typing import Tuple
 
 
 def scramble_word_order(
@@ -34,115 +36,149 @@ def scramble_word_order(
     return " ".join(words)
 
 
+def _word_deletion(
+    del_count: int, words: list[str], word_details: dict, max_dels: int
+) -> list[int]:
+    delete_indices = []
+
+    while len(delete_indices) < del_count:
+        word_to_modify = random.randint(0, len(words) - 1)
+        word_detail = word_details[word_to_modify]
+        word_text = word_detail["word"]
+        word_start = word_detail["start"]
+        word_end = word_detail["end"]
+        word_dels = word_detail["dels"]
+
+        # ensure the word hasn't gone over the max_dels per word
+        # or greater than the length of the word
+        if len(word_dels) == max_dels or len(word_dels) == len(word_text):
+            continue
+
+        del_ind = -1
+        # ensure that this character hasn't already been marked for delete
+        while del_ind == -1:
+            idx = random.randint(int(word_start), int(word_end))
+            if idx not in delete_indices and idx not in word_dels:
+                del_ind = idx
+
+        delete_indices.append(idx)
+        word_details[word_to_modify].get("dels").append(idx)
+
+    return delete_indices
+
+
+def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> Tuple[int, dict]:
+    for key, word_deets in word_details.items():
+        if char_idx in range(int(word_deets["start"]), int(word_deets["end"])):
+            return int(key), word_deets
+
+    return 0, None
+
+
+def _char_deletion(
+    del_count: int, char_indices: list[int], word_details: dict, max_dels: int
+) -> list[int]:
+    delete_indices = []
+
+    while len(delete_indices) < del_count:
+        char_to_modify = random.choice(char_indices)
+
+        # ensure this char isn't already marked for delete
+        if char_to_modify in delete_indices:
+            continue
+
+        word_idx, word_detail = _get_word_detail_by_char_range(word_details, char_to_modify)
+
+        # make sure word details are found
+        if not word_detail:
+            continue
+
+        word_text = word_detail["word"]
+        word_dels = word_detail["dels"]
+
+        # ensure the char to delete isn't in a word
+        # that already has the max number of deletes
+        # applied
+        if len(word_dels) == max_dels or len(word_dels) == len(word_text):
+            continue
+
+        delete_indices.append(char_to_modify)
+        word_details[word_idx].get("dels").append(char_to_modify)
+
+    return delete_indices
+
+
 def random_char_deletion(
     text: str,
-    min_deletions: int = 1,
-    max_deletions: int = 1,
-    max_deletions_per_word: int = 0,
+    min_dels: int = 1,
+    max_dels: int = 3,
+    max_per_word: int = 2,
     method: typing.Literal["char", "word"] = "char",
 ) -> str:
     """
     This function randomly deletes characters from a string.  Two modes can be
-    selected.  'word' mode will randomly select a word from the string
-    and delete a random number of characters, lower than the max_deletions_per_word
-    specified.  'char' mode will randomly select a series of words from the string
-    and delete a random number of characters from that word, below the specified
-    max_deletions_per_word.
+    selected.
+    'word' mode will randomly select words, which will then have characters
+    randomly selected for deletion as long as the number of deletions per each word
+    is below the max per word threshold.
+    'char' mode will randomly select a series characters from the string, skipping
+    any spaces, for deletion, ensuring that all words do not have more than the max
+    per word deletions selected.
+    The randomly select characters from both are removed from the input text and
+    the result is returned.
 
     :param text: The input text to delete characters from.
-    :param min_deletions: The minimum number of characters to delete.
-    :param max_deletions: The maximum number of characters to delete.
-    :param max_deletions_per_word: The maximum number of characters to delete
+    :param min_dels: The minimum number of characters to delete. Defaults to 1.
+    :param max_dels: The maximum number of characters to delete. Defaults to 3
+    :param max_per_word: The maximum number of characters to delete
         per word in the input text.  If the random number of deletes exceeds
-        this input, the excess deletes will be ignored. The default is 0.
-    :param method: Two methods can be chosen.
-        word - pick a single word and delete up to `max_deletions_per_word` chars from it.
-        char - spread deletions across random words, respecting `max_deletions_per_word`.
-            input text.
+        this input, the excess deletes will be ignored. The default is 2.
+    :param method: Two methods can be chosen 'word' or 'char'.
         The default is set to 'char'
-    :return: The text with words scrambled.
+    :return: The text with characters deleted.
     """
 
-    if min_deletions < 0 or max_deletions < 1:
-        return text
+    words = text.strip().split()
+    char_indices = [i for i, char in enumerate(text) if char not in (" ")]
+    words_details = {}
+    delete_indices = []
 
-    words = text.split()
+    # get indexes of start and end of each word
+    # within given string and store them in dict
+    # for use later. Ensures randomness in word selection
+    # even with repeating words in the string
+    starting_char = 0
+    for i, word in enumerate(words):
+        for m in re.finditer(re.escape(word), text):
+            indexes = {
+                "word": m.group(),
+                "start": m.start(),
+                "end": m.end() - 1,
+                "dels": [],
+            }
+            # ensure only the next first instance of the word is
+            # used to create the next word detail record
+            if m.start() >= starting_char and not words_details.get(i):
+                words_details[i] = indexes
+                starting_char = m.end()
 
     # get random number of deletes within specified range
-    deletion_count = min(random.randint(min_deletions, max_deletions), len(words) - 1)
+    deletion_count = min(random.randint(min_dels, max_dels), len(words) - 1)
+
+    # ensure the deletion count is not bigger than all the word characters
+    if deletion_count > len(char_indices):
+        deletion_count = len(char_indices - 1)
 
     ####### word method ######
-    # take random word and find random delete indices
-    # for chars in the word under the max number of deletes per word
     if method == "word":
-        word_to_modify = random.randint(0, len(words) - 1)
-        words[word_to_modify] = _delete_chars_from_word(
-            words[word_to_modify], deletion_count, max_deletions_per_word
-        )
+        delete_indices = _word_deletion(deletion_count, words, words_details, max_per_word)
 
     ####### char method ######
-    # select multiple random words and randomly get char indices for delete
-    # for each word until delete count is reached, making sure each word
-    # doesn't have more deletes in it above the max number of deletes per word.
-    # Each word in the string will only be modified once.
     elif method == "char":
-        total_deletes = deletion_count
-        words_modified = []
+        delete_indices = _char_deletion(deletion_count, char_indices, words_details, max_per_word)
 
-        # loop through delete count
-        while total_deletes > 0:
-            # exit loop if every word in string has already been modified
-            # or if the number of deletes have been met
-            if len(words_modified) == len(words):
-                break
-
-            # get just a portion of the number of deletes to handle for this word
-            word_delete_count = random.randint(1, total_deletes)
-            # select a word from the string randomly
-            word_to_modify = random.randint(0, len(words) - 1)
-            # ensure the word hasn't already been modified
-            while word_to_modify in words_modified:
-                word_to_modify = random.randint(0, len(words) - 1)
-            # add selected word to list of modified words
-            words_modified.append(word_to_modify)
-
-            words[word_to_modify] = _delete_chars_from_word(
-                words[word_to_modify], deletion_count, max_deletions_per_word
-            )
-            total_deletes = total_deletes - word_delete_count
-
-    # reconstruct the string with the modified words delimited by a space
-    return " ".join(words)
-
-
-def _delete_chars_from_word(word: str, delete_count: int, max_deletes: int) -> str:
-    """
-    Deletes random character indices of the input word under the
-    max_deletes specified per word.
-    """
-
-    if not word:
-        return word
-
-    # ensure the number of deletes for this word
-    # does not exceed max deletes per word.
-    # If it does just use the max delete per word
-    # as the ceiling of deletes.
-    if max_deletes > 0 and delete_count > max_deletes:
-        final_delete_count = max_deletes
-    else:
-        final_delete_count = delete_count
-
-    # if number of deletes exceeds the length of
-    # the word selected, just delete the whole word
-    # TODO: Should we limit this or will this work?
-    if final_delete_count > len(word):
-        final_delete_count = len(word)
-
-    word_chars = list(word)
-    delete_indices = random.sample(range(len(word_chars)), final_delete_count)
-    result_chars = [char for i, char in enumerate(word_chars) if i not in delete_indices]
-
+    # reconstruct the string by reconstructing the chars that aren't delete indices
+    result_chars = [char for i, char in enumerate(text) if i not in delete_indices]
     return "".join(result_chars)
 
 
