@@ -3,10 +3,10 @@ from typing import Union
 
 import spacy
 
-import regex_patterns as rp
+import utils.regex_patterns as rp
 
-PART_DESCRIPTION_EXTRACTS_FILE = "snoinc_data_extracts/loinc_codes_with_part_descriptions.csv"
-OUTPUT_SENTENCES_FILE = "training_data_files/part_description_sentences.txt"
+PART_DESCRIPTION_EXTRACTS_FILE = "../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv"
+OUTPUT_SENTENCES_FILE = "../data/training_files/part_description_sentences.txt"
 
 
 def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
