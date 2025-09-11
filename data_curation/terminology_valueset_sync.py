@@ -22,6 +22,7 @@ Requirements:
 
 import argparse
 import csv
+import datetime
 import os
 import sys
 
@@ -49,13 +50,13 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
-CSV_DIRECTORY = "tmp/"
+CSV_DIRECTORY = "./data"
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
-    snomed_filename = "snomed_lab_value.csv"
+    snomed_filename = f"snomed_lab_value_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     page_num = 1
     page_size = 500
     params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": page_size}
@@ -87,7 +88,7 @@ def get_umls_snomed_lab_values():  # noqa: D103
 
 
 def get_hl7_lab_interp():  # noqa: D103
-    hl7_filename = "hl7_lab_interp.csv"
+    hl7_filename = f"hl7_lab_interp_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_response = requests.get(HL7_LAB_INTERP_URL)
     hl7_rows = []
 
@@ -122,7 +123,7 @@ def get_hl7_lab_interp():  # noqa: D103
 
 def get_loinc_lab_names():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
-    loinc_filename = "loinc_lab_names.csv"
+    loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_vs_type = "Lab Names"
     loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -131,7 +132,7 @@ def get_loinc_lab_names():  # noqa: D103
 
 def get_loinc_lab_orders():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_ORDER_SUFFIX
-    loinc_filename = "loinc_lab_orders.csv"
+    loinc_filename = f"loinc_lab_orders_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -140,7 +141,7 @@ def get_loinc_lab_orders():  # noqa: D103
 
 def get_loinc_lab_results():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_RESULT_SUFFIX
-    loinc_filename = "loinc_lab_result.csv"
+    loinc_filename = f"loinc_lab_result_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_vs_type = "Lab Results"
     loinc_result_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
