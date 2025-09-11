@@ -253,6 +253,64 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
+def create_loinc_part_abrv_syn_dicts():
+    """
+    Creates single file dictionary for each of the different
+    LOINC parts, which contains each LOINC Part Code, Name
+    and Abbreviations and Synonyms
+    """
+    file_path = "./loinc/LOINC_PARTS_ABRV_SYNONYMS.txt"
+    component_dict = {}
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        reader = csv.DictReader(file, delimiter="|")
+        count = 0
+        for row in reader:
+            part_code = row.get("PART_NUM")
+            axis_name = row.get("PART_TYPE_NAME_NAME")
+            part_name = row.get("PART")
+            repl_name = row.get("PART_NAME")
+            pref_abrv = row.get("PREF_ABRV")
+            synonym = row.get("SYNONYM")
+            existing_row = component_dict.get(part_name)
+            print(f"ROW: {row}")
+            # build component dict
+            if axis_name == "COMPONENT":
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    component_dict[part_name] = existing_row
+
+                if existing_row.get("code") == part_code:
+                    if (
+                        repl_name is not None
+                        and repl_name != part_name
+                        and repl_name not in existing_row.get("replacement")
+                    ):
+                        existing_row["replacement"].append(repl_name)
+                    if (
+                        pref_abrv is not None
+                        and pref_abrv != part_name
+                        and pref_abrv not in existing_row.get("replacement")
+                        and pref_abrv not in existing_row.get("abbr")
+                    ):
+                        existing_row["abbr"].append(pref_abrv)
+
+                    if (
+                        synonym is not None
+                        and synonym != part_name
+                        and synonym not in existing_row.get("replacement")
+                        and synonym not in existing_row.get("abbr")
+                    ):
+                        existing_row["replacement"].append(synonym)
+                    print("********************************************************")
+                    print(f"NEW ROW: {existing_row}")
+
+            print(f"COMP DICT: {component_dict}")
+            if count == 10:
+                break
+            count = count + 1
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -260,6 +318,7 @@ def main(  # noqa: D103
     lab_values: bool,
     lab_interp: bool,
     lab_names: bool,
+    loinc_ab_syn: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -277,6 +336,9 @@ def main(  # noqa: D103
     if all_vs or lab_names:
         print("Getting LOINC Lab Names...")
         get_loinc_lab_names()
+    if all_vs or loinc_ab_syn:
+        print("Getting LOINC Part Abreviations & Synonyms...")
+        create_loinc_part_abrv_syn_dicts()
 
 
 if __name__ == "__main__":
@@ -291,6 +353,17 @@ if __name__ == "__main__":
     parser.add_argument("--lab_values", action="store_true", help="For Snomed Lab Result Values")
     parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
+    parser.add_argument(
+        "--loinc_ab_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
+    )
 
     args = parser.parse_args()
-    main(args.all, args.lab_orders, args.lab_obs, args.lab_values, args.lab_interp, args.lab_names)
+    main(
+        args.all,
+        args.lab_orders,
+        args.lab_obs,
+        args.lab_values,
+        args.lab_interp,
+        args.lab_names,
+        args.loinc_ab_syn,
+    )
