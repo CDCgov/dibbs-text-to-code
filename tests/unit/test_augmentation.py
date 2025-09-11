@@ -1,6 +1,6 @@
 import pytest
 
-from dibbs_text_to_code import augmentation
+from data_curation import augmentation
 
 
 @pytest.mark.parametrize(
