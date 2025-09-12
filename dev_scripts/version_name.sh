@@ -3,7 +3,7 @@
 # Get the name of the version if the commit is tagged, else
 # calculate the next feature version name for the project.
 #
-# Usage: scripts/version_name.sh
+# Usage: dev_scripts/version_name.sh
 #
 # The format of the tag is vM.m.p or vM.m.p-rc.Z, where:
 # - M is the major version
