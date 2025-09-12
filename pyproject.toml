@@ -99,8 +99,10 @@ force-single-line = true
 order-by-type = false
 
 [tool.pytest.ini_options]
+
 testpaths = ["tests/unit"]
-pythonpath = ["src", "tests/unit"]
+
+pythonpath = ["src", "."]
 filterwarnings = [
     "ignore:typing.io is deprecated, import directly from typing instead:DeprecationWarning",
 ]
