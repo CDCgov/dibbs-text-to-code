@@ -8,7 +8,7 @@ def code_root() -> pathlib.Path:
     Returns the root directory of the dibbs_text_to_code source code.
     """
     root = pathlib.Path(__file__).resolve()
-    while root.name != "dibbs_text_to_code":
+    while root.name != "dibbs-text-to-code":
         if root.parent == root:
             raise FileNotFoundError("dibbs_text_to_code project root not found.")
         root = root.parent
