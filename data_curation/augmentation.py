@@ -1,6 +1,10 @@
 import random
 import typing
 
+from utils import path as utils
+
+LOINC_ENHANCEMENTS = utils.read_json("data/loinc_enhancements.json")
+
 
 def scramble_word_order(
     text: str,
@@ -68,8 +72,7 @@ def insert_loinc_related_names(
 
 def enhance_loinc_str(
     text: str,
-    enhancement_type: typing.Literal["abbreviation", "acryonym", "replacement", "all"],
-    enhancements: typing.Dict,
+    enhancement_type: typing.Literal["abbreviation", "replacement", "all"],
     max_enhancements: int,
     min_enhancements: int = 1,
 ) -> str:
@@ -78,23 +81,45 @@ def enhance_loinc_str(
     :param text: The input text to enhance.
     :param enhancement_type: The type of enhancement to apply. Options are:
         - "abbreviation": Replace words with their abbreviations.
-        - "acronym": Replace phrases with their acronyms.
         - "replacement": Replace words with semantically related terms.
         - "all": Apply all of the above techniques.
     :param max_enhancements: The maximum number of enhancements to apply.
     :param min_enhancements: The minimum number of enhancements to apply.
     :return: The enhanced text.
     """
-    words = text.split()
-    print(words)
+    words = [word.lower().strip() for word in text.split()]
 
     # Check that there are words to enhance
-    applicable_enhancements = enhancements.get(enhancements.key)
-    if not applicable_enhancements:
+    possible_words_to_enhance = {}
+    idx = 0
+    for word in words:
+        if len(word) > 2 and word in LOINC_ENHANCEMENTS:
+            possible_words_to_enhance[idx] = word
+        idx += 1
+
+    if not possible_words_to_enhance:
         return text
 
     # Choose number of enhancements to apply
-    num_enhancements = random.randint(min_enhancements, max_enhancements)
-    print(f"Applying {num_enhancements} enhancements of type {enhancement_type}")
+    num_enhancements = random.randint(
+        min_enhancements, min(max_enhancements, len(possible_words_to_enhance))
+    )
 
-    return text
+    for _ in range(num_enhancements):
+        key = random.choice(list(possible_words_to_enhance.keys()))
+        word_to_enhance = possible_words_to_enhance.pop(key).lower().strip()
+
+        possible_enhancements = LOINC_ENHANCEMENTS[word_to_enhance]
+
+        if enhancement_type == "all":
+            # Randomly choose between abbreviation and replacement & randomly pick an enhancement from the available options for the specified type
+            enhancement = random.choice(
+                possible_enhancements[random.choice(["abbreviation", "replacements"])]
+            )
+        else:
+            # Randomly pick an enhancement from the available options for the specified type
+            enhancement = random.choice(possible_enhancements[enhancement_type])
+
+        words[key] = enhancement
+
+    return " ".join(words)
