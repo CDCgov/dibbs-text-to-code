@@ -1,4 +1,5 @@
 import random
+import typing
 
 
 def scramble_word_order(
@@ -63,3 +64,37 @@ def insert_loinc_related_names(
         words.insert(idx_to_insert, name_to_insert)
 
     return " ".join(words)
+
+
+def enhance_loinc_str(
+    text: str,
+    enhancement_type: typing.Literal["abbreviation", "acryonym", "replacement", "all"],
+    enhancements: typing.Dict,
+    max_enhancements: int,
+    min_enhancements: int = 1,
+) -> str:
+    """
+    Enhances the input text by applying specified enhancement techniques.
+    :param text: The input text to enhance.
+    :param enhancement_type: The type of enhancement to apply. Options are:
+        - "abbreviation": Replace words with their abbreviations.
+        - "acronym": Replace phrases with their acronyms.
+        - "replacement": Replace words with semantically related terms.
+        - "all": Apply all of the above techniques.
+    :param max_enhancements: The maximum number of enhancements to apply.
+    :param min_enhancements: The minimum number of enhancements to apply.
+    :return: The enhanced text.
+    """
+    words = text.split()
+    print(words)
+
+    # Check that there are words to enhance
+    applicable_enhancements = enhancements.get(enhancements.key)
+    if not applicable_enhancements:
+        return text
+
+    # Choose number of enhancements to apply
+    num_enhancements = random.randint(min_enhancements, max_enhancements)
+    print(f"Applying {num_enhancements} enhancements of type {enhancement_type}")
+
+    return text
