@@ -23,6 +23,7 @@ Requirements:
 import argparse
 import csv
 import datetime
+import json
 import os
 import sys
 
@@ -253,6 +254,59 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
+def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
+    if not filename.strip():
+        print("No filename supplied.  Failed to save LOINC Part Dictionary!")
+        return
+
+    if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save LOINC Part Dictionary!")
+        return
+
+    if not os.path.exists(CSV_DIRECTORY):
+        os.makedirs(CSV_DIRECTORY)
+
+    try:
+        full_file_path = os.path.join(CSV_DIRECTORY, filename)
+
+        with open(full_file_path, "w", encoding="utf-8") as dictfile:
+            json.dump(contents, dictfile, indent=4)
+        print(f"JSON Dictionary for Loinc Part saved successfully as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+def _get_loinc_abrv_syns(
+    part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
+) -> dict:
+    if loinc_row.get("code") == part_code:
+        if (
+            repl_name is not None
+            and repl_name != part_name
+            and repl_name not in loinc_row.get("replacement")
+        ):
+            loinc_row["replacement"].append(repl_name)
+        if (
+            pref_abrv is not None
+            and pref_abrv != part_name
+            and pref_abrv not in loinc_row.get("replacement")
+            and pref_abrv not in loinc_row.get("abbr")
+        ):
+            loinc_row["abbr"].append(pref_abrv)
+
+        if (
+            synonym is not None
+            and synonym != part_name
+            and synonym not in loinc_row.get("replacement")
+            and synonym not in loinc_row.get("abbr")
+        ):
+            loinc_row["replacement"].append(synonym)
+    return loinc_row
+
+
 def create_loinc_part_abrv_syn_dicts():
     """
     Creates single file dictionary for each of the different
@@ -260,11 +314,23 @@ def create_loinc_part_abrv_syn_dicts():
     and Abbreviations and Synonyms
     """
     file_path = "./loinc/LOINC_PARTS_ABRV_SYNONYMS.txt"
+
+    # Separate LOINC Part Dictionaries
     component_dict = {}
+    method_dict = {}
+    property_dict = {}
+    scale_dict = {}
+    system_dict = {}
+    time_dict = {}
+    component_file = "COMPONENT_ABR_SYN.json"
+    method_file = "METHOD_ABR_SYN.json"
+    property_file = "PROPERTY_ABR_SYN.json"
+    scale_file = "SCALE_ABR_SYN.json"
+    system_file = "SYSTEM_ABR_SYN.json"
+    time_file = "TIME_ABR_SYN.json"
 
     with open(file_path, "r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
-        count = 0
         for row in reader:
             part_code = row.get("PART_NUM")
             axis_name = row.get("PART_TYPE_NAME_NAME")
@@ -272,43 +338,63 @@ def create_loinc_part_abrv_syn_dicts():
             repl_name = row.get("PART_NAME")
             pref_abrv = row.get("PREF_ABRV")
             synonym = row.get("SYNONYM")
-            existing_row = component_dict.get(part_name)
-            print(f"ROW: {row}")
-            # build component dict
+
+            # build various LOINC Part dicts
             if axis_name == "COMPONENT":
+                existing_row = component_dict.get(part_name)
                 if not existing_row:
                     existing_row = {"code": part_code, "abbr": [], "replacement": []}
                     component_dict[part_name] = existing_row
-
-                if existing_row.get("code") == part_code:
-                    if (
-                        repl_name is not None
-                        and repl_name != part_name
-                        and repl_name not in existing_row.get("replacement")
-                    ):
-                        existing_row["replacement"].append(repl_name)
-                    if (
-                        pref_abrv is not None
-                        and pref_abrv != part_name
-                        and pref_abrv not in existing_row.get("replacement")
-                        and pref_abrv not in existing_row.get("abbr")
-                    ):
-                        existing_row["abbr"].append(pref_abrv)
-
-                    if (
-                        synonym is not None
-                        and synonym != part_name
-                        and synonym not in existing_row.get("replacement")
-                        and synonym not in existing_row.get("abbr")
-                    ):
-                        existing_row["replacement"].append(synonym)
-                    print("********************************************************")
-                    print(f"NEW ROW: {existing_row}")
-
-            print(f"COMP DICT: {component_dict}")
-            if count == 10:
-                break
-            count = count + 1
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "METHOD":
+                existing_row = method_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    method_dict[part_name] = existing_row
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "PROPERTY":
+                existing_row = property_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    property_dict[part_name] = existing_row
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SYSTEM":
+                existing_row = system_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    system_dict[part_name] = existing_row
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "TIME":
+                existing_row = time_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    time_dict[part_name] = existing_row
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SCALE":
+                existing_row = scale_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    scale_dict[part_name] = existing_row
+                existing_row = _get_loinc_abrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+    # write each dict out into it's own file
+    save_loinc_part_dict_file(component_file, component_dict)
+    save_loinc_part_dict_file(method_file, method_dict)
+    save_loinc_part_dict_file(property_file, property_dict)
+    save_loinc_part_dict_file(system_file, system_dict)
+    save_loinc_part_dict_file(time_file, time_dict)
+    save_loinc_part_dict_file(scale_file, scale_dict)
 
 
 def main(  # noqa: D103
