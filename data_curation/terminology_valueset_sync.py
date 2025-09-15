@@ -337,6 +337,9 @@ def create_loinc_part_abrv_syn_dicts():
     with open(file_path, "r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
+            # NOTE: the below print statement can be used
+            # to track down errors within the access extract file
+            # for particular rows with character issues
             # print(f"ROW_COUNT: {row_count}")
             row_count = row_count + 1
             part_code = row.get("PART_NUM")
