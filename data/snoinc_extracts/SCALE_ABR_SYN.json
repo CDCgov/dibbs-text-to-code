@@ -1,0 +1,92 @@
+{
+    "Doc": {
+        "code": "LP32888-7",
+        "abbr": [],
+        "replacement": [
+            "Document"
+        ]
+    },
+    "XXX^min": {
+        "code": "LP435512-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "SemiQn": {
+        "code": "LP436123-6",
+        "abbr": [
+            "SmQn"
+        ],
+        "replacement": []
+    },
+    "Nominal": {
+        "code": "LP437507-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Multi": {
+        "code": "LP7748-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "\"Multi\""
+        ]
+    },
+    "Nar": {
+        "code": "LP7749-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Narrative",
+            "Report"
+        ]
+    },
+    "Nom": {
+        "code": "LP7750-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Nominal"
+        ]
+    },
+    "Ord": {
+        "code": "LP7751-3",
+        "abbr": [
+            "Ql"
+        ],
+        "replacement": [
+            "Ordinal",
+            "Qualitative",
+            "Qual",
+            "Screen"
+        ]
+    },
+    "OrdQn": {
+        "code": "LP7752-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Quantitative or Ordinal"
+        ]
+    },
+    "Qn": {
+        "code": "LP7753-9",
+        "abbr": [],
+        "replacement": [
+            "Quantitative",
+            "Quant",
+            "QNT",
+            "Quan"
+        ]
+    },
+    "Set": {
+        "code": "LP7754-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    }
+}

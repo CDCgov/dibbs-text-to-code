@@ -1,0 +1,1969 @@
+{
+    "EntSub": {
+        "code": "LP100323-7",
+        "abbr": [],
+        "replacement": [
+            "Entitic substance"
+        ]
+    },
+    "ClockTime": {
+        "code": "LP101588-4",
+        "abbr": [
+            "Clock time"
+        ],
+        "replacement": []
+    },
+    "EngRatFr": {
+        "code": "LP101814-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "PPresDiff": {
+        "code": "LP101909-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "VFrDiff": {
+        "code": "LP101984-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "MCncDiff": {
+        "code": "LP113965-0",
+        "abbr": [
+            "MCDiff"
+        ],
+        "replacement": []
+    },
+    "RelSRat": {
+        "code": "LP133881-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelMRat": {
+        "code": "LP133882-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "RatDiff": {
+        "code": "LP136159-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "VRtoPctDiff": {
+        "code": "LP145618-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "VPctDiff": {
+        "code": "LP145620-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "AFr": {
+        "code": "LP145812-6",
+        "abbr": [
+            "%"
+        ],
+        "replacement": []
+    },
+    "MCPctDiff": {
+        "code": "LP146762-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "ThrRelRto": {
+        "code": "LP147273-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Pr": {
+        "code": "LP149220-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "ThrRto": {
+        "code": "LP149664-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "NFr.DF": {
+        "code": "LP149697-7",
+        "abbr": [],
+        "replacement": [
+            "Number fraction"
+        ]
+    },
+    "CSub": {
+        "code": "LP149700-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "VFr.DF": {
+        "code": "LP150069-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "MFr.DF": {
+        "code": "LP150070-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "ColorRto": {
+        "code": "LP157151-4",
+        "abbr": [
+            "ColRto"
+        ],
+        "replacement": []
+    },
+    "SFr.DF": {
+        "code": "LP157781-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "CFr.DF": {
+        "code": "LP157782-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "Zscore": {
+        "code": "LP164005-3",
+        "abbr": [
+            "Z-score"
+        ],
+        "replacement": [
+            "Z score",
+            "Standard score",
+            "Z value"
+        ]
+    },
+    "Tscore": {
+        "code": "LP171796-8",
+        "abbr": [
+            "T-score"
+        ],
+        "replacement": []
+    },
+    "PctDiff": {
+        "code": "LP172626-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "MFrDiff": {
+        "code": "LP172735-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "EntSRto": {
+        "code": "LP172736-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "LogRtoElp": {
+        "code": "LP173478-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "MDiff": {
+        "code": "LP173530-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "von Willebrand factor.activity actual/Normal": {
+        "code": "LP182314-7",
+        "abbr": [
+            "vWf:Ac actual/Norm"
+        ],
+        "replacement": []
+    },
+    "Date": {
+        "code": "LP182451-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Range": {
+        "code": "LP185756-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "Likelihood": {
+        "code": "LP185777-2",
+        "abbr": [],
+        "replacement": [
+            "Risk"
+        ]
+    },
+    "Score": {
+        "code": "LP185820-0",
+        "abbr": [],
+        "replacement": [
+            "Scale"
+        ]
+    },
+    "TimeFr": {
+        "code": "LP185982-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "ScoreDiff": {
+        "code": "LP186068-5",
+        "abbr": [],
+        "replacement": [
+            "Score difference"
+        ]
+    },
+    "VFr/PPres": {
+        "code": "LP186992-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "TempDiff": {
+        "code": "LP187131-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "Freq": {
+        "code": "LP187186-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "ScoreRange": {
+        "code": "LP187190-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "ThreshNum": {
+        "code": "LP188772-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "EntLogNum": {
+        "code": "LP193852-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "URI": {
+        "code": "LP199288-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "PPresRto": {
+        "code": "LP199475-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "ArMass": {
+        "code": "LP200147-9",
+        "abbr": [],
+        "replacement": [
+            "MAric"
+        ]
+    },
+    "ArLen": {
+        "code": "LP200148-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "AreaFr": {
+        "code": "LP200149-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "ElpotRto": {
+        "code": "LP201254-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "ArLumTime": {
+        "code": "LP201619-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "LogInvPct": {
+        "code": "LP201643-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "TscoreDiff": {
+        "code": "LP202986-8",
+        "abbr": [],
+        "replacement": [
+            "T-score",
+            "Score difference"
+        ]
+    },
+    "ArArea": {
+        "code": "LP203627-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "SCncSq": {
+        "code": "LP203668-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "MCncSq": {
+        "code": "LP203669-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "LogLenRto": {
+        "code": "LP203678-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "EngCnc": {
+        "code": "LP204133-5",
+        "abbr": [],
+        "replacement": [
+            "Energy concentration"
+        ]
+    },
+    "TmStpRange": {
+        "code": "LP207118-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "ExtendedID": {
+        "code": "LP208396-4",
+        "abbr": [
+            "Ext ID"
+        ],
+        "replacement": []
+    },
+    "EngDiff": {
+        "code": "LP208616-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelEngRat": {
+        "code": "LP208919-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "Scope.modifier.doc template": {
+        "code": "LP212142-6",
+        "abbr": [
+            "Scope.mod.doc temp"
+        ],
+        "replacement": []
+    },
+    "NumRange": {
+        "code": "LP212318-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelSCnc": {
+        "code": "LP21275-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "RlSCnc"
+        ]
+    },
+    "RelTime": {
+        "code": "LP21276-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "RlTm"
+        ]
+    },
+    "PrThr": {
+        "code": "LP217195-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "VCF": {
+        "code": "LP232488-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Osmolarity": {
+        "code": "LP247773-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "RelSoundInt": {
+        "code": "LP266552-1",
+        "abbr": [],
+        "replacement": [
+            "Relative sound intensity"
+        ]
+    },
+    "SCRat": {
+        "code": "LP269826-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "CAct": {
+        "code": "LP30830-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelFldResist": {
+        "code": "LP310434-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "RelCCnc": {
+        "code": "LP31739-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "RlCCnc"
+        ]
+    },
+    "PressDiff": {
+        "code": "LP31921-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "MSCnc": {
+        "code": "LP33032-1",
+        "abbr": [],
+        "replacement": [
+            "Level"
+        ]
+    },
+    "MSRat": {
+        "code": "LP33093-3",
+        "abbr": [
+            "msRate"
+        ],
+        "replacement": []
+    },
+    "Enzymatic Related Properties": {
+        "code": "LP33101-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "Entitic Related Properties (measure per particle)": {
+        "code": "LP33102-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "Count Related Properties": {
+        "code": "LP33104-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "Substance (molar) Related Properties": {
+        "code": "LP33105-5",
+        "abbr": [],
+        "replacement": []
+    },
+    "Volume Related Properties": {
+        "code": "LP33106-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "Arbitrary Properties": {
+        "code": "LP33107-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "Time Properties": {
+        "code": "LP33108-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Other Properties": {
+        "code": "LP33109-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "LnCnc": {
+        "code": "LP33110-5",
+        "abbr": [
+            "Log#"
+        ],
+        "replacement": [
+            "Log NCNC"
+        ]
+    },
+    "Area Properties": {
+        "code": "LP33112-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "Length/Distance Properties": {
+        "code": "LP33113-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Pressure Related Properties": {
+        "code": "LP33114-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "Special Properties": {
+        "code": "LP33116-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "Circumference Related Properties": {
+        "code": "LP33118-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "Scope Modifier": {
+        "code": "LP33120-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "Energy Related Properties": {
+        "code": "LP33121-2",
+        "abbr": [],
+        "replacement": []
+    },
+    "Electrical Related Properties": {
+        "code": "LP33122-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "Threshold Properties": {
+        "code": "LP33123-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "InvLen": {
+        "code": "LP33124-6",
+        "abbr": [],
+        "replacement": [
+            "Inverse Length"
+        ]
+    },
+    "EngRto": {
+        "code": "LP33125-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "Compli": {
+        "code": "LP33126-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "CompliRto": {
+        "code": "LP33127-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Categorical Properties": {
+        "code": "LP33130-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "Special Biologic Properties": {
+        "code": "LP33131-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "Quintile": {
+        "code": "LP33290-5",
+        "abbr": [
+            "Quint"
+        ],
+        "replacement": []
+    },
+    "LaCnc": {
+        "code": "LP34325-8",
+        "abbr": [
+            "Log IU"
+        ],
+        "replacement": [
+            "Log ACNC"
+        ]
+    },
+    "TmMCnc": {
+        "code": "LP343621-1",
+        "abbr": [
+            "AUC"
+        ],
+        "replacement": []
+    },
+    "MAric": {
+        "code": "LP34382-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "Geno": {
+        "code": "LP345004-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "NCncRange": {
+        "code": "LP345057-6",
+        "abbr": [
+            "NCncRng"
+        ],
+        "replacement": []
+    },
+    "RelACnc": {
+        "code": "LP35077-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "RlACnc"
+        ]
+    },
+    "EngCnt": {
+        "code": "LP35765-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "SatFr": {
+        "code": "LP36180-5",
+        "abbr": [],
+        "replacement": [
+            "Saturation Fraction",
+            "RS",
+            "Relative Supersaturation",
+            "Percent"
+        ]
+    },
+    "TmSCnc": {
+        "code": "LP411318-1",
+        "abbr": [
+            "AUC"
+        ],
+        "replacement": []
+    },
+    "Likelihood.DF": {
+        "code": "LP411536-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "LRat": {
+        "code": "LP412244-8",
+        "abbr": [
+            "lRate"
+        ],
+        "replacement": []
+    },
+    "NumDiff": {
+        "code": "LP420419-6",
+        "abbr": [
+            "# diff"
+        ],
+        "replacement": []
+    },
+    "MRatRange": {
+        "code": "LP422181-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelFldConduct": {
+        "code": "LP428396-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "RelInvVI": {
+        "code": "LP428398-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "AUC": {
+        "code": "LP429280-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "TmElpot": {
+        "code": "LP429496-5",
+        "abbr": [
+            "AUC"
+        ],
+        "replacement": []
+    },
+    "Body temperature.max": {
+        "code": "LP430229-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "Elcur": {
+        "code": "LP431008-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "Scale": {
+        "code": "LP434562-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "Doc": {
+        "code": "LP441214-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "Alcoholic drink": {
+        "code": "LP443370-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "SpGrav": {
+        "code": "LP443402-5",
+        "abbr": [
+            "Sp Gr"
+        ],
+        "replacement": []
+    },
+    "Color": {
+        "code": "LP443403-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "EntMCnc": {
+        "code": "LP443404-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "EntSCnc": {
+        "code": "LP443405-8",
+        "abbr": [],
+        "replacement": []
+    },
+    "DistWidth": {
+        "code": "LP443406-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "EntMeanVol": {
+        "code": "LP443407-4",
+        "abbr": [],
+        "replacement": []
+    },
+    "Source": {
+        "code": "LP443466-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "Disposition": {
+        "code": "LP443823-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "RelVel": {
+        "code": "LP444407-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "ElecCond": {
+        "code": "LP446062-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Electrical Conductivity": {
+        "code": "LP446067-3",
+        "abbr": [
+            "ElecCond"
+        ],
+        "replacement": []
+    },
+    "EntMassDiff": {
+        "code": "LP448267-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "Sedimentation Rate": {
+        "code": "LP448341-0",
+        "abbr": [
+            "Sed Rat"
+        ],
+        "replacement": []
+    },
+    "Seq": {
+        "code": "LP62164-6",
+        "abbr": [],
+        "replacement": []
+    },
+    "SCncDiff": {
+        "code": "LP65028-0",
+        "abbr": [
+            "SCDiff"
+        ],
+        "replacement": []
+    },
+    "LnRto": {
+        "code": "LP65260-9",
+        "abbr": [],
+        "replacement": [
+            "Log number ratio",
+            "Log Nrto"
+        ]
+    },
+    "Diam": {
+        "code": "LP66948-8",
+        "abbr": [],
+        "replacement": [
+            "Diameter"
+        ]
+    },
+    "Accel": {
+        "code": "LP6772-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Acceleration"
+        ]
+    },
+    "ACnc": {
+        "code": "LP6773-8",
+        "abbr": [],
+        "replacement": [
+            "Arbitrary Concentration",
+            "Arbitrary concentration"
+        ]
+    },
+    "ACnt": {
+        "code": "LP6774-6",
+        "abbr": [],
+        "replacement": [
+            "Arbitrary Content",
+            "Arbitrary content"
+        ]
+    },
+    "Addr": {
+        "code": "LP6775-3",
+        "abbr": [],
+        "replacement": [
+            "Address"
+        ]
+    },
+    "Aent": {
+        "code": "LP6776-1",
+        "abbr": [],
+        "replacement": [
+            "Arbitrary Entitic",
+            "Arbitrary entitic"
+        ]
+    },
+    "Anat": {
+        "code": "LP6777-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Anatomy"
+        ]
+    },
+    "Angle": {
+        "code": "LP6778-7",
+        "abbr": [],
+        "replacement": []
+    },
+    "Aper": {
+        "code": "LP6779-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Appearance"
+        ]
+    },
+    "ARat": {
+        "code": "LP6780-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Arbitrary Rate",
+            "Arbitrary rate"
+        ]
+    },
+    "Arb": {
+        "code": "LP6781-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Arbitrary"
+        ]
+    },
+    "Area": {
+        "code": "LP6782-9",
+        "abbr": [],
+        "replacement": []
+    },
+    "AreaRto": {
+        "code": "LP6783-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Area Ratio"
+        ]
+    },
+    "ArEnrg": {
+        "code": "LP6784-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Aric Energy",
+            "Aric energy"
+        ]
+    },
+    "ArResis": {
+        "code": "LP6785-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Resistance/Area",
+            "Resistance/area"
+        ]
+    },
+    "ArVol": {
+        "code": "LP6786-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Volume/Area",
+            "Volume/area"
+        ]
+    },
+    "ArVRat": {
+        "code": "LP6787-8",
+        "abbr": [],
+        "replacement": [
+            "Volume Rate/Ratio",
+            "Volume rate/area"
+        ]
+    },
+    "Bib": {
+        "code": "LP6788-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Bibliographic Citation",
+            "Bibliographic citation"
+        ]
+    },
+    "CCnc": {
+        "code": "LP6789-4",
+        "abbr": [],
+        "replacement": [
+            "Catalytic Concentration"
+        ]
+    },
+    "CCnt": {
+        "code": "LP6790-2",
+        "abbr": [],
+        "replacement": [
+            "Catalytic Content"
+        ]
+    },
+    "CRto": {
+        "code": "LP6791-0",
+        "abbr": [],
+        "replacement": [
+            "Catalytic Concentration Ratio",
+            "CCrto",
+            "Enzymatic activity ratio",
+            "Catalytic Ratio"
+        ]
+    },
+    "CFr": {
+        "code": "LP6792-8",
+        "abbr": [],
+        "replacement": [
+            "Catalytic Fraction",
+            "Percent"
+        ]
+    },
+    "Circ": {
+        "code": "LP6793-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Circumference"
+        ]
+    },
+    "CircFr": {
+        "code": "LP6794-4",
+        "abbr": [],
+        "replacement": [
+            "Circumference Fraction",
+            "Circumference fraction",
+            "Percent"
+        ]
+    },
+    "Class": {
+        "code": "LP6795-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Cmplx": {
+        "code": "LP6796-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Complex"
+        ]
+    },
+    "CRat": {
+        "code": "LP6799-3",
+        "abbr": [
+            "cRate"
+        ],
+        "replacement": [
+            "Catalytic Rate"
+        ]
+    },
+    "Desc": {
+        "code": "LP6800-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Description"
+        ]
+    },
+    "Dosage": {
+        "code": "LP6801-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Dose"
+        ]
+    },
+    "Elpot": {
+        "code": "LP6802-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Electrical Potential (Voltage)",
+            "Voltage",
+            "Electrical potential"
+        ]
+    },
+    "ElpotRat": {
+        "code": "LP6803-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Voltage Rate (=Amperage)",
+            "Amperage",
+            "Voltage rate"
+        ]
+    },
+    "EngRat": {
+        "code": "LP6804-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Power = Energy/Time",
+            "Energy/time",
+            "Power"
+        ]
+    },
+    "Enrg": {
+        "code": "LP6805-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Energy"
+        ]
+    },
+    "EntNum": {
+        "code": "LP6806-6",
+        "abbr": [],
+        "replacement": [
+            "Entitic",
+            "Entitic number"
+        ]
+    },
+    "EntCat": {
+        "code": "LP6807-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Entitic Catalytic Activity",
+            "Entitic catalytic activity"
+        ]
+    },
+    "EntLen": {
+        "code": "LP6808-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Entitic Length",
+            "Entitic length"
+        ]
+    },
+    "EntMass": {
+        "code": "LP6809-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Entitic Mass",
+            "Entitic mass"
+        ]
+    },
+    "EntVol": {
+        "code": "LP6810-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Entitic Volume",
+            "Entitic volume"
+        ]
+    },
+    "Equ": {
+        "code": "LP6811-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Equation"
+        ]
+    },
+    "Fcn": {
+        "code": "LP6812-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Function"
+        ]
+    },
+    "Find": {
+        "code": "LP6813-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Finding",
+            "Findings"
+        ]
+    },
+    "FldConduct": {
+        "code": "LP6814-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Fluid Conductance",
+            "Fluid conductance"
+        ]
+    },
+    "FldResist": {
+        "code": "LP6815-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Fluid Resistance",
+            "Fluid resistance"
+        ]
+    },
+    "Force": {
+        "code": "LP6816-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Mechanical Force",
+            "Mechanical force"
+        ]
+    },
+    "Hx": {
+        "code": "LP6817-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "History"
+        ]
+    },
+    "ID": {
+        "code": "LP6818-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Identifier",
+            "Ident"
+        ]
+    },
+    "Imp": {
+        "code": "LP6819-9",
+        "abbr": [],
+        "replacement": [
+            "Impression/interpretation of study",
+            "Impression",
+            "Impressions",
+            "Interpretation",
+            "Interp"
+        ]
+    },
+    "Instrct": {
+        "code": "LP6820-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Instructions"
+        ]
+    },
+    "Inverse VI": {
+        "code": "LP6821-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Len": {
+        "code": "LP6822-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Length"
+        ]
+    },
+    "LenFr": {
+        "code": "LP6823-1",
+        "abbr": [],
+        "replacement": [
+            "Length Fraction",
+            "Percent"
+        ]
+    },
+    "LenRto": {
+        "code": "LP6824-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Length Ratio"
+        ]
+    },
+    "Loc": {
+        "code": "LP6825-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Location"
+        ]
+    },
+    "Mass": {
+        "code": "LP6826-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "MCnc": {
+        "code": "LP6827-2",
+        "abbr": [],
+        "replacement": [
+            "Mass Concentration",
+            "Mass concentration",
+            "Level"
+        ]
+    },
+    "DateRange": {
+        "code": "LP68272-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "MCnt": {
+        "code": "LP6828-0",
+        "abbr": [],
+        "replacement": [
+            "Mass Content",
+            "Mass content"
+        ]
+    },
+    "MCrto": {
+        "code": "LP6829-8",
+        "abbr": [],
+        "replacement": [
+            "Mass Concentration Ratio"
+        ]
+    },
+    "MFr": {
+        "code": "LP6831-4",
+        "abbr": [],
+        "replacement": [
+            "Mass Fraction",
+            "Mass fraction",
+            "Percent"
+        ]
+    },
+    "Morph": {
+        "code": "LP6832-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Morphology"
+        ]
+    },
+    "MRat": {
+        "code": "LP6833-0",
+        "abbr": [
+            "mRate"
+        ],
+        "replacement": [
+            "Mass Rate",
+            "Mass rate"
+        ]
+    },
+    "MRto": {
+        "code": "LP6834-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Mass Ratio",
+            "MCRto",
+            "Mass concentration ratio",
+            "Mass ratio"
+        ]
+    },
+    "Naric": {
+        "code": "LP6835-5",
+        "abbr": [
+            "#/area"
+        ],
+        "replacement": [
+            "Number areic"
+        ]
+    },
+    "NCnc": {
+        "code": "LP6836-3",
+        "abbr": [
+            "#"
+        ],
+        "replacement": [
+            "Number Concentration (count/vol)",
+            "Cnt",
+            "absolute",
+            "CT",
+            "Count",
+            "ABS",
+            "absolutes",
+            "Number concentration",
+            "Count/volume"
+        ]
+    },
+    "NCnt": {
+        "code": "LP6837-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Number Content = Count/Mass",
+            "Number content",
+            "Count/mass"
+        ]
+    },
+    "NFr": {
+        "code": "LP6838-9",
+        "abbr": [],
+        "replacement": [
+            "Number Fraction",
+            "Number fraction",
+            "Percent"
+        ]
+    },
+    "NRat": {
+        "code": "LP6839-7",
+        "abbr": [
+            "nRate"
+        ],
+        "replacement": [
+            "Number Rate = Count/Time",
+            "Count/time",
+            "Number rate"
+        ]
+    },
+    "NRto": {
+        "code": "LP6840-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Number Ratio",
+            "Number ratio"
+        ]
+    },
+    "Num": {
+        "code": "LP6841-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Number",
+            "Cnt",
+            "Count"
+        ]
+    },
+    "OD": {
+        "code": "LP6842-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Optical density"
+        ]
+    },
+    "Osmol": {
+        "code": "LP6843-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Osmolality",
+            "Osmo"
+        ]
+    },
+    "Pn": {
+        "code": "LP6844-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Person Name",
+            "Person name"
+        ]
+    },
+    "PPres": {
+        "code": "LP6845-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Pressure (partial)",
+            "Partial pressure"
+        ]
+    },
+    "Prctl": {
+        "code": "LP6846-2",
+        "abbr": [],
+        "replacement": [
+            "Percentile"
+        ]
+    },
+    "Pres": {
+        "code": "LP6847-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Pressure"
+        ]
+    },
+    "PresRat": {
+        "code": "LP6848-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Pressure Rate"
+        ]
+    },
+    "PresRto": {
+        "code": "LP6849-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "PressureRatio"
+        ]
+    },
+    "Prid": {
+        "code": "LP6850-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Presence or Identity",
+            "Identity or presence"
+        ]
+    },
+    "Prn": {
+        "code": "LP6851-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Ratio": {
+        "code": "LP6852-0",
+        "abbr": [
+            "Rto"
+        ],
+        "replacement": [
+            "Ratios"
+        ]
+    },
+    "Rden": {
+        "code": "LP6853-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Relative Density",
+            "Relative density"
+        ]
+    },
+    "RelRto": {
+        "code": "LP6854-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Relative Ratio",
+            "Relative ratio"
+        ]
+    },
+    "RelVol": {
+        "code": "LP6855-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Relative Volume",
+            "Relative volume"
+        ]
+    },
+    "RelVRat": {
+        "code": "LP6856-1",
+        "abbr": [],
+        "replacement": [
+            "Relative Volume Rate",
+            "Relative volume rate"
+        ]
+    },
+    "Resis": {
+        "code": "LP6857-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Resistance",
+            "Resistant",
+            "Resistanc",
+            "Resistent",
+            "Resist"
+        ]
+    },
+    "RelMCnc": {
+        "code": "LP6858-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Relative Mass Concentration",
+            "Relative mass concentration",
+            "RLMCNC"
+        ]
+    },
+    "SCnc": {
+        "code": "LP6860-3",
+        "abbr": [],
+        "replacement": [
+            "Substance Concentration",
+            "Level",
+            "Substance concentration"
+        ]
+    },
+    "SCnt": {
+        "code": "LP6861-1",
+        "abbr": [],
+        "replacement": [
+            "Substance Content",
+            "Substance content"
+        ]
+    },
+    "Scope.modifier.selection item": {
+        "code": "LP6862-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "Scope.modifier.time window": {
+        "code": "LP6863-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "SCrto": {
+        "code": "LP6864-5",
+        "abbr": [],
+        "replacement": [
+            "Substance Concentration Ratio"
+        ]
+    },
+    "SFr": {
+        "code": "LP6866-0",
+        "abbr": [],
+        "replacement": [
+            "Substance Fraction",
+            "Substance fraction",
+            "Percent"
+        ]
+    },
+    "SRat": {
+        "code": "LP6867-8",
+        "abbr": [
+            "sRate"
+        ],
+        "replacement": [
+            "Substance Rate",
+            "Substance rate"
+        ]
+    },
+    "SRto": {
+        "code": "LP6868-6",
+        "abbr": [],
+        "replacement": [
+            "Substance Ratio",
+            "Scrto",
+            "Substance concentration ratio",
+            "Substance ratio"
+        ]
+    },
+    "Sub": {
+        "code": "LP6869-4",
+        "abbr": [],
+        "replacement": [
+            "Substance Amount",
+            "Substance amount"
+        ]
+    },
+    "Susc": {
+        "code": "LP6870-2",
+        "abbr": [],
+        "replacement": [
+            "Susceptibility",
+            "AST",
+            "Suscept",
+            "Susceptibilities",
+            "Susceptibilty",
+            "Sus"
+        ]
+    },
+    "Tele": {
+        "code": "LP6871-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Telecommunication Number",
+            "Telephone number",
+            "Telecommunication number"
+        ]
+    },
+    "Temp": {
+        "code": "LP6872-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Temperature"
+        ]
+    },
+    "ThrACnc": {
+        "code": "LP6874-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Threshold Arbitrary Concentration",
+            "Threshold arbitrary concentration"
+        ]
+    },
+    "Threshold": {
+        "code": "LP6875-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    },
+    "ThrMCnc": {
+        "code": "LP6876-9",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Threshold Mass Concentration",
+            "Threshold mass concentration"
+        ]
+    },
+    "ThrSCnc": {
+        "code": "LP6877-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Threshold Substance Concentration",
+            "Threshold substance concentration"
+        ]
+    },
+    "Time": {
+        "code": "LP6879-3",
+        "abbr": [],
+        "replacement": []
+    },
+    "TimeDif": {
+        "code": "LP6880-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Time difference"
+        ]
+    },
+    "Titr": {
+        "code": "LP6881-9",
+        "abbr": [],
+        "replacement": [
+            "Dilution Factor (Titer)",
+            "Titered",
+            "Titer",
+            "Ttr",
+            "Titre",
+            "Dilution factor"
+        ]
+    },
+    "TmStp": {
+        "code": "LP6882-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Time Stamp",
+            "Timestamp",
+            "Date and time",
+            "Time stamp"
+        ]
+    },
+    "TQ2": {
+        "code": "LP6883-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Timing - quantity"
+        ]
+    },
+    "TRto": {
+        "code": "LP6884-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Time Ratio",
+            "Time ratio"
+        ]
+    },
+    "Txt": {
+        "code": "LP6885-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Text"
+        ]
+    },
+    "Type": {
+        "code": "LP6886-8",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Typ"
+        ]
+    },
+    "VCnt": {
+        "code": "LP6887-6",
+        "abbr": [],
+        "replacement": [
+            "Volume Content",
+            "Volume content"
+        ]
+    },
+    "Vel": {
+        "code": "LP6888-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Velocity"
+        ]
+    },
+    "VelRat": {
+        "code": "LP6889-2",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Velocity Rate",
+            "Velocity rate"
+        ]
+    },
+    "VelRto": {
+        "code": "LP6890-0",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Velocity Ratio",
+            "Velocity ratio"
+        ]
+    },
+    "VFr": {
+        "code": "LP6891-8",
+        "abbr": [],
+        "replacement": [
+            "Volume Fraction",
+            "Volfr",
+            "Volume fraction",
+            "Percent"
+        ]
+    },
+    "Visc": {
+        "code": "LP6892-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Viscosity"
+        ]
+    },
+    "Vol": {
+        "code": "LP6893-4",
+        "abbr": [],
+        "replacement": [
+            "Volume"
+        ]
+    },
+    "VRat": {
+        "code": "LP6895-9",
+        "abbr": [
+            "vRate"
+        ],
+        "replacement": [
+            "Volume Rate",
+            "Flow",
+            "Volume rate"
+        ]
+    },
+    "VRatCnt": {
+        "code": "LP6896-7",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Volume Rate Content",
+            "Volume rate content"
+        ]
+    },
+    "VRatRto": {
+        "code": "LP6897-5",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Volume Rate Ratio",
+            "Volume rate ratio"
+        ]
+    },
+    "VRto": {
+        "code": "LP6898-3",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Volume Ratio",
+            "Volume ratio"
+        ]
+    },
+    "Xad": {
+        "code": "LP6899-1",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Extended Address"
+        ]
+    },
+    "LsCnc": {
+        "code": "LP70220-6",
+        "abbr": [
+            "$"
+        ],
+        "replacement": [
+            "Log molar concentration"
+        ]
+    },
+    "MoM": {
+        "code": "LP71590-1",
+        "abbr": [],
+        "replacement": [
+            "Multiple of the median"
+        ]
+    },
+    "Shape": {
+        "code": "LP76093-1",
+        "abbr": [],
+        "replacement": []
+    },
+    "EngFr": {
+        "code": "LP90117-0",
+        "abbr": [],
+        "replacement": []
+    },
+    "EmailAddr": {
+        "code": "LP91370-4",
+        "abbr": [
+            "$"
+        ],
+        "replacement": []
+    }
+}

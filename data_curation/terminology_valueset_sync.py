@@ -51,7 +51,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
-CSV_DIRECTORY = "./data"
+CSV_DIRECTORY = "../data/snoinc_extracts"
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
@@ -285,12 +285,14 @@ def _get_loinc_abrv_syns(
     if loinc_row.get("code") == part_code:
         if (
             repl_name is not None
+            and repl_name != ""
             and repl_name != part_name
             and repl_name not in loinc_row.get("replacement")
         ):
             loinc_row["replacement"].append(repl_name)
         if (
             pref_abrv is not None
+            and pref_abrv != ""
             and pref_abrv != part_name
             and pref_abrv not in loinc_row.get("replacement")
             and pref_abrv not in loinc_row.get("abbr")
@@ -299,6 +301,7 @@ def _get_loinc_abrv_syns(
 
         if (
             synonym is not None
+            and synonym != ""
             and synonym != part_name
             and synonym not in loinc_row.get("replacement")
             and synonym not in loinc_row.get("abbr")
@@ -329,9 +332,13 @@ def create_loinc_part_abrv_syn_dicts():
     system_file = "SYSTEM_ABR_SYN.json"
     time_file = "TIME_ABR_SYN.json"
 
+    row_count = 1
+
     with open(file_path, "r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
+            # print(f"ROW_COUNT: {row_count}")
+            row_count = row_count + 1
             part_code = row.get("PART_NUM")
             axis_name = row.get("PART_TYPE_NAME_NAME")
             part_name = row.get("PART")
@@ -388,6 +395,7 @@ def create_loinc_part_abrv_syn_dicts():
                 existing_row = _get_loinc_abrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
+    print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
     save_loinc_part_dict_file(component_file, component_dict)
     save_loinc_part_dict_file(method_file, method_dict)
