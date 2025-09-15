@@ -325,12 +325,12 @@ def create_loinc_part_abrv_syn_dicts():
     scale_dict = {}
     system_dict = {}
     time_dict = {}
-    component_file = "COMPONENT_ABR_SYN.json"
-    method_file = "METHOD_ABR_SYN.json"
-    property_file = "PROPERTY_ABR_SYN.json"
-    scale_file = "SCALE_ABR_SYN.json"
-    system_file = "SYSTEM_ABR_SYN.json"
-    time_file = "TIME_ABR_SYN.json"
+    component_file = f"component_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    method_file = f"method_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    property_file = f"property_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    scale_file = f"scale_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    system_file = f"system_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    time_file = f"time_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
     row_count = 1
 
