@@ -1,62 +1,56 @@
 {
     "Doc": {
         "code": "LP32888-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Document"
         ]
     },
     "XXX^min": {
         "code": "LP435512-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SemiQn": {
         "code": "LP436123-6",
-        "abbr": [
+        "abbrv": [
             "SmQn"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Nominal": {
         "code": "LP437507-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Multi": {
         "code": "LP7748-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "\"Multi\""
         ]
     },
     "Nar": {
         "code": "LP7749-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Narrative",
             "Report"
         ]
     },
     "Nom": {
         "code": "LP7750-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Nominal"
         ]
     },
     "Ord": {
         "code": "LP7751-3",
-        "abbr": [
+        "abbrv": [
             "Ql"
         ],
-        "replacement": [
+        "synonyms": [
             "Ordinal",
             "Qualitative",
             "Qual",
@@ -65,17 +59,15 @@
     },
     "OrdQn": {
         "code": "LP7752-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Quantitative or Ordinal"
         ]
     },
     "Qn": {
         "code": "LP7753-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Quantitative",
             "Quant",
             "QNT",
@@ -84,9 +76,7 @@
     },
     "Set": {
         "code": "LP7754-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     }
 }

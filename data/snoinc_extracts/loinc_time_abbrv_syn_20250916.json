@@ -1,448 +1,448 @@
 {
     "ReportPeriod": {
         "code": "LP116233-0",
-        "abbr": [
+        "abbrv": [
             "Rpt Period"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "30S": {
         "code": "LP125040-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "6M": {
         "code": "LP125044-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "2M": {
         "code": "LP125046-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Seconds": {
         "code": "LP135294-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Interdialy Int": {
         "code": "LP149202-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Procedure": {
         "code": "LP173480-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Surg": {
         "code": "LP173481-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "100ms": {
         "code": "LP188663-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "30D": {
         "code": "LP189782-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "12Mo": {
         "code": "LP189870-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 year",
             "12Mos"
         ]
     },
     "RptPeriod": {
         "code": "LP190654-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Proced dur.max": {
         "code": "LP201814-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "90D": {
         "code": "LP203019-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "14D": {
         "code": "LP203020-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "6Mo": {
         "code": "LP203021-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1Y": {
         "code": "LP203022-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "180D": {
         "code": "LP203023-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Lifetime": {
         "code": "LP203024-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Years": {
         "code": "LP203625-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "7D": {
         "code": "LP204183-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Pre18yo": {
         "code": "LP213668-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "2Y": {
         "code": "LP220278-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "100D": {
         "code": "LP231776-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "3Y": {
         "code": "LP241874-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10Y": {
         "code": "LP241875-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "24H^min": {
         "code": "LP281581-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10H^max": {
         "code": "LP281582-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10H^min": {
         "code": "LP281583-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "12H^max": {
         "code": "LP281584-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "12H^min": {
         "code": "LP281585-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1H^max": {
         "code": "LP281586-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1H^min": {
         "code": "LP281587-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1W^max": {
         "code": "LP281588-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1W^mean": {
         "code": "LP281589-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "24H^max": {
         "code": "LP281590-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Enctr^frst": {
         "code": "LP281591-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Stdy^mean": {
         "code": "LP281592-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Stdy^total": {
         "code": "LP281593-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Enctr^max": {
         "code": "LP281594-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Episode^max": {
         "code": "LP281595-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Episode^mean": {
         "code": "LP281596-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Episode^min": {
         "code": "LP281597-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "XXX^max": {
         "code": "LP281598-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "XXX^mean": {
         "code": "LP281599-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10H^mean": {
         "code": "LP281600-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "12H^mean": {
         "code": "LP281601-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1H^mean": {
         "code": "LP281602-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "24H^mean": {
         "code": "LP281603-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "8H^mean": {
         "code": "LP281604-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1M^mean": {
         "code": "LP281605-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10M^mean": {
         "code": "LP281606-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "1Mo^mean": {
         "code": "LP281607-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "24H^median": {
         "code": "LP281608-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Stdy^max": {
         "code": "LP281609-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Stdy^min": {
         "code": "LP281610-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RptPeriod^end": {
         "code": "LP281611-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RptPeriod^mean": {
         "code": "LP281612-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RptPeriod^start": {
         "code": "LP281613-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Episode^frst": {
         "code": "LP281614-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "8H^max": {
         "code": "LP30641-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "8H^min": {
         "code": "LP30642-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Minutes": {
         "code": "LP32506-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Hours": {
         "code": "LP32507-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Days": {
         "code": "LP32508-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Months": {
         "code": "LP32510-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Other": {
         "code": "LP32511-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Lt 1H": {
         "code": "LP36189-6",
-        "abbr": [
+        "abbrv": [
             "<1h"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Gt 1H": {
         "code": "LP36190-4",
-        "abbr": [
+        "abbrv": [
             ">1h"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "LE 1H": {
         "code": "LP36191-2",
-        "abbr": [
+        "abbrv": [
             "<=1h"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "GE 1H": {
         "code": "LP36192-0",
-        "abbr": [
+        "abbrv": [
             ">=1h"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "RptPeriod^max": {
         "code": "LP418120-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "XXX^min": {
         "code": "LP422692-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "24Hr": {
         "code": "LP435780-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "time": {
         "code": "LP436318-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Deprecated: Mean oxygen saturation": {
         "code": "LP436439-6",
-        "abbr": [
+        "abbrv": [
             "Mean O2 sat"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "(Timing^mean)": {
         "code": "LP436498-2",
-        "abbr": [
+        "abbrv": [
             "Mean O2 sat"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "40M": {
         "code": "LP438036-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "7 days": {
         "code": "LP442210-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "12M": {
         "code": "LP444387-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "10H": {
         "code": "LP6903-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "10 hours",
             "10HR"
         ]
     },
     "10M": {
         "code": "LP6907-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "10 minutes"
         ]
     },
     "12H": {
         "code": "LP6908-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "12 hours",
             "12HR"
         ]
     },
     "15M": {
         "code": "LP6912-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "15 minutes",
             "15 Min",
             ".25 hour",
@@ -451,16 +451,16 @@
     },
     "18H": {
         "code": "LP6913-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "18 hours",
             "18HR"
         ]
     },
     "1D": {
         "code": "LP6914-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 day",
             "24H",
             "24HR",
@@ -469,8 +469,8 @@
     },
     "1H": {
         "code": "LP6915-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 hour",
             "60 min",
             "60min",
@@ -482,15 +482,15 @@
     },
     "1M": {
         "code": "LP6919-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 minute"
         ]
     },
     "1Mo": {
         "code": "LP6920-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 month (30 days)",
             "30 days",
             "1 month"
@@ -498,15 +498,15 @@
     },
     "1W": {
         "code": "LP6921-3",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "1 week"
         ]
     },
     "2.5H": {
         "code": "LP6922-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "2\ufffd hours",
             "2 1/2 hours",
             "150 minutes",
@@ -515,8 +515,8 @@
     },
     "20M": {
         "code": "LP6923-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "20 minutes",
             "1/3 hour",
             ".33 hour"
@@ -524,8 +524,8 @@
     },
     "24H": {
         "code": "LP6924-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "24 hours",
             "24HR",
             "1 day"
@@ -533,16 +533,16 @@
     },
     "2D": {
         "code": "LP6928-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "2 days",
             "48 hours"
         ]
     },
     "2H": {
         "code": "LP6929-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "2 hours",
             "120 min",
             "120min",
@@ -552,24 +552,24 @@
     },
     "2Mo": {
         "code": "LP6930-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "2 months",
             "60 days"
         ]
     },
     "2W": {
         "code": "LP6931-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "2 weeks",
             "14 days"
         ]
     },
     "30M": {
         "code": "LP6932-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "30 minutes",
             "1/2HR",
             "1/2 HR",
@@ -581,15 +581,15 @@
     },
     "3D": {
         "code": "LP6933-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "3 days"
         ]
     },
     "3H": {
         "code": "LP6934-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "3 hours",
             "180min",
             "3HR",
@@ -599,23 +599,23 @@
     },
     "3Mo": {
         "code": "LP6935-3",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "3 months"
         ]
     },
     "3W": {
         "code": "LP6936-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "3 weeks",
             "21 days"
         ]
     },
     "45M": {
         "code": "LP6937-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "45 minutes",
             "45 Min",
             ".75 hour",
@@ -624,8 +624,8 @@
     },
     "48H": {
         "code": "LP6938-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "48 hours",
             "48HR",
             "2D",
@@ -634,15 +634,15 @@
     },
     "4D": {
         "code": "LP6939-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "4 days"
         ]
     },
     "4H": {
         "code": "LP6940-3",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "4 hours",
             "4HR",
             "240 minutes",
@@ -651,22 +651,22 @@
     },
     "4W": {
         "code": "LP6941-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "4 weeks"
         ]
     },
     "5D": {
         "code": "LP6942-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "5 days"
         ]
     },
     "5H": {
         "code": "LP6943-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "5 hours",
             "5.0Hr",
             "5HR"
@@ -674,30 +674,30 @@
     },
     "5M": {
         "code": "LP6944-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "5 minutes"
         ]
     },
     "6D": {
         "code": "LP6945-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "6 days"
         ]
     },
     "6H": {
         "code": "LP6946-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "6 hours",
             "6Hr"
         ]
     },
     "72H": {
         "code": "LP6947-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "72 hours",
             "72HR",
             "3 days"
@@ -705,16 +705,16 @@
     },
     "7H": {
         "code": "LP6948-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "7 hours",
             "7HR"
         ]
     },
     "8H": {
         "code": "LP6949-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "8 hours",
             "8HR",
             "1/3 day"
@@ -722,8 +722,8 @@
     },
     "90M": {
         "code": "LP6953-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "90 minutes",
             "1 1/2 hours",
             "1.5 hours"
@@ -731,37 +731,33 @@
     },
     "9H": {
         "code": "LP6954-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "9 hours",
             "9HR"
         ]
     },
     "Enctr": {
         "code": "LP6955-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Encounter"
         ]
     },
     "Episode": {
         "code": "LP6957-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Procedure dur": {
         "code": "LP6959-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Pt": {
         "code": "LP6960-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Point in Time",
             "Point in time",
             "Random"
@@ -769,21 +765,21 @@
     },
     "Pt/Enctr": {
         "code": "LP6961-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Point in Time or Encounter"
         ]
     },
     "Stdy": {
         "code": "LP6967-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "XXX": {
         "code": "LP6969-2",
-        "abbr": [
+        "abbrv": [
             "?Tm"
         ],
-        "replacement": []
+        "synonyms": []
     }
 }

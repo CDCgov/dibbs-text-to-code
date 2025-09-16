@@ -282,17 +282,20 @@ def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
 def _get_loinc_abbrv_syns(
     part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
 ) -> dict:
+    
+    filter_from_names = ["","$"]
+
     if loinc_row.get("code") == part_code:
         if (
             repl_name is not None
-            and repl_name != ""
+            and repl_name not in filter_from_names
             and repl_name != part_name
             and repl_name not in loinc_row.get("synonyms")
         ):
             loinc_row["synonyms"].append(repl_name)
         if (
             pref_abrv is not None
-            and pref_abrv != ""
+            and pref_abrv not in filter_from_names
             and pref_abrv != part_name
             and pref_abrv not in loinc_row.get("synonyms")
             and pref_abrv not in loinc_row.get("abbrv")
@@ -301,7 +304,7 @@ def _get_loinc_abbrv_syns(
 
         if (
             synonym is not None
-            and synonym != ""
+            and synonym not in filter_from_names
             and synonym != part_name
             and synonym not in loinc_row.get("synonyms")
             and synonym not in loinc_row.get("abbrv")
@@ -325,12 +328,12 @@ def create_loinc_part_abbrv_syn_dicts():
     scale_dict = {}
     system_dict = {}
     time_dict = {}
-    component_file = f"component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    method_file = f"method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    property_file = f"property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    scale_file = f"scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    system_file = f"system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    time_file = f"time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    component_file = f"loinc_component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    method_file = f"loinc_method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    property_file = f"loinc_property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    scale_file = f"loinc_scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    system_file = f"loinc_system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    time_file = f"loinc_time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
     row_count = 1
 
@@ -415,7 +418,7 @@ def main(  # noqa: D103
     lab_values: bool,
     lab_interp: bool,
     lab_names: bool,
-    loinc_ab_syn: bool,
+    loinc_abbr_syn: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -433,7 +436,7 @@ def main(  # noqa: D103
     if all_vs or lab_names:
         print("Getting LOINC Lab Names...")
         get_loinc_lab_names()
-    if all_vs or loinc_ab_syn:
+    if all_vs or loinc_abbr_syn:
         print("Getting LOINC Part Abreviations & Synonyms...")
         create_loinc_part_abbrv_syn_dicts()
 
@@ -451,7 +454,7 @@ if __name__ == "__main__":
     parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
     parser.add_argument(
-        "--loinc_ab_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
+        "--loinc_abbr_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
     )
 
     args = parser.parse_args()
@@ -462,5 +465,5 @@ if __name__ == "__main__":
         args.lab_values,
         args.lab_interp,
         args.lab_names,
-        args.loinc_ab_syn,
+        args.loinc_abbr_syn,
     )

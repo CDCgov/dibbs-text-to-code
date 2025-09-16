@@ -1,141 +1,137 @@
 {
     "EntSub": {
         "code": "LP100323-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic substance"
         ]
     },
     "ClockTime": {
         "code": "LP101588-4",
-        "abbr": [
+        "abbrv": [
             "Clock time"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "EngRatFr": {
         "code": "LP101814-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "PPresDiff": {
         "code": "LP101909-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "VFrDiff": {
         "code": "LP101984-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MCncDiff": {
         "code": "LP113965-0",
-        "abbr": [
+        "abbrv": [
             "MCDiff"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "RelSRat": {
         "code": "LP133881-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelMRat": {
         "code": "LP133882-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RatDiff": {
         "code": "LP136159-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "VRtoPctDiff": {
         "code": "LP145618-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "VPctDiff": {
         "code": "LP145620-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "AFr": {
         "code": "LP145812-6",
-        "abbr": [
+        "abbrv": [
             "%"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "MCPctDiff": {
         "code": "LP146762-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ThrRelRto": {
         "code": "LP147273-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Pr": {
         "code": "LP149220-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ThrRto": {
         "code": "LP149664-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "NFr.DF": {
         "code": "LP149697-7",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Number fraction"
         ]
     },
     "CSub": {
         "code": "LP149700-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "VFr.DF": {
         "code": "LP150069-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MFr.DF": {
         "code": "LP150070-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ColorRto": {
         "code": "LP157151-4",
-        "abbr": [
+        "abbrv": [
             "ColRto"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "SFr.DF": {
         "code": "LP157781-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "CFr.DF": {
         "code": "LP157782-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Zscore": {
         "code": "LP164005-3",
-        "abbr": [
+        "abbrv": [
             "Z-score"
         ],
-        "replacement": [
+        "synonyms": [
             "Z score",
             "Standard score",
             "Z value"
@@ -143,495 +139,479 @@
     },
     "Tscore": {
         "code": "LP171796-8",
-        "abbr": [
+        "abbrv": [
             "T-score"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "PctDiff": {
         "code": "LP172626-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MFrDiff": {
         "code": "LP172735-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EntSRto": {
         "code": "LP172736-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "LogRtoElp": {
         "code": "LP173478-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MDiff": {
         "code": "LP173530-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "von Willebrand factor.activity actual/Normal": {
         "code": "LP182314-7",
-        "abbr": [
+        "abbrv": [
             "vWf:Ac actual/Norm"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Date": {
         "code": "LP182451-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Range": {
         "code": "LP185756-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Likelihood": {
         "code": "LP185777-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Risk"
         ]
     },
     "Score": {
         "code": "LP185820-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Scale"
         ]
     },
     "TimeFr": {
         "code": "LP185982-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ScoreDiff": {
         "code": "LP186068-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Score difference"
         ]
     },
     "VFr/PPres": {
         "code": "LP186992-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "TempDiff": {
         "code": "LP187131-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Freq": {
         "code": "LP187186-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ScoreRange": {
         "code": "LP187190-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ThreshNum": {
         "code": "LP188772-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EntLogNum": {
         "code": "LP193852-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "URI": {
         "code": "LP199288-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "PPresRto": {
         "code": "LP199475-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ArMass": {
         "code": "LP200147-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "MAric"
         ]
     },
     "ArLen": {
         "code": "LP200148-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "AreaFr": {
         "code": "LP200149-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ElpotRto": {
         "code": "LP201254-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ArLumTime": {
         "code": "LP201619-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "LogInvPct": {
         "code": "LP201643-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "TscoreDiff": {
         "code": "LP202986-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "T-score",
             "Score difference"
         ]
     },
     "ArArea": {
         "code": "LP203627-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SCncSq": {
         "code": "LP203668-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MCncSq": {
         "code": "LP203669-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "LogLenRto": {
         "code": "LP203678-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EngCnc": {
         "code": "LP204133-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Energy concentration"
         ]
     },
     "TmStpRange": {
         "code": "LP207118-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ExtendedID": {
         "code": "LP208396-4",
-        "abbr": [
+        "abbrv": [
             "Ext ID"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "EngDiff": {
         "code": "LP208616-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelEngRat": {
         "code": "LP208919-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Scope.modifier.doc template": {
         "code": "LP212142-6",
-        "abbr": [
+        "abbrv": [
             "Scope.mod.doc temp"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "NumRange": {
         "code": "LP212318-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelSCnc": {
         "code": "LP21275-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "RlSCnc"
         ]
     },
     "RelTime": {
         "code": "LP21276-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "RlTm"
         ]
     },
     "PrThr": {
         "code": "LP217195-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "VCF": {
         "code": "LP232488-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Osmolarity": {
         "code": "LP247773-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelSoundInt": {
         "code": "LP266552-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative sound intensity"
         ]
     },
     "SCRat": {
         "code": "LP269826-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "CAct": {
         "code": "LP30830-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelFldResist": {
         "code": "LP310434-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelCCnc": {
         "code": "LP31739-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "RlCCnc"
         ]
     },
     "PressDiff": {
         "code": "LP31921-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MSCnc": {
         "code": "LP33032-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Level"
         ]
     },
     "MSRat": {
         "code": "LP33093-3",
-        "abbr": [
+        "abbrv": [
             "msRate"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Enzymatic Related Properties": {
         "code": "LP33101-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Entitic Related Properties (measure per particle)": {
         "code": "LP33102-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Count Related Properties": {
         "code": "LP33104-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Substance (molar) Related Properties": {
         "code": "LP33105-5",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Volume Related Properties": {
         "code": "LP33106-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Arbitrary Properties": {
         "code": "LP33107-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Time Properties": {
         "code": "LP33108-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Other Properties": {
         "code": "LP33109-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "LnCnc": {
         "code": "LP33110-5",
-        "abbr": [
+        "abbrv": [
             "Log#"
         ],
-        "replacement": [
+        "synonyms": [
             "Log NCNC"
         ]
     },
     "Area Properties": {
         "code": "LP33112-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Length/Distance Properties": {
         "code": "LP33113-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Pressure Related Properties": {
         "code": "LP33114-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Special Properties": {
         "code": "LP33116-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Circumference Related Properties": {
         "code": "LP33118-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Scope Modifier": {
         "code": "LP33120-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Energy Related Properties": {
         "code": "LP33121-2",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Electrical Related Properties": {
         "code": "LP33122-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Threshold Properties": {
         "code": "LP33123-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "InvLen": {
         "code": "LP33124-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Inverse Length"
         ]
     },
     "EngRto": {
         "code": "LP33125-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Compli": {
         "code": "LP33126-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "CompliRto": {
         "code": "LP33127-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Categorical Properties": {
         "code": "LP33130-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Special Biologic Properties": {
         "code": "LP33131-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Quintile": {
         "code": "LP33290-5",
-        "abbr": [
+        "abbrv": [
             "Quint"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "LaCnc": {
         "code": "LP34325-8",
-        "abbr": [
+        "abbrv": [
             "Log IU"
         ],
-        "replacement": [
+        "synonyms": [
             "Log ACNC"
         ]
     },
     "TmMCnc": {
         "code": "LP343621-1",
-        "abbr": [
+        "abbrv": [
             "AUC"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "MAric": {
         "code": "LP34382-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Geno": {
         "code": "LP345004-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "NCncRange": {
         "code": "LP345057-6",
-        "abbr": [
+        "abbrv": [
             "NCncRng"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "RelACnc": {
         "code": "LP35077-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "RlACnc"
         ]
     },
     "EngCnt": {
         "code": "LP35765-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SatFr": {
         "code": "LP36180-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Saturation Fraction",
             "RS",
             "Relative Supersaturation",
@@ -640,348 +620,322 @@
     },
     "TmSCnc": {
         "code": "LP411318-1",
-        "abbr": [
+        "abbrv": [
             "AUC"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Likelihood.DF": {
         "code": "LP411536-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "LRat": {
         "code": "LP412244-8",
-        "abbr": [
+        "abbrv": [
             "lRate"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "NumDiff": {
         "code": "LP420419-6",
-        "abbr": [
+        "abbrv": [
             "# diff"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "MRatRange": {
         "code": "LP422181-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelFldConduct": {
         "code": "LP428396-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelInvVI": {
         "code": "LP428398-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "AUC": {
         "code": "LP429280-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "TmElpot": {
         "code": "LP429496-5",
-        "abbr": [
+        "abbrv": [
             "AUC"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Body temperature.max": {
         "code": "LP430229-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Elcur": {
         "code": "LP431008-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Scale": {
         "code": "LP434562-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Doc": {
         "code": "LP441214-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Alcoholic drink": {
         "code": "LP443370-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SpGrav": {
         "code": "LP443402-5",
-        "abbr": [
+        "abbrv": [
             "Sp Gr"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Color": {
         "code": "LP443403-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EntMCnc": {
         "code": "LP443404-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EntSCnc": {
         "code": "LP443405-8",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "DistWidth": {
         "code": "LP443406-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EntMeanVol": {
         "code": "LP443407-4",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Source": {
         "code": "LP443466-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Disposition": {
         "code": "LP443823-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "RelVel": {
         "code": "LP444407-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ElecCond": {
         "code": "LP446062-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Electrical Conductivity": {
         "code": "LP446067-3",
-        "abbr": [
+        "abbrv": [
             "ElecCond"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "EntMassDiff": {
         "code": "LP448267-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Sedimentation Rate": {
         "code": "LP448341-0",
-        "abbr": [
+        "abbrv": [
             "Sed Rat"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "Seq": {
         "code": "LP62164-6",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SCncDiff": {
         "code": "LP65028-0",
-        "abbr": [
+        "abbrv": [
             "SCDiff"
         ],
-        "replacement": []
+        "synonyms": []
     },
     "LnRto": {
         "code": "LP65260-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Log number ratio",
             "Log Nrto"
         ]
     },
     "Diam": {
         "code": "LP66948-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Diameter"
         ]
     },
     "Accel": {
         "code": "LP6772-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Acceleration"
         ]
     },
     "ACnc": {
         "code": "LP6773-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Arbitrary Concentration",
             "Arbitrary concentration"
         ]
     },
     "ACnt": {
         "code": "LP6774-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Arbitrary Content",
             "Arbitrary content"
         ]
     },
     "Addr": {
         "code": "LP6775-3",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Address"
         ]
     },
     "Aent": {
         "code": "LP6776-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Arbitrary Entitic",
             "Arbitrary entitic"
         ]
     },
     "Anat": {
         "code": "LP6777-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Anatomy"
         ]
     },
     "Angle": {
         "code": "LP6778-7",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Aper": {
         "code": "LP6779-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Appearance"
         ]
     },
     "ARat": {
         "code": "LP6780-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Arbitrary Rate",
             "Arbitrary rate"
         ]
     },
     "Arb": {
         "code": "LP6781-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Arbitrary"
         ]
     },
     "Area": {
         "code": "LP6782-9",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "AreaRto": {
         "code": "LP6783-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Area Ratio"
         ]
     },
     "ArEnrg": {
         "code": "LP6784-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Aric Energy",
             "Aric energy"
         ]
     },
     "ArResis": {
         "code": "LP6785-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Resistance/Area",
             "Resistance/area"
         ]
     },
     "ArVol": {
         "code": "LP6786-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume/Area",
             "Volume/area"
         ]
     },
     "ArVRat": {
         "code": "LP6787-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Rate/Ratio",
             "Volume rate/area"
         ]
     },
     "Bib": {
         "code": "LP6788-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Bibliographic Citation",
             "Bibliographic citation"
         ]
     },
     "CCnc": {
         "code": "LP6789-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Catalytic Concentration"
         ]
     },
     "CCnt": {
         "code": "LP6790-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Catalytic Content"
         ]
     },
     "CRto": {
         "code": "LP6791-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Catalytic Concentration Ratio",
             "CCrto",
             "Enzymatic activity ratio",
@@ -990,25 +944,23 @@
     },
     "CFr": {
         "code": "LP6792-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Catalytic Fraction",
             "Percent"
         ]
     },
     "Circ": {
         "code": "LP6793-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Circumference"
         ]
     },
     "CircFr": {
         "code": "LP6794-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Circumference Fraction",
             "Circumference fraction",
             "Percent"
@@ -1016,53 +968,43 @@
     },
     "Class": {
         "code": "LP6795-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Cmplx": {
         "code": "LP6796-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Complex"
         ]
     },
     "CRat": {
         "code": "LP6799-3",
-        "abbr": [
+        "abbrv": [
             "cRate"
         ],
-        "replacement": [
+        "synonyms": [
             "Catalytic Rate"
         ]
     },
     "Desc": {
         "code": "LP6800-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Description"
         ]
     },
     "Dosage": {
         "code": "LP6801-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Dose"
         ]
     },
     "Elpot": {
         "code": "LP6802-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Electrical Potential (Voltage)",
             "Voltage",
             "Electrical potential"
@@ -1070,10 +1012,8 @@
     },
     "ElpotRat": {
         "code": "LP6803-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Voltage Rate (=Amperage)",
             "Amperage",
             "Voltage rate"
@@ -1081,10 +1021,8 @@
     },
     "EngRat": {
         "code": "LP6804-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Power = Energy/Time",
             "Energy/time",
             "Power"
@@ -1092,142 +1030,116 @@
     },
     "Enrg": {
         "code": "LP6805-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Energy"
         ]
     },
     "EntNum": {
         "code": "LP6806-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic",
             "Entitic number"
         ]
     },
     "EntCat": {
         "code": "LP6807-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic Catalytic Activity",
             "Entitic catalytic activity"
         ]
     },
     "EntLen": {
         "code": "LP6808-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic Length",
             "Entitic length"
         ]
     },
     "EntMass": {
         "code": "LP6809-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic Mass",
             "Entitic mass"
         ]
     },
     "EntVol": {
         "code": "LP6810-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Entitic Volume",
             "Entitic volume"
         ]
     },
     "Equ": {
         "code": "LP6811-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Equation"
         ]
     },
     "Fcn": {
         "code": "LP6812-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Function"
         ]
     },
     "Find": {
         "code": "LP6813-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Finding",
             "Findings"
         ]
     },
     "FldConduct": {
         "code": "LP6814-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Fluid Conductance",
             "Fluid conductance"
         ]
     },
     "FldResist": {
         "code": "LP6815-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Fluid Resistance",
             "Fluid resistance"
         ]
     },
     "Force": {
         "code": "LP6816-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mechanical Force",
             "Mechanical force"
         ]
     },
     "Hx": {
         "code": "LP6817-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "History"
         ]
     },
     "ID": {
         "code": "LP6818-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Identifier",
             "Ident"
         ]
     },
     "Imp": {
         "code": "LP6819-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Impression/interpretation of study",
             "Impression",
             "Impressions",
@@ -1237,66 +1149,54 @@
     },
     "Instrct": {
         "code": "LP6820-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Instructions"
         ]
     },
     "Inverse VI": {
         "code": "LP6821-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Len": {
         "code": "LP6822-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Length"
         ]
     },
     "LenFr": {
         "code": "LP6823-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Length Fraction",
             "Percent"
         ]
     },
     "LenRto": {
         "code": "LP6824-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Length Ratio"
         ]
     },
     "Loc": {
         "code": "LP6825-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Location"
         ]
     },
     "Mass": {
         "code": "LP6826-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MCnc": {
         "code": "LP6827-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mass Concentration",
             "Mass concentration",
             "Level"
@@ -1304,28 +1204,28 @@
     },
     "DateRange": {
         "code": "LP68272-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "MCnt": {
         "code": "LP6828-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mass Content",
             "Mass content"
         ]
     },
     "MCrto": {
         "code": "LP6829-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mass Concentration Ratio"
         ]
     },
     "MFr": {
         "code": "LP6831-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mass Fraction",
             "Mass fraction",
             "Percent"
@@ -1333,29 +1233,25 @@
     },
     "Morph": {
         "code": "LP6832-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Morphology"
         ]
     },
     "MRat": {
         "code": "LP6833-0",
-        "abbr": [
+        "abbrv": [
             "mRate"
         ],
-        "replacement": [
+        "synonyms": [
             "Mass Rate",
             "Mass rate"
         ]
     },
     "MRto": {
         "code": "LP6834-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Mass Ratio",
             "MCRto",
             "Mass concentration ratio",
@@ -1364,19 +1260,19 @@
     },
     "Naric": {
         "code": "LP6835-5",
-        "abbr": [
+        "abbrv": [
             "#/area"
         ],
-        "replacement": [
+        "synonyms": [
             "Number areic"
         ]
     },
     "NCnc": {
         "code": "LP6836-3",
-        "abbr": [
+        "abbrv": [
             "#"
         ],
-        "replacement": [
+        "synonyms": [
             "Number Concentration (count/vol)",
             "Cnt",
             "absolute",
@@ -1390,10 +1286,8 @@
     },
     "NCnt": {
         "code": "LP6837-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Number Content = Count/Mass",
             "Number content",
             "Count/mass"
@@ -1401,8 +1295,8 @@
     },
     "NFr": {
         "code": "LP6838-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Number Fraction",
             "Number fraction",
             "Percent"
@@ -1410,10 +1304,10 @@
     },
     "NRat": {
         "code": "LP6839-7",
-        "abbr": [
+        "abbrv": [
             "nRate"
         ],
-        "replacement": [
+        "synonyms": [
             "Number Rate = Count/Time",
             "Count/time",
             "Number rate"
@@ -1421,20 +1315,16 @@
     },
     "NRto": {
         "code": "LP6840-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Number Ratio",
             "Number ratio"
         ]
     },
     "Num": {
         "code": "LP6841-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Number",
             "Cnt",
             "Count"
@@ -1442,147 +1332,121 @@
     },
     "OD": {
         "code": "LP6842-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Optical density"
         ]
     },
     "Osmol": {
         "code": "LP6843-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Osmolality",
             "Osmo"
         ]
     },
     "Pn": {
         "code": "LP6844-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Person Name",
             "Person name"
         ]
     },
     "PPres": {
         "code": "LP6845-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Pressure (partial)",
             "Partial pressure"
         ]
     },
     "Prctl": {
         "code": "LP6846-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Percentile"
         ]
     },
     "Pres": {
         "code": "LP6847-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Pressure"
         ]
     },
     "PresRat": {
         "code": "LP6848-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Pressure Rate"
         ]
     },
     "PresRto": {
         "code": "LP6849-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "PressureRatio"
         ]
     },
     "Prid": {
         "code": "LP6850-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Presence or Identity",
             "Identity or presence"
         ]
     },
     "Prn": {
         "code": "LP6851-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Ratio": {
         "code": "LP6852-0",
-        "abbr": [
+        "abbrv": [
             "Rto"
         ],
-        "replacement": [
+        "synonyms": [
             "Ratios"
         ]
     },
     "Rden": {
         "code": "LP6853-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative Density",
             "Relative density"
         ]
     },
     "RelRto": {
         "code": "LP6854-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative Ratio",
             "Relative ratio"
         ]
     },
     "RelVol": {
         "code": "LP6855-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative Volume",
             "Relative volume"
         ]
     },
     "RelVRat": {
         "code": "LP6856-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative Volume Rate",
             "Relative volume rate"
         ]
     },
     "Resis": {
         "code": "LP6857-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Resistance",
             "Resistant",
             "Resistanc",
@@ -1592,10 +1456,8 @@
     },
     "RelMCnc": {
         "code": "LP6858-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Relative Mass Concentration",
             "Relative mass concentration",
             "RLMCNC"
@@ -1603,8 +1465,8 @@
     },
     "SCnc": {
         "code": "LP6860-3",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Concentration",
             "Level",
             "Substance concentration"
@@ -1612,37 +1474,33 @@
     },
     "SCnt": {
         "code": "LP6861-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Content",
             "Substance content"
         ]
     },
     "Scope.modifier.selection item": {
         "code": "LP6862-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "Scope.modifier.time window": {
         "code": "LP6863-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "SCrto": {
         "code": "LP6864-5",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Concentration Ratio"
         ]
     },
     "SFr": {
         "code": "LP6866-0",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Fraction",
             "Substance fraction",
             "Percent"
@@ -1650,18 +1508,18 @@
     },
     "SRat": {
         "code": "LP6867-8",
-        "abbr": [
+        "abbrv": [
             "sRate"
         ],
-        "replacement": [
+        "synonyms": [
             "Substance Rate",
             "Substance rate"
         ]
     },
     "SRto": {
         "code": "LP6868-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Ratio",
             "Scrto",
             "Substance concentration ratio",
@@ -1670,16 +1528,16 @@
     },
     "Sub": {
         "code": "LP6869-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Substance Amount",
             "Substance amount"
         ]
     },
     "Susc": {
         "code": "LP6870-2",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Susceptibility",
             "AST",
             "Suscept",
@@ -1690,10 +1548,8 @@
     },
     "Tele": {
         "code": "LP6871-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Telecommunication Number",
             "Telephone number",
             "Telecommunication number"
@@ -1701,68 +1557,56 @@
     },
     "Temp": {
         "code": "LP6872-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Temperature"
         ]
     },
     "ThrACnc": {
         "code": "LP6874-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Threshold Arbitrary Concentration",
             "Threshold arbitrary concentration"
         ]
     },
     "Threshold": {
         "code": "LP6875-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "ThrMCnc": {
         "code": "LP6876-9",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Threshold Mass Concentration",
             "Threshold mass concentration"
         ]
     },
     "ThrSCnc": {
         "code": "LP6877-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Threshold Substance Concentration",
             "Threshold substance concentration"
         ]
     },
     "Time": {
         "code": "LP6879-3",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "TimeDif": {
         "code": "LP6880-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Time difference"
         ]
     },
     "Titr": {
         "code": "LP6881-9",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Dilution Factor (Titer)",
             "Titered",
             "Titer",
@@ -1773,10 +1617,8 @@
     },
     "TmStp": {
         "code": "LP6882-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Time Stamp",
             "Timestamp",
             "Date and time",
@@ -1785,82 +1627,68 @@
     },
     "TQ2": {
         "code": "LP6883-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Timing - quantity"
         ]
     },
     "TRto": {
         "code": "LP6884-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Time Ratio",
             "Time ratio"
         ]
     },
     "Txt": {
         "code": "LP6885-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Text"
         ]
     },
     "Type": {
         "code": "LP6886-8",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Typ"
         ]
     },
     "VCnt": {
         "code": "LP6887-6",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Content",
             "Volume content"
         ]
     },
     "Vel": {
         "code": "LP6888-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Velocity"
         ]
     },
     "VelRat": {
         "code": "LP6889-2",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Velocity Rate",
             "Velocity rate"
         ]
     },
     "VelRto": {
         "code": "LP6890-0",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Velocity Ratio",
             "Velocity ratio"
         ]
     },
     "VFr": {
         "code": "LP6891-8",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Fraction",
             "Volfr",
             "Volume fraction",
@@ -1869,26 +1697,24 @@
     },
     "Visc": {
         "code": "LP6892-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Viscosity"
         ]
     },
     "Vol": {
         "code": "LP6893-4",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume"
         ]
     },
     "VRat": {
         "code": "LP6895-9",
-        "abbr": [
+        "abbrv": [
             "vRate"
         ],
-        "replacement": [
+        "synonyms": [
             "Volume Rate",
             "Flow",
             "Volume rate"
@@ -1896,74 +1722,62 @@
     },
     "VRatCnt": {
         "code": "LP6896-7",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Rate Content",
             "Volume rate content"
         ]
     },
     "VRatRto": {
         "code": "LP6897-5",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Rate Ratio",
             "Volume rate ratio"
         ]
     },
     "VRto": {
         "code": "LP6898-3",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Volume Ratio",
             "Volume ratio"
         ]
     },
     "Xad": {
         "code": "LP6899-1",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Extended Address"
         ]
     },
     "LsCnc": {
         "code": "LP70220-6",
-        "abbr": [
-            "$"
-        ],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Log molar concentration"
         ]
     },
     "MoM": {
         "code": "LP71590-1",
-        "abbr": [],
-        "replacement": [
+        "abbrv": [],
+        "synonyms": [
             "Multiple of the median"
         ]
     },
     "Shape": {
         "code": "LP76093-1",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EngFr": {
         "code": "LP90117-0",
-        "abbr": [],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     },
     "EmailAddr": {
         "code": "LP91370-4",
-        "abbr": [
-            "$"
-        ],
-        "replacement": []
+        "abbrv": [],
+        "synonyms": []
     }
 }
