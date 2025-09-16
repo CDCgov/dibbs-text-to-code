@@ -282,8 +282,7 @@ def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
 def _get_loinc_abbrv_syns(
     part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
 ) -> dict:
-    
-    filter_from_names = ["","$"]
+    filter_from_names = ["", "$"]
 
     if loinc_row.get("code") == part_code:
         if (
