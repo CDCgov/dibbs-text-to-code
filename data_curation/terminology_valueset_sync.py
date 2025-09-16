@@ -279,7 +279,7 @@ def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
-def _get_loinc_abrv_syns(
+def _get_loinc_abbrv_syns(
     part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
 ) -> dict:
     if loinc_row.get("code") == part_code:
@@ -287,36 +287,36 @@ def _get_loinc_abrv_syns(
             repl_name is not None
             and repl_name != ""
             and repl_name != part_name
-            and repl_name not in loinc_row.get("replacement")
+            and repl_name not in loinc_row.get("synonyms")
         ):
-            loinc_row["replacement"].append(repl_name)
+            loinc_row["synonyms"].append(repl_name)
         if (
             pref_abrv is not None
             and pref_abrv != ""
             and pref_abrv != part_name
-            and pref_abrv not in loinc_row.get("replacement")
-            and pref_abrv not in loinc_row.get("abbr")
+            and pref_abrv not in loinc_row.get("synonyms")
+            and pref_abrv not in loinc_row.get("abbrv")
         ):
-            loinc_row["abbr"].append(pref_abrv)
+            loinc_row["abbrv"].append(pref_abrv)
 
         if (
             synonym is not None
             and synonym != ""
             and synonym != part_name
-            and synonym not in loinc_row.get("replacement")
-            and synonym not in loinc_row.get("abbr")
+            and synonym not in loinc_row.get("synonyms")
+            and synonym not in loinc_row.get("abbrv")
         ):
-            loinc_row["replacement"].append(synonym)
+            loinc_row["synonyms"].append(synonym)
     return loinc_row
 
 
-def create_loinc_part_abrv_syn_dicts():
+def create_loinc_part_abbrv_syn_dicts():
     """
     Creates single file dictionary for each of the different
     LOINC parts, which contains each LOINC Part Code, Name
     and Abbreviations and Synonyms
     """
-    file_path = "./loinc/LOINC_PARTS_ABRV_SYNONYMS.txt"
+    file_path = "./loinc/LOINC_PARTS_ABBRV_SYNONYMS.txt"
 
     # Separate LOINC Part Dictionaries
     component_dict = {}
@@ -325,12 +325,12 @@ def create_loinc_part_abrv_syn_dicts():
     scale_dict = {}
     system_dict = {}
     time_dict = {}
-    component_file = f"component_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    method_file = f"method_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    property_file = f"property_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    scale_file = f"scale_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    system_file = f"system_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    time_file = f"time_abr_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    component_file = f"component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    method_file = f"method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    property_file = f"property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    scale_file = f"scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    system_file = f"system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    time_file = f"time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
     row_count = 1
 
@@ -353,49 +353,49 @@ def create_loinc_part_abrv_syn_dicts():
             if axis_name == "COMPONENT":
                 existing_row = component_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     component_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
             elif axis_name == "METHOD":
                 existing_row = method_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     method_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
             elif axis_name == "PROPERTY":
                 existing_row = property_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     property_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
             elif axis_name == "SYSTEM":
                 existing_row = system_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     system_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
             elif axis_name == "TIME":
                 existing_row = time_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     time_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
             elif axis_name == "SCALE":
                 existing_row = scale_dict.get(part_name)
                 if not existing_row:
-                    existing_row = {"code": part_code, "abbr": [], "replacement": []}
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     scale_dict[part_name] = existing_row
-                existing_row = _get_loinc_abrv_syns(
+                existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
     print(f"Total Rows Processed: {row_count}")
@@ -435,7 +435,7 @@ def main(  # noqa: D103
         get_loinc_lab_names()
     if all_vs or loinc_ab_syn:
         print("Getting LOINC Part Abreviations & Synonyms...")
-        create_loinc_part_abrv_syn_dicts()
+        create_loinc_part_abbrv_syn_dicts()
 
 
 if __name__ == "__main__":

@@ -3,9 +3,12 @@ FROM ((PART_TYPE_NAME LEFT JOIN PART ON PART_TYPE_NAME.PART_TYPE = PART.TYPE) LE
 WHERE (((PART.PART) Not Like "[{]*" And (PART.PART) Not Like "[*]*" And (PART.PART) Not Like "[?]*" And (PART.PART) Not Like "[-]*" And (PART.PART) Not Like "[_]*") AND ((PART_TYPE_NAME.PART_TYPE) In (1,2,3,4,5,6)))
 ORDER BY PART_TYPE_NAME.NAME, PART.PART_NUM;
 
--- Note, after creating the above query in the RELMA Access DB, you will 
--- Want to save the query as a table 
--- Then you can export the table as a text file with | delimiters
+-- Note: after creating the above query in the RELMA Access DB, you will 
+-- want to save the query as a table and then you can export the table as a text file with | delimiters
+-- ensure the name of the table is LOINC_PARTS_ABBRV_SYNONYMS
 
 -- NOTE: you will have to manually 'find' and remove special characters (ie.  20666|"COMPONENT"|"LP17035-4"|"Allium cepa"|||"Onion"|"Allium salota Dost�l")
 -- So far only 1 special character was found (see example above)
+
+-- Save the exported file into the /data_curation/loinc folder, at the base of this repo, with a 
+-- file name of: LOINC_PARTS_ABBRV_SYNONYMS.txt
