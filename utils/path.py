@@ -1,5 +1,4 @@
 import json
-import os
 import pathlib
 
 
@@ -24,14 +23,6 @@ def repo_root(start: pathlib.Path | None = None) -> pathlib.Path | None:
         if (directory / "pyproject.toml").is_file():
             return directory
     return None
-
-
-def rel_path(path: pathlib.Path) -> str:
-    """
-    Return a path relative to the CWD of the given path.
-    """
-    cwd: pathlib.Path = pathlib.Path.cwd()
-    return str(os.path.relpath(path, cwd))
 
 
 def read_json(path: str) -> dict:

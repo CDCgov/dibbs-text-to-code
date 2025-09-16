@@ -1,9 +1,10 @@
+import os
 import pathlib
+import tempfile
 import unittest.mock
 
 import pytest
 
-from dibbs_text_to_code import main as main
 from utils import path as utils
 
 
@@ -31,10 +32,6 @@ def test_repo_root_not_found():
         assert root is None
 
 
-# def test_rel_path():
-#     assert main.rel_path(main.code_root()).endswith("src/dibbs_text_to_code")
-
-
 def test_read_json_relative():
     tmp = utils.code_root() / "test.json"
     with open(tmp, "w") as fobj:
@@ -43,9 +40,11 @@ def test_read_json_relative():
     tmp.unlink()
 
 
-# def test_read_json_absolute():
-#     tmp = tempfile.NamedTemporaryFile(suffix=".json")
-#     with open(tmp.name, "w") as fobj:
-#         fobj.write('{"key": "value"}')
-#     assert utils.read_json(tmp.name) == {"key": "value"}
-#     tmp.close()
+def test_read_json_absolute():
+    fd, path = tempfile.mkstemp(suffix=".json")
+    try:
+        with os.fdopen(fd, "w") as fobj:
+            fobj.write('{"key": "value"}')
+        assert utils.read_json(path) == {"key": "value"}
+    finally:
+        os.unlink(path)
