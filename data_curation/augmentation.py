@@ -163,7 +163,7 @@ def random_char_deletion(
                 starting_char = m.end()
 
     # get random number of deletes within specified range
-    deletion_count = min(random.randint(min_dels, max_dels), len(words) - 1)
+    deletion_count = min(random.randint(min_dels, max_dels), (len(words) - 1) * max_per_word)
 
     # ensure the deletion count is not bigger than all the word characters
     if deletion_count > len(char_indices):
