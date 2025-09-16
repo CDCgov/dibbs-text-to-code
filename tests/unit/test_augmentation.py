@@ -39,11 +39,13 @@ class TestCharDeletion:
         test_string = self.LOINC_LAB_TEXT_1
         expected_result = "5Hydroytryptophan [Measureent] n rie"
         result = augmentation.random_char_deletion(test_string, 3, 8, 2, "char")
+        assert len(result) < len(test_string)
         assert result == expected_result
 
         test_string = self.LOINC_LAB_TEXT_3
         expected_result = "This term is intnded to collate similar measurements fr he OINC SNOMED CT Collaboration in an ontological view. Addtionally, it can be used to communicate a laboraory order, either alone or in combiaion with specimen or oter information in the odr. It may NOT be sed to report back the measured patient value."
         result = augmentation.random_char_deletion(test_string, 3, 15, 4, "char")
+        assert len(result) < len(test_string)
         assert result == expected_result
 
     def test_random_char_deletion_word(self):
