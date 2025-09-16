@@ -1,6 +1,7 @@
 import pytest
 
 from data_curation import augmentation
+from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 
 
 @pytest.mark.parametrize(
@@ -57,7 +58,7 @@ class TestCharDeletion:
 
 
 @pytest.mark.parametrize(
-    "text, loinc_names, max_inserts,expected ",
+    "text, loinc_names, max_inserts, expected",
     [
         # Empty string
         ("", ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"], 3, ""),
@@ -84,4 +85,36 @@ class TestInsertLoincRelatedNames:
         result = augmentation.insert_loinc_related_names(
             text, loinc_names, min_inserts=2, max_inserts=max_inserts
         )
+        assert result == expected
+
+
+@pytest.mark.parametrize(
+    "text, related_names, num_examples, config, expected",
+    [
+        # Augmentation without any enhancements
+        (
+            "Hematocrit [Volume Fraction] of Blood by calculation",
+            [
+                "Blood",
+                "Erythrocytes",
+                "Calculation",
+                "CalcRBC",
+                "Volume fraction",
+                "% mL",
+                "Hemat.",
+                "HoBBC",
+            ],
+            3,
+            AUGMENTATION_WITHOUT_ENHANCEMENT,
+            [
+                "CalcRC [Volume Fraction] of by Hematocrit Blood calculation",
+                "CalcRBC Hematorit Fraction] HBBC of Blood by [Voume Volume fraction calculation",
+                "Hematocrit [Volume Fraction] of Blood % mL by calculation",
+            ],
+        ),
+    ],
+)
+class TestGenerateAugmentedTrainingSamples:
+    def test_generate_augmented_examples(self, text, related_names, num_examples, config, expected):
+        result = augmentation.generate_augmented_examples(text, related_names, num_examples, config)
         assert result == expected

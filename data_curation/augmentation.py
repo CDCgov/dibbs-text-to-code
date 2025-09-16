@@ -1,7 +1,10 @@
 import random
 import re
 import typing
+from typing import List
 from typing import Tuple
+
+from data_curation.augmentation_config import AugmentationConfig
 
 
 def scramble_word_order(
@@ -212,3 +215,105 @@ def insert_loinc_related_names(
         words.insert(idx_to_insert, name_to_insert)
 
     return " ".join(words)
+
+
+# TODO: Replace with actual function once Marcelle's work lands
+def do_enhancement():
+    """
+    Docstring required by ruff
+    """
+    pass
+
+
+def generate_augmented_examples(
+    input_code: str, related_names: List[str], num_examples: int, config: AugmentationConfig
+):
+    """
+    Given a LOINC code string, generates a specified number of augmented
+    training examples, which are returned as a list. Each augmented example is
+    probabilistically operated on by a scrambling or enhancement function
+    above to create a semantically and syntactically variant instance. The
+    order of augmentation operations is always enhancement, insertion,
+    permutation, then deletion.
+
+    :param input_code: The LOINC code string to generate augmented copies of.
+    :param related_names: A list of strings consisting of the LOINC "Related
+      Names" field pulled from the SNOINC extracts.
+    :param num_examples: The number of augmented examples to generate.
+    :param config: An Augmentation Configuration object indicating the
+      thresholds, options, and probabilities used to modify the example.
+    :returns: A list of augmented training examples.
+    """
+
+    augmented_examples = []
+    for _ in range(num_examples):
+        ex_code = input_code
+        performed_enhancement = False
+
+        # TODO: Replace all instances of `do_enhancement` with appropriate
+        # function call
+        if "enhancement_all" in config:
+            prob = random.uniform(0.0, 1.0)
+            if prob <= config["enhancement_all"]["enhancement_prob"]:
+                performed_enhancement = True
+                ex_code = do_enhancement()
+        else:
+            if "enhancement_replace" in config:
+                prob = random.uniform(0.0, 1.0)
+                if prob <= config["enhancement_replace"]["enhancement_prob"]:
+                    performed_enhancement = True
+                    ex_code = do_enhancement()
+            if "enhancement_acronym" in config:
+                prob = random.uniform(0.0, 1.0)
+                if prob <= config["enhancement_acronym"]["enhancement_prob"]:
+                    performed_enhancement = True
+                    ex_code = do_enhancement()
+            if "enhancement_abbreviation" in config:
+                prob = random.uniform(0.0, 1.0)
+                if prob <= config["enhancement_abbreviation"]["enhancement_prob"]:
+                    performed_enhancement = True
+                    ex_code = do_enhancement()
+
+        # Use the right insertion probability threshold
+        # Inserts come after enhancements so that the random index any related
+        # names are inserted at doesn't interfere with substring searching
+        # for acronyms or abbreviations
+        if performed_enhancement:
+            t = config["insertion"]["insert_prob_after_enhance"]
+        else:
+            t = config["insertion"]["insert_prob_without_enhance"]
+        prob = random.uniform(0.0, 1.0)
+        if prob <= t:
+            ex_code = insert_loinc_related_names(
+                ex_code,
+                related_names,
+                config["insertion"]["max_inserts"],
+                config["insertion"]["min_inserts"],
+            )
+
+        # Next comes permutations, if applicable; no risk of interference
+        # with deletions, but they have to come after enhancements for the
+        # same reasons as insertions, and insertions have priority as the
+        # only other mechanism to insert new semantic meaning
+        prob = random.uniform(0.0, 1.0)
+        if prob <= config["permutation"]["swap_prob"]:
+            ex_code = scramble_word_order(
+                ex_code, config["permutation"]["max_swaps"], config["permutation"]["min_swaps"]
+            )
+
+        # Last come the deletions: must be the final operation because
+        # they're syntactically destructive, and other operations depend on
+        # the full syntax of each token
+        prob = random.uniform(0.0, 1.0)
+        if prob <= config["deletion"]["deletion_prob"]:
+            ex_code = random_char_deletion(
+                ex_code,
+                config["deletion"]["min_deletes"],
+                config["deletion"]["max_deletes"],
+                config["deletion"]["max_deletes_per_word"],
+                config["deletion"]["deletion_mode"],
+            )
+
+        augmented_examples.append(ex_code)
+
+    return augmented_examples
