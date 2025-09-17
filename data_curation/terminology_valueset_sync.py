@@ -23,6 +23,7 @@ Requirements:
 import argparse
 import csv
 import datetime
+import json
 import os
 import sys
 
@@ -50,7 +51,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
-CSV_DIRECTORY = "./data"
+CSV_DIRECTORY = "../data/snoinc_extracts"
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
@@ -253,6 +254,162 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
+def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
+    if not filename.strip():
+        print("No filename supplied.  Failed to save LOINC Part Dictionary!")
+        return
+
+    if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save LOINC Part Dictionary!")
+        return
+
+    if not os.path.exists(CSV_DIRECTORY):
+        os.makedirs(CSV_DIRECTORY)
+
+    try:
+        full_file_path = os.path.join(CSV_DIRECTORY, filename)
+
+        with open(full_file_path, "w", encoding="utf-8") as dictfile:
+            json.dump(contents, dictfile, indent=4)
+        print(f"JSON Dictionary for Loinc Part saved successfully as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+def _get_loinc_abbrv_syns(
+    part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
+) -> dict:
+    filter_from_names = ["", "$"]
+
+    if loinc_row.get("code") == part_code:
+        if (
+            repl_name is not None
+            and repl_name not in filter_from_names
+            and repl_name != part_name
+            and repl_name not in loinc_row.get("synonyms")
+        ):
+            loinc_row["synonyms"].append(repl_name)
+        if (
+            pref_abrv is not None
+            and pref_abrv not in filter_from_names
+            and pref_abrv != part_name
+            and pref_abrv not in loinc_row.get("synonyms")
+            and pref_abrv not in loinc_row.get("abbrv")
+        ):
+            loinc_row["abbrv"].append(pref_abrv)
+
+        if (
+            synonym is not None
+            and synonym not in filter_from_names
+            and synonym != part_name
+            and synonym not in loinc_row.get("synonyms")
+            and synonym not in loinc_row.get("abbrv")
+        ):
+            loinc_row["synonyms"].append(synonym)
+    return loinc_row
+
+
+def create_loinc_part_abbrv_syn_dicts():
+    """
+    Creates single file dictionary for each of the different
+    LOINC parts, which contains each LOINC Part Code, Name
+    and Abbreviations and Synonyms
+    """
+    file_path = "./loinc/LOINC_PARTS_ABBRV_SYNONYMS.txt"
+
+    # Separate LOINC Part Dictionaries
+    component_dict = {}
+    method_dict = {}
+    property_dict = {}
+    scale_dict = {}
+    system_dict = {}
+    time_dict = {}
+    component_file = f"loinc_component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    method_file = f"loinc_method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    property_file = f"loinc_property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    scale_file = f"loinc_scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    system_file = f"loinc_system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    time_file = f"loinc_time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+
+    row_count = 1
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        reader = csv.DictReader(file, delimiter="|")
+        for row in reader:
+            # NOTE: the below print statement can be used
+            # to track down errors within the access extract file
+            # for particular rows with character issues
+            # print(f"ROW_COUNT: {row_count}")
+            row_count = row_count + 1
+            part_code = row.get("PART_NUM")
+            axis_name = row.get("PART_TYPE_NAME_NAME")
+            part_name = row.get("PART")
+            repl_name = row.get("PART_NAME")
+            pref_abrv = row.get("PREF_ABRV")
+            synonym = row.get("SYNONYM")
+
+            # build various LOINC Part dicts
+            if axis_name == "COMPONENT":
+                existing_row = component_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    component_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "METHOD":
+                existing_row = method_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    method_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "PROPERTY":
+                existing_row = property_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    property_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SYSTEM":
+                existing_row = system_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    system_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "TIME":
+                existing_row = time_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    time_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SCALE":
+                existing_row = scale_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    scale_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+    print(f"Total Rows Processed: {row_count}")
+    # write each dict out into it's own file
+    save_loinc_part_dict_file(component_file, component_dict)
+    save_loinc_part_dict_file(method_file, method_dict)
+    save_loinc_part_dict_file(property_file, property_dict)
+    save_loinc_part_dict_file(system_file, system_dict)
+    save_loinc_part_dict_file(time_file, time_dict)
+    save_loinc_part_dict_file(scale_file, scale_dict)
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -260,6 +417,7 @@ def main(  # noqa: D103
     lab_values: bool,
     lab_interp: bool,
     lab_names: bool,
+    loinc_abbr_syn: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -277,6 +435,9 @@ def main(  # noqa: D103
     if all_vs or lab_names:
         print("Getting LOINC Lab Names...")
         get_loinc_lab_names()
+    if all_vs or loinc_abbr_syn:
+        print("Getting LOINC Part Abreviations & Synonyms...")
+        create_loinc_part_abbrv_syn_dicts()
 
 
 if __name__ == "__main__":
@@ -291,6 +452,17 @@ if __name__ == "__main__":
     parser.add_argument("--lab_values", action="store_true", help="For Snomed Lab Result Values")
     parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
+    parser.add_argument(
+        "--loinc_abbr_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
+    )
 
     args = parser.parse_args()
-    main(args.all, args.lab_orders, args.lab_obs, args.lab_values, args.lab_interp, args.lab_names)
+    main(
+        args.all,
+        args.lab_orders,
+        args.lab_obs,
+        args.lab_values,
+        args.lab_interp,
+        args.lab_names,
+        args.loinc_abbr_syn,
+    )

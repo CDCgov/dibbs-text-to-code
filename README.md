@@ -35,17 +35,17 @@ NOTE: Sourcing the script is recommended over simply executing the script. This 
 the virtual environment to stay active in your shell.
 
 ```bash
-source scripts/bootstrap.sh
+source dev_scripts/bootstrap.sh
 ```
 
 **NOTE:** If you are running in on a Windows machine, will need to run the bootstrap
-file directly with `./scripts/bootstrap.sh` and then activate the virtual environment
+file directly with `./dev_scripts/bootstrap.sh` and then activate the virtual environment
 by running `.\.venv\Scripts\Activate.ps1`.
 
 ### Build and Verify
 
 Use the following to build the lambda image and verify that its accepting requests:
-(*requires Docker Compose*)
+(_requires Docker Compose_)
 
 ```sh
 docker compose up -d
