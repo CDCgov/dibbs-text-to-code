@@ -85,3 +85,53 @@ class TestInsertLoincRelatedNames:
             text, loinc_names, min_inserts=2, max_inserts=max_inserts
         )
         assert result == expected
+
+
+class TestEnhanceWithLoincAbbreviations:
+    def test_enhance_loinc_str_abbreviation(self):
+        # Test case 1: Basic enhancement with a single synonym
+        text = "Blood Glucose Measurement"
+        expected = "blood glucoseur measurement"
+        result = augmentation.enhance_loinc_str(
+            text,
+            enhancement_type="synonyms",
+            max_enhancements=2,
+            min_enhancements=1,
+        )
+        assert result == expected
+
+    def test_enhance_loinc_str_abbreviation_multiple(self):
+        # Test case 2: Enhancement with "all" replacements
+        text = "Blood Glucose Measurement"
+        expected = "blood gluc measurement"
+        result = augmentation.enhance_loinc_str(
+            text,
+            enhancement_type="all",
+            max_enhancements=2,
+            min_enhancements=1,
+        )
+        assert result == expected
+
+    def test_enhance_loinc_str_raise_error(self):
+        # Test case 3: Invalid enhancement numbers
+        text = "Blood Glucose Measurement"
+
+        with pytest.raises(ValueError):
+            augmentation.enhance_loinc_str(
+                text,
+                enhancement_type="abbrv",
+                max_enhancements=1,
+                min_enhancements=3,
+            )
+
+    def test_enhance_loinc_str_no_enhancements(self):
+        # Test case 4: No possible enhancements
+        text = "This term has no enhancements"
+
+        result = augmentation.enhance_loinc_str(
+            text,
+            enhancement_type="abbrv",
+            max_enhancements=2,
+            min_enhancements=1,
+        )
+        assert result == text

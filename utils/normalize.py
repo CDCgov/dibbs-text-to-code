@@ -21,7 +21,7 @@ def merge_enhancements(
 ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
     """
      Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
-    Merges 'abbr' and 'replacement' lists, preserves order and uniqueness,
+    Merges 'abbr' and 'synonyms' lists, preserves order and uniqueness,
     keeps the first-seen 'code' for each key.
     :param typing.Dicts: Variable number of typing.Dictionaries to merge.
     :return: A single typing.Dictionary with merged enhancements.
@@ -31,15 +31,16 @@ def merge_enhancements(
 
     for d in dicts:
         for key, value in d.items():
+            key = key.lower()
             code = value["code"]
-            abbrs = value.get("abbr", [])
-            replacements = value.get("replacement", [])
+            abbrs = [a.lower() for a in value.get("abbr", [])]
+            synonyms = [s.lower() for s in value.get("synonyms", [])]
 
             if key not in merged:
                 merged[key] = {
                     "code": code,
                     "abbr": [],
-                    "replacement": [],
+                    "synonyms": [],
                 }
             # Keep first-seen code
             if merged[key]["code"] is None and code is not None:
@@ -48,8 +49,8 @@ def merge_enhancements(
             # Merge and deduplicate abbrs while preserving order
             merged[key]["abbr"] = merge_two_lists(merged[key]["abbr"], abbrs)
 
-            # Merge and deduplicate replacements while preserving order
-            merged[key]["replacement"] = merge_two_lists(merged[key]["replacement"], replacements)
+            # Merge and deduplicate synonyms while preserving order
+            merged[key]["synonyms"] = merge_two_lists(merged[key]["synonyms"], synonyms)
 
     return merged
 
