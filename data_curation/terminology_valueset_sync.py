@@ -44,6 +44,13 @@ HL7_LAB_INTERP_URL = (
 UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
+UMLS_LOINC_CODE = ""
+UMLS_LOINC_LAB_ATOMS_URL = (
+    f"https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/{UMLS_LOINC_CODE}/atoms"
+)
+UMLS_LOINC_LAB_CROSSWALK_URL = (
+    f"https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/{UMLS_LOINC_CODE}"
+)
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -52,6 +59,11 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # CSV file settings
 CSV_DIRECTORY = "../data/snoinc_extracts"
+
+# Data Filter Criteria
+LOINC_TEXT_TO_FILTER = [
+    "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
+]
 
 
 def get_umls_snomed_lab_values():  # noqa: D103
@@ -149,6 +161,16 @@ def get_loinc_lab_results():  # noqa: D103
     save_valueset_csv_file(loinc_filename, loinc_result_rows)
 
 
+def get_loinc_umls_related_results():  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+    loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
+    file_name = f"loinc_related_names__{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
+
+    save_valueset_csv_file(file_name, umls_loinc_results)
+
+
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     if LOINC_USERNAME is None or LOINC_PWD is None:
         raise KeyError(
@@ -170,7 +192,10 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
     while current_row_count > 0 or next_url_call is None:
-        loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
+        if loinc_valueset_type not in ("UMLS atoms"):
+            loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
+        else:
+            loinc_rows = process_loinc_codes_with_umls(loinc_codes, loinc_rows)
 
         next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
         if next_loinc_response.status_code != 200:
@@ -187,6 +212,106 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     return loinc_rows
 
 
+def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+
+    if len(loinc_results) == 0:
+        print("NO RESULTS TO PROCESS!")
+        return loinc_code_rows
+
+    # loop through all the LOINC codes for labs (orders and results)
+    for loinc_result in loinc_results:
+        # get the LOINC Code and store it for use in the
+        # UMLS urls
+        loinc_code = loinc_result.get("LOINC_NUM")
+        UMLS_LOINC_CODE = loinc_code  # noqa: F841
+
+        ###########################################################################
+        # LOINC ATOMIC TERMS PROCESSING
+        ###########################################################################
+        atom_page_num = 1
+        page_size = 500
+        lang = "ENG"
+        params = {
+            "apiKey": UMLS_API_KEY,
+            "pageNumber": atom_page_num,
+            "pageSize": page_size,
+            "language": lang,
+        }
+        umls_atom_response = requests.get(UMLS_LOINC_LAB_ATOMS_URL, params=params)
+        atom_row_count = 0
+
+        while umls_atom_response.status_code == 200:
+            # NOTE: the UMLS responses are a bit slow
+            #  you can use the print statement below to get a
+            #  better idea of the progress if needed.
+            # print(f"Processing LOINC ATOM page {atom_page_num}")
+            umls_atom_results = umls_atom_response.json().get("result")
+
+            for atom_result in umls_atom_results:
+                related_name = atom_result.get("name")
+                if related_name:
+                    atom_row = {"code": loinc_code, "text": related_name}
+                    loinc_code_rows.append(atom_row)
+                    atom_row_count += 1
+
+            atom_page_num += 1
+            params = {
+                "apiKey": UMLS_API_KEY,
+                "pageNumber": atom_page_num,
+                "pageSize": page_size,
+                "language": lang,
+            }
+
+            umls_atom_response = requests.get(UMLS_LOINC_LAB_ATOMS_URL, params=params)
+
+        ###########################################################################
+        # LOINC CROSSWALK TERMS PROCESSING
+        ###########################################################################
+        crs_page_num = 1
+        page_size = 500
+        lang = "ENG"
+        params = {
+            "apiKey": UMLS_API_KEY,
+            "pageNumber": crs_page_num,
+            "pageSize": page_size,
+            "language": lang,
+        }
+        umls_crs_response = requests.get(UMLS_LOINC_LAB_CROSSWALK_URL, params=params)
+        crs_row_count = 0
+
+        while umls_crs_response.status_code == 200:
+            # NOTE: the UMLS responses are a bit slow
+            #  you can use the print statement below to get a
+            #  better idea of the progress if needed.
+            # print(f"Processing LOINC CROSSWALK page {crs_page_num}")
+            umls_crs_results = umls_crs_response.json().get("result")
+
+            for crs_result in umls_crs_results:
+                related_name = crs_result.get("name")
+                root_source = crs_result.get("rootSource")
+                if "LNC-" not in root_source and related_name:
+                    crs_row = {"code": loinc_code, "text": related_name}
+                    loinc_code_rows.append(crs_row)
+                    crs_row_count += 1
+
+            crs_page_num += 1
+            params = {
+                "apiKey": UMLS_API_KEY,
+                "pageNumber": crs_page_num,
+                "pageSize": page_size,
+                "language": lang,
+            }
+
+            umls_crs_response = requests.get(UMLS_LOINC_LAB_CROSSWALK_URL, params=params)
+
+    print(f"{atom_row_count} LOINC ATOMIC Terms/Related Names Added")
+    print(f"{crs_row_count} LOINC CROSSWALK Terms/Related Names Added")
+
+    return loinc_code_rows
+
+
 def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
     if len(loinc_results) == 0:
         print("NO RESULTS TO PROCESS!")
@@ -201,10 +326,16 @@ def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D10
 def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:  # noqa: D103
     result_code = loinc_result.get("LOINC_NUM")
     result_row = {"code": result_code}
-    if loinc_result.get("SHORTNAME") is not None:
-        result_row["short_name"] = loinc_result.get("SHORTNAME")
-    if loinc_result.get("LONG_COMMON_NAME") is not None:
-        result_row["long_name"] = loinc_result.get("LONG_COMMON_NAME")
+    short_name = loinc_result.get("SHORTNAME")
+    long_name = loinc_result.get("LONG_COMMON_NAME")
+    display_name = loinc_result.get("DisplayName")
+    related_names = loinc_result.get("RELATEDNAMES2")
+    defintion_desc = loinc_result.get("DefinitionDescription")
+
+    if short_name is not None:
+        result_row["short_name"] = short_name
+    if long_name is not None:
+        result_row["long_name"] = long_name
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
@@ -212,14 +343,14 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     #  make them configurable
 
     # More human centered name for the concept
-    if loinc_result.get("DisplayName") is not None:
-        result_row["display_name"] = loinc_result.get("DisplayName")
+    if display_name is not None:
+        result_row["display_name"] = display_name
     # Paragraph of information concerning the concept/code/term in question
-    if loinc_result.get("DefinitionDescription") is not None:
+    if defintion_desc is not None and not _filter_loinc_term(defintion_desc):
         result_row["definition_desc"] = loinc_result.get("DefinitionDescription")
     # ';' separated list of related terms to the concept/code/term in question
-    if loinc_result.get("RELATEDNAMES2") is not None:
-        result_row["related_names"] = loinc_result.get("RELATEDNAMES2")
+    if related_names is not None:
+        result_row["related_names"] = related_names
 
     loinc_order_rows.append(result_row)
 
@@ -410,6 +541,14 @@ def create_loinc_part_abbrv_syn_dicts():
     save_loinc_part_dict_file(scale_file, scale_dict)
 
 
+def _filter_loinc_term(text: str) -> bool:
+    result: bool = False
+    for filter_text in LOINC_TEXT_TO_FILTER:
+        if filter_text in text:
+            result = True
+    return result
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -418,6 +557,7 @@ def main(  # noqa: D103
     lab_interp: bool,
     lab_names: bool,
     loinc_abbr_syn: bool,
+    loinc_umls_syn: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -438,6 +578,9 @@ def main(  # noqa: D103
     if all_vs or loinc_abbr_syn:
         print("Getting LOINC Part Abreviations & Synonyms...")
         create_loinc_part_abbrv_syn_dicts()
+    if all_vs or loinc_umls_syn:
+        print("Getting LOINC UMLS Related Names...")
+        get_loinc_umls_related_results()
 
 
 if __name__ == "__main__":
@@ -455,6 +598,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--loinc_abbr_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
     )
+    parser.add_argument(
+        "--loinc_umls_syn",
+        action="store_true",
+        help="For Loinc UMLS Related Names (Atomic & Crosswalk)",
+    )
 
     args = parser.parse_args()
     main(
@@ -465,4 +613,5 @@ if __name__ == "__main__":
         args.lab_interp,
         args.lab_names,
         args.loinc_abbr_syn,
+        args.loinc_umls_syn,
     )
