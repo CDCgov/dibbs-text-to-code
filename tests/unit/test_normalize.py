@@ -52,78 +52,78 @@ class TestMergeTwoLists:
         # Merges two dicts with some overlap, preserving order and uniqueness
         (
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "EntSub": {"code": "LP100323-7", "abbrv": [], "replacement": ["Entitic substance"]},
+                "ClockTime": {"code": "LP101588-4", "abbrv": ["Clock time"], "replacement": []},
+                "EngRatFr": {"code": "LP101814-4", "abbrv": [], "replacement": ["hello"]},
             },
             {
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello", "goodbye"]},
-                "PPresDiff": {"code": "LP101909-2", "abbr": [], "replacement": []},
-                "VFrDiff": {"code": "LP101984-5", "abbr": [], "replacement": []},
+                "EngRatFr": {
+                    "code": "LP101814-4",
+                    "abbrv": [],
+                    "replacement": ["hello", "goodbye"],
+                },
+                "PPresDiff": {"code": "LP101909-2", "abbrv": [], "replacement": []},
+                "VFrDiff": {"code": "LP101984-5", "abbrv": [], "replacement": []},
             },
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello", "goodbye"]},
-                "PPresDiff": {"code": "LP101909-2", "abbr": [], "replacement": []},
-                "VFrDiff": {"code": "LP101984-5", "abbr": [], "replacement": []},
+                "entsub": {"code": "LP100323-7", "abbrv": [], "synonyms": []},
+                "clocktime": {"code": "LP101588-4", "abbrv": ["clock time"], "synonyms": []},
+                "engratfr": {"code": "LP101814-4", "abbrv": [], "synonyms": []},
+                "ppresdiff": {"code": "LP101909-2", "abbrv": [], "synonyms": []},
+                "vfrdiff": {"code": "LP101984-5", "abbrv": [], "synonyms": []},
             },
         ),
         # Merges two dicts with no overlap
         (
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "EntSub": {"code": "LP100323-7", "abbrv": [], "replacement": ["Entitic substance"]},
+                "ClockTime": {"code": "LP101588-4", "abbrv": ["Clock time"], "replacement": []},
+                "EngRatFr": {"code": "LP101814-4", "abbrv": [], "replacement": ["hello"]},
             },
             {
                 "TscoreDiff": {
                     "code": "LP202986-8",
-                    "abbr": [],
+                    "abbrv": [],
                     "replacement": ["T-score", "Score difference"],
                 },
             },
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
-                "TscoreDiff": {
-                    "code": "LP202986-8",
-                    "abbr": [],
-                    "replacement": ["T-score", "Score difference"],
-                },
+                "entsub": {"code": "LP100323-7", "abbrv": [], "synonyms": []},
+                "clocktime": {"code": "LP101588-4", "abbrv": ["clock time"], "synonyms": []},
+                "engratfr": {"code": "LP101814-4", "abbrv": [], "synonyms": []},
+                "tscorediff": {"code": "LP202986-8", "abbrv": [], "synonyms": []},
             },
         ),
         # Merges when one dict is empty
         (
             {},
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "EntSub": {"code": "LP100323-7", "abbrv": [], "replacement": ["Entitic substance"]},
+                "ClockTime": {"code": "LP101588-4", "abbrv": ["Clock time"], "replacement": []},
+                "EngRatFr": {"code": "LP101814-4", "abbrv": [], "replacement": ["hello"]},
             },
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "entsub": {"code": "LP100323-7", "abbrv": [], "synonyms": []},
+                "clocktime": {"code": "LP101588-4", "abbrv": ["clock time"], "synonyms": []},
+                "engratfr": {"code": "LP101814-4", "abbrv": [], "synonyms": []},
             },
         ),
         # Merges two identical dicts
         (
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "EntSub": {"code": "LP100323-7", "abbrv": [], "replacement": ["Entitic substance"]},
+                "ClockTime": {"code": "LP101588-4", "abbrv": ["Clock time"], "replacement": []},
+                "EngRatFr": {"code": "LP101814-4", "abbrv": [], "replacement": ["hello"]},
             },
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "EntSub": {"code": "LP100323-7", "abbrv": [], "replacement": ["Entitic substance"]},
+                "ClockTime": {"code": "LP101588-4", "abbrv": ["Clock time"], "replacement": []},
+                "EngRatFr": {"code": "LP101814-4", "abbrv": [], "replacement": ["hello"]},
             },
             {
-                "EntSub": {"code": "LP100323-7", "abbr": [], "replacement": ["Entitic substance"]},
-                "ClockTime": {"code": "LP101588-4", "abbr": ["Clock time"], "replacement": []},
-                "EngRatFr": {"code": "LP101814-4", "abbr": [], "replacement": ["hello"]},
+                "entsub": {"code": "LP100323-7", "abbrv": [], "synonyms": []},
+                "clocktime": {"code": "LP101588-4", "abbrv": ["clock time"], "synonyms": []},
+                "engratfr": {"code": "LP101814-4", "abbrv": [], "synonyms": []},
             },
         ),
     ],
