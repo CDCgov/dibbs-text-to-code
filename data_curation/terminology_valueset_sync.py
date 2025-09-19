@@ -45,12 +45,8 @@ UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
 UMLS_LOINC_CODE = ""
-UMLS_LOINC_LAB_ATOMS_URL = (
-    f"https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/{UMLS_LOINC_CODE}/atoms"
-)
-UMLS_LOINC_LAB_CROSSWALK_URL = (
-    f"https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/{UMLS_LOINC_CODE}"
-)
+UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
+UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -168,6 +164,8 @@ def get_loinc_umls_related_results():  # noqa: D103
     file_name = f"loinc_related_names__{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
 
+    print(f"LOINC RELATED NAMES ADDED: {len(umls_loinc_results)}")
+
     save_valueset_csv_file(file_name, umls_loinc_results)
 
 
@@ -192,10 +190,10 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
     while current_row_count > 0 or next_url_call is None:
-        if loinc_valueset_type not in ("UMLS atoms"):
+        if loinc_valueset_type not in ("UMLS Atoms"):
             loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
         else:
-            loinc_rows = process_loinc_codes_with_umls(loinc_codes, loinc_rows)
+            loinc_rows = process_loinc_codes_with_umls(loinc_codes["Results"], loinc_rows)
 
         next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
         if next_loinc_response.status_code != 200:
@@ -225,7 +223,8 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
         # get the LOINC Code and store it for use in the
         # UMLS urls
         loinc_code = loinc_result.get("LOINC_NUM")
-        UMLS_LOINC_CODE = loinc_code  # noqa: F841
+        umls_atom_url = UMLS_LOINC_LAB_ATOMS_URL + loinc_code + "/atoms"
+        umls_crs_url = UMLS_LOINC_LAB_CROSSWALK_URL + loinc_code
 
         ###########################################################################
         # LOINC ATOMIC TERMS PROCESSING
@@ -239,7 +238,8 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
             "pageSize": page_size,
             "language": lang,
         }
-        umls_atom_response = requests.get(UMLS_LOINC_LAB_ATOMS_URL, params=params)
+
+        umls_atom_response = requests.get(umls_atom_url, params=params)
         atom_row_count = 0
 
         while umls_atom_response.status_code == 200:
@@ -264,7 +264,7 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
                 "language": lang,
             }
 
-            umls_atom_response = requests.get(UMLS_LOINC_LAB_ATOMS_URL, params=params)
+            umls_atom_response = requests.get(umls_atom_url, params=params)
 
         ###########################################################################
         # LOINC CROSSWALK TERMS PROCESSING
@@ -278,10 +278,12 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
             "pageSize": page_size,
             "language": lang,
         }
-        umls_crs_response = requests.get(UMLS_LOINC_LAB_CROSSWALK_URL, params=params)
+        umls_crs_response = requests.get(umls_crs_url, params=params)
         crs_row_count = 0
+        max_page = 1
 
-        while umls_crs_response.status_code == 200:
+        while umls_crs_response.status_code == 200 and crs_page_num <= max_page:
+            max_page = umls_crs_response.json().get("pageCount")
             # NOTE: the UMLS responses are a bit slow
             #  you can use the print statement below to get a
             #  better idea of the progress if needed.
@@ -304,10 +306,7 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
                 "language": lang,
             }
 
-            umls_crs_response = requests.get(UMLS_LOINC_LAB_CROSSWALK_URL, params=params)
-
-    print(f"{atom_row_count} LOINC ATOMIC Terms/Related Names Added")
-    print(f"{crs_row_count} LOINC CROSSWALK Terms/Related Names Added")
+            umls_crs_response = requests.get(umls_crs_url, params=params)
 
     return loinc_code_rows
 
