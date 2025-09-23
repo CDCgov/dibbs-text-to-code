@@ -44,7 +44,7 @@ def parse_snoinc_extracts(
     short_names = []
     display_names = []
 
-    with open(extract_path, "r") as fp:
+    with open(extract_path, "r", encoding="utf-8") as fp:
         lines_seen = 0
         for line in fp:
             if lines_seen == 0:
@@ -80,7 +80,11 @@ def embed_loinc_names(
       the computed embeddings to disk.
     :returns: The computed embeddings.
     """
+    name_list = name_list[:100]  # for trial purposes (will only take a few minutes, not overnight)
     corpus_embeddings = model.encode(name_list, show_progress_bar=True, convert_to_tensor=True)
+
+    # make sure just the directory exists
+    os.makedirs(EMBEDDING_CACHE_DIR, exist_ok=True)
 
     if save_embeddings:
         with open(EMBEDDING_CACHE_DIR + EMBEDDING_FILE, "wb") as fp:
