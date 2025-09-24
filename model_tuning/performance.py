@@ -7,10 +7,11 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers import util
 from torch import Tensor
 
-MODEL_NAME = "all-MiniLM-L6-v2"
+SIZE = 50000
+MODEL_NAME = "all-MiniLM-L6-v2d"
 SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20250911.csv"
 EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
-EMBEDDING_FILE = f"loinc_lab_names_{MODEL_NAME.replace('/', '_')}"
+EMBEDDING_FILE = f"loinc_lab_names_{MODEL_NAME.replace('/', '_')}_{SIZE}"
 VALIDATION_FILE = "../data/training_files/validation_toy.txt"
 K_VALUES = [1, 3, 5, 10]
 
@@ -80,7 +81,7 @@ def embed_loinc_names(
       the computed embeddings to disk.
     :returns: The computed embeddings.
     """
-    name_list = name_list[:100]  # for trial purposes (will only take a few minutes, not overnight)
+    name_list = name_list[:SIZE]  # for trial purposes (will only take a few minutes, not overnight)
     corpus_embeddings = model.encode(name_list, show_progress_bar=True, convert_to_tensor=True)
 
     # make sure just the directory exists
