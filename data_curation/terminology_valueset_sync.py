@@ -37,7 +37,7 @@ load_dotenv()
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
 LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
 LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
-LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation"
+LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation&rows=500"
 HL7_LAB_INTERP_URL = (
     "https://terminology.hl7.org/2.1.0/CodeSystem-v3-ObservationInterpretation.json"
 )
@@ -53,8 +53,9 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
-# CSV file settings
+# File settings
 CSV_DIRECTORY = "../data/snoinc_extracts"
+TMP_DIRECTORY = "./tmp"
 
 # Data Filter Criteria
 LOINC_TEXT_TO_FILTER = [
@@ -161,12 +162,17 @@ def get_loinc_umls_related_results():  # noqa: D103
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
     loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
-    file_name = f"loinc_related_names__{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    url_filename = "loinc_umls_related_names_urls.json"
+    umls_filename = f"loinc_umls_related_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
 
-    print(f"LOINC RELATED NAMES ADDED: {len(umls_loinc_results)}")
+    print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
 
-    save_valueset_csv_file(file_name, umls_loinc_results)
+    save_url_file(url_filename, umls_loinc_results)
+
+    umls_rows = process_loinc_codes_with_umls(url_filename)
+    print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
+    save_valueset_csv_file(umls_filename, umls_rows)
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
@@ -183,48 +189,89 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
 
     loinc_codes = loinc_response.json()
     loinc_rows = []
+    loinc_umls_urls = {}
 
     record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
     print(f"{loinc_valueset_type} Record Count: {record_count}")
     current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
-    while current_row_count > 0 or next_url_call is None:
+    while current_row_count > 0:
         if loinc_valueset_type not in ("UMLS Atoms"):
             loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
         else:
-            loinc_rows = process_loinc_codes_with_umls(loinc_codes["Results"], loinc_rows)
+            loinc_umls_urls = get_loinc_umls_urls(loinc_codes["Results"], loinc_umls_urls)
 
-        next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
-        if next_loinc_response.status_code != 200:
-            print(
-                f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
-            )
-            return
-        loinc_codes = next_loinc_response.json()
-        current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
-        next_url_call = loinc_codes.get("ResponseSummary").get("Next")
-        if next_url_call is None:
-            break
+        if next_url_call is not None:
+            next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
+            if next_loinc_response.status_code != 200:
+                print(
+                    f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
+                )
+                return
+            loinc_codes = next_loinc_response.json()
+            current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
+            next_url_call = loinc_codes.get("ResponseSummary").get("Next")
+        else:
+            current_row_count = 0
 
-    return loinc_rows
+    if len(loinc_rows) > 0:
+        return loinc_rows
+    else:
+        return loinc_umls_urls
 
 
-def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # noqa: D103
-    if UMLS_API_KEY is None:
-        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
-
-    if len(loinc_results) == 0:
-        print("NO RESULTS TO PROCESS!")
-        return loinc_code_rows
+def get_loinc_umls_urls(loinc_results, loinc_rows_list):
+    """
+    This function will just generate and store the UMLS Urls that need
+    to be used for each LOINC code.  They can be processed separately by another
+    function.  Performance issues resulted in trying to do it all at once.
+    """
 
     # loop through all the LOINC codes for labs (orders and results)
     for loinc_result in loinc_results:
         # get the LOINC Code and store it for use in the
         # UMLS urls
         loinc_code = loinc_result.get("LOINC_NUM")
-        umls_atom_url = UMLS_LOINC_LAB_ATOMS_URL + loinc_code + "/atoms"
-        umls_crs_url = UMLS_LOINC_LAB_CROSSWALK_URL + loinc_code
+        loinc_umls_urls = {
+            "atom": UMLS_LOINC_LAB_ATOMS_URL + loinc_code + "/atoms",
+            "crs": UMLS_LOINC_LAB_CROSSWALK_URL + loinc_code,
+        }
+        loinc_rows_list[loinc_code] = loinc_umls_urls
+
+    return loinc_rows_list
+
+
+def process_loinc_codes_with_umls(filename: str) -> dict:  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+
+    if not os.path.exists(TMP_DIRECTORY):
+        raise KeyError("Directory where file is expected is missing!")
+
+    try:
+        full_file_path = os.path.join(TMP_DIRECTORY, filename)
+
+        with open(full_file_path, "r") as file:
+            umls_urls = json.load(file)
+    except FileNotFoundError:
+        print(f"Error: {full_file_path} not found. Please ensure the file exists.")
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON format in {full_file_path}.")
+
+    print("Processing UMLS URLS for LOINC Codes!")
+    umls_loinc_rows = []
+    loinc_code_count = 0
+
+    # loop through all the LOINC codes in dict along
+    # with all the correlated umls urls
+    for loinc_code, urls_dict in umls_urls.items():
+        umls_atom_url = urls_dict["atom"]
+        umls_crs_url = urls_dict["crs"]
+        loinc_code_count += 1
+
+        print(f"CODE: {loinc_code_count}")
+        print(f"ROW COUNTS: {len(umls_loinc_rows)}")
 
         ###########################################################################
         # LOINC ATOMIC TERMS PROCESSING
@@ -253,7 +300,7 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
                 related_name = atom_result.get("name")
                 if related_name:
                     atom_row = {"code": loinc_code, "text": related_name}
-                    loinc_code_rows.append(atom_row)
+                    umls_loinc_rows.append(atom_row)
                     atom_row_count += 1
 
             atom_page_num += 1
@@ -295,7 +342,7 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
                 root_source = crs_result.get("rootSource")
                 if "LNC-" not in root_source and related_name:
                     crs_row = {"code": loinc_code, "text": related_name}
-                    loinc_code_rows.append(crs_row)
+                    umls_loinc_rows.append(crs_row)
                     crs_row_count += 1
 
             crs_page_num += 1
@@ -308,7 +355,7 @@ def process_loinc_codes_with_umls(loinc_results, loinc_code_rows) -> dict:  # no
 
             umls_crs_response = requests.get(umls_crs_url, params=params)
 
-    return loinc_code_rows
+    return umls_loinc_rows
 
 
 def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
@@ -409,8 +456,38 @@ def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
         print(f"An error occured: {e}")
 
 
+def save_url_file(filename: str, contents: dict):  # noqa: D103
+    if not filename.strip():
+        print("No filename supplied.  Failed to save URL File!")
+        return
+
+    if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save URL File!")
+        return
+
+    if not os.path.exists(TMP_DIRECTORY):
+        os.makedirs(TMP_DIRECTORY)
+
+    try:
+        full_file_path = os.path.join(TMP_DIRECTORY, filename)
+
+        with open(full_file_path, "w", encoding="utf-8") as dictfile:
+            json.dump(contents, dictfile, indent=4)
+        print(f"URL File successfully saved as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
 def _get_loinc_abbrv_syns(
-    part_code: str, part_name: str, repl_name: str, pref_abrv: str, synonym: str, loinc_row: dict
+    part_code: str,
+    part_name: str,
+    repl_name: str,
+    pref_abrv: str,
+    synonym: str,
+    loinc_row: dict,
 ) -> dict:
     filter_from_names = ["", "$"]
 
@@ -587,7 +664,9 @@ if __name__ == "__main__":
         description="A script to pull down various Medical Terminology Value Set Codes and Texts, specify which sets."
     )
     parser.add_argument(
-        "--lab_names", action="store_true", help="For ALL Loinc Lab Names both Ordering & Resulting"
+        "--lab_names",
+        action="store_true",
+        help="For ALL Loinc Lab Names both Ordering & Resulting",
     )
     parser.add_argument("--lab_orders", action="store_true", help="For Loinc Lab Orders")
     parser.add_argument("--lab_obs", action="store_true", help="For Loinc Lab Observations")
@@ -595,7 +674,9 @@ if __name__ == "__main__":
     parser.add_argument("--lab_interp", action="store_true", help="For HL7 Lab Interpretations")
     parser.add_argument("--all", action="store_true", help="If present, pulls all value sets")
     parser.add_argument(
-        "--loinc_abbr_syn", action="store_true", help="For Loinc Part Abreviations and Synonyms"
+        "--loinc_abbr_syn",
+        action="store_true",
+        help="For Loinc Part Abreviations and Synonyms",
     )
     parser.add_argument(
         "--loinc_umls_syn",
