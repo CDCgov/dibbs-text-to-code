@@ -8,32 +8,9 @@ import data_curation.schemas.augmentation as schemas
 from utils import normalize as normalize
 from utils import path as path
 
-# TODO: move these loads to path or normalize module
-LOINC_METHOD_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_method_abbrv_syn_20250916.json"
-)
-LOINC_PROPERTY_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_property_abbrv_syn_20250916.json"
-)
-LOINC_SCALE_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_scale_abbrv_syn_20250916.json"
-)
-LOINC_SYSTEM_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_system_abbrv_syn_20250916.json"
-)
-LOINC_TIME_ENHANCEMENTS = path.read_json("data/snoinc_extracts/loinc_time_abbrv_syn_20250916.json")
-LOINC_COMPONENT_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_component_abbrv_syn_20250916.json"
-)
+enhancements = path.load_loinc_enhancements()
 
-LOINC_ENHANCEMENTS = normalize.merge_enhancements(
-    LOINC_METHOD_ENHANCEMENTS,
-    LOINC_PROPERTY_ENHANCEMENTS,
-    LOINC_SCALE_ENHANCEMENTS,
-    LOINC_SYSTEM_ENHANCEMENTS,
-    LOINC_TIME_ENHANCEMENTS,
-    LOINC_COMPONENT_ENHANCEMENTS,
-)
+LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 
 
 def scramble_word_order(
