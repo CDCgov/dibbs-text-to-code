@@ -5,6 +5,7 @@ ACADEMIC_CITATION_FULL = re.compile(r"\d{4} [A-Za-z]{3}(\s\d+)?;\d+\(\d+\):\d+-\
 ACADEMIC_CITATION_PERIODICAL_LONG = re.compile(r"(\d{4})?,?[;\s]\d+:\d+\s?-\s?\d+(?!:)\.?")
 ACADEMIC_CITATION_PERIODICAL_SHORT = re.compile(r"\d{4};\s\d*:\d*-\d*")
 ACADEMIC_CITATION_SHORT = re.compile(r"\d{4};\s?\d*(\(\d+\))?:\d*-\d*")
+ALPHA_NUMERIC = re.compile(r"[^a-zA-Z0-9]")
 BRACKETED_TEXT = re.compile(r"\[(?<=\[)[^\]]*?(?=\])\]")
 DOUBLE_QUOTE_MARK = re.compile(r'""')
 EC_REFERENCE = re.compile(r"\(?EC\s\d+\.\d+\.\d+\.\d+\)?")
