@@ -1,10 +1,17 @@
 import random
 import re
 import typing
-from typing import List
-from typing import Tuple
 
+import pydantic
+
+import data_curation.schemas.augmentation as schemas
 from data_curation.augmentation_config import AugmentationConfig
+from utils import normalize as normalize
+from utils import path as path
+
+enhancements = path.load_loinc_enhancements()
+
+LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 
 
 def scramble_word_order(
@@ -70,7 +77,7 @@ def _word_deletion(
     return delete_indices
 
 
-def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> Tuple[int, dict]:
+def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> typing.Tuple[int, dict]:
     for key, word_deets in word_details.items():
         if char_idx in range(int(word_deets["start"]), int(word_deets["end"])):
             return int(key), word_deets
@@ -217,16 +224,135 @@ def insert_loinc_related_names(
     return " ".join(words)
 
 
-# TODO: Replace with actual function once Marcelle's work lands
-def do_enhancement():
+@pydantic.validate_call
+def enhance_loinc_str(
+    text: str,
+    enhancement_type: schemas.EnhancementType,
+    max_enhancements: int,
+    min_enhancements: int = 1,
+) -> str:
     """
-    Docstring required by ruff
+    Enhances the input text by applying specified enhancement techniques.
+    :param text: The input text to enhance.
+    :param enhancement_type: The type of enhancement to apply. Options are:
+        - "abbrv": Replace words with their abbrveviations.
+        - "synonyms": Replace words with semantically related terms.
+        - "all": Apply all of the above techniques.
+    :param max_enhancements: The maximum number of enhancements to apply.
+    :param min_enhancements: The minimum number of enhancements to apply.
+    :return: The enhanced text.
     """
-    pass
+    if max_enhancements <= min_enhancements:
+        raise ValueError("max_enhancements must be greater than min_enhancements")
+
+    words = [[word.lower().strip(), [i]] for i, word in enumerate(text.split())]
+    # Check for possible enhancements
+    possible_words_to_enhance = _check_for_enhancements(words)
+
+    # Choose number of enhancements to apply
+    # Look for substrings to enhance if there are no individual words to enhance
+    if len(possible_words_to_enhance) < 1:
+        words = _generate_substrings(words)
+        possible_words_to_enhance = _check_for_enhancements(words)
+
+    if not possible_words_to_enhance:
+        return text
+
+    # Determine number of enhancements to apply
+    if len(possible_words_to_enhance) < min_enhancements:
+        num_enhancements = len(possible_words_to_enhance)
+    else:
+        num_enhancements = random.randint(
+            min_enhancements, min(max_enhancements, len(possible_words_to_enhance))
+        )
+
+    # Apply enhancements
+    words = _apply_enhancements(
+        words, possible_words_to_enhance, enhancement_type, num_enhancements
+    )
+
+    return " ".join(w[0] for w in words)
+
+
+def _apply_enhancements(
+    words: list[str, list[int]],
+    possible_words_to_enhance: dict[int, str],
+    enhancement_type: typing.Annotated[schemas.EnhancementType, pydantic.Field()],
+    num_enhancements: int,
+) -> list[str, list[int]]:
+    """
+
+    :param words: The list of words in the input text with their indices.
+    :param possible_words_to_enhance: A dictionary of words that can be enhanced.
+    :param enhancement_type: The type of enhancement to apply.
+    :param num_enhancements: The number of enhancements to apply.
+    :return: A tuple containing the enhanced list of words and the number of enhancements made.
+    """
+
+    # Apply enhancements
+    for _ in range(num_enhancements):
+        word_to_enhance = random.choice(list(possible_words_to_enhance.keys()))
+        word_to_enhance_idx = possible_words_to_enhance.pop(word_to_enhance)
+
+        possible_enhancements = LOINC_ENHANCEMENTS[word_to_enhance]
+        if not possible_enhancements.get(enhancement_type) and enhancement_type != "all":
+            continue
+
+        if enhancement_type == "all":
+            # Randomly choose between abbrveviation and synonyms & randomly pick an enhancement from the available options for the specified type
+            enhancement_type = random.choice(["abbrv", "synonyms"])
+            # If there are no enhancements of the chosen type, switch to the other type
+            if not possible_enhancements.get(enhancement_type):
+                enhancement_type = "abbrv" if enhancement_type == "synonyms" else "synonyms"
+
+        enhancement = random.choice(possible_enhancements[enhancement_type])
+
+        words[word_to_enhance_idx[0]][0] = enhancement
+
+    return words
+
+
+def _check_for_enhancements(words: list[str, list[int]]) -> list[str, list[int]]:
+    """
+    Checks the list of words for possible enhancements based on the LOINC_ENHANCEMENTS dictionary.
+
+    :param words: List of words to check for enhancements, including their indices.
+    :return: A dictionary with indices of words that can be enhanced as keys and the words themselves as values.
+    """
+    # Check that there are words to enhance
+    possible_words_to_enhance = {}
+
+    for word, idx in words:
+        if word in LOINC_ENHANCEMENTS:
+            # Only add if there are enhancements available
+            if not LOINC_ENHANCEMENTS[word].get("abbrv") and not LOINC_ENHANCEMENTS[word].get(
+                "synonyms"
+            ):
+                continue
+            possible_words_to_enhance[word] = idx
+
+    return possible_words_to_enhance
+
+
+def _generate_substrings(words: list[str, list[int]]) -> list[str, list[int]]:
+    """
+    Generates all possible substrings of the input list of words with at least 2 words
+    per substring.
+
+    :param words: List of words, including their indices, to generate substrings from.
+    :return: List of substrings, including their indices.
+    """
+    substrings = []
+    for start_idx in range(len(words)):
+        for end_idx in range(start_idx + 2, len(words) + 1):  # ensures at least 2 words
+            substring = " ".join(word for word, _ in words[start_idx:end_idx])
+            substrings.append([substring, [start_idx, end_idx]])
+
+    return substrings
 
 
 def generate_augmented_examples(
-    input_code: str, related_names: List[str], num_examples: int, config: AugmentationConfig
+    input_code: str, related_names: typing.List[str], num_examples: int, config: AugmentationConfig
 ):
     """
     Given a LOINC code string, generates a specified number of augmented
@@ -256,18 +382,30 @@ def generate_augmented_examples(
             prob = random.uniform(0.0, 1.0)
             if prob <= config["enhancement_all"]["enhancement_prob"]:
                 performed_enhancement = True
-                ex_code = do_enhancement()
+                ex_code = enhance_loinc_str(
+                    text=input_code,
+                    enhancement_type="all",
+                    max_enhancements=config["enhancement_all"]["max_enhancements"],
+                )
         else:
             if "enhancement_replace" in config:
                 prob = random.uniform(0.0, 1.0)
                 if prob <= config["enhancement_replace"]["enhancement_prob"]:
                     performed_enhancement = True
-                    ex_code = do_enhancement()
+                    ex_code = enhance_loinc_str(
+                        text=input_code,
+                        enhancement_type="synonyms",
+                        max_enhancements=config["enhancement_replace"]["max_enhancements"],
+                    )
             if "enhancement_abbreviation" in config:
                 prob = random.uniform(0.0, 1.0)
                 if prob <= config["enhancement_abbreviation"]["enhancement_prob"]:
                     performed_enhancement = True
-                    ex_code = do_enhancement()
+                    ex_code = enhance_loinc_str(
+                        text=input_code,
+                        enhancement_type="abbrv",
+                        max_enhancements=config["enhancement_abbreviation"]["max_enhancements"],
+                    )
 
         # Use the right insertion probability threshold
         # Inserts come after enhancements so that the random index any related
