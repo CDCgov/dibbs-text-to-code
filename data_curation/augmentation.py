@@ -388,14 +388,14 @@ def generate_augmented_examples(
                     max_enhancements=config["enhancement_all"]["max_enhancements"],
                 )
         else:
-            if "enhancement_replace" in config:
+            if "enhancement_synonyms" in config:
                 prob = random.uniform(0.0, 1.0)
-                if prob <= config["enhancement_replace"]["enhancement_prob"]:
+                if prob <= config["enhancement_synonyms"]["enhancement_prob"]:
                     performed_enhancement = True
                     ex_code = enhance_loinc_str(
                         text=input_code,
                         enhancement_type="synonyms",
-                        max_enhancements=config["enhancement_replace"]["max_enhancements"],
+                        max_enhancements=config["enhancement_synonyms"]["max_enhancements"],
                     )
             if "enhancement_abbreviation" in config:
                 prob = random.uniform(0.0, 1.0)

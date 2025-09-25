@@ -176,16 +176,16 @@ class AugmentationConfig(pydantic.BaseModel):
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_all'. "
             "This setting, if provided, will randomly choose what type of enhancement "
-            "to perform on the input string (abbreviation, replacement,  "
-            "substitution, etc.). If this parameter is provided, other enhancement "
-            "parameters will not be checked for or evaluated."
+            "to perform on the input string (abbreviation, synonyms, etc.). If this "
+            "parameter is provided, other enhancement parameters will not be checked "
+            "for or evaluated."
         ),
     )
-    enhancement_replace: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_synonyms: typing.Optional[EnhancementOptions] = pydantic.Field(
         default=None,
         description=(
-            "A dictionary of EnhancementOptions for the setting 'enhancement_replace'. "
-            "This setting, if provided, will apply property-axis word replacement to "
+            "A dictionary of EnhancementOptions for the setting 'enhancement_synonyms'. "
+            "This setting, if provided, will apply property-axis word synonym to "
             "tokens in the input string. Will not be used if 'enhancement_all' is "
             "defined, but can be used with enhancement_abbreviation."
         ),
@@ -196,7 +196,7 @@ class AugmentationConfig(pydantic.BaseModel):
             "A dictionary of EnhancementOptions for the setting 'enhancement_abbreviation'. "
             "This setting, if provided, will abbreviate word tokens in the input string, "
             "based on LOINC related name properties. Will not be used if "
-            "'enhancement_all' is defined, but can be used with enhancement_replace "
+            "'enhancement_all' is defined, but can be used with enhancement_synonyms "
             "and enhancement_abbreviation."
         ),
     )
