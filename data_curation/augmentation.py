@@ -5,7 +5,6 @@ import typing
 import pydantic
 
 import data_curation.schemas.augmentation as schemas
-from data_curation.augmentation_config import AugmentationConfig
 from utils import normalize as normalize
 from utils import path as path
 
@@ -352,7 +351,10 @@ def _generate_substrings(words: list[str, list[int]]) -> list[str, list[int]]:
 
 
 def generate_augmented_examples(
-    input_code: str, related_names: typing.List[str], num_examples: int, config: AugmentationConfig
+    input_code: str,
+    related_names: typing.List[str],
+    num_examples: int,
+    config: schemas.AugmentationConfig,
 ):
     """
     Given a LOINC code string, generates a specified number of augmented
@@ -376,8 +378,6 @@ def generate_augmented_examples(
         ex_code = input_code
         performed_enhancement = False
 
-        # TODO: Replace all instances of `do_enhancement` with appropriate
-        # function call
         if "enhancement_all" in config:
             prob = random.uniform(0.0, 1.0)
             if prob <= config["enhancement_all"]["enhancement_prob"]:
