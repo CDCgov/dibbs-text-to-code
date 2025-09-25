@@ -52,10 +52,9 @@ A configuration intended for granular control over the levels of enhancement
 and semantic variance performed. This config is a good candidate for simulating
 higher levels of "human shorthand" by preferencing synthetic data towards
 syntactic rather than semantic substitution. Deletion is down-weighted here
-to not interfere with acronym and abbreviation usage.
+to not interfere with replacement and abbreviation usage.
 """
 AUGMENTATION_INDIVIDUALLY_SPECIFIED: AugmentationConfig = {
-    "enhancement_acronym": {"min_enhances": 1, "max_enhances": 3, "enhancement_prob": 0.8},
     "enhancement_abbreviation": {"min_enhances": 1, "max_enhances": 3, "enhancement_prob": 0.8},
     "enhancement_replace": {"min_enhances": 1, "max_enhances": 2, "enhancement_prob": 0.4},
     "insertion": {

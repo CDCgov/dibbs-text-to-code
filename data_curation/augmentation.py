@@ -172,11 +172,11 @@ def random_char_deletion(
     if deletion_count > len(char_indices):
         deletion_count = len(char_indices - 1)
 
-    ####### word method ######
+    # word method
     if method == "word":
         delete_indices = _word_deletion(deletion_count, words, words_details, max_per_word)
 
-    ####### char method ######
+    # char method
     elif method == "char":
         delete_indices = _char_deletion(deletion_count, char_indices, words_details, max_per_word)
 
@@ -261,11 +261,6 @@ def generate_augmented_examples(
             if "enhancement_replace" in config:
                 prob = random.uniform(0.0, 1.0)
                 if prob <= config["enhancement_replace"]["enhancement_prob"]:
-                    performed_enhancement = True
-                    ex_code = do_enhancement()
-            if "enhancement_acronym" in config:
-                prob = random.uniform(0.0, 1.0)
-                if prob <= config["enhancement_acronym"]["enhancement_prob"]:
                     performed_enhancement = True
                     ex_code = do_enhancement()
             if "enhancement_abbreviation" in config:
