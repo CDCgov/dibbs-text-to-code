@@ -277,7 +277,8 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 reader = csv.DictReader(csvfile, delimiter="|")
                 for row in reader:
                     umls_loinc_rows.append(row)
-            starting_loinc_code = umls_loinc_rows[(len(umls_loinc_rows) - 1)]
+            last_umls_record = umls_loinc_rows[(len(umls_loinc_rows) - 1)]
+            starting_loinc_code = last_umls_record.get("code")
             process_loinc_code = False
         except FileNotFoundError:
             print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
