@@ -137,7 +137,7 @@ def get_loinc_lab_names():  # noqa: D103
     loinc_vs_type = "Lab Names"
     loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
-    save_valueset_csv_file(loinc_filename, loinc_order_rows)
+    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
 def get_loinc_lab_orders():  # noqa: D103
@@ -146,7 +146,7 @@ def get_loinc_lab_orders():  # noqa: D103
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
-    save_valueset_csv_file(loinc_filename, loinc_order_rows)
+    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
 def get_loinc_lab_results():  # noqa: D103
@@ -155,7 +155,7 @@ def get_loinc_lab_results():  # noqa: D103
     loinc_vs_type = "Lab Results"
     loinc_result_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
-    save_valueset_csv_file(loinc_filename, loinc_result_rows)
+    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
 def get_loinc_umls_related_results():  # noqa: D103
@@ -224,7 +224,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
         else:
             current_row_count = 0
 
-    if len(loinc_rows) > 0:
+    if loinc_valueset_type not in ("UMLS Atoms"):
         return loinc_rows
     else:
         return loinc_umls_urls
@@ -434,8 +434,11 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     if display_name is not None:
         result_row["display_name"] = display_name
     # Paragraph of information concerning the concept/code/term in question
-    if defintion_desc is not None and not _filter_loinc_term(defintion_desc):
-        result_row["definition_desc"] = loinc_result.get("DefinitionDescription")
+    if defintion_desc is not None:
+        if not _filter_loinc_term(defintion_desc):
+            result_row["definition_desc"] = loinc_result.get("DefinitionDescription")
+        else:
+            result_row["definition_desc"] = ""
     # ';' separated list of related terms to the concept/code/term in question
     if related_names is not None:
         result_row["related_names"] = related_names
