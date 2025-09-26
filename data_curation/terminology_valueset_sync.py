@@ -393,7 +393,9 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     except:
         print("Unexpected error:", sys.exc_info()[0])
         print(f"Saving {len(umls_loinc_rows)} records in file!")
-        save_valueset_csv_file(umls_filename_err, umls_loinc_rows, True)
+        # if exception occurs use all the rows in the existing list
+        # to overwrite the entire partial file
+        save_valueset_csv_file(umls_filename_err, umls_loinc_rows, False)
         raise
     return umls_loinc_rows
 
@@ -466,7 +468,8 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
 
         with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
-            writer.writeheader()
+            if not (append_to_file):
+                writer.writeheader()
             writer.writerows(contents)
         print(f"CSV File successfully saved as {full_file_path}")
 
