@@ -166,6 +166,9 @@ def get_loinc_umls_related_results():  # noqa: D103
     umls_filename = f"loinc_umls_related_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     full_url_file_path = os.path.join(TMP_DIRECTORY, url_filename)
 
+    # handle the first step of the process - find all the loinc codes
+    # and generate the two different URLS specific for UMLS API
+    # then store them in a file
     if not os.path.exists(full_url_file_path):
         loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
         umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
@@ -173,6 +176,8 @@ def get_loinc_umls_related_results():  # noqa: D103
         print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
 
         save_url_file(url_filename, umls_loinc_results)
+    else:
+        print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
@@ -264,7 +269,6 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     print("Processing UMLS URLS for LOINC Codes!")
     umls_loinc_rows = []
     loinc_code_count = 0
-    current_time = datetime.datetime.now()
 
     process_loinc_code = True
     starting_loinc_code = ""
@@ -294,13 +298,14 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 umls_crs_url = urls_dict["crs"]
                 loinc_code_count += 1
 
+                # every 500 loinc code store the results
+                # in a temp file to ensure progress is not lost
+                # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
-                    process_time = datetime.datetime.now()
-                    time_diff = process_time - current_time
-                    process_mins = time_diff.total_seconds() / 60
-                    print(f"CODE: {loinc_code_count}")
-                    print(f"ROW COUNTS: {len(umls_loinc_rows)}")
-                    print(f"PROCESS TIME: {process_mins} Minutes")
+                    save_valueset_csv_file(umls_filename_err, umls_loinc_rows, True)
+                    print(
+                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
+                    )
 
                 ###########################################################################
                 # LOINC ATOMIC TERMS PROCESSING
@@ -388,7 +393,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     except:
         print("Unexpected error:", sys.exc_info()[0])
         print(f"Saving {len(umls_loinc_rows)} records in file!")
-        save_valueset_csv_file(umls_filename_err, umls_loinc_rows)
+        save_valueset_csv_file(umls_filename_err, umls_loinc_rows, True)
         raise
     return umls_loinc_rows
 
@@ -438,7 +443,7 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     return loinc_order_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
+def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
     if not filename.strip():
         print("No filename supplied.  Failed to save CSV file!")
         return
@@ -450,11 +455,16 @@ def save_valueset_csv_file(filename: str, contents: dict):  # noqa: D103
     if not os.path.exists(CSV_DIRECTORY):
         os.makedirs(CSV_DIRECTORY)
 
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
+
     try:
         full_file_path = os.path.join(CSV_DIRECTORY, filename)
         csv_headers = contents[0].keys()
 
-        with open(full_file_path, "w", newline="", encoding="utf-8") as csvfile:
+        with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
             writer.writeheader()
             writer.writerows(contents)
