@@ -8,32 +8,9 @@ import data_curation.schemas.augmentation as schemas
 from utils import normalize as normalize
 from utils import path as path
 
-# TODO: move these loads to path or normalize module
-LOINC_METHOD_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_method_abbrv_syn_20250916.json"
-)
-LOINC_PROPERTY_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_property_abbrv_syn_20250916.json"
-)
-LOINC_SCALE_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_scale_abbrv_syn_20250916.json"
-)
-LOINC_SYSTEM_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_system_abbrv_syn_20250916.json"
-)
-LOINC_TIME_ENHANCEMENTS = path.read_json("data/snoinc_extracts/loinc_time_abbrv_syn_20250916.json")
-LOINC_COMPONENT_ENHANCEMENTS = path.read_json(
-    "data/snoinc_extracts/loinc_component_abbrv_syn_20250916.json"
-)
+enhancements = path.load_loinc_enhancements()
 
-LOINC_ENHANCEMENTS = normalize.merge_enhancements(
-    LOINC_METHOD_ENHANCEMENTS,
-    LOINC_PROPERTY_ENHANCEMENTS,
-    LOINC_SCALE_ENHANCEMENTS,
-    LOINC_SYSTEM_ENHANCEMENTS,
-    LOINC_TIME_ENHANCEMENTS,
-    LOINC_COMPONENT_ENHANCEMENTS,
-)
+LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 
 
 def scramble_word_order(
@@ -201,11 +178,11 @@ def random_char_deletion(
     if deletion_count > len(char_indices):
         deletion_count = len(char_indices - 1)
 
-    ####### word method ######
+    # word method
     if method == "word":
         delete_indices = _word_deletion(deletion_count, words, words_details, max_per_word)
 
-    ####### char method ######
+    # char method
     elif method == "char":
         delete_indices = _char_deletion(deletion_count, char_indices, words_details, max_per_word)
 
@@ -371,3 +348,105 @@ def _generate_substrings(words: list[str, list[int]]) -> list[str, list[int]]:
             substrings.append([substring, [start_idx, end_idx]])
 
     return substrings
+
+
+def generate_augmented_examples(
+    input_code: str,
+    related_names: typing.List[str],
+    num_examples: int,
+    config: schemas.AugmentationConfig,
+):
+    """
+    Given a LOINC code string, generates a specified number of augmented
+    training examples, which are returned as a list. Each augmented example is
+    probabilistically operated on by a scrambling or enhancement function
+    above to create a semantically and syntactically variant instance. The
+    order of augmentation operations is always enhancement, insertion,
+    permutation, then deletion.
+
+    :param input_code: The LOINC code string to generate augmented copies of.
+    :param related_names: A list of strings consisting of the LOINC "Related
+      Names" field pulled from the SNOINC extracts.
+    :param num_examples: The number of augmented examples to generate.
+    :param config: An Augmentation Configuration object indicating the
+      thresholds, options, and probabilities used to modify the example.
+    :returns: A list of augmented training examples.
+    """
+
+    augmented_examples = []
+    for _ in range(num_examples):
+        ex_code = input_code
+        performed_enhancement = False
+
+        if "enhancement_all" in config:
+            prob = random.uniform(0.0, 1.0)
+            if prob <= config["enhancement_all"]["enhancement_prob"]:
+                performed_enhancement = True
+                ex_code = enhance_loinc_str(
+                    text=input_code,
+                    enhancement_type="all",
+                    max_enhancements=config["enhancement_all"]["max_enhancements"],
+                )
+        else:
+            if "enhancement_synonyms" in config:
+                prob = random.uniform(0.0, 1.0)
+                if prob <= config["enhancement_synonyms"]["enhancement_prob"]:
+                    performed_enhancement = True
+                    ex_code = enhance_loinc_str(
+                        text=input_code,
+                        enhancement_type="synonyms",
+                        max_enhancements=config["enhancement_synonyms"]["max_enhancements"],
+                    )
+            if "enhancement_abbreviation" in config:
+                prob = random.uniform(0.0, 1.0)
+                if prob <= config["enhancement_abbreviation"]["enhancement_prob"]:
+                    performed_enhancement = True
+                    ex_code = enhance_loinc_str(
+                        text=input_code,
+                        enhancement_type="abbrv",
+                        max_enhancements=config["enhancement_abbreviation"]["max_enhancements"],
+                    )
+
+        # Use the right insertion probability threshold
+        # Inserts come after enhancements so that the random index any related
+        # names are inserted at doesn't interfere with substring searching
+        # for acronyms or abbreviations
+        if performed_enhancement:
+            t = config["insertion"]["insert_prob_after_enhance"]
+        else:
+            t = config["insertion"]["insert_prob_without_enhance"]
+        prob = random.uniform(0.0, 1.0)
+        if prob <= t:
+            ex_code = insert_loinc_related_names(
+                ex_code,
+                related_names,
+                config["insertion"]["max_inserts"],
+                config["insertion"]["min_inserts"],
+            )
+
+        # Next comes permutations, if applicable; no risk of interference
+        # with deletions, but they have to come after enhancements for the
+        # same reasons as insertions, and insertions have priority as the
+        # only other mechanism to insert new semantic meaning
+        prob = random.uniform(0.0, 1.0)
+        if prob <= config["permutation"]["swap_prob"]:
+            ex_code = scramble_word_order(
+                ex_code, config["permutation"]["max_swaps"], config["permutation"]["min_swaps"]
+            )
+
+        # Last come the deletions: must be the final operation because
+        # they're syntactically destructive, and other operations depend on
+        # the full syntax of each token
+        prob = random.uniform(0.0, 1.0)
+        if prob <= config["deletion"]["deletion_prob"]:
+            ex_code = random_char_deletion(
+                ex_code,
+                config["deletion"]["min_deletes"],
+                config["deletion"]["max_deletes"],
+                config["deletion"]["max_deletes_per_word"],
+                config["deletion"]["deletion_mode"],
+            )
+
+        augmented_examples.append(ex_code)
+
+    return augmented_examples

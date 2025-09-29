@@ -48,3 +48,9 @@ def test_read_json_absolute():
         assert utils.read_json(path) == {"key": "value"}
     finally:
         os.unlink(path)
+
+
+def test_load_loinc_enhancements():
+    enhancements = utils.load_loinc_enhancements()
+    assert isinstance(enhancements, dict)
+    assert len(enhancements) > 0

@@ -1,3 +1,4 @@
+import glob
 import json
 import pathlib
 
@@ -34,3 +35,20 @@ def read_json(path: str) -> dict:
         path = str(pathlib.Path(code_root(), path))
     with open(path, "r") as fobj:
         return json.load(fobj)
+
+
+def load_loinc_enhancements():
+    """
+    Loads LOINC enhancements from JSON files.
+    :return: A dictionary of LOINC enhancements.
+    """
+    pattern = "data/snoinc_extracts/*_abbrv_syn_*.json"
+    matches = glob.glob(pattern)
+
+    enhancements = {}
+
+    for match in matches:
+        m = read_json(match)
+        enhancements.update(m)
+
+    return enhancements
