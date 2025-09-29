@@ -163,7 +163,7 @@ def get_loinc_umls_related_results():  # noqa: D103
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
     url_filename = "loinc_umls_related_names_urls.json"
-    umls_filename = f"loinc_umls_related_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    umls_filename = f"loinc_umls_related_names_{datetime.datetime.now().strftime('%Y%m%d')}.json"
     full_url_file_path = os.path.join(TMP_DIRECTORY, url_filename)
 
     # handle the first step of the process - find all the loinc codes
@@ -175,13 +175,15 @@ def get_loinc_umls_related_results():  # noqa: D103
 
         print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
 
-        save_url_file(url_filename, umls_loinc_results)
+        save_json_file(
+            directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
+        )
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
-    save_valueset_csv_file(umls_filename, umls_rows)
+    save_json_file(CSV_DIRECTORY, umls_filename, umls_rows, False)
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
@@ -242,9 +244,11 @@ def get_loinc_umls_urls(loinc_results, loinc_rows_list):
         # get the LOINC Code and store it for use in the
         # UMLS urls
         loinc_code = loinc_result.get("LOINC_NUM")
+        long_name = loinc_result.get("LONG_COMMON_NAME")
         loinc_umls_urls = {
             "atom": UMLS_LOINC_LAB_ATOMS_URL + loinc_code + "/atoms",
             "crs": UMLS_LOINC_LAB_CROSSWALK_URL + loinc_code,
+            "long_name": long_name,
         }
         loinc_rows_list[loinc_code] = loinc_umls_urls
 
@@ -263,27 +267,26 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
             umls_urls = json.load(file)
     except FileNotFoundError:
         print(f"Error: {file_path} not found. Please ensure the file exists.")
+        raise
     except json.JSONDecodeError:
         print(f"Error: Invalid JSON format in {file_path}.")
+        raise
 
     print("Processing UMLS URLS for LOINC Codes!")
-    umls_loinc_rows = []
+    umls_loinc_rows = {}
     loinc_code_count = 0
 
     process_loinc_code = True
     starting_loinc_code = ""
-    umls_filename_err = "loinc_umls_related_names_PARTIAL.csv"
-    full_partial_file_path = os.path.join(CSV_DIRECTORY, umls_filename_err)
+    umls_filename_err = "loinc_umls_related_names_PARTIAL.json"
+    full_partial_file_path = os.path.join(TMP_DIRECTORY, umls_filename_err)
 
     if os.path.exists(full_partial_file_path):
         try:
-            with open(full_partial_file_path, "r", newline="", encoding="utf-8") as csvfile:
-                reader = csv.DictReader(csvfile, delimiter="|")
-                for row in reader:
-                    umls_loinc_rows.append(row)
-            last_umls_record = umls_loinc_rows[(len(umls_loinc_rows) - 1)]
-            starting_loinc_code = last_umls_record.get("code")
-            process_loinc_code = False
+            with open(full_partial_file_path, "r", newline="", encoding="utf-8") as file:
+                umls_loinc_rows = json.load(file)
+                starting_loinc_code = list(umls_loinc_rows)[-1]
+                process_loinc_code = False
         except FileNotFoundError:
             print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
         except csv.Error:
@@ -296,20 +299,20 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
             if process_loinc_code:
                 umls_atom_url = urls_dict["atom"]
                 umls_crs_url = urls_dict["crs"]
+                long_name = urls_dict["long_name"]
+                related_names = []
                 loinc_code_count += 1
 
                 # every 500 loinc code store the results
                 # in a temp file to ensure progress is not lost
                 # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
-                    save_valueset_csv_file(umls_filename_err, umls_loinc_rows, True)
+                    save_json_file(TMP_DIRECTORY, umls_filename_err, umls_loinc_rows, True)
                     print(
                         f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
                     )
 
-                ###########################################################################
                 # LOINC ATOMIC TERMS PROCESSING
-                ###########################################################################
                 atom_page_num = 1
                 page_size = 500
                 lang = "ENG"
@@ -332,9 +335,8 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
                     for atom_result in umls_atom_results:
                         related_name = atom_result.get("name")
-                        if related_name:
-                            atom_row = {"code": loinc_code, "text": related_name}
-                            umls_loinc_rows.append(atom_row)
+                        if related_name and related_name not in related_names:
+                            related_names.append(related_name)
                             atom_row_count += 1
 
                     atom_page_num += 1
@@ -347,9 +349,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
                     umls_atom_response = requests.get(umls_atom_url, params=params)
 
-                ###########################################################################
                 # LOINC CROSSWALK TERMS PROCESSING
-                ###########################################################################
                 crs_page_num = 1
                 page_size = 500
                 lang = "ENG"
@@ -374,9 +374,12 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                     for crs_result in umls_crs_results:
                         related_name = crs_result.get("name")
                         root_source = crs_result.get("rootSource")
-                        if "LNC-" not in root_source and related_name:
-                            crs_row = {"code": loinc_code, "text": related_name}
-                            umls_loinc_rows.append(crs_row)
+                        if (
+                            "LNC-" not in root_source
+                            and related_name
+                            and related_name not in related_names
+                        ):
+                            related_names.append(related_name)
                             crs_row_count += 1
 
                     crs_page_num += 1
@@ -388,6 +391,10 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                     }
 
                     umls_crs_response = requests.get(umls_crs_url, params=params)
+
+                # add the record for the specific loinc code
+                related_names_row = {"code": loinc_code, "names": related_names}
+                umls_loinc_rows[long_name] = related_names_row
             if starting_loinc_code != "" and loinc_code == starting_loinc_code:
                 process_loinc_code = True
     except:
@@ -395,7 +402,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
         print(f"Saving {len(umls_loinc_rows)} records in file!")
         # if exception occurs use all the rows in the existing list
         # to overwrite the entire partial file
-        save_valueset_csv_file(umls_filename_err, umls_loinc_rows, False)
+        save_json_file(TMP_DIRECTORY, umls_filename_err, umls_loinc_rows, False)
         raise
     return umls_loinc_rows
 
@@ -482,47 +489,31 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print(f"An error occured: {e}")
 
 
-def save_loinc_part_dict_file(filename: str, contents: dict):  # noqa: D103
-    if not filename.strip():
-        print("No filename supplied.  Failed to save LOINC Part Dictionary!")
+def save_json_file(  # noqa: D103
+    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
+):
+    if not filename.strip() or not directory_path.strip():
+        print("No filename & path supplied.  Failed to save JSON File!")
         return
 
     if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save LOINC Part Dictionary!")
+        print("Empty file contents!  Failed to save JSON File!")
         return
 
-    if not os.path.exists(CSV_DIRECTORY):
-        os.makedirs(CSV_DIRECTORY)
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+    full_file_path = os.path.join(directory_path, filename)
+
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
 
     try:
-        full_file_path = os.path.join(CSV_DIRECTORY, filename)
-
-        with open(full_file_path, "w", encoding="utf-8") as dictfile:
+        with open(full_file_path, file_method, encoding="utf-8") as dictfile:
             json.dump(contents, dictfile, indent=4)
-        print(f"JSON Dictionary for Loinc Part saved successfully as: {full_file_path}")
-
-    except ValueError as e:
-        print(f"Error parsing Dict Contents: {e}")
-    except Exception as e:
-        print(f"An error occured: {e}")
-
-
-def save_url_file(file_path: str, contents: dict):  # noqa: D103
-    if not file_path.strip():
-        print("No filename & path supplied.  Failed to save URL File!")
-        return
-
-    if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save URL File!")
-        return
-
-    if not os.path.exists(TMP_DIRECTORY):
-        os.makedirs(TMP_DIRECTORY)
-
-    try:
-        with open(file_path, "w", encoding="utf-8") as dictfile:
-            json.dump(contents, dictfile, indent=4)
-        print(f"URL File successfully saved as: {file_path}")
+        print(f"JSON File successfully saved as: {full_file_path}")
 
     except ValueError as e:
         print(f"Error parsing Dict Contents: {e}")
@@ -658,12 +649,12 @@ def create_loinc_part_abbrv_syn_dicts():
                 )
     print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
-    save_loinc_part_dict_file(component_file, component_dict)
-    save_loinc_part_dict_file(method_file, method_dict)
-    save_loinc_part_dict_file(property_file, property_dict)
-    save_loinc_part_dict_file(system_file, system_dict)
-    save_loinc_part_dict_file(time_file, time_dict)
-    save_loinc_part_dict_file(scale_file, scale_dict)
+    save_json_file(CSV_DIRECTORY, component_file, component_dict)
+    save_json_file(CSV_DIRECTORY, method_file, method_dict)
+    save_json_file(CSV_DIRECTORY, property_file, property_dict)
+    save_json_file(CSV_DIRECTORY, system_file, system_dict)
+    save_json_file(CSV_DIRECTORY, time_file, time_dict)
+    save_json_file(CSV_DIRECTORY, scale_file, scale_dict)
 
 
 def _filter_loinc_term(text: str) -> bool:
