@@ -54,7 +54,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # File settings
-CSV_DIRECTORY = "../data/snoinc_extracts"
+SNOINC_DIRECTORY = "../data/snoinc_extracts"
 TMP_DIRECTORY = "./tmp"
 
 # Data Filter Criteria
@@ -183,7 +183,7 @@ def get_loinc_umls_related_results():  # noqa: D103
 
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
-    save_json_file(CSV_DIRECTORY, umls_filename, umls_rows, False)
+    save_json_file(SNOINC_DIRECTORY, umls_filename, umls_rows, False)
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
@@ -464,8 +464,8 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print("Empty file contents!  Failed to save CSV!")
         return
 
-    if not os.path.exists(CSV_DIRECTORY):
-        os.makedirs(CSV_DIRECTORY)
+    if not os.path.exists(SNOINC_DIRECTORY):
+        os.makedirs(SNOINC_DIRECTORY)
 
     if append_to_file:
         file_method = "a"
@@ -473,7 +473,7 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         file_method = "w"
 
     try:
-        full_file_path = os.path.join(CSV_DIRECTORY, filename)
+        full_file_path = os.path.join(SNOINC_DIRECTORY, filename)
         csv_headers = contents[0].keys()
 
         with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
@@ -649,12 +649,12 @@ def create_loinc_part_abbrv_syn_dicts():
                 )
     print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
-    save_json_file(CSV_DIRECTORY, component_file, component_dict)
-    save_json_file(CSV_DIRECTORY, method_file, method_dict)
-    save_json_file(CSV_DIRECTORY, property_file, property_dict)
-    save_json_file(CSV_DIRECTORY, system_file, system_dict)
-    save_json_file(CSV_DIRECTORY, time_file, time_dict)
-    save_json_file(CSV_DIRECTORY, scale_file, scale_dict)
+    save_json_file(SNOINC_DIRECTORY, component_file, component_dict)
+    save_json_file(SNOINC_DIRECTORY, method_file, method_dict)
+    save_json_file(SNOINC_DIRECTORY, property_file, property_dict)
+    save_json_file(SNOINC_DIRECTORY, system_file, system_dict)
+    save_json_file(SNOINC_DIRECTORY, time_file, time_dict)
+    save_json_file(SNOINC_DIRECTORY, scale_file, scale_dict)
 
 
 def _filter_loinc_term(text: str) -> bool:
