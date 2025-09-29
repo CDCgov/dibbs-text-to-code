@@ -1,3 +1,6 @@
+import csv
+import os
+
 import pytest
 
 from data_curation import augmentation
@@ -223,3 +226,47 @@ class TestGenerateAugmentedTrainingSamples:
     def test_generate_augmented_examples(self, text, related_names, num_examples, config, expected):
         result = augmentation.generate_augmented_examples(text, related_names, num_examples, config)
         assert result == expected
+
+
+class TestBuildAugmentedLoincFiles:
+    def test_build_augmented_loinc_files(self, cleanup_tmp_files):
+        input_path = "./data/snoinc_extracts/loinc_lab_names_20250911.csv"
+        num_sn = 2
+        num_lcn = 2
+        num_dn = 2
+        config = {
+            "long_common_name": AUGMENTATION_WITHOUT_ENHANCEMENT,
+            "short_name": AUGMENTATION_WITHOUT_ENHANCEMENT,
+            "display_name": AUGMENTATION_WITHOUT_ENHANCEMENT,
+        }
+        output_base_path = "./tmp/augmented_loinc"
+        augmentation.build_augmented_loinc_files(
+            input_path=input_path,
+            num_sn=num_sn,
+            num_lcn=num_lcn,
+            num_dn=num_dn,
+            config=config,
+            output_path_base=output_base_path,
+        )
+
+        # Check that the expected files were created
+        # Assert files were created
+        for key in config:
+            file_path = f"{output_base_path}_{key}.csv"
+            assert os.path.exists(file_path)
+
+            # Check that the files are not empty
+            assert os.path.getsize(file_path) > 0
+
+            # Check that the files contain the expected number of augmented examples
+            with open(file_path, "r", encoding="utf-8", newline="") as fp:
+                reader = csv.reader(fp, delimiter=":")
+                for row in reader:
+                    loinc_code, base_value, augmented_examples = row
+                    augmented_examples = augmented_examples.split("|")
+                    if key == "long_common_name":
+                        assert len(augmented_examples) == num_lcn
+                    elif key == "short_name":
+                        assert len(augmented_examples) == num_sn
+                    elif key == "display_name":
+                        assert len(augmented_examples) == num_dn
