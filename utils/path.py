@@ -1,0 +1,54 @@
+import glob
+import json
+import pathlib
+
+
+def code_root() -> pathlib.Path:
+    """
+    Returns the root directory of the dibbs_text_to_code source code.
+    """
+    root = pathlib.Path(__file__).resolve()
+    while root.name != "dibbs-text-to-code":
+        if root.parent == root:
+            raise FileNotFoundError("dibbs_text_to_code project root not found.")
+        root = root.parent
+    return root
+
+
+def repo_root(start: pathlib.Path | None = None) -> pathlib.Path | None:
+    """
+    Returns the root directory of the dibbs_text_to_code repository, or None if not found.
+    """
+    start = start or pathlib.Path(__file__).resolve()
+    for directory in [start] + list(start.parents):
+        if (directory / "pyproject.toml").is_file():
+            return directory
+    return None
+
+
+def read_json(path: str) -> dict:
+    """
+    Loads a JSON file.
+    """
+    if not pathlib.Path(path).is_absolute():
+        # if path is relative, append to the project root
+        path = str(pathlib.Path(code_root(), path))
+    with open(path, "r") as fobj:
+        return json.load(fobj)
+
+
+def load_loinc_enhancements():
+    """
+    Loads LOINC enhancements from JSON files.
+    :return: A dictionary of LOINC enhancements.
+    """
+    pattern = "data/snoinc_extracts/*_abbrv_syn_*.json"
+    matches = glob.glob(pattern)
+
+    enhancements = {}
+
+    for match in matches:
+        m = read_json(match)
+        enhancements.update(m)
+
+    return enhancements

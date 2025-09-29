@@ -38,3 +38,6 @@ coverage.xml
 # macOS
 **/.DS_Store
 /.vscode
+
+# Training files
+data/training_files/

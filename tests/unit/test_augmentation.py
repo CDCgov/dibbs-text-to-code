@@ -1,6 +1,7 @@
 import pytest
 
 from data_curation import augmentation
+from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 
 
 @pytest.mark.parametrize(
@@ -57,7 +58,7 @@ class TestCharDeletion:
 
 
 @pytest.mark.parametrize(
-    "text, loinc_names, max_inserts,expected ",
+    "text, loinc_names, max_inserts, expected",
     [
         # Empty string
         ("", ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"], 3, ""),
@@ -84,4 +85,141 @@ class TestInsertLoincRelatedNames:
         result = augmentation.insert_loinc_related_names(
             text, loinc_names, min_inserts=2, max_inserts=max_inserts
         )
+        assert result == expected
+
+
+@pytest.mark.parametrize(
+    "words, expected",
+    [
+        # Test case 1: Words with possible enhancements
+        ([("blood", [0]), ("glucose", [1]), ("measurement", [2])], {"glucose": [1]}),
+        # Test case 2: No words with enhancements
+        ([("this", [0]), ("term", [1]), ("has", [2]), ("no", [3]), ("enhancements", [4])], {}),
+        # Test case 3: Mixed case words
+        ([("blood", [0]), ("glucose", [1]), ("zscore", [2])], {"glucose": [1], "zscore": [2]}),
+    ],
+)
+class TestCheckForEnhancements:
+    def test_check_for_enhancements(self, words, expected):
+        result = augmentation._check_for_enhancements(words)
+        assert result == expected
+
+
+@pytest.mark.parametrize(
+    "words, expected",
+    [
+        # Test case 1: Typical case with multiple words
+        (
+            [["blood", [0]], ["glucose", [1]], ["measurement", [2]]],
+            [
+                ["blood glucose", [0, 2]],
+                ["blood glucose measurement", [0, 3]],
+                ["glucose measurement", [1, 3]],
+            ],
+        ),
+        # Test case 2: Single word (no substrings possible)
+        ([["blood", [0]]], []),
+        # # Test case 3: Two words
+        ([["blood", [0]], ["glucose", [1]]], [["blood glucose", [0, 2]]]),
+    ],
+)
+class TestGenerateSubstrings:
+    def test_generate_substrings(self, words, expected):
+        result = augmentation._generate_substrings(words)
+        assert result == expected
+
+
+@pytest.mark.parametrize(
+    "text, enhancement_type, max_enhancements, min_enhancements, expected",
+    [
+        # Test case 1: Basic enhancement with a single synonym
+        (
+            "Blood Glucose Measurement",
+            "synonyms",
+            2,
+            1,
+            "blood glucoseur measurement",
+        ),
+        # Test case 2: Enhancement with "all" replacements
+        (
+            "Blood Glucose Measurement",
+            "all",
+            2,
+            1,
+            "blood gluc measurement",
+        ),
+        # Test case 3: No possible enhancements
+        (
+            "This term has no enhancements",
+            "abbrv",
+            2,
+            1,
+            "This term has no enhancements",
+        ),
+        # Test case 4: Enhancement on substrings
+        (
+            "Blood Glucose Measurement",
+            "all",
+            4,
+            2,
+            "blood glucoseur measurement",
+        ),
+    ],
+)
+class TestEnhanceLoinc:
+    def test_enhance_loinc(
+        self, text, enhancement_type, max_enhancements, min_enhancements, expected
+    ):
+        result = augmentation.enhance_loinc_str(
+            text,
+            enhancement_type=enhancement_type,
+            max_enhancements=max_enhancements,
+            min_enhancements=min_enhancements,
+        )
+
+        assert result == expected
+
+
+class TestEnhanceLoincError:
+    def test_enhance_loinc_str_raise_error(self):
+        text = "Blood Glucose Measurement"
+
+        with pytest.raises(ValueError):
+            augmentation.enhance_loinc_str(
+                text=text,
+                enhancement_type="abbrv",
+                max_enhancements=1,
+                min_enhancements=3,
+            )
+
+
+@pytest.mark.parametrize(
+    "text, related_names, num_examples, config, expected",
+    [
+        # Augmentation without any enhancements
+        (
+            "Hematocrit [Volume Fraction] of Blood by calculation",
+            [
+                "Blood",
+                "Erythrocytes",
+                "Calculation",
+                "CalcRBC",
+                "Volume fraction",
+                "% mL",
+                "Hemat.",
+                "HoBBC",
+            ],
+            3,
+            AUGMENTATION_WITHOUT_ENHANCEMENT,
+            [
+                "CalcRC [Volume Fraction] of by Hematocrit Blood calculation",
+                "CalcRBC Hematorit Fraction] HBBC of Blood by [Voume Volume fraction calculation",
+                "Hematocrit [Volume Fraction] of Blood % mL by calculation",
+            ],
+        ),
+    ],
+)
+class TestGenerateAugmentedTrainingSamples:
+    def test_generate_augmented_examples(self, text, related_names, num_examples, config, expected):
+        result = augmentation.generate_augmented_examples(text, related_names, num_examples, config)
         assert result == expected
