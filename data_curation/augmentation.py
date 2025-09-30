@@ -476,21 +476,21 @@ def build_augmented_loinc_files(
 
     num_map = {"short_name": num_sn, "long_common_name": num_lcn, "display_name": num_dn}
 
-    # Read in data/loinc_lab_names.csv
+    # Read in data/loinc_lab_names_XXXX.csv
     with open(
         input_path,
         encoding="utf-8",
     ) as fp:
         data = fp.readlines()
 
-    for row in data[1:15]:
+    for row in data:
         r = row.split("|")
         # skip any malformed rows
-        if len(r) < 5:
+        if len(r) < 6:
             continue
 
         loinc_code, short_name, long_name, display_name = r[0], r[1], r[2], r[3]
-        related_names = r[5].split(";") if r[4] else []
+        related_names = r[5].split(";") if r[5] else []
 
         values = {
             "short_name": short_name,

@@ -230,7 +230,7 @@ class TestGenerateAugmentedTrainingSamples:
 
 class TestBuildAugmentedLoincFiles:
     def test_build_augmented_loinc_files(self, cleanup_tmp_files):
-        input_path = "./data/snoinc_extracts/loinc_lab_names_20250911.csv"
+        input_path = "./tests/unit/assets/loinc_lab_names_20250930.csv"
         num_sn = 2
         num_lcn = 2
         num_dn = 2
