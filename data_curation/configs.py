@@ -3,7 +3,7 @@ import data_curation.schemas.augmentation as schemas
 """
 A default augmentation configuration meant as a "representative" synthetic
 baseline for most cases. Slightly favors applying enhancement, but if 
-enhancement isn't performed, heavily skews towards insertion. This promotes
+enhancement isn't performed, heavily skews towards insertion. This promotes 
 variance in semantic meaning in the input, which then undergoes a moderate
 level of skewing / corruption.
 """
@@ -71,4 +71,14 @@ AUGMENTATION_INDIVIDUALLY_SPECIFIED: schemas.AugmentationConfig = {
         "max_deletes_per_word": 1,
         "deletion_prob": 0.2,
     },
+}
+
+"""
+A configuration intended for the generation of augmented LOINC files, with
+granular control over the levels of enhancement at the individual type level. 
+"""
+LOINC_FILE_GENERATION_AUGMENTATION: schemas.LoincFileGenerationConfig = {
+    "long_common_name": DEFAULT_AUGMENTATION,
+    "short_name": DEFAULT_AUGMENTATION,
+    "display_name": DEFAULT_AUGMENTATION,
 }
