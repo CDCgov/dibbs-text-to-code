@@ -10,11 +10,24 @@ The `data_curation` folder contains scripts for TTC model development, tuning, a
 
 ### terminology_valueset_sync.py
 
-Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see link section below](#terminology-valueset-sync-script)
+Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#terminology-valueset-sync-script)
 
 ### augmentation.py
 
-A gathering of various functions to modify data from the different terminology data sets to help with model training and tuning.
+A gathering of various functions to modify data from the different terminology data sets to help with model training and tuning.  Functions that randomly scramble words, randomly delete characters, and randomly replacing words with related terms are included.  The `configs.py` is leveraged to allow the user to configure the various parameters/properties for these random data modification functions.
+
+### configs.py
+
+A collection of various configurations used to augment data and/or create synthetic data, using the terminology data sets.
+
+### generation.py
+
+A script to house functions that can be used to generate data sets used to help train and tune the data models.  ie. `Generate Positive Pairs` - Given the location of one or more files of LOINC codes and some corresponding augmented examples for those codes, this function compiles a list of positive pairs that can be read for model training. A positive pair is a tuple of the form (original_loinc_code, augmented_example_of_code).
+
+### synthetic_lab_results.py
+
+Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
+and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript can introduce randomized case changes and typos.
 
 
 ## Data Files
