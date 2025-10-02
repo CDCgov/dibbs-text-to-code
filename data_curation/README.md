@@ -75,7 +75,8 @@ These data files are organizing all the possible abbreviations and synonyms for 
             "Medical biochemical genetics",
             "Clinical biochemical genomics"
         ]
-    },```
+    },
+```
 
    - Key: LOINC Part Short Name
    - Code: The LOINC Part unique identifier, starting with LP then typically in a 5-digit-then-a-dash format (e.g., LP806-0).
