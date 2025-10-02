@@ -64,7 +64,10 @@ Each part provides unique information about the test or observation:
 These data files are organizing all the possible abbreviations and synonyms for a particular LOINC Part into a single JSON/Dictionary file.
 
 - **Data Structure:**
-```"Clinical biochemical genetics": {
+```{
+   ...
+   {
+   "Clinical biochemical genetics": {
         "code": "LP134112-4",
         "abbrv": [
             "Clinic biochem gen"
