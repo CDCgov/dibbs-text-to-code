@@ -30,10 +30,16 @@ A script to house functions that can be used to generate data sets used to help 
 Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
 and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript can introduce randomized case changes and typos.
 
+### loinc (folder)
+
+Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files that are used to generate some of the data files.
+
 
 ## Data Files
 
 ### LOINC:
+
+These data files are for the Lab codes/concepts in LOINC.
 
 - **Data Structure:** `code|short_name|long_name|display_name|definition_desc|related_names`
    - Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
@@ -51,6 +57,8 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ### LOINC Part Synonyms & Abbreviations
 
+These data files are organizing all the possible abbreviations and synonyms for all the particular LOINC Part codes/concepts into a single JSON/Dictionary file.
+
 LOINC terms are comprised of six parts, defining a specific clinical observation or measurement: Component (the analyte), Property (the characteristic being measured), Time Aspect (when it was measured), System (the specimen or source), Scale (how the result is expressed), and Method (how it was measured). These parts, joined by colons, create a fully specified name that provides clarity and standardization for clinical data exchange.  
 
 Each part provides unique information about the test or observation: 
@@ -60,8 +68,6 @@ Each part provides unique information about the test or observation:
 - [System](../data/snoinc_extracts/loinc_system_abbrv_syn_20250926.json): The specimen source or origin of the measurement (e.g., serum, plasma, blood). 
 - [Scale](../data/snoinc_extracts/loinc_scale_abbrv_syn_20250926.json): How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text). 
 - [Method](../data/snoinc_extracts/loinc_method_abbrv_syn_20250926.json): The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term. 
-
-These data files are organizing all the possible abbreviations and synonyms for a particular LOINC Part into a single JSON/Dictionary file.
 
 - **Data Structure:**
 ```{
@@ -80,12 +86,20 @@ These data files are organizing all the possible abbreviations and synonyms for 
         ]
     },
 ```
-
    - Key: LOINC Part Short Name
-   - Code: The LOINC Part unique identifier, starting with LP then typically in a 5-digit-then-a-dash format (e.g., LP806-0).
-
+   - Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
+   - Abbrv: A list of abbreviations for the specific LOINC Part.
+   - Synonym: A list of synonyms for the specific LOINC Part.
 
 ### LOINC Part Descriptions
+
+This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept.  Not all LOINC codes/concepts will have a result in this data file.  A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API.
+
+- **Data Structure**: (CSV) `LOINC_NUM,DESCRIPTION`
+   - Loinc num: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+   - Description: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
+
+~~**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**~~
 
 ### SNOMED
 
