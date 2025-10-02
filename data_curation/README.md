@@ -99,9 +99,20 @@ This is a data file that contains LOINC codes/concepts that also have a LOINC Pa
    - Loinc num: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
    - Description: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
 
-~~**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**~~
+- [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
+
+_**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**_
 
 ### SNOMED
+
+These data files are for the various codes/concepts in SNOMED.
+
+- **Data Structure**: `code|text`
+   - Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
+   - Text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
+
+- [Lab Values](../data/snoinc_extracts/snomed_lab_value_20250926.csv) - SNOMED CT does not code the specific quantitative values of lab results (e.g., "glucose 105 mg/dL") but rather provides codes for the qualitative interpretation of a result (e.g., positive, negative, abnormal). The quantitative value and its units are typically stored separately in the health record. 
+
 
 ### HL7
 
