@@ -1,10 +1,11 @@
 # DIBBS Text to Code (TTC) - Data Curation
 
 ## Table of Contents
+[[_TOC_]]
 
 ## Overview
 
-The `data_curation` folder contains scripts for TTC model development, tuning, and evaluation.  
+The `data_curation` folder contains scripts for TTC model development, tuning, and evaluation.  Most of the scripts leverage data that is being pulled from the LOINC, UMLS, and HL7 APIs.  However, some require the LOINC RelmaDB (MS-Access database).
 
 ## Scripts
 
@@ -34,6 +35,7 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ### LOINC:
 
+- [How to generate](#loinc-1)
 - Data Structure: `code|short_name|long_name|display_name|definition_desc|related_names`
    - Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
    - Short Name: A concise name used for quick displays, such as in a report's column header. 
@@ -51,6 +53,12 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ## Instructions
 
-### Terminology ValueSet Sync Script
+### LOINC
 
-### RELMA DB
+### LOINC Part Synonyms & Abbreviations
+
+### LOINC Part Descriptions
+
+### SNOMED
+
+### HL7
