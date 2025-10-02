@@ -11,7 +11,7 @@ The `data_curation` folder contains scripts for TTC model development, tuning, a
 
 ### terminology_valueset_sync.py
 
-Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#terminology-valueset-sync-script)
+Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#instructions)
 
 ### augmentation.py
 
@@ -35,8 +35,7 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ### LOINC:
 
-- [How to generate](#loinc-1)
-- Data Structure: `code|short_name|long_name|display_name|definition_desc|related_names`
+- **Data Structure:** `code|short_name|long_name|display_name|definition_desc|related_names`
    - Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
    - Short Name: A concise name used for quick displays, such as in a report's column header. 
    - Long Name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians. 
@@ -50,15 +49,44 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
    
 - [Lab Names](../data/snoinc_extracts/loinc_lab_names_20250926.csv) - The LOINC codes and terms for both Lab Orders and Lab Results in a single set.  This is primarily used to satisfy the models used for determining the correct code for Lab Orders and Resulting Labs in TTC.
 
-
-## Instructions
-
-### LOINC
-
 ### LOINC Part Synonyms & Abbreviations
+
+LOINC terms are comprised of six parts, defining a specific clinical observation or measurement: Component (the analyte), Property (the characteristic being measured), Time Aspect (when it was measured), System (the specimen or source), Scale (how the result is expressed), and Method (how it was measured). These parts, joined by colons, create a fully specified name that provides clarity and standardization for clinical data exchange.  
+
+Each part provides unique information about the test or observation: 
+- [Component](../data/snoinc_extracts/loinc_component_abbrv_syn_20250926.json): What is being measured (e.g., glucose, a specific organ part). 
+- [Property](../data/snoinc_extracts/loinc_property_abbrv_syn_20250926.json): The specific attribute of the component being measured (e.g., length, mass, number). 
+- [Time Aspect](../data/snoinc_extracts/loinc_time_abbrv_syn_20250926.json): The time frame or duration over which the measurement was made. 
+- [System](../data/snoinc_extracts/loinc_system_abbrv_syn_20250926.json): The specimen source or origin of the measurement (e.g., serum, plasma, blood). 
+- [Scale](../data/snoinc_extracts/loinc_scale_abbrv_syn_20250926.json): How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text). 
+- [Method](../data/snoinc_extracts/loinc_method_abbrv_syn_20250926.json): The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term. 
+
+These data files are organizing all the possible abbreviations and synonyms for a particular LOINC Part into a single JSON/Dictionary file.
+
+- **Data Structure:**
+```"Clinical biochemical genetics": {
+        "code": "LP134112-4",
+        "abbrv": [
+            "Clinic biochem gen"
+        ],
+        "synonyms": [
+            "Medical biochemical genomics",
+            "Clinical biochem genetics",
+            "Medical biochemical genetics",
+            "Clinical biochemical genomics"
+        ]
+    },```
+
+   - Key: LOINC Part Short Name
+   - Code: The LOINC Part unique identifier, starting with LP then typically in a 5-digit-then-a-dash format (e.g., LP806-0).
+
 
 ### LOINC Part Descriptions
 
 ### SNOMED
 
 ### HL7
+
+## Instructions
+
+### LOINC
