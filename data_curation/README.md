@@ -39,7 +39,7 @@ Contains .sql queries/files that are used to gather data from LOINC's RELMA data
 
 ### LOINC:
 
-These data files are for the Lab codes/concepts in LOINC.
+These data files are for the Lab codes/concepts in LOINC for the base TTC model.
 
 - **Data Structure:** `code|short_name|long_name|display_name|definition_desc|related_names`
    - Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
@@ -105,7 +105,7 @@ _**NOTE: we can easily change this to be a file with any delimiter instead of a 
 
 ### SNOMED
 
-These data files are for the various codes/concepts in SNOMED.
+These data files are for the various codes/concepts in SNOMED used to be the base of the TTC model.
 
 - **Data Structure**: `code|text`
    - Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
@@ -116,6 +116,16 @@ These data files are for the various codes/concepts in SNOMED.
 
 ### HL7
 
+These data files are for the various codes & displays from various HL7 ValueSets and CodeSystems used in the base of the TTC model.
+
+- **Data Structure**: `code|text`
+   - Code: The unique machine-readable identifier for a concept.
+   - Text: Human-readable text describing the concept.
+
+- [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves. 
+
+
 ## Instructions
 
-### LOINC
+### Generating SNOINC Extracts
+
