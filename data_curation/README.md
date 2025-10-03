@@ -1,7 +1,40 @@
 # DIBBS Text to Code (TTC) - Data Curation
 
 ## Table of Contents
-[[_TOC_]]
+
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Scripts](#scripts)
+   - [terminology_valueset_sync.py](#terminology_valueset_sync.py)
+   - [augmentation.py](#augmentation.py)
+   - [configs.py](#configs.py)
+   - [generation.py](#generation.py)
+   - [synthetic_lab_results.py](#synthetic_lab_results.py)
+   - [loinc (folder)](#loinc-(folder))
+- [Data Files](#data-files)
+   - [LOINC:](#loinc:)
+   - [Data Structure:](#data-structure:)
+   - [Extracts](#extracts)
+   - [LOINC Part Synonyms & Abbreviations](#loinc-part-synonyms-&-abbreviations)
+   - [Extracts](#extracts)
+   - [Data Structure:](#data-structure:)
+   - [LOINC Part Descriptions](#loinc-part-descriptions)
+   - [Data Structure:](#data-structure:)
+   - [Extracts:](#extracts:)
+   - [LOINC UMLS Related Names](#loinc-umls-related-names)
+   - [Data Structure:](#data-structure:)
+   - [Extracts](#extracts)
+   - [SNOMED](#snomed)
+   - [Data Structure:](#data-structure:)
+   - [Extracts:](#extracts:)
+   - [HL7](#hl7)
+   - [Data Structure:](#data-structure:)
+   - [Extracts:](#extracts:)
+- [Instructions](#instructions)
+   - [Generating SNOINC Extracts](#generating-snoinc-extracts)
+   - [Dependencies](#dependencies)
+   - [Command Line](#command-line)
+   - [Direct Relma DB Queries](#direct-relma-db-queries)
 
 ## Overview
 
@@ -320,7 +353,6 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - With the newly created query still open, select `External Data` in the menu up-top.  Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:\<your repo location>\data\` and then click `OK`.
    ![SAVE CSV](./assets/export_csv_to_repo.jpg)
    - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `C:\<your repo location>\data_curation\loinc` and then click `OK`.
-   ![SAVE EXPORT TO REPO](./assets/save_export_to_repo.jpg)
    - When the "Export Text Wizard" appears select `Finish`.
    - This will save the query results in the [data folder](../data/)
 
