@@ -42,6 +42,7 @@ Contains .sql queries/files that are used to gather data from LOINC's RELMA data
 These data files are for the Lab codes/concepts in LOINC for the base TTC model.
 
 #### Data Structure:
+
 ```csv
 code|short_name|long_name|display_name|definition_desc|related_names
 110636-8|APAP Msmt Ur|Acetaminophen [Measurement] in Urine|Acetaminophen (U) [Measurement]||ACET; Acetamidophenol; Acetaminoph; Acetominophen; APAP; c209; C55; Hydroxyacetanilide; Lab orders; Msmt; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; p-Acetamidophenol; Paracetamol; p-Hydroxyacetanilide; Tylenol; u209; UA; UR; Urn
@@ -69,6 +70,8 @@ These data files are organizing all the possible abbreviations and synonyms for 
 
 LOINC terms are comprised of six parts, defining a specific clinical observation or measurement: Component (the analyte), Property (the characteristic being measured), Time Aspect (when it was measured), System (the specimen or source), Scale (how the result is expressed), and Method (how it was measured). These parts, joined by colons, create a fully specified name that provides clarity and standardization for clinical data exchange.  
 
+#### Extracts
+
 Each part provides unique information about the test or observation: 
 - [Component](../data/snoinc_extracts/loinc_component_abbrv_syn_20250926.json): What is being measured (e.g., glucose, a specific organ part). 
 - [Property](../data/snoinc_extracts/loinc_property_abbrv_syn_20250926.json): The specific attribute of the component being measured (e.g., length, mass, number). 
@@ -77,7 +80,8 @@ Each part provides unique information about the test or observation:
 - [Scale](../data/snoinc_extracts/loinc_scale_abbrv_syn_20250926.json): How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text). 
 - [Method](../data/snoinc_extracts/loinc_method_abbrv_syn_20250926.json): The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term. 
 
-- **Data Structure:**
+#### Data Structure:
+
 ```json
 {
    ...
@@ -95,18 +99,26 @@ Each part provides unique information about the test or observation:
         ]
     },
 ```
-   - Key: LOINC Part Short Name
-   - Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
-   - Abbrv: A list of abbreviations for the specific LOINC Part.
-   - Synonym: A list of synonyms for the specific LOINC Part.
+- Key: LOINC Part Short Name
+- Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
+- Abbrv: A list of abbreviations for the specific LOINC Part.
+- Synonym: A list of synonyms for the specific LOINC Part.
 
 ### LOINC Part Descriptions
 
 This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept.  Not all LOINC codes/concepts will have a result in this data file.  A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API.
 
-- **Data Structure**: (CSV) `LOINC_NUM,DESCRIPTION`
-   - Loinc num: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
-   - Description: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
+#### Data Structure:
+
+```csv
+LOINC_NUM,DESCRIPTION
+21019-5,Metanephrine is a metabolite generated when epiniphrine is cleaved by catechol O-methyltransferase. It is also known as 4-hydroxy-3-methoxy-alpha-((methylamino)methyl) benzenemethanol with formula C10-H15-N-O3.
+80974-9,"Sulfamethoxazole is a sulfonamide bacteriostatic antibiotic. It is most often used as part of a synergistic combination with trimethoprim in a 5:1 ratio in co-trimoxazole, which is also known as Bactrim or Septrin. It can be used as an alternative to amoxicillin -based antibiotics to treat sinusitis. Mechanism of action:Sulfonamides are structural anologs and competitive antagonists of para-aminobenzoic acid (PABA). They inhibit normal bacterial utilization of PABA for the synthesis of folic acid, an important metabolite in DNA synthesis. The effects seen are usually bacteriostatic in nature. Folic acid is not synthesized in humans, but is instead a dietary requirement. This allows for the selective toxicity to bacterial cells (or any cell dependent on synthesizing folic acid) over human cells."
+```
+- Loinc num: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- Description: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
+
+#### Extracts:
 
 - [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
 
@@ -116,9 +128,17 @@ _**NOTE: we can easily change this to be a file with any delimiter instead of a 
 
 These data files are for the various codes/concepts in SNOMED used to be the base of the TTC model.
 
-- **Data Structure**: `code|text`
-   - Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
-   - Text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
+#### Data Structure:
+
+ ```csv
+ code|text
+442779003|Borderline low
+281301001|Within reference range
+ ```
+- Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
+- Text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
+
+#### Extracts:
 
 - [Lab Values](../data/snoinc_extracts/snomed_lab_value_20250926.csv) - SNOMED CT does not code the specific quantitative values of lab results (e.g., "glucose 105 mg/dL") but rather provides codes for the qualitative interpretation of a result (e.g., positive, negative, abnormal). The quantitative value and its units are typically stored separately in the health record. 
 
@@ -127,9 +147,17 @@ These data files are for the various codes/concepts in SNOMED used to be the bas
 
 These data files are for the various codes & displays from various HL7 ValueSets and CodeSystems used in the base of the TTC model.
 
-- **Data Structure**: `code|text`
-   - Code: The unique machine-readable identifier for a concept.
-   - Text: Human-readable text describing the concept.
+#### Data Structure:
+
+```csv
+code|text
+B|Better
+D|Significant change down
+```
+- Code: The unique machine-readable identifier for a concept.
+- Text: Human-readable text describing the concept.
+
+#### Extracts:
 
 - [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves. 
 
