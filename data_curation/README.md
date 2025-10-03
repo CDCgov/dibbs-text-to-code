@@ -2,11 +2,10 @@
 
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [Scripts](#scripts)
 - [Data Files](#data-files)
-   - [LOINC:](#loinc)
+   - [LOINC](#loinc)
    - [LOINC Part Synonyms & Abbreviations](#loinc-part-synonyms-&-abbreviations)
    - [LOINC Part Descriptions](#loinc-part-descriptions)
    - [LOINC UMLS Related Names](#loinc-umls-related-names)
