@@ -193,21 +193,29 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - Make sure your loinc username and password are [set as environment variables](#dependencies)
    - Enter `python .\terminology_valueset_sync.py --lab_orders`
    - A file named loinc_lab_orders_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+
 - [**Lab Observations**](#loinc)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Make sure your loinc username and password are [set as environment variables](#dependencies)
    - Enter `python .\terminology_valueset_sync.py --lab_obs`
    - A file named loinc_lab_result_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+
 - [**Lab Names**](#loinc) (All Labs for both Orders and Observations)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Make sure your loinc username and password are [set as environment variables](#dependencies)
    - Enter `python .\terminology_valueset_sync.py --lab_names`
    - A file named loinc_lab_names_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+
 - [**Lab Result Values**](#snomed)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
    - Enter `python .\terminology_valueset_sync.py --lab_values`
    - A file named snomed_lab_values_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+
 - [**Lab Interpretations**](#hl7)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Enter `python .\terminology_valueset_sync.py --lab_interp`
