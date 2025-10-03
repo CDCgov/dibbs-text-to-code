@@ -191,4 +191,4 @@ D|Significant change down
 
 ### Instructions
 
-To generate these SNOINC Extract Files refer to this [README](../data_curation/README.md)
+To generate these SNOINC Extract Files refer to this [README](../data_curation/README.md#instructions)
