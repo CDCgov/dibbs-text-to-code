@@ -140,3 +140,10 @@ These data files are for the various codes & displays from various HL7 ValueSets
 
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
    - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
+
+#### Command Line
+
+There are a handful of CLI commands you can use to generate the extract files.  Here are the instructions you can use to get the various files.
+
+- HELP
+![CLI_HELP](./assets/CLI_HELP.jpg)
