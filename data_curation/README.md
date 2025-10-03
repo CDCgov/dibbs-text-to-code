@@ -204,6 +204,8 @@ D|Significant change down
 
 ### Generating SNOINC Extracts
 
+:warning: **NOTE: this process to generate these extracts will pull from the latest data from LOINC and SNOMED.  A process to "Update" these extracts has not been created yet** :warning:
+
 #### Dependencies
 
 - [LOINC Regenstrief Account](https://loinc.org/join/) - Sign up to create a LOINC User Account
