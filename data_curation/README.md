@@ -275,7 +275,7 @@ There are a handful of CLI commands you can use to generate the extract files.  
    ![RELMA](./assets/RELMADB.jpg)
    - Select the `Create` Option in the Menu and then select `SQL Query`
    ![CREATE QUERY](./assets/create_query.jpg)
-   - Open the SQL query provided for [loinc parts abbreviations & synonyms](./loinc/get_loinc_parts_abrv_synonyms.sql) and copy the contents of that file into the newly created query.
+   - Open the SQL query provided for [loinc parts abbreviations & synonyms](./loinc/get_loinc_parts_abbrv_synonyms.sql) and copy the contents of that file into the newly created query.
    ![SAVE QUERY ABBRV](./assets/query_loinc_abbrv_syn.jpg)
    - Before saving the query, select the `Make Table` option for the `Query Type` and enter the "Table Name" as `LOINC_PARTS_ABBRV_SYNONYMS` and then click `OK`
    ![MAKE TABLE QUERY](./assets/make_table_query.jpg)
@@ -294,3 +294,12 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Enter `python .\terminology_valueset_sync.py --loinc_abbr_syn`
    - Several files with a similar pattern for all the different LOINC Parts: loinc_<part>_abbrv_syn_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
+
+---
+
+- [**Loinc Lab UMLS Related Names**](#loinc-umls-related-names)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Enter `python .\terminology_valueset_sync.py --loinc_umls_syn`
+   - A file named loinc_umls_related_names_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
+   
+---
