@@ -70,7 +70,8 @@ Each part provides unique information about the test or observation:
 - [Method](../data/snoinc_extracts/loinc_method_abbrv_syn_20250926.json): The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term. 
 
 - **Data Structure:**
-```{
+```json
+{
    ...
    {
    "Clinical biochemical genetics": {
@@ -146,8 +147,8 @@ These data files are for the various codes & displays from various HL7 ValueSets
 There are a handful of CLI commands you can use to generate the extract files.  Here are the instructions you can use to get the various files.
 
 - **HELP**
-   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder ```cd data_curation
-   - enter ```python .\terminology_valueset_sync.py --help
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - enter `python .\terminology_valueset_sync.py --help`
 
 ![CLI_HELP](./assets/CLI_HELP1.jpg)
 
