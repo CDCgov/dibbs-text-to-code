@@ -266,3 +266,15 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Enter `python .\terminology_valueset_sync.py --lab_interp`
    - A file named hl7_lab_interp_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+   
+---
+
+- [**Loinc Abbreviations & Synonyms**](#loinc-part-synonyms--abbreviations)
+   - Make sure you have download the [LOINC Relma database](#dependencies) and have located it
+   - Open the Relma.mdb file
+   ![RELMA](./assets/RELMADB.jpg)
+   - Select the `Create` Option in the Menu and then select `SQL Query`
+   ![CREATE QUERY](./assets/create_query.jpg)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Enter `python .\terminology_valueset_sync.py --lab_interp`
+   - A file named hl7_lab_interp_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
