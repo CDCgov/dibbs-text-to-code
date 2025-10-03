@@ -303,3 +303,23 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - A file named loinc_umls_related_names_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
    
 ---
+
+#### Direct Relma DB Queries
+
+- [**Loinc Codes With Core Component Descriptions**](#loinc-part-descriptions)
+   - Make sure you have download the [LOINC Relma database](#dependencies) and have located it
+   - Open the Relma.mdb file
+   ![RELMA](./assets/RELMADB.jpg)
+   - Select the `Create` Option in the Menu and then select `SQL Query`
+   ![CREATE QUERY](./assets/create_query.jpg)
+   - Open the SQL query provided for [loinc codes with part descriptions](./loinc/loinc_codes_with_part_descriptions.sql) and copy the contents of that file into the newly created query.  Then select the save button at the top left.
+   - Enter a name for the query and click on `OK`\
+   ![SAVE QUERY](./assets/save_query.jpg)
+   - With the newly created query still open, select `External Data` in the menu up-top.  Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:\<your repo location>\data\` and then click `OK`.
+   ![SAVE CSV](./assets/export_csv_to_repo.jpg)
+   - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `C:\<your repo location>\data_curation\loinc` and then click `OK`.
+   ![SAVE EXPORT TO REPO](./assets/save_export_to_repo.jpg)
+   - When the "Export Text Wizard" appears select `Finish`.
+   - This will save the query results in the [data folder](../data/)
+
+---
