@@ -146,4 +146,4 @@ These data files are for the various codes & displays from various HL7 ValueSets
 There are a handful of CLI commands you can use to generate the extract files.  Here are the instructions you can use to get the various files.
 
 - HELP
-![CLI_HELP](./assets/CLI_HELP.jpg)
+![CLI_HELP](./assets/CLI_HELP1.jpg)
