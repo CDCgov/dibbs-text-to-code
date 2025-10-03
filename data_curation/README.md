@@ -85,7 +85,6 @@ Each part provides unique information about the test or observation:
 ```json
 {
    ...
-   {
    "Clinical biochemical genetics": {
         "code": "LP134112-4",
         "abbrv": [
@@ -98,6 +97,8 @@ Each part provides unique information about the test or observation:
             "Clinical biochemical genomics"
         ]
     },
+    ...
+}
 ```
 - Key: LOINC Part Short Name
 - Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
@@ -123,6 +124,35 @@ LOINC_NUM,DESCRIPTION
 - [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
 
 _**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**_
+
+### LOINC UMLS Related Names
+
+This data file organizes correlated terms from LOINC and other terminology sets, such as SNOMED, that correlate to a single LOINC code.  The UMLS `Atom` and `Crosswalk` APIs are leveraged to gather and organize this data.
+
+#### Data Structure:
+
+```json
+{
+   ...
+    "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE panel - Serum or Plasma": {
+        "code": "102115-3",
+        "names": [
+            "(Dog dander+Cat epithelium+Horse dander) Antibody.immunoglobulin E panel:-:To identify measures at a point in time:Serum/Plasma:-",
+            "Epid Allerg Mix IgE pl SerPl",
+            "(Dog dander+Cat epithelium+Horse dander) IgE pl",
+            "(Dog dander+Cat epithelium+Horse dander) Ab.IgE panel:-:Pt:Ser/Plas:-"
+        ]
+    },
+    ...
+}
+```
+- Key: LOINC Full Common Name
+- Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- Names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
+
+#### Extracts
+
+- [Loinc UMLS Related Names](../data/snoinc_extracts/loinc_umls_related_names_20250929.json)
 
 ### SNOMED
 
