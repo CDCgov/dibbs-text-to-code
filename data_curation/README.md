@@ -275,6 +275,23 @@ There are a handful of CLI commands you can use to generate the extract files.  
    ![RELMA](./assets/RELMADB.jpg)
    - Select the `Create` Option in the Menu and then select `SQL Query`
    ![CREATE QUERY](./assets/create_query.jpg)
+   - Open the SQL query provided for [loinc parts abbreviations & synonyms](./loinc/get_loinc_parts_abrv_synonyms.sql) and copy the contents of that file into the newly created query.
+   ![SAVE QUERY ABBRV](./assets/query_loinc_abbrv_syn.jpg)
+   - Before saving the query, select the `Make Table` option for the `Query Type` and enter the "Table Name" as `LOINC_PARTS_ABBRV_SYNONYMS` and then click `OK`
+   ![MAKE TABLE QUERY](./assets/make_table_query.jpg)
+   - Click on Save in the top right corner and name the query: `GET_LOINC_PARTS_ABBRV_SYNONYMS`
+   ![NAME ABBRV](./assets/query_name_abbrv_syn.jpg)
+   - With the query still open in "Design" mode click on the `Run` Button at the top of the menu.  This will create the table using the data from the query.
+   ![RUN QUERY](./assets/run_abbrv_query.jpg)
+   - Find the newly created table by expanding the '^' option next to `Tables` in the right hand menu.  Select the `LOINC_PARTS_ABBRV_SYNONYMS` table from the list and then select `External Data` in the menu up-top.  Then click on the `Text File` as the "Export" option.
+   ![EXPORT TEXT](./assets/find_table_export_text.jpg)
+   - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `C:\<your repo location>\data_curation\loinc` and then click `OK`.
+   ![SAVE EXPORT TO REPO](./assets/save_export_to_repo.jpg)
+   - When the "Export Text Wizard" appears select `Delimited` and click `Next`
+   ![DELIM](./assets/delimited.jpg)
+   - Choose the `Other` option and enter a `|` in the box and click `Next`.  And then `Finish` on the next screen.
+   ![PIPE DELIM](./assets/pipe_delim.jpg)
+   - This will save the necessary data in a file within the repo that will be used to generate the LOINC Part Abbreviation Files.
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
-   - Enter `python .\terminology_valueset_sync.py --lab_interp`
-   - A file named hl7_lab_interp_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+   - Enter `python .\terminology_valueset_sync.py --loinc_abbr_syn`
+   - Several files with a similar pattern for all the different LOINC Parts: loinc_<part>_abbrv_syn_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
