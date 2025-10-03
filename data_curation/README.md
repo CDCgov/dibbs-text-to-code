@@ -41,7 +41,10 @@ Contains .sql queries/files that are used to gather data from LOINC's RELMA data
 
 These data files are for the Lab codes/concepts in LOINC for the base TTC model.
 
-- **Data Structure:** `code|short_name|long_name|display_name|definition_desc|related_names`
+- **Data Structure:** 
+```csv
+code|short_name|long_name|display_name|definition_desc|related_names
+```
    - Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
    - Short Name: A concise name used for quick displays, such as in a report's column header. 
    - Long Name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians. 
