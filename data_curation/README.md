@@ -280,7 +280,6 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - Before saving the query, select the `Make Table` option for the `Query Type` and enter the "Table Name" as `LOINC_PARTS_ABBRV_SYNONYMS` and then click `OK`
    ![MAKE TABLE QUERY](./assets/make_table_query.jpg)
    - Click on Save in the top right corner and name the query: `GET_LOINC_PARTS_ABBRV_SYNONYMS`
-   ![NAME ABBRV](./assets/query_name_abbrv_syn.jpg)
    - With the query still open in "Design" mode click on the `Run` Button at the top of the menu.  This will create the table using the data from the query.
    ![RUN QUERY](./assets/run_abbrv_query.jpg)
    - Find the newly created table by expanding the '^' option next to `Tables` in the right hand menu.  Select the `LOINC_PARTS_ABBRV_SYNONYMS` table from the list and then select `External Data` in the menu up-top.  Then click on the `Text File` as the "Export" option.
