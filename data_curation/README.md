@@ -11,7 +11,7 @@ The `data_curation` folder contains scripts for TTC model development, tuning, a
 
 ### terminology_valueset_sync.py
 
-Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#instructions)
+Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#command-line)
 
 ### augmentation.py
 
@@ -146,8 +146,8 @@ These data files are for the various codes & displays from various HL7 ValueSets
 There are a handful of CLI commands you can use to generate the extract files.  Here are the instructions you can use to get the various files.
 
 - **HELP**
-   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
-   - enter `python .\terminology_valueset_sync.py --help`
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder ```cd data_curation```
+   - enter ```python .\terminology_valueset_sync.py --help```
 
 ![CLI_HELP](./assets/CLI_HELP1.jpg)
 
