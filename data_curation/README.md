@@ -64,6 +64,8 @@ code|short_name|long_name|display_name|definition_desc|related_names
    
 - [Lab Names](../data/snoinc_extracts/loinc_lab_names_20250926.csv) - The LOINC codes and terms for both Lab Orders and Lab Results in a single set.  This is primarily used to satisfy the models used for determining the correct code for Lab Orders and Resulting Labs in TTC.
 
+---
+
 ### LOINC Part Synonyms & Abbreviations
 
 These data files are organizing all the possible abbreviations and synonyms for all the particular LOINC Part codes/concepts into a single JSON/Dictionary file.
@@ -105,6 +107,8 @@ Each part provides unique information about the test or observation:
 - Abbrv: A list of abbreviations for the specific LOINC Part.
 - Synonym: A list of synonyms for the specific LOINC Part.
 
+---
+
 ### LOINC Part Descriptions
 
 This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept.  Not all LOINC codes/concepts will have a result in this data file.  A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API.
@@ -124,6 +128,8 @@ LOINC_NUM,DESCRIPTION
 - [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
 
 _**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**_
+
+---
 
 ### LOINC UMLS Related Names
 
@@ -154,6 +160,8 @@ This data file organizes correlated terms from LOINC and other terminology sets,
 
 - [Loinc UMLS Related Names](../data/snoinc_extracts/loinc_umls_related_names_20250929.json)
 
+---
+
 ### SNOMED
 
 These data files are for the various codes/concepts in SNOMED used to be the base of the TTC model.
@@ -172,6 +180,7 @@ These data files are for the various codes/concepts in SNOMED used to be the bas
 
 - [Lab Values](../data/snoinc_extracts/snomed_lab_value_20250926.csv) - SNOMED CT does not code the specific quantitative values of lab results (e.g., "glucose 105 mg/dL") but rather provides codes for the qualitative interpretation of a result (e.g., positive, negative, abnormal). The quantitative value and its units are typically stored separately in the health record. 
 
+---
 
 ### HL7
 
@@ -191,7 +200,6 @@ D|Significant change down
 
 - [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves. 
 
-
 ## Instructions
 
 ### Generating SNOINC Extracts
@@ -208,6 +216,8 @@ D|Significant change down
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
    - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
 
+---
+
 #### Command Line
 
 There are a handful of CLI commands you can use to generate the extract files.  Here are the instructions you can use to get the various files.
@@ -218,12 +228,15 @@ There are a handful of CLI commands you can use to generate the extract files.  
 
 ![CLI_HELP](./assets/CLI_HELP1.jpg)
 
+---
+
 - [**Lab Orders**](#loinc)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Make sure your loinc username and password are [set as environment variables](#dependencies)
    - Enter `python .\terminology_valueset_sync.py --lab_orders`
    - A file named loinc_lab_orders_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
 
+---
 
 - [**Lab Observations**](#loinc)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
@@ -231,6 +244,7 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - Enter `python .\terminology_valueset_sync.py --lab_obs`
    - A file named loinc_lab_result_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
 
+---
 
 - [**Lab Names**](#loinc) (All Labs for both Orders and Observations)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
@@ -238,6 +252,7 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - Enter `python .\terminology_valueset_sync.py --lab_names`
    - A file named loinc_lab_names_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
 
+---
 
 - [**Lab Result Values**](#snomed)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
@@ -245,6 +260,7 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - Enter `python .\terminology_valueset_sync.py --lab_values`
    - A file named snomed_lab_values_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
 
+---
 
 - [**Lab Interpretations**](#hl7)
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
