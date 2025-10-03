@@ -129,3 +129,14 @@ These data files are for the various codes & displays from various HL7 ValueSets
 
 ### Generating SNOINC Extracts
 
+#### Dependencies
+
+- [LOINC Regenstrief Account](https://loinc.org/join/) - Sign up to create a LOINC User Account
+   - Store your newly created LOINC Username in an environment variable: `LOINC_USERNAME`
+   - Store your newly created LOINC Password in an environment variable: `LOINC_PWD`
+
+- [Download LOINC Relma](https://loinc.org/file-access/download-id/8763/)
+   - Locate and remember where the Relma.mdb database is (Typically located: `C:<path_to_relma_installation>\RELMA\RELMA.MDB`)
+
+- [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
+   - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
