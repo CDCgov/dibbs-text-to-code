@@ -317,6 +317,16 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
    - Enter `python .\terminology_valueset_sync.py --loinc_umls_syn`
    - A file named loinc_umls_related_names_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
+
+   :warning: **NOTE: This will take approximately 36 hours to complete, but if you stop it or you receive an error, you can restart this process and it will pick up where it left off** :warning:
+
+---
+
+- **All Extracts**
+   - Ensure that all [dependencies](#dependencies) are handled
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Enter `python .\terminology_valueset_sync.py --all`
+   - All processes for the various extracts, listed above, will run created all subsequent files in the [data folder](../data/)
    
 ---
 
