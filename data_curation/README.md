@@ -141,7 +141,7 @@ LOINC_NUM,DESCRIPTION
 
 - [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
 
-_**NOTE: we can easily change this to be a file with any delimiter instead of a `,`**_
+_**NOTE: we can easily change this to be a file with any delimiter instead of a comma (`,`)**_
 
 ---
 
