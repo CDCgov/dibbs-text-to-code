@@ -29,7 +29,16 @@ Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to prov
 
 ### augmentation.py
 
-A gathering of various functions to modify data from the different terminology data sets to help with model training and tuning.  Functions that randomly scramble words, randomly delete characters, and randomly replacing words with related terms are included.  The `configs.py` is leveraged to allow the user to configure the various parameters/properties for these random data modification functions.
+A collection of data modification utilities for terminology datasets, designed to support model training and tuning.
+
+This module provides functions to introduce controlled randomness into text data by:
+   - Randomly scrambling words or characters
+   - Randomly deleting characters
+   - Randomly replacing words with related or synonymous terms  
+
+These transformations are useful for creating augmented datasets that improve model robustness and generalization, particularly when dealing with noisy or variant terminology (e.g., clinical terms, lab names, or LOINC entries).
+
+All randomization behaviors and transformation parameters are configurable via the `configs.py` module, allowing users to fine-tune augmentation intensity, probability distributions, and substitution rules.
 
 ### configs.py
 
