@@ -27,6 +27,8 @@ The `data_curation` folder contains scripts for TTC model development, tuning, a
 
 Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#command-line)
 
+---
+
 ### augmentation.py
 
 A collection of data modification utilities for terminology datasets, designed to support model training and tuning.
@@ -40,18 +42,34 @@ These transformations are useful for creating augmented datasets that improve mo
 
 All randomization behaviors and transformation parameters are configurable via the `configs.py` module, allowing users to fine-tune augmentation intensity, probability distributions, and substitution rules.
 
+---
+
 ### configs.py
 
-A collection of various configurations used to augment data and/or create synthetic data, using the terminology data sets.
+A collection of schema-like structures that bundle together the various parameters used when executing multiple `augmentation` functions. When executed in this way, a particular combination of `augmentation` functions can be thought of as one "complete" or "end-to-end" data generation process. A single `Config` object thus specifies the properties and probability distributions of any data created by its augmentation process.
+
+We've identified several "starter" configurations, listed below:
+
+    - `DEFAULT_AUGMENTATION`: A "general-purpose" augmentation config that seeks to maximize semantic diversity and variance in meaning, while also applying a moderate degree of deliberate obfuscation or corruption to represent imperfect data. This config should be used as a starting point in most cases, since the semantic richness and variety the model is exposed to directly determines its prediction capabilities.
+    - `AUGMENTATION_WITHOUT_ENHANCEMENT`: When the number of enhancement variations for data is low, this config performs augmentation favoring other properties instead. Insertion is one of the most important elements to this config, as it is the only means of injecting semantic variance. However, the deletion probability is also scaled up to prevent the model memorizing or hallucinating character-clusters over embedded meaning. This config should be expected to produce longer code strings than given inputs, with words sharing similar meanings or connotations added randomly throughout, all with characters randomly missing.
+    - `AUGMENTATION_INDIVIDUALLY_SPECIFIED`: When more granular control over the type of enhancement is desirable, this config allows the creation of data heavily biased towards _syntactic_ rather than _semantic_ variance. Human shorthand of clinical concepts is most often abbreviation- or acronym-based, thus this config prefers replacing words with syntactically truncated variants. Deletion is heavily down-weighted to not interfere with the generation of plausible acronyms.
+
+---
 
 ### generation.py
 
 A script to house functions that can be used to generate data sets used to help train and tune the data models.  ie. `Generate Positive Pairs` - Given the location of one or more files of LOINC codes and some corresponding augmented examples for those codes, this function compiles a list of positive pairs that can be read for model training. A positive pair is a tuple of the form (original_loinc_code, augmented_example_of_code).
 
+**TODO: Add more content here as we flesh out the generation script more**
+
+---
+
 ### synthetic_lab_results.py
 
 Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
 and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript can introduce randomized case changes and typos.
+
+---
 
 ### loinc (folder)
 
