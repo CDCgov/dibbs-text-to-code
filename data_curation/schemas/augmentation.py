@@ -203,3 +203,15 @@ class AugmentationConfig(pydantic.BaseModel):
     insertion: InsertionOptions = InsertionOptions()
     permutation: PermutationOptions = PermutationOptions()
     deletion: DeletionOptions = DeletionOptions()
+
+
+class LoincFileGenerationConfig(pydantic.BaseModel):
+    """
+    The schema for a dictionary of configuration options governing how to generate
+    synthetic data specifically for LOINC short names, long common names, and display
+    names.
+    """
+
+    short_name: AugmentationConfig = AugmentationConfig()
+    long_common_name: AugmentationConfig = AugmentationConfig()
+    display_name: AugmentationConfig = AugmentationConfig()
