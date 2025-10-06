@@ -92,9 +92,9 @@ Each part provides unique information about the test or observation:
 }
 ```
 - Key: LOINC Part Short Name
-- Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
-- Abbrv: A list of abbreviations for the specific LOINC Part.
-- Synonym: A list of synonyms for the specific LOINC Part.
+- code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
+- abbrv: A list of abbreviations for the specific LOINC Part.
+- synonyms: A list of synonyms for the specific LOINC Part.
 
 ---
 
