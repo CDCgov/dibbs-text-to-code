@@ -166,9 +166,9 @@ This data file organizes correlated terms from LOINC and other terminology sets,
     ...
 }
 ```
-- Key: LOINC Full Common Name
-- Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
-- Names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
+- key: LOINC Full Common Name
+- code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
 
 #### Extracts
 
