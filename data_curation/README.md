@@ -231,7 +231,7 @@ D|Significant change down
 
 #### Extracts:
 
-- [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves.
+- **Lab Interpretations** - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves.
    - File Name: `../data/snoinc_extracts/hl7_lab_interp_<YYYYMMDD>.csv`
 
 ## Instructions
