@@ -72,20 +72,23 @@ code|short_name|long_name|display_name|definition_desc|related_names
 53781-1|Acetamin+Propoxyph Pnl Ur-mCnc|Acetaminophen and Propoxyphene panel [Mass/volume] - Urine|Acetaminophen and Propoxyphene panel (U) [Mass/Vol]||ACET; Acetamidophenol; Acetamin+Propoxyph Pnl; Acetaminoph; Acetominophen; Algaphan; APAP; c209; C55; Cosalgesic; Cotonal-65; Darvocet; Darvon; Depronal; Dextrogesic; Dextropropoxyphene; Distalgesic; Dolasan; Doloxene; D-propoxyphene; DRUG/TOXICOLOGY; Drugs; Hydroxyacetanilide; Level; Mass concentration; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; Napsalgesic; p-Acetamidophenol; Pan; PANEL.DRUG & TOXICOLOGY; Panl; Paracetamol; p-Hydroxyacetanilide; Pnl; Point in time; Propoxyph pnl; QNT; Quan; Quant; Quantitative; Random; Tylenol; u209; UA; UR; Urn
 
 ```
-- Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
-- Short Name: A concise name used for quick displays, such as in a report's column header. 
-- Long Name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians. 
-- Display Name: A flexible field that can be the Long Common Name, Short Name, or another name for the term, depending on how the user or system wants to present it. 
-- Definition Description (Fully-Specified Name): The formal, six-part description that provides the complete and standardized meaning of the observation. 
-- Related Names: This category can include various other terms or synonyms used to describe the same test or observation, helping to map local codes to the LOINC standard. List of terms is `;` delimited.
+- code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0). 
+- short_name: A concise name used for quick displays, such as in a report's column header. 
+- long_name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians. 
+- display_name: A flexible field that can be the Long Common Name, Short Name, or another name for the term, depending on how the user or system wants to present it. 
+- definition_desc (Fully-Specified Name): The formal, six-part description that provides the complete and standardized meaning of the observation. 
+- related_names: This category can include various other terms or synonyms used to describe the same test or observation, helping to map local codes to the LOINC standard. List of terms is `;` delimited.
 
 #### Extracts
 
-- [Lab Orders](../data/snoinc_extracts/loinc_lab_orders_20250926.csv) - LOINC provides codes that represent the specific clinical concept of the test being ordered, or in other words a request made to a laboratory to perform a specific test or panel of tests.   In HL7v2 this would be the equivalent of an OBR.   
+- **Lab Orders** - LOINC provides codes that represent the specific clinical concept of the test being ordered, or in other words a request made to a laboratory to perform a specific test or panel of tests.   In HL7v2 this would be the equivalent of an OBR.
+   - File Name: `../data/snoinc_extracts/loinc_lab_orders_<YYYYMMDD>.csv`
 
-- [Lab Results](../data/snoinc_extracts/loinc_lab_result_20250926.csv) - The LOINC code identifies the performed test, the actual information or observation that comes back from the laboratory after the order has been fulfilled, and is combined with a result value and unit of measure (See other valuesets for more information) to form the complete lab result.   In HL7v2 this would be the equivalent of an OBX.
+- **Lab Results** - The LOINC code identifies the performed test, the actual information or observation that comes back from the laboratory after the order has been fulfilled, and is combined with a result value and unit of measure (See other valuesets for more information) to form the complete lab result.   In HL7v2 this would be the equivalent of an OBX.
+   - File Name: `../data/snoinc_extracts/loinc_lab_results_<YYYYMMDD>.csv`
    
-- [Lab Names](../data/snoinc_extracts/loinc_lab_names_20250926.csv) - The LOINC codes and terms for both Lab Orders and Lab Results in a single set.  This is primarily used to satisfy the models used for determining the correct code for Lab Orders and Resulting Labs in TTC.
+- **Lab Names** - The LOINC codes and terms for both Lab Orders and Lab Results in a single set.  This is primarily used to satisfy the models used for determining the correct code for Lab Orders and Resulting Labs in TTC.
+   - File Name: `../data/snoinc_extracts/loinc_lab_names_<YYYYMMDD>.csv`
 
 ---
 
@@ -98,19 +101,25 @@ LOINC terms are comprised of six parts, defining a specific clinical observation
 #### Extracts
 
 Each part provides unique information about the test or observation: 
-- [Component](../data/snoinc_extracts/loinc_component_abbrv_syn_20250926.json): What is being measured (e.g., glucose, a specific organ part). 
-- [Property](../data/snoinc_extracts/loinc_property_abbrv_syn_20250926.json): The specific attribute of the component being measured (e.g., length, mass, number). 
-- [Time Aspect](../data/snoinc_extracts/loinc_time_abbrv_syn_20250926.json): The time frame or duration over which the measurement was made. 
-- [System](../data/snoinc_extracts/loinc_system_abbrv_syn_20250926.json): The specimen source or origin of the measurement (e.g., serum, plasma, blood). 
-- [Scale](../data/snoinc_extracts/loinc_scale_abbrv_syn_20250926.json): How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text). 
-- [Method](../data/snoinc_extracts/loinc_method_abbrv_syn_20250926.json): The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term. 
+- **Component**: What is being measured (e.g., glucose, a specific organ part).
+   - File Name: `../data/snoinc_extracts/loinc_component_abbrv_syn_<YYYYMMDD>.json`
+- **Property**: The specific attribute of the component being measured (e.g., length, mass, number).
+   - File Name: `../data/snoinc_extracts/loinc_property_abbrv_syn_<YYYYMMDD>.json`
+- **Time Aspect**: The time frame or duration over which the measurement was made.
+   - File Name: `../data/snoinc_extracts/loinc_time_abbrv_syn_<YYYYMMDD>.json`
+- **System**: The specimen source or origin of the measurement (e.g., serum, plasma, blood).
+   - File Name: `../data/snoinc_extracts/loinc_system_abbrv_syn_<YYYYMMDD>.json`
+- **Scale**: How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text).
+   - File Name: `../data/snoinc_extracts/loinc_scale_abbrv_syn_<YYYYMMDD>.json`
+- **Method**: The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term.
+   - File Name: `../data/snoinc_extracts/loinc_method_abbrv_syn_<YYYYMMDD>.json`
 
 #### Data Structure:
 
 ```json
 {
    ...
-   "Clinical biochemical genetics": {
+   "Clinical biochemical genetics": { // Key
         "code": "LP134112-4",
         "abbrv": [
             "Clinic biochem gen"
@@ -126,9 +135,9 @@ Each part provides unique information about the test or observation:
 }
 ```
 - Key: LOINC Part Short Name
-- Code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
-- Abbrv: A list of abbreviations for the specific LOINC Part.
-- Synonym: A list of synonyms for the specific LOINC Part.
+- code: The LOINC Part unique identifier, starting with LP then typically in a 6-digit-then-a-dash format (e.g., LP806123-0).
+- abbrv: A list of abbreviations for the specific LOINC Part.
+- synonyms: A list of synonyms for the specific LOINC Part.
 
 ---
 
@@ -148,7 +157,7 @@ LOINC_NUM,DESCRIPTION
 
 #### Extracts:
 
-- [LOINC Codes with Part Descriptions](../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv)
+- LOINC Codes with Part Descriptions - File: `../data/snoinc_extracts/loinc_codes_with_part_descriptions_<YYYYMMDD>.csv`
 
 _**NOTE: we can easily change this to be a file with any delimiter instead of a comma (`,`)**_
 
@@ -163,7 +172,7 @@ This data file organizes correlated terms from LOINC and other terminology sets,
 ```json
 {
    ...
-    "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE panel - Serum or Plasma": {
+    "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE panel - Serum or Plasma": { //Key
         "code": "102115-3",
         "names": [
             "(Dog dander+Cat epithelium+Horse dander) Antibody.immunoglobulin E panel:-:To identify measures at a point in time:Serum/Plasma:-",
@@ -175,13 +184,13 @@ This data file organizes correlated terms from LOINC and other terminology sets,
     ...
 }
 ```
-- key: LOINC Full Common Name
+- Key: LOINC Full Common Name
 - code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
 - names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
 
 #### Extracts
 
-- [Loinc UMLS Related Names](../data/snoinc_extracts/loinc_umls_related_names_20250929.json)
+- Loinc UMLS Related Names - File: `../data/snoinc_extracts/loinc_umls_related_names_<YYYYMMDD>.json`
 
 ---
 
@@ -201,7 +210,8 @@ These data files are for the various codes/concepts in SNOMED used to be the bas
 
 #### Extracts:
 
-- [Lab Values](../data/snoinc_extracts/snomed_lab_value_20250926.csv) - SNOMED CT does not code the specific quantitative values of lab results (e.g., "glucose 105 mg/dL") but rather provides codes for the qualitative interpretation of a result (e.g., positive, negative, abnormal). The quantitative value and its units are typically stored separately in the health record. 
+- Lab Values - SNOMED CT does not code the specific quantitative values of lab results (e.g., "glucose 105 mg/dL") but rather provides codes for the qualitative interpretation of a result (e.g., positive, negative, abnormal). The quantitative value and its units are typically stored separately in the health record.
+   - File Name: `../data/snoinc_extracts/snomed_lab_value_<YYYYMMDD>.csv`
 
 ---
 
@@ -216,12 +226,13 @@ code|text
 B|Better
 D|Significant change down
 ```
-- Code: The unique machine-readable identifier for a concept.
-- Text: Human-readable text describing the concept.
+- code: The unique machine-readable identifier for a concept.
+- text: Human-readable text describing the concept.
 
 #### Extracts:
 
-- [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves. 
+- [Lab Interpretations](../data/snoinc_extracts/hl7_lab_interp_20250926.csv) - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves.
+   - File Name: `../data/snoinc_extracts/hl7_lab_interp_<YYYYMMDD>.csv`
 
 ## Instructions
 
