@@ -143,8 +143,8 @@ LOINC_NUM,DESCRIPTION
 21019-5,Metanephrine is a metabolite generated when epiniphrine is cleaved by catechol O-methyltransferase. It is also known as 4-hydroxy-3-methoxy-alpha-((methylamino)methyl) benzenemethanol with formula C10-H15-N-O3.
 80974-9,"Sulfamethoxazole is a sulfonamide bacteriostatic antibiotic. It is most often used as part of a synergistic combination with trimethoprim in a 5:1 ratio in co-trimoxazole, which is also known as Bactrim or Septrin. It can be used as an alternative to amoxicillin -based antibiotics to treat sinusitis. Mechanism of action:Sulfonamides are structural anologs and competitive antagonists of para-aminobenzoic acid (PABA). They inhibit normal bacterial utilization of PABA for the synthesis of folic acid, an important metabolite in DNA synthesis. The effects seen are usually bacteriostatic in nature. Folic acid is not synthesized in humans, but is instead a dietary requirement. This allows for the selective toxicity to bacterial cells (or any cell dependent on synthesizing folic acid) over human cells."
 ```
-- Loinc num: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
-- Description: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
+- LOINC_NUM: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- DESCRIPTION: The description pulled for the 'Component Core' Part for correlating LOINC codes/concept.
 
 #### Extracts:
 
@@ -175,9 +175,9 @@ This data file organizes correlated terms from LOINC and other terminology sets,
     ...
 }
 ```
-- Key: LOINC Full Common Name
-- Code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
-- Names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
+- key: LOINC Full Common Name
+- code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- names: A list of all related terms/names from the `atom` and `crosswalk` APIs for the LOINC Code.
 
 #### Extracts
 
@@ -196,8 +196,8 @@ These data files are for the various codes/concepts in SNOMED used to be the bas
 442779003|Borderline low
 281301001|Within reference range
  ```
-- Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
-- Text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
+- code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
+- text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
 
 #### Extracts:
 
