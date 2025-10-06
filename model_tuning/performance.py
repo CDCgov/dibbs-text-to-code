@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers import util
 from torch import Tensor
 
-MODEL_NAME = "all-MiniLM-L6-v2d"
+MODEL_NAME = "all-MiniLM-L6-v2"
 SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20250911.csv"
 # use date in filename to keep track of versions
 DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
