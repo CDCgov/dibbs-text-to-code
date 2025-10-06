@@ -39,8 +39,8 @@ source dev_scripts/bootstrap.sh
 ```
 
 **NOTE:** If you are running in on a Windows machine, will need to run the bootstrap
-file directly with `./dev_scripts/bootstrap.sh` and then activate the virtual environment
-by running `.\.venv\Scripts\Activate.ps1`.
+file directly with `./dev_scripts/bootstrap.sh` in a bash terminal and then activate the
+virtual environment by running `.\.venv\Scripts\Activate.ps1`in a powershell terminal.
 
 ### Build and Verify
 
