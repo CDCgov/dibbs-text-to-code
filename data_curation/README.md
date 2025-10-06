@@ -187,8 +187,8 @@ These data files are for the various codes/concepts in SNOMED used to be the bas
 442779003|Borderline low
 281301001|Within reference range
  ```
-- Code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
-- Text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
+- code: These are unique numerical identifiers for clinical concepts, such as a specific disease, a symptom, or a procedure.
+- text: Each concept code is associated with one or more textual descriptions that human-readable terms for the concept. A concept can have several descriptions, including synonyms, which represent the same clinical idea.  For this data file there will just be a single text, the common name/term/description, associated with each code.
 
 #### Extracts:
 
