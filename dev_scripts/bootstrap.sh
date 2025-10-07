@@ -56,6 +56,14 @@ echo "Installing development requirements..."
 $python_cmd -m pip install --upgrade pip > /dev/null
 pip install '.[dev]' > /dev/null
 
+# Download spacy model if not already downloaded
+echo "Checking for spacy and model..."
+if ! $python_cmd -c "import spacy; spacy.load('en_core_web_sm')" &> /dev/null; then
+    echo "Installing spacy and downloading model..."
+    $python_cmd -m pip install spacy > /dev/null
+    $python_cmd -m spacy download en_core_web_sm > /dev/null
+fi
+
 # Install pre-commit hooks
 echo "Installing pre-commit hooks..."
 pre-commit install

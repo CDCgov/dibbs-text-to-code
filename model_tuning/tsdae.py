@@ -1,9 +1,13 @@
+import os
+import sys
 from re import Match
 from typing import Union
 
 import spacy
 
-import utils.regex_patterns as rp
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from utils import regex_patterns as rp
 
 PART_DESCRIPTION_EXTRACTS_FILE = "../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv"
 OUTPUT_SENTENCES_FILE = "../data/training_files/part_description_sentences.txt"
@@ -35,7 +39,7 @@ def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
     # start with a LOINC code line, which is a hyphenated number.
     curr_description = ""
 
-    with open(parts_fp, "r") as fp:
+    with open(parts_fp, "r", encoding="utf-8") as fp:
         for loinc_line in fp:
             stripped_loinc_line = loinc_line.strip()
             if stripped_loinc_line != "":
@@ -59,7 +63,7 @@ def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
     processed_docs = nlp.pipe(list(descriptions))
 
     # Write the output sentence by sentence from the spacy parser
-    with open(out_fp, "w") as fp:
+    with open(out_fp, "w", encoding="utf-8") as fp:
         for doc in processed_docs:
             for sent in doc.sents:
                 st = sent.text.strip()
