@@ -1,3 +1,4 @@
+import csv
 import random
 import re
 import typing
@@ -9,7 +10,6 @@ from utils import normalize as normalize
 from utils import path as path
 
 enhancements = path.load_loinc_enhancements()
-
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 
 
@@ -450,3 +450,61 @@ def generate_augmented_examples(
         augmented_examples.append(ex_code)
 
     return augmented_examples
+
+
+def build_augmented_loinc_files(
+    input_path: str,
+    config: schemas.LoincFileGenerationConfig,
+    num_lcn: int = 5,
+    num_sn: int = 5,
+    num_dn: int = 5,
+    output_path_base: str = "./data/training_files/augmented_loinc",
+) -> None:
+    """
+    Generates augmented LOINC data files for the long common names, short
+    common names, and display names based on the provided configurations.
+
+    :param path: The path to the base LOINC name file.
+    :param configs: Configuration dictionaries for long common names, short
+        common names, and display names.
+    :param num_lcn: The number of augmented long common names to generate.
+    :param num_sn: The number of augmented short common names to generate.
+    :param num_dn: The number of augmented display names to generate.
+    :param output_files_base: The base path for the output files.
+    :return: None
+    """
+
+    num_map = {"short_name": num_sn, "long_common_name": num_lcn, "display_name": num_dn}
+
+    # Read in data/loinc_lab_names_XXXX.csv
+    with open(
+        input_path,
+        encoding="utf-8",
+    ) as fp:
+        data = fp.readlines()
+
+    for row in data:
+        r = row.split("|")
+        # skip any malformed rows
+        if len(r) < 6:
+            continue
+
+        loinc_code, short_name, long_name, display_name = r[0], r[1], r[2], r[3]
+        related_names = r[5].split(";") if r[5] else []
+
+        values = {
+            "short_name": short_name,
+            "long_common_name": long_name,
+            "display_name": display_name,
+        }
+
+        for key, base_value in values.items():
+            augmented_examples = generate_augmented_examples(
+                base_value, related_names, num_map[key], config[key]
+            )
+
+            # Append data to respective files
+            # Note: these files should be opened using a CSV reader
+            with open(f"{output_path_base}_{key}.csv", "a", encoding="utf-8", newline="") as fp:
+                writer = csv.writer(fp, delimiter=":")  # use ":" instead of default ","
+                writer.writerow([loinc_code, base_value, "|".join(augmented_examples)])
