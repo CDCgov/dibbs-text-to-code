@@ -9,8 +9,10 @@ from torch import Tensor
 
 MODEL_NAME = "all-MiniLM-L6-v2"
 SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20250911.csv"
+# use date in filename to keep track of versions
+DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
 EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
-EMBEDDING_FILE = f"loinc_lab_names_{MODEL_NAME.replace('/', '_')}"
+EMBEDDING_FILE = f"loinc_lab_names_{MODEL_NAME.replace('/', '_')}_{DATE}"
 VALIDATION_FILE = "../data/training_files/validation_toy.txt"
 K_VALUES = [1, 3, 5, 10]
 
@@ -44,7 +46,7 @@ def parse_snoinc_extracts(
     short_names = []
     display_names = []
 
-    with open(extract_path, "r") as fp:
+    with open(extract_path, "r", encoding="utf-8") as fp:
         lines_seen = 0
         for line in fp:
             if lines_seen == 0:
@@ -80,7 +82,11 @@ def embed_loinc_names(
       the computed embeddings to disk.
     :returns: The computed embeddings.
     """
+    name_list = name_list
     corpus_embeddings = model.encode(name_list, show_progress_bar=True, convert_to_tensor=True)
+
+    # make sure just the directory exists
+    os.makedirs(EMBEDDING_CACHE_DIR, exist_ok=True)
 
     if save_embeddings:
         with open(EMBEDDING_CACHE_DIR + EMBEDDING_FILE, "wb") as fp:
