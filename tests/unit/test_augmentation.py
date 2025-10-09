@@ -1,7 +1,10 @@
 import csv
 import os
+import sys
 
 import pytest
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import augmentation
 from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
@@ -47,7 +50,7 @@ class TestCharDeletion:
         assert result == expected_result
 
         test_string = self.LOINC_LAB_TEXT_3
-        expected_result = "This term is intnded to collate similar measurements fr he OINC SNOMED CT Collaboration in an ontological view. Addtionally, it can be used to communicate a laboraory order, either alone or in combiaion with specimen or oter information in the odr. It may NOT be sed to report back the measured patient value."
+        expected_result = "Thi term is intnded to collate similar measurements for the LOINC SNOMED CT Collaboration i a ontological view. Addtionally i can be used to communicate a laboraory order, either alone or in combinaion with specimen or other information in the odr. It may NOT be sed to report back the measured patient value."
         result = augmentation.random_char_deletion(test_string, 3, 15, 4, "char")
         assert len(result) < len(test_string)
         assert result == expected_result
@@ -113,22 +116,32 @@ class TestCheckForEnhancements:
     [
         # Test case 1: Typical case with multiple words
         (
-            [["blood", [0]], ["glucose", [1]], ["measurement", [2]]],
+            [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))],
             [
-                ["blood glucose", [0, 2]],
-                ["blood glucose measurement", [0, 3]],
-                ["glucose measurement", [1, 3]],
+                ("blood", (0, 0)),
+                ("glucose", (1, 1)),
+                ("measurement", (2, 2)),
+                ("blood glucose", (0, 1)),
+                ("blood glucose measurement", (0, 2)),
+                ("glucose measurement", (1, 2)),
             ],
         ),
-        # Test case 2: Single word (no substrings possible)
-        ([["blood", [0]]], []),
+        # Test case 2: Single word (no substrings possible, just base word)
+        ([("blood", (0, 0))], [("blood", (0, 0))]),
         # # Test case 3: Two words
-        ([["blood", [0]], ["glucose", [1]]], [["blood glucose", [0, 2]]]),
+        (
+            [("blood", (0, 0)), ("glucose", (1, 1))],
+            [
+                ("blood", (0, 0)),
+                ("glucose", (1, 1)),
+                ("blood glucose", (0, 1)),
+            ],
+        ),
     ],
 )
-class TestGenerateSubstrings:
-    def test_generate_substrings(self, words, expected):
-        result = augmentation._generate_substrings(words)
+class TestGenerateEnhancementCandidates:
+    def test_generate_enhancement_candidates(self, words, expected):
+        result = augmentation._generate_enhancement_candidates(words)
         assert result == expected
 
 

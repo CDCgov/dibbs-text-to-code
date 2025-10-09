@@ -37,18 +37,31 @@ def read_json(path: str) -> dict:
         return json.load(fobj)
 
 
-def load_loinc_enhancements():
+def load_loinc_enhancements(cwd: str):
     """
     Loads LOINC enhancements from JSON files.
+
+    :param cwd: The current working file directory.
     :return: A dictionary of LOINC enhancements.
     """
-    pattern = "../data/snoinc_extracts/*_abbrv_syn_*.json"
-    matches = glob.glob(pattern)
+    # Determine how many levels deep in the call structure we are
+    dirs = cwd.split("/")
+    base_idx = -1
+    for i, dir in enumerate(dirs):
+        if dir == "dibbs-text-to-code":
+            base_idx = i
 
+    # However many levels deep is how far we need to go back up to hit
+    # the data folder
+    levels = (len(dirs) - 1) - base_idx
+    level_prefix = "../" * levels
+
+    pattern = level_prefix + "data/snoinc_extracts/*_abbrv_syn_*.json"
+    matches = glob.glob(pattern)
     enhancements = {}
 
     for match in matches:
-        relative_normalized_match = "/".join(match.split("/")[1:])
+        relative_normalized_match = "/".join(match.split("/")[levels:])
         m = read_json(relative_normalized_match)
         enhancements.update(m)
 

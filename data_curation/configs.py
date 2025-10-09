@@ -1,4 +1,4 @@
-import schemas.augmentation as schemas
+from data_curation.schemas import augmentation as schemas
 
 """
 A configuration meant for generating a validation data set in which each base

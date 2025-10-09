@@ -7,16 +7,17 @@ import typing
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import configs
 import pydantic
-import schemas.augmentation as schemas
 
+from data_curation import configs
+from data_curation.schemas import augmentation as schemas
 from utils import normalize
 from utils import path
 from utils import regex_patterns
 
-enhancements = path.load_loinc_enhancements()
+enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
+assert len(LOINC_ENHANCEMENTS) > 0
 
 MAX_AUGMENTATION_TRIES = 100
 
@@ -638,4 +639,5 @@ if __name__ == "__main__":
         num_lcn=1,
         num_sn=1,
         num_dn=1,
+        output_path_base="../data/augmented_",
     )
