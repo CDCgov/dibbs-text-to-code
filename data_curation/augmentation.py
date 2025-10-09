@@ -5,11 +5,11 @@ import re
 import sys
 import typing
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import configs
 import pydantic
 import schemas.augmentation as schemas
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils import normalize
 from utils import path
