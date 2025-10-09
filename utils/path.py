@@ -42,13 +42,14 @@ def load_loinc_enhancements():
     Loads LOINC enhancements from JSON files.
     :return: A dictionary of LOINC enhancements.
     """
-    pattern = "data/snoinc_extracts/*_abbrv_syn_*.json"
+    pattern = "../data/snoinc_extracts/*_abbrv_syn_*.json"
     matches = glob.glob(pattern)
 
     enhancements = {}
 
     for match in matches:
-        m = read_json(match)
+        relative_normalized_match = "/".join(match.split("/")[1:])
+        m = read_json(relative_normalized_match)
         enhancements.update(m)
 
     return enhancements
