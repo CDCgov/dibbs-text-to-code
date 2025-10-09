@@ -25,10 +25,14 @@ import csv
 import datetime
 import json
 import os
+import re
 import sys
 
 import requests
 from dotenv import load_dotenv
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from utils import regex_patterns
 
 load_dotenv()
 
@@ -85,7 +89,10 @@ def get_umls_snomed_lab_values():  # noqa: D103
             snomed_code = result.get("ui")
             snomed_text = result.get("name")
             if snomed_code and snomed_text:
-                result_row = {"code": snomed_code, "text": snomed_text}
+                result_row = {
+                    "code": snomed_code,
+                    "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", snomed_text).strip(),
+                }
                 snomed_rows.append(result_row)
                 snomed_row_count += 1
 
@@ -126,7 +133,10 @@ def get_hl7_lab_interp():  # noqa: D103
                 and not hl7_code.startswith(("_", "Observation", "OBX", "ReactivityObs"))
                 and hl7_text
             ):
-                result_row = {"code": hl7_code, "text": hl7_text}
+                result_row = {
+                    "code": hl7_code,
+                    "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", hl7_text).strip(),
+                }
                 hl7_rows.append(result_row)
         save_valueset_csv_file(hl7_filename, hl7_rows)
 
@@ -336,7 +346,9 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                     for atom_result in umls_atom_results:
                         related_name = atom_result.get("name")
                         if related_name and related_name not in related_names:
-                            related_names.append(related_name)
+                            related_names.append(
+                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                            )
                             atom_row_count += 1
 
                     atom_page_num += 1
@@ -379,7 +391,9 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                             and related_name
                             and related_name not in related_names
                         ):
-                            related_names.append(related_name)
+                            related_names.append(
+                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                            )
                             crs_row_count += 1
 
                     crs_page_num += 1
@@ -428,9 +442,9 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     defintion_desc = loinc_result.get("DefinitionDescription")
 
     if short_name is not None:
-        result_row["short_name"] = short_name
+        result_row["short_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", short_name).strip()
     if long_name is not None:
-        result_row["long_name"] = long_name
+        result_row["long_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", long_name).strip()
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
@@ -439,16 +453,22 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
 
     # More human centered name for the concept
     if display_name is not None:
-        result_row["display_name"] = display_name
+        result_row["display_name"] = re.sub(
+            regex_patterns.MULTIPLE_SPACE, " ", display_name
+        ).strip()
     # Paragraph of information concerning the concept/code/term in question
     if defintion_desc is not None:
         if not _filter_loinc_term(defintion_desc):
-            result_row["definition_desc"] = loinc_result.get("DefinitionDescription")
+            result_row["definition_desc"] = re.sub(
+                regex_patterns.MULTIPLE_SPACE, " ", defintion_desc
+            ).strip()
         else:
             result_row["definition_desc"] = ""
     # ';' separated list of related terms to the concept/code/term in question
     if related_names is not None:
-        result_row["related_names"] = related_names
+        result_row["related_names"] = re.sub(
+            regex_patterns.MULTIPLE_SPACE, " ", related_names
+        ).strip()
 
     loinc_order_rows.append(result_row)
 

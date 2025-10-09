@@ -1,0 +1,49 @@
+code|text
+EX|outside threshold
+HM|Hold for Medical Review
+CAR|Carrier
+Carrier|Carrier
+B|Better
+D|Significant change down
+U|Significant change up
+W|Worse
+<|Off scale low
+>|Off scale high
+AC|Anti-complementary substances present
+IE|Insufficient evidence
+QCF|Quality control failure
+TOX|Cytotoxic substance present
+A|Abnormal
+N|Normal
+I|Intermediate
+MS|moderately susceptible
+NCL|No CLSI defined breakpoint
+NS|Non-susceptible
+R|Resistant
+S|Susceptible
+VS|very susceptible
+AA|Critical abnormal
+H|High
+L|Low
+HH|Critical high
+LL|Critical low
+HX|above high threshold
+LX|below low threshold
+H>|Significantly high
+HU|Significantly high
+E|Equivocal
+L<|Significantly low
+LU|Significantly low
+ND|Not detected
+IND|Indeterminate
+NEG|Negative
+POS|Positive
+EXP|Expected
+UNE|Unexpected
+DET|Detected
+SYN-R|Synergy - resistant
+NR|Non-reactive
+RR|Reactive
+WR|Weakly reactive
+SDD|Susceptible-dose dependent
+SYN-S|Synergy - susceptible
