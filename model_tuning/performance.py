@@ -164,7 +164,7 @@ def predict_and_evaluate_validation_set(
 
 if __name__ == "__main__":
     print("Instantiating language model...")
-    # model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(MODEL_NAME)
 
     print("Extracting SNOINC data to form standardized names...")
     lcns, sns, dns = parse_snoinc_extracts(SNOINC_CODES_FILE)
@@ -180,18 +180,7 @@ if __name__ == "__main__":
         print("No cache found, performing embedding.")
         name_codes = lcns + sns + dns
         print("  This might take a while...")
-        # DELETE THIS BLOCK
-        models = [
-            "ibm-granite/granite-embedding-125m-english",
-            "intfloat/e5-large-v2",
-            "BAAI/bge-large-en-v1.5",
-        ]
-        for mn in models:
-            model = SentenceTransformer(mn)
-        for mn in models:
-            model = SentenceTransformer(mn)
-            embedding_file = f"loinc_lab_names_{mn.replace('/', '_')}"
-            embeddings = embed_loinc_names(model, name_codes, embedding_file, save_embeddings=True)
+        embeddings = embed_loinc_names(model, name_codes, EMBEDDING_FILE, save_embeddings=True)
 
     print("Loading validation set...")
     examples = []
