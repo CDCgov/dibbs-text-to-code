@@ -68,7 +68,7 @@ def parse_snoinc_extracts(
 
 
 def embed_loinc_names(
-    model: SentenceTransformer, name_list: List[str], save_embeddings: bool = False
+    model: SentenceTransformer, name_list: List[str], dest: str, save_embeddings: bool = False
 ):
     """
     Use a SentenceTransformers model to embed the standard name codes for
@@ -82,14 +82,15 @@ def embed_loinc_names(
       the computed embeddings to disk.
     :returns: The computed embeddings.
     """
-    name_list = name_list
-    corpus_embeddings = model.encode(name_list, show_progress_bar=True, convert_to_tensor=True)
+    corpus_embeddings = model.encode(
+        name_list, batch_size=16, show_progress_bar=True, convert_to_tensor=True
+    )
 
     # make sure just the directory exists
     os.makedirs(EMBEDDING_CACHE_DIR, exist_ok=True)
 
     if save_embeddings:
-        with open(EMBEDDING_CACHE_DIR + EMBEDDING_FILE, "wb") as fp:
+        with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
             pickle.dump({"codes": name_list, "embeddings": corpus_embeddings}, fp)
 
     return corpus_embeddings
@@ -163,7 +164,7 @@ def predict_and_evaluate_validation_set(
 
 if __name__ == "__main__":
     print("Instantiating language model...")
-    model = SentenceTransformer(MODEL_NAME)
+    # model = SentenceTransformer(MODEL_NAME)
 
     print("Extracting SNOINC data to form standardized names...")
     lcns, sns, dns = parse_snoinc_extracts(SNOINC_CODES_FILE)
@@ -179,7 +180,18 @@ if __name__ == "__main__":
         print("No cache found, performing embedding.")
         name_codes = lcns + sns + dns
         print("  This might take a while...")
-        embeddings = embed_loinc_names(model, name_codes, save_embeddings=True)
+        # DELETE THIS BLOCK
+        models = [
+            "ibm-granite/granite-embedding-125m-english",
+            "intfloat/e5-large-v2",
+            "BAAI/bge-large-en-v1.5",
+        ]
+        for mn in models:
+            model = SentenceTransformer(mn)
+        for mn in models:
+            model = SentenceTransformer(mn)
+            embedding_file = f"loinc_lab_names_{mn.replace('/', '_')}"
+            embeddings = embed_loinc_names(model, name_codes, embedding_file, save_embeddings=True)
 
     print("Loading validation set...")
     examples = []

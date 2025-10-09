@@ -5,7 +5,7 @@ import re
 import sys
 import typing
 
-import configs as configs
+import configs
 import pydantic
 import schemas.augmentation as schemas
 
@@ -230,7 +230,7 @@ def insert_loinc_related_names(
     for _ in range(num_inserts):
         name_to_insert = loinc_names_to_insert.pop()
         idx_to_insert = indices_to_insert.pop()
-        words.insert(idx_to_insert, name_to_insert)
+        words.insert(idx_to_insert, name_to_insert.strip())
 
     return " ".join(words)
 
@@ -288,7 +288,8 @@ def enhance_loinc_str(
 
     # Step 5: Actually perform enhancement and return
     words = _apply_enhancements(words, maximal_candidate_set, enhancement_type, num_enhancements)
-    return " ".join(w[0] for w in words)
+    reconstructed_text = re.sub(regex_patterns.MULTIPLE_SPACE, " ", " ".join(w[0] for w in words))
+    return reconstructed_text.strip()
 
 
 def _apply_enhancements(
@@ -348,8 +349,9 @@ def _apply_enhancements(
                 e_type_to_use = "abbrv" if e_type_to_use == "synonyms" else "synonyms"
 
         enhancement = random.choice(possible_enhancements[e_type_to_use])
+        enhancement = re.sub(regex_patterns.MULTIPLE_SPACE, " ", enhancement)
         enhancements_applied += 1
-        enhancements_to_apply.append((enhancement_idx, enhancement))
+        enhancements_to_apply.append((enhancement_idx, enhancement.strip()))
 
     # Sort by substring start index, since we know everything is disjoint.
     # This lets us completely replace one string before hitting another.
@@ -362,7 +364,7 @@ def _apply_enhancements(
         # We can just throw away all tokens after the start index and insert
         # the whole enhancement into one position
         else:
-            for j in range(e[0][0] + 1, e[0][1] + 1):
+            for j in range(e[0][1], e[0][0], -1):
                 del words[j]
             words[e[0][0]] = (e[1], e[0])
 
@@ -562,7 +564,8 @@ def generate_augmented_examples(
                 config["deletion"]["deletion_mode"],
             )
 
-        augmented_examples.append(ex_code)
+        ex_code = re.sub(regex_patterns.MULTIPLE_SPACE, " ", ex_code)
+        augmented_examples.append(ex_code.strip())
 
     return augmented_examples
 
@@ -630,7 +633,7 @@ def build_augmented_loinc_files(
 
 if __name__ == "__main__":
     build_augmented_loinc_files(
-        "../data/snoinc_extracts/loinc_lab_names_20250926.csv",
+        "../data/snoinc_extracts/loinc_lab_names_20251008.csv",
         configs.ONE_SHOT_VALIDATION_AUGMENTATION,
         num_lcn=1,
         num_sn=1,
