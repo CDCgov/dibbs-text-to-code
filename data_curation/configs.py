@@ -105,7 +105,7 @@ A configuration intended for the generation of augmented LOINC files, with
 granular control over the levels of enhancement at the individual type level. 
 """
 LOINC_FILE_GENERATION_AUGMENTATION: schemas.LoincFileGenerationConfig = {
-    "long_common_name": DEFAULT_AUGMENTATION,
-    "short_name": DEFAULT_AUGMENTATION,
-    "display_name": DEFAULT_AUGMENTATION,
+    "long_common_name": ONE_SHOT_VALIDATION_AUGMENTATION,
+    "short_name": ONE_SHOT_VALIDATION_AUGMENTATION,
+    "display_name": ONE_SHOT_VALIDATION_AUGMENTATION,
 }

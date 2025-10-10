@@ -263,7 +263,9 @@ def enhance_loinc_str(
 
     # Step 2: check each one for eligibility for a LOINC enhancement and
     # filter to only those that have one
-    enhancemenet_eligible_strings = _filter_candidates_for_enhancement(candidates)
+    enhancemenet_eligible_strings = _filter_candidates_for_enhancement(
+        candidates, LOINC_ENHANCEMENTS
+    )
 
     if len(enhancemenet_eligible_strings) < 1:
         # We found no options in the LOINC dictionary at all, nothing more
@@ -408,6 +410,7 @@ def _generate_disjoint_intervals(
 
 def _filter_candidates_for_enhancement(
     words: list[typing.Tuple[str, typing.Tuple[int, int]]],
+    loinc_enhancements: dict,
 ) -> list[str, list[int]]:
     """
     Given a list of candidate words and substrings, filter the list to only contain
@@ -416,6 +419,8 @@ def _filter_candidates_for_enhancement(
 
     :param words: A list of tuples of words and their inclusive indices. Each
       such candidate will be checked independently for an eligible enhancement.
+    :param loinc_enhancements: A dictionary containing eligible enhancements
+      that can be made on a substring in the input code.
     :return: A filtered list containing only tuples for which an eligible
       enhancement was found.
     """
@@ -425,9 +430,9 @@ def _filter_candidates_for_enhancement(
         # Applying the lowercasing here lets us still reconstruct the string with
         # other capitalization preserved
         search_word = word.lower()
-        if word.lower() in LOINC_ENHANCEMENTS:
+        if word.lower() in loinc_enhancements:
             # Only add if there are enhancements available
-            if not LOINC_ENHANCEMENTS[search_word].get("abbrv") and not LOINC_ENHANCEMENTS[
+            if not loinc_enhancements[search_word].get("abbrv") and not loinc_enhancements[
                 search_word
             ].get("synonyms"):
                 continue
@@ -622,7 +627,7 @@ def build_augmented_loinc_files(
         for key, base_value in values.items():
             if base_value != "":
                 augmented_examples = generate_augmented_examples(
-                    base_value, related_names, num_map[key], config
+                    base_value, related_names, num_map[key], config[key]
                 )
 
                 # Append data to respective files
@@ -635,7 +640,7 @@ def build_augmented_loinc_files(
 if __name__ == "__main__":
     build_augmented_loinc_files(
         "../data/snoinc_extracts/loinc_lab_names_20251008.csv",
-        configs.ONE_SHOT_VALIDATION_AUGMENTATION,
+        configs.LOINC_FILE_GENERATION_AUGMENTATION,
         num_lcn=1,
         num_sn=1,
         num_dn=1,

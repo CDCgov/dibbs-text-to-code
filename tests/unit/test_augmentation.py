@@ -8,6 +8,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import augmentation
 from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
+from utils import normalize
+from utils import path
+
+enhancements = path.load_loinc_enhancements(os.getcwd())
+LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
+assert len(LOINC_ENHANCEMENTS) > 0
 
 
 @pytest.mark.parametrize(
@@ -94,21 +100,51 @@ class TestInsertLoincRelatedNames:
         assert result == expected
 
 
-@pytest.mark.parametrize(
-    "words, expected",
-    [
-        # Test case 1: Words with possible enhancements
-        ([("blood", [0]), ("glucose", [1]), ("measurement", [2])], {"glucose": [1]}),
-        # Test case 2: No words with enhancements
-        ([("this", [0]), ("term", [1]), ("has", [2]), ("no", [3]), ("enhancements", [4])], {}),
-        # Test case 3: Mixed case words
-        ([("blood", [0]), ("glucose", [1]), ("zscore", [2])], {"glucose": [1], "zscore": [2]}),
-    ],
-)
-class TestCheckForEnhancements:
-    def test_check_for_enhancements(self, words, expected):
-        result = augmentation._check_for_enhancements(words)
-        assert result == expected
+class TestGenerateDisjointIntervals:
+    def test_generate_disjoint_intervals(self):
+        # Test case 1: already disjoint intervals
+        words = [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))]
+        filtered = augmentation._generate_disjoint_intervals(words)
+        assert filtered == [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))]
+
+        # Test case 2: empty list
+        filtered = augmentation._generate_disjoint_intervals([])
+        assert filtered == []
+
+        # Test case 3: overlap with a singleton and interval
+        words = [
+            ("dog+cat+horse epithelilal allergen dander", (0, 3)),
+            ("allergen dander", (2, 3)),
+            ("dog+cat+horse", (0, 0)),
+        ]
+        filtered = augmentation._generate_disjoint_intervals(words)
+        assert filtered == [("dog+cat+horse", (0, 0)), ("allergen dander", (2, 3))]
+
+
+class TestFilterCandidatesForEnhancement:
+    def test_filter_candidates_for_enhancement(self):
+        # Case 1: Empty list
+        assert augmentation._filter_candidates_for_enhancement([], LOINC_ENHANCEMENTS) == []
+
+        # Case 2: Some disjoint candidates, some of which have enhancements
+        words = [("epidermal", (0, 0)), ("IgE", (1, 1)), ("Serum", (2, 2)), ("dander+Cat", (3, 3))]
+        filtered = augmentation._filter_candidates_for_enhancement(words, LOINC_ENHANCEMENTS)
+        assert filtered == [("IgE", (1, 1))]
+
+        # Case 3: Substring candidates with enhancement
+        words = [
+            ("Allergen Mix", (0, 1)),
+            ("IgE", (2, 2)),
+            ("Serum", (3, 3)),
+            ("(Dog dander+Cat epithelium+Horse dander)", (4, 7)),
+        ]
+        filtered = augmentation._filter_candidates_for_enhancement(words, LOINC_ENHANCEMENTS)
+        assert filtered == [("IgE", (2, 2)), ("(Dog dander+Cat epithelium+Horse dander)", (4, 7))]
+
+        # Case 3: Candidate list with no tokens that have enhancements
+        words = [("there", (0, 0)), ("are", (1, 1)), ("no", (2, 2)), ("enhancements", (3, 3))]
+        filtered = augmentation._filter_candidates_for_enhancement(words, LOINC_ENHANCEMENTS)
+        assert filtered == []
 
 
 @pytest.mark.parametrize(
@@ -145,55 +181,30 @@ class TestGenerateEnhancementCandidates:
         assert result == expected
 
 
-@pytest.mark.parametrize(
-    "text, enhancement_type, max_enhancements, min_enhancements, expected",
-    [
-        # Test case 1: Basic enhancement with a single synonym
-        (
-            "Blood Glucose Measurement",
-            "synonyms",
-            2,
-            1,
-            "blood glucoseur measurement",
-        ),
-        # Test case 2: Enhancement with "all" replacements
-        (
-            "Blood Glucose Measurement",
-            "all",
-            2,
-            1,
-            "blood gluc measurement",
-        ),
-        # Test case 3: No possible enhancements
-        (
-            "This term has no enhancements",
-            "abbrv",
-            2,
-            1,
-            "This term has no enhancements",
-        ),
-        # Test case 4: Enhancement on substrings
-        (
-            "Blood Glucose Measurement",
-            "all",
-            4,
-            2,
-            "blood glucoseur measurement",
-        ),
-    ],
-)
 class TestEnhanceLoinc:
-    def test_enhance_loinc(
-        self, text, enhancement_type, max_enhancements, min_enhancements, expected
-    ):
-        result = augmentation.enhance_loinc_str(
-            text,
-            enhancement_type=enhancement_type,
-            max_enhancements=max_enhancements,
-            min_enhancements=min_enhancements,
-        )
+    def test_enhance_loinc(self):
+        # Case 1: sanity check empty string
+        assert augmentation.enhance_loinc_str("", "all", 5) == ""
 
-        assert result == expected
+        # Case 2: One enhancement that's a disjoint singleton, and its replacement
+        # is multiple words--make sure the rest of the string is unaffected
+        code_str = "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum"  # noqa
+        enhanced_code = augmentation.enhance_loinc_str(code_str, "all", 5)
+        assert (
+            enhanced_code
+            == "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) immune globulin e Ab [Measurement] in Serum"
+        )  # noqa
+
+        # Case 3: Multiple enhancements, one singleton and one substring
+        # The substring's replacement is shorter, so this test's string
+        # truncation and the deletion of other tokens later.
+        # Make sure word is modified in reverse order and both take effect
+        code_str = "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE [Measurement] panel - Urine"  # noqa
+        enhanced_code = augmentation.enhance_loinc_str(code_str, "all", 5, min_enhancements=2)
+        assert (
+            enhanced_code
+            == "Epidermal Allergen Mix epid allerg mix Ab.IgE [Measurement] panel - ur"
+        )  # noqa
 
 
 class TestEnhanceLoincError:
@@ -243,7 +254,11 @@ class TestGenerateAugmentedTrainingSamples:
 
 class TestBuildAugmentedLoincFiles:
     def test_build_augmented_loinc_files(self, cleanup_tmp_files):
-        input_path = "./tests/unit/assets/loinc_lab_names_20250930.csv"
+        working_dir = os.getcwd()
+        if working_dir.split("/")[-1] == "unit":
+            input_path = "assets/loinc_lab_names_20250930.csv"
+        elif working_dir.split("/")[-1] == "dibbs-text-to-code":
+            input_path = "./tests/unit/assets/loinc_lab_names_20250930.csv"
         num_sn = 2
         num_lcn = 2
         num_dn = 2
@@ -255,10 +270,10 @@ class TestBuildAugmentedLoincFiles:
         output_base_path = "./tmp/augmented_loinc"
         augmentation.build_augmented_loinc_files(
             input_path=input_path,
+            config=config,
             num_sn=num_sn,
             num_lcn=num_lcn,
             num_dn=num_dn,
-            config=config,
             output_path_base=output_base_path,
         )
 
