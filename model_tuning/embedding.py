@@ -1,9 +1,12 @@
 import os
 import pickle
+import sys
 from typing import List
 
 import torch
 from sentence_transformers import SentenceTransformer
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.parse_and_extract_loinc_names import parse_snoinc_extracts
 
@@ -11,7 +14,8 @@ SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20251008.csv"
 DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
 EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
 
-CHUNK_SIZE = 1024
+BATCH_SIZE = 32
+CHUNK_SIZE = 8192
 
 
 def embed_loinc_names(
@@ -43,7 +47,7 @@ def embed_loinc_names(
             print("Mini-batching from", start, "to", end - 1)
 
             batch_embeddings: torch.Tensor = model.encode(
-                mini_batch, batch_size=64, show_progress_bar=True, convert_to_tensor=True
+                mini_batch, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
             )
             batch_embeddings = batch_embeddings.to("cpu")
             try:
@@ -69,7 +73,7 @@ def embed_loinc_names(
 
     else:
         corpus_embeddings = model.encode(
-            name_list, batch_size=16, show_progress_bar=True, convert_to_tensor=True
+            name_list, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
         )
         with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
             pickle.dump({"codes": name_list, "embeddings": corpus_embeddings}, fp)
@@ -77,9 +81,7 @@ def embed_loinc_names(
 
 if __name__ == "__main__":
     models = [
-        "ibm-granite/granite-embedding-125m-english",
-        "intfloat/e5-large-v2",
-        "BAAI/bge-large-en-v1.5",
+        "Qwen/Qwen3-Embedding-0.6B",
     ]
 
     print("Extracting SNOINC data to form standardized names...")
@@ -93,4 +95,6 @@ if __name__ == "__main__":
         model = SentenceTransformer(mn)
 
         print("Performing embedding, this might take a while...")
-        embeddings = embed_loinc_names(model, name_codes, embedding_file)
+        embeddings = embed_loinc_names(
+            model, name_codes, embedding_file, use_incremental_mini_batching=True
+        )

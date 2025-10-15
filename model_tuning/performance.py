@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 import time
 from typing import List
 
@@ -12,6 +13,10 @@ EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
 EMBEDDING_FILE = "loinc_lab_names_intfloat_e5-base-v2_20251007"
 VALIDATION_FILE = "../data/training_files/validation_set_positive_pairs.txt"
 K_VALUES = [1, 3, 5, 10]
+
+# IMPORTANT: Change this value to calculate stats using more or less
+# examples drawn from the validation set.
+NUM_EXAMPLES_TO_VALIDATE = 1000
 
 
 def predict_and_evaluate_validation_set(
@@ -45,7 +50,8 @@ def predict_and_evaluate_validation_set(
     times = {k: [] for k in k_vals}
     examples_with_correct_output_in_top_k = {k: 0.0 for k in k_vals}
 
-    examples = examples[:10]
+    random.shuffle(examples)
+    examples = examples[:NUM_EXAMPLES_TO_VALIDATE]
 
     for e in examples:
         correct_code = e[0].strip()
