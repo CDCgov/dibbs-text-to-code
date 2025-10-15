@@ -44,25 +44,31 @@ def load_loinc_enhancements(cwd: str):
     :param cwd: The current working file directory.
     :return: A dictionary of LOINC enhancements.
     """
-    # Determine how many levels deep in the call structure we are
-    dirs = cwd.split("/")
+    cwd_path = pathlib.Path(cwd)
+    parts = cwd_path.parts
+
+    # Find where "dibbs-text-to-code" appears in the path
     base_idx = -1
-    for i, dir in enumerate(dirs):
-        if dir == "dibbs-text-to-code":
+    for i, part in enumerate(parts):
+        if part == "dibbs-text-to-code":
             base_idx = i
+            break
 
-    # However many levels deep is how far we need to go back up to hit
-    # the data folder
-    levels = (len(dirs) - 1) - base_idx
-    level_prefix = "../" * levels
+    if base_idx == -1:
+        raise ValueError("Could not find 'dibbs-text-to-code' in current working directory path.")
 
-    pattern = level_prefix + "data/snoinc_extracts/*_abbrv_syn_*.json"
+    # Compute how many levels up we need to go to reach the project root
+    levels = (len(parts) - 1) - base_idx
+    level_prefix = pathlib.Path(*([".."] * levels)) if levels > 0 else pathlib.Path(".")
+
+    # Use glob pattern relative to the computed prefix
+    pattern = str(level_prefix / "data" / "snoinc_extracts" / "*_abbrv_syn_*.json")
     matches = glob.glob(pattern)
-    enhancements = {}
 
+    enhancements = {}
     for match in matches:
-        relative_normalized_match = "/".join(match.split("/")[levels:])
-        m = read_json(relative_normalized_match)
+        match_path = pathlib.Path(match)
+        m = read_json(match_path.resolve())
         enhancements.update(m)
 
     return enhancements

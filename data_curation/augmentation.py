@@ -257,7 +257,7 @@ def enhance_loinc_str(
     if max_enhancements <= min_enhancements:
         raise ValueError("max_enhancements must be greater than min_enhancements")
 
-    # Step 1: build all susbtring candidates, including singletons
+    # Step 1: build all substring candidates, including singletons
     words = [(word.strip(), [i]) for i, word in enumerate(text.split())]
     candidates = _generate_enhancement_candidates(words)
 
@@ -313,6 +313,7 @@ def _apply_enhancements(
       available and that do not overlap one another.
     :param enhancement_type: The type of enhancement to apply.
     :param num_enhancements: The number of enhancements to apply.
+    :return: The modified list of words and indices.
     """
     enhancements_applied = 0
     enhancements_used = set()
@@ -326,7 +327,7 @@ def _apply_enhancements(
     while enhancements_applied < num_enhancements and num_tries < MAX_AUGMENTATION_TRIES:
         num_tries += 1
 
-        # If we need to change type based on snonym/abbreviation availability,
+        # If we need to change type based on synonym/abbreviation availability,
         # make sure that switch only affects the current enhancement; we'll try
         # the full suite on the next enhancement because it might be available
         e_type_to_use = enhancement_type
@@ -359,17 +360,14 @@ def _apply_enhancements(
     # Sort by substring start index, since we know everything is disjoint.
     # This lets us completely replace one string before hitting another.
     enhancements_to_apply = sorted(enhancements_to_apply, key=lambda x: x[0][0], reverse=True)
-    for e in enhancements_to_apply:
+    for (start, end), replacement in enhancements_to_apply:
         # Base case: singletons are easy to replace
-        if e[0][0] == e[0][1]:
-            words[e[0][0]] = (e[1], e[0])
-        # Substring case involves replacing out a list of tokens
-        # We can just throw away all tokens after the start index and insert
-        # the whole enhancement into one position
+        if start == end:
+            words[start] = (replacement, (start, end))
+        # Substring case involves replacing out a list of tokens, so we
+        # can just slice it out and overwrite all at once
         else:
-            for j in range(e[0][1], e[0][0], -1):
-                del words[j]
-            words[e[0][0]] = (e[1], e[0])
+            words[start : end + 1] = [(replacement, (start, end))]
 
     return words
 
@@ -399,17 +397,17 @@ def _generate_disjoint_intervals(
     result = []
     current_end = -1
 
-    for candidate in candidates:
+    for replacement, (start, end) in candidates:
         # Next interval starts after our current one ends
-        if candidate[1][0] > current_end:
-            result.append(candidate)
-            current_end = candidate[1][1]
+        if start > current_end:
+            result.append((replacement, (start, end)))
+            current_end = end
 
     return result
 
 
 def _filter_candidates_for_enhancement(
-    words: list[typing.Tuple[str, typing.Tuple[int, int]]],
+    candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
     loinc_enhancements: dict,
 ) -> list[str, list[int]]:
     """
@@ -417,7 +415,7 @@ def _filter_candidates_for_enhancement(
     tuples for which the candidate has one or more enhancements available in the
     LOINC_ENHANCEMENTS dictionary.
 
-    :param words: A list of tuples of words and their inclusive indices. Each
+    :param candidates: A list of tuples of words and their inclusive indices. Each
       such candidate will be checked independently for an eligible enhancement.
     :param loinc_enhancements: A dictionary containing eligible enhancements
       that can be made on a substring in the input code.
@@ -426,7 +424,7 @@ def _filter_candidates_for_enhancement(
     """
     filtered_candidates = []
 
-    for word, idx in words:
+    for word, idx in candidates:
         # Applying the lowercasing here lets us still reconstruct the string with
         # other capitalization preserved
         search_word = word.lower()
@@ -459,8 +457,8 @@ def _generate_enhancement_candidates(
     # a point rather than an interval (will need this later for maximally
     # disjoint interval computation)
     candidates = []
-    for w in words:
-        candidates.append((w[0], (w[1][0], w[1][0])))
+    for word, [position] in words:
+        candidates.append((word, (position, position)))
 
     # Now build up all sequentially linear combinations of substrings
     for start_idx in range(len(words)):
@@ -497,7 +495,7 @@ def generate_augmented_examples(
     """
 
     augmented_examples = []
-    for i in range(num_examples):
+    for _ in range(num_examples):
         ex_code = input_code
         performed_enhancement = False
 

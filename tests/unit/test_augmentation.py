@@ -1,5 +1,6 @@
 import csv
 import os
+import pathlib
 import sys
 
 import pytest
@@ -152,7 +153,7 @@ class TestFilterCandidatesForEnhancement:
     [
         # Test case 1: Typical case with multiple words
         (
-            [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))],
+            [("blood", [0]), ("glucose", [1]), ("measurement", [2])],
             [
                 ("blood", (0, 0)),
                 ("glucose", (1, 1)),
@@ -163,10 +164,10 @@ class TestFilterCandidatesForEnhancement:
             ],
         ),
         # Test case 2: Single word (no substrings possible, just base word)
-        ([("blood", (0, 0))], [("blood", (0, 0))]),
+        ([("blood", [0])], [("blood", (0, 0))]),
         # # Test case 3: Two words
         (
-            [("blood", (0, 0)), ("glucose", (1, 1))],
+            [("blood", [0]), ("glucose", [1])],
             [
                 ("blood", (0, 0)),
                 ("glucose", (1, 1)),
@@ -254,11 +255,13 @@ class TestGenerateAugmentedTrainingSamples:
 
 class TestBuildAugmentedLoincFiles:
     def test_build_augmented_loinc_files(self, cleanup_tmp_files):
-        working_dir = os.getcwd()
-        if working_dir.split("/")[-1] == "unit":
-            input_path = "assets/loinc_lab_names_20250930.csv"
-        elif working_dir.split("/")[-1] == "dibbs-text-to-code":
-            input_path = "./tests/unit/assets/loinc_lab_names_20250930.csv"
+        working_dir = pathlib.Path.cwd()
+        if working_dir.name == "unit":
+            input_path = pathlib.Path("assets") / "loinc_lab_names_20250930.csv"
+        elif working_dir.name == "dibbs-text-to-code":
+            input_path = pathlib.Path("tests") / "unit" / "assets" / "loinc_lab_names_20250930.csv"
+        else:
+            raise RuntimeError(f"Unexpected working directory: {working_dir}")
         num_sn = 2
         num_lcn = 2
         num_dn = 2
