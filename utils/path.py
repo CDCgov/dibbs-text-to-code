@@ -30,9 +30,11 @@ def read_json(path: str) -> dict:
     """
     Loads a JSON file.
     """
+    print("top of read_json", path)
     if not pathlib.Path(path).is_absolute():
         # if path is relative, append to the project root
         path = str(pathlib.Path(code_root(), path))
+    print(path)
     with open(path, "r") as fobj:
         return json.load(fobj)
 
@@ -68,7 +70,7 @@ def load_loinc_enhancements(cwd: str):
     enhancements = {}
     for match in matches:
         match_path = pathlib.Path(match)
-        m = read_json(match_path.resolve())
+        m = read_json(match_path)
         enhancements.update(m)
 
     return enhancements
