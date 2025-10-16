@@ -733,8 +733,17 @@ def get_hl7_encounter_act_codes():  # noqa: D103
                         result_row["description"] = re.sub(
                             regex_patterns.MULTIPLE_SPACE, " ", hl7_definition
                         ).strip()
+                    else:
+                        result_row["description"] = ""
 
                     hl7_rows.append(result_row)
+        # Hard coded external encounter code that 'SHOULD' be used if it is an External Encounter
+        external_encounter = {
+            "code": "PHC2237",
+            "text": "External Encounter",
+            "description": "External Encounter",
+        }
+        hl7_rows.append(external_encounter)
         print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
         save_valueset_csv_file(hl7_filename, hl7_rows)
 
