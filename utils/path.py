@@ -68,8 +68,7 @@ def load_loinc_enhancements(cwd: str):
     enhancements = {}
     for match in matches:
         match_path = pathlib.Path(match)
-        filepath = pathlib.Path("data") / "snoinc_extracts" / match_path.name
-        m = read_json(filepath)
+        match_path = pathlib.Path(*match_path.parts[levels:])
+        m = read_json(match_path)
         enhancements.update(m)
-
     return enhancements
