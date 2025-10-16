@@ -70,14 +70,8 @@ def load_loinc_enhancements(cwd: str):
 
     enhancements = {}
     for match in matches:
-        # relative_normalized_match = "/".join(match.split("/")[levels:])
-        # print(relative_normalized_match)
-        # m = read_json(relative_normalized_match)
-
         match_path = pathlib.Path(match)
         match_path = pathlib.Path(*match_path.parts[levels:])
-        # print(match_path)
         m = read_json(match_path)
-
         enhancements.update(m)
     return enhancements

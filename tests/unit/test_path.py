@@ -53,6 +53,5 @@ def test_read_json_absolute():
 def test_load_loinc_enhancements():
     print("test_load_loinc_enhancements cwd", os.getcwd())
     enhancements = utils.load_loinc_enhancements(os.getcwd())
-    print("test_load_loinc_enhancements enhance dict", enhancements)
     assert isinstance(enhancements, dict)
     assert len(enhancements) > 0
