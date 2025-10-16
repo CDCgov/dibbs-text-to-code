@@ -30,11 +30,9 @@ def read_json(path: str) -> dict:
     """
     Loads a JSON file.
     """
-    print("top of read_json", path)
     if not pathlib.Path(path).is_absolute():
         # if path is relative, append to the project root
         path = str(pathlib.Path(code_root(), path))
-    print(path)
     with open(path, "r") as fobj:
         return json.load(fobj)
 
@@ -63,18 +61,15 @@ def load_loinc_enhancements(cwd: str):
     levels = (len(parts) - 1) - base_idx
     level_prefix = pathlib.Path(*([".."] * levels)) if levels > 0 else pathlib.Path(".")
 
-    # print("levels prefix", level_prefix)
-
     # Use glob pattern relative to the computed prefix
     pattern = str(level_prefix / "data" / "snoinc_extracts" / "*_abbrv_syn_*.json")
     matches = glob.glob(pattern)
 
     enhancements = {}
     for match in matches:
-        # print("match", match)
         match_path = pathlib.Path(match)
-        # print(match_path.resolve().relative_to(cwd_path))
-        m = read_json(match_path)
+        filepath = pathlib.Path("data") / "snoinc_extracts" / match_path.name
+        m = read_json(filepath)
         enhancements.update(m)
 
     return enhancements
