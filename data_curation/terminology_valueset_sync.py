@@ -54,6 +54,9 @@ UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/sourc
 UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
 VSAC_MEDICATIONS_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4/$expand"
 VSAC_VACCINES_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.6/$expand"
+VSAC_PROBLEMS_URL = (
+    "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.88.12.3221.7.4/$expand"
+)
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -760,6 +763,12 @@ def get_vsac_cvx_vaccines():  # noqa: D103
     _process_vsac_codes(VSAC_VACCINES_URL, vaccine_filename, "CVX Vaccines")
 
 
+# problems are also known as "Diagnosis/Symptom Codes"
+def get_vsac_snomed_problems():  # noqa: D103
+    problem_filename = f"vsac_snomed_problems_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    _process_vsac_codes(VSAC_PROBLEMS_URL, problem_filename, "SNOMED Problems (Diagnosis/Symptoms)")
+
+
 def _process_vsac_codes(api_url: str, filename: str, vs_type: str):  # noqa: D103
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
@@ -817,6 +826,7 @@ def main(  # noqa: D103
     encounter_code: bool,
     medication: bool,
     vaccine: bool,
+    problem: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -849,6 +859,9 @@ def main(  # noqa: D103
     if all_vs or vaccine:
         print("Getting VSAC CVX Vaccine Codes...")
         get_vsac_cvx_vaccines()
+    if all_vs or problem:
+        print("Getting VSAC SNOMED Problem (Diagnosis/Symptom) Codes...")
+        get_vsac_snomed_problems()
 
 
 if __name__ == "__main__":
@@ -890,6 +903,11 @@ if __name__ == "__main__":
         action="store_true",
         help="For VSAC CVX Vaccine Codes",
     )
+    parser.add_argument(
+        "--problem",
+        action="store_true",
+        help="For VSAC SNOMED Problem (Diagnosis/Symptom) Codes",
+    )
 
     args = parser.parse_args()
     main(
@@ -904,4 +922,5 @@ if __name__ == "__main__":
         args.encounter_code,
         args.medication,
         args.vaccine,
+        args.problem,
     )
