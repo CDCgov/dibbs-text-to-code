@@ -45,6 +45,7 @@ LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Obse
 HL7_LAB_INTERP_URL = (
     "https://terminology.hl7.org/2.1.0/CodeSystem-v3-ObservationInterpretation.json"
 )
+HL7_ENCOUNTER_CODE_URL = "https://terminology.hl7.org/6.5.0/CodeSystem-v3-ActCode.json"
 UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
@@ -685,6 +686,57 @@ def _filter_loinc_term(text: str) -> bool:
     return result
 
 
+def get_hl7_encounter_act_codes():  # noqa: D103
+    hl7_filename = f"hl7_encounter_code_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    hl7_response = requests.get(HL7_ENCOUNTER_CODE_URL)
+    encounter_act_code = "_ActEncounterCode"
+    hl7_rows = []
+
+    if hl7_response.status_code != 200:
+        print(
+            f"ERROR Retrieving HL7 Encounter Act Codes: {hl7_response.status_code}: {hl7_response.text}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    hl7_codes = hl7_response.json().get("concept")
+
+    if hl7_codes is not None:
+        record_count = len(hl7_codes)
+        print(f"HL7 ACT Codes to process through to get the Encounter Codes: {record_count}")
+
+        for hl7_row in hl7_codes:
+            hl7_code = hl7_row.get("code")
+            hl7_text = hl7_row.get("display")
+            hl7_definition = hl7_row.get("definition")
+
+            # get list of properties and ensure that the code/name is part
+            # of the specific Encounter Act Code Subset
+            hl7_properties = hl7_row.get("property")
+
+            for property in hl7_properties:
+                property_code = property.get("code")
+                property_value = property.get("valueCode")
+
+                if (
+                    property_code
+                    and property_code == "subsumedBy"
+                    and property_value
+                    and property_value == encounter_act_code
+                ):
+                    result_row = {
+                        "code": hl7_code,
+                        "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", hl7_text).strip(),
+                    }
+                    if hl7_definition:
+                        result_row["description"] = re.sub(
+                            regex_patterns.MULTIPLE_SPACE, " ", hl7_definition
+                        ).strip()
+
+                    hl7_rows.append(result_row)
+        print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
+        save_valueset_csv_file(hl7_filename, hl7_rows)
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -694,6 +746,7 @@ def main(  # noqa: D103
     lab_names: bool,
     loinc_abbr_syn: bool,
     loinc_umls_syn: bool,
+    encounter_code: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -717,6 +770,9 @@ def main(  # noqa: D103
     if all_vs or loinc_umls_syn:
         print("Getting LOINC UMLS Related Names...")
         get_loinc_umls_related_results()
+    if all_vs or encounter_code:
+        print("Getting HL7 Encounter Act Codes...")
+        get_hl7_encounter_act_codes()
 
 
 if __name__ == "__main__":
@@ -743,6 +799,11 @@ if __name__ == "__main__":
         action="store_true",
         help="For Loinc UMLS Related Names (Atomic & Crosswalk)",
     )
+    parser.add_argument(
+        "--encounter_code",
+        action="store_true",
+        help="For HL7 Encounter Act Codes",
+    )
 
     args = parser.parse_args()
     main(
@@ -754,4 +815,5 @@ if __name__ == "__main__":
         args.lab_names,
         args.loinc_abbr_syn,
         args.loinc_umls_syn,
+        args.encounter_code,
     )
