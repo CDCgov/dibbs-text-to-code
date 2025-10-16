@@ -63,13 +63,17 @@ def load_loinc_enhancements(cwd: str):
     levels = (len(parts) - 1) - base_idx
     level_prefix = pathlib.Path(*([".."] * levels)) if levels > 0 else pathlib.Path(".")
 
+    # print("levels prefix", level_prefix)
+
     # Use glob pattern relative to the computed prefix
     pattern = str(level_prefix / "data" / "snoinc_extracts" / "*_abbrv_syn_*.json")
     matches = glob.glob(pattern)
 
     enhancements = {}
     for match in matches:
+        # print("match", match)
         match_path = pathlib.Path(match)
+        # print(match_path.resolve().relative_to(cwd_path))
         m = read_json(match_path)
         enhancements.update(m)
 
