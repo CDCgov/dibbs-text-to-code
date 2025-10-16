@@ -52,6 +52,7 @@ UMLS_SNOMED_LAB_VALUES_URL = (
 UMLS_LOINC_CODE = ""
 UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
 UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
+VSAC_MEDICATIONS_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4/$expand"
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -737,6 +738,56 @@ def get_hl7_encounter_act_codes():  # noqa: D103
         save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
+def get_vsac_rxnorm_medications():  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+    medication_filename = (
+        f"vsac_rxnorm_medications_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    )
+
+    record_offset = 0
+    params = {"offset": record_offset}
+    vsac_response = requests.get(VSAC_MEDICATIONS_URL, params=params, auth=("apikey", UMLS_API_KEY))
+    medication_count = 0
+    total_medications = 1
+    medication_rows = []
+
+    while vsac_response.status_code == 200 and medication_count < total_medications:
+        # get the offset and record counts from the 'expansion'
+        vsac_expansion = vsac_response.json().get("expansion")
+        if vsac_expansion:
+            if total_medications == 1:
+                total_medications = vsac_expansion.get("total")
+                print(f"Total Medications to be processed: {total_medications}")
+            count_params = vsac_expansion.get("parameter")
+            for vs_param in count_params:
+                if vs_param.get("name") and vs_param.get("name") == "count":
+                    medication_count += vs_param.get("valueInteger")
+
+            # get all the medication codes
+            medication_codes = vsac_expansion.get("contains")
+
+            for medication_code in medication_codes:
+                med_code = medication_code.get("code")
+                med_text = medication_code.get("display")
+
+                if med_code and med_text:
+                    result_row = {
+                        "code": med_code,
+                        "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", med_text).strip(),
+                    }
+                    medication_rows.append(result_row)
+
+        if total_medications != medication_count:
+            params = {"offset": medication_count}
+            vsac_response = requests.get(
+                VSAC_MEDICATIONS_URL, params=params, auth=("apikey", UMLS_API_KEY)
+            )
+
+    print(f"{len(medication_rows)} Codes Extracted")
+    save_valueset_csv_file(medication_filename, medication_rows)
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -747,6 +798,7 @@ def main(  # noqa: D103
     loinc_abbr_syn: bool,
     loinc_umls_syn: bool,
     encounter_code: bool,
+    medication: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -773,6 +825,9 @@ def main(  # noqa: D103
     if all_vs or encounter_code:
         print("Getting HL7 Encounter Act Codes...")
         get_hl7_encounter_act_codes()
+    if all_vs or medication:
+        print("Getting VSAC RXNORM Medication Codes...")
+        get_vsac_rxnorm_medications()
 
 
 if __name__ == "__main__":
@@ -804,6 +859,11 @@ if __name__ == "__main__":
         action="store_true",
         help="For HL7 Encounter Act Codes",
     )
+    parser.add_argument(
+        "--medication",
+        action="store_true",
+        help="For VSAC RXNORM Medication Codes",
+    )
 
     args = parser.parse_args()
     main(
@@ -816,4 +876,5 @@ if __name__ == "__main__":
         args.loinc_abbr_syn,
         args.loinc_umls_syn,
         args.encounter_code,
+        args.medication,
     )
