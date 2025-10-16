@@ -51,8 +51,11 @@ def load_loinc_enhancements(cwd: str):
     base_idx = -1
     for i, part in enumerate(parts):
         if part == "dibbs-text-to-code":
+            # NOTE: DO NOT add a break after this statement
+            # The github runner working directory for file management
+            # has MULTIPLE directories named "dibbs-text-to-code".
+            # We need the LAST one in the path.
             base_idx = i
-            break
 
     if base_idx == -1:
         raise ValueError("Could not find 'dibbs-text-to-code' in current working directory path.")
@@ -67,14 +70,14 @@ def load_loinc_enhancements(cwd: str):
 
     enhancements = {}
     for match in matches:
-        relative_normalized_match = "/".join(match.split("/")[levels:])
-        print(relative_normalized_match)
-        m = read_json(relative_normalized_match)
+        # relative_normalized_match = "/".join(match.split("/")[levels:])
+        # print(relative_normalized_match)
+        # m = read_json(relative_normalized_match)
 
         match_path = pathlib.Path(match)
         match_path = pathlib.Path(*match_path.parts[levels:])
-        print(match_path)
-        # m = read_json(match_path)
+        # print(match_path)
+        m = read_json(match_path)
 
         enhancements.update(m)
     return enhancements
