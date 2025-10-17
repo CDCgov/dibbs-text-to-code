@@ -11,6 +11,7 @@
    - [LOINC UMLS Related Names](#loinc-umls-related-names)
    - [SNOMED](#snomed)
    - [HL7](#hl7)
+   - [VSAC](#vsac-value-set-authority-center)
 - [Instructions](#instructions)
    - [Generating SNOINC Extracts](#generating-snoinc-extracts)
      - [Dependencies](#dependencies)
@@ -246,10 +247,51 @@ D|Significant change down
 - code: The unique machine-readable identifier for a concept.
 - text: Human-readable text describing the concept.
 
+```csv
+code|text|description
+AMB|ambulatory|A comprehensive term for health care provided in a healthcare facility (e.g. a practitioneraTMs office, clinic setting, or hospital) on a nonresident basis. The term ambulatory usually implies that the patient has come to the location and is not assigned to a bed. Sometimes referred to as an outpatient encounter.
+EMER|emergency|A patient encounter that takes place at a dedicated healthcare service delivery location where the patient receives immediate evaluation and treatment, provided until the patient can be discharged or responsibility for the patient's care is transferred elsewhere (for example, the patient could be admitted as an inpatient or transferred to another facility.)
+```
+
+- code: The unique machine-readable identifier for a concept.
+- text: Human-readable text describing the concept.
+- description: A more in depth text giving detail about the concept.  **NOTE: Not all extracts will have this field available.**
+
 #### Extracts:
 
 - **Lab Interpretations** - In an HL7 message, the value from the ObservationInterpretation code system and/or a value set derived from it is used to provide additional context to the reported lab result. For instance, alongside a quantitative lab value, an interpretation code might indicate whether the result is "High" or "Low". This helps clinicians understand the significance of a result without having to interpret raw data themselves.
    - File Name: `../data/snoinc_extracts/hl7_lab_interp_<YYYYMMDD>.csv`
+
+- **Encounter Act Codes** - This ValueSet, defined by Health Level Seven (HL7), provides the vocabulary for classifying healthcare encounters, which are defined as interactions between a patient and healthcare providers for the purpose of receiving healthcare services. The codes qualify and add detail to the general `ActEncounterClass`.
+   - File Name: `../data/snoinc_extracts/hl7_encounter_code_<YYYYMMDD>.csv`
+
+---
+
+### VSAC (Value Set Authority Center)
+
+These data files are from various VSAC value sets, which are standardized lists of codes and terms used to define clinical concepts for healthcare initiatives, managed by the National Library of Medicine's Value Set Authority Center (VSAC). They provide standardized terminology for health data, supporting interoperability and quality measurement by ensuring consistency in how data is collected and exchanged between systems, especially through tools like electronic clinical quality measures (eCQMs).  These value sets can leverage other medical ontologies, like the UMLS, such as `RXNORM`, `SNOMED`, and `CVX`.
+
+#### Data Structure:
+
+```csv
+code|text
+01|diphtheria, tetanus toxoids and pertussis vaccine
+02|trivalent poliovirus vaccine, live, oral
+03|measles, mumps and rubella virus vaccine
+```
+- code: The unique machine-readable identifier for a concept.
+- text: Human-readable text describing the concept.
+
+#### Extracts:
+
+- **CVX Vaccines** - The CVX (Vaccines Administered) value set is a standard code set developed and maintained by the Centers for Disease Control and Prevention (CDC) for the electronic exchange of vaccine information. The CVX code is a numeric string that identifies a specific type of vaccine product administered to a patient. 
+   - File Name: `../data/snoinc_extracts/vsac_cvx_vaccines_<YYYYMMDD>.csv`
+
+- **RXNORM Medications Administered** - An RXNORM Medications Administered valueset is a standardized list of codes from the RxNorm vocabulary that specifies medications that have been given to a patient. It is most often used in electronic health records (EHRs) and clinical quality measures (eCQMs) to ensure different healthcare IT systems can accurately and unambiguously communicate about medications that were actually administered.
+   - File Name: `../data/snoinc_extracts/vsac_rxnorm_medications_<YYYYMMDD>.csv`
+
+- **SNOMED Problems** - A SNOMED Problems (Diagnosis/Symptoms) value set is a curated, standardized list of specific medical concepts used to describe a patient's health problems. It is a subset drawn from the much larger Systematized Nomenclature of Medicine—Clinical Terms (SNOMED CT), which is the most comprehensive clinical health terminology in the world.
+   - File Name: `../data/snoinc_extracts/vsac_snomed_problems_<YYYYMMDD>.csv`
 
 ## Instructions
 
@@ -356,6 +398,37 @@ There are a handful of CLI commands you can use to generate the extract files.  
    - A file named loinc_umls_related_names_<current date (YYYYMMDD)>.json will be created in the [data folder](../data/)
 
    :warning: **NOTE: This will take approximately 36 hours to complete, but if you stop it or you receive an error, you can restart this process and it will pick up where it left off** :warning:
+
+---
+
+- [**Encounter Act (Type) Codes**](#hl7)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Enter `python .\terminology_valueset_sync.py --encounter_code`
+   - A file named hl7_encounter_code_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+   
+---
+
+- [**Vaccines**](#vsac-value-set-authority-center)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
+   - Enter `python .\terminology_valueset_sync.py --vaccine`
+   - A file named vsac_cvx_vaccines_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+---
+
+- [**Medications**](#vsac-value-set-authority-center)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
+   - Enter `python .\terminology_valueset_sync.py --medication`
+   - A file named vsac_rxnorm_medications_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
+
+---
+
+- [**Problems (Diagnosis/Symptoms)**](#vsac-value-set-authority-center)
+   - In a terminal at the base of the dibbs-text-to-code repo, navigate to the data_curation folder `cd data_curation`
+   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
+   - Enter `python .\terminology_valueset_sync.py --problem`
+   - A file named vsac_snomed_problems_<current date (YYYYMMDD)>.csv will be created in the [data folder](../data/)
 
 ---
 
