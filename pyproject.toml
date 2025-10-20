@@ -20,7 +20,7 @@ dependencies = [
     # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
     # versions and rely on spacy and sentence-transformers to manage their own dependencies.
     "torch==2.2.2",
-    "numpy < 2",
+    "numpy < 3",
     "spacy",
     "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz",
     "spacy-lookups-data",
