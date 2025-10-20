@@ -40,4 +40,4 @@ coverage.xml
 /.vscode
 
 # Training files
-data/training_files/
+data/training_files/embeddings

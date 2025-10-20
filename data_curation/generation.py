@@ -1,8 +1,8 @@
+import csv
 import random
-from io import TextIOWrapper
 
-BASE_FILE_PATH = ""
-OUT_FILE_PATH = ""
+BASE_FILE_PATH = "../data/training_files/augmented_loinc"
+OUT_FILE_PATH = "../data/training_files/validation_set_positive_pairs.txt"
 
 
 def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
@@ -28,14 +28,16 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
     # Given handle is a prefix to multiple files, so we'll use naming
     # conventions to open the three appropriate ones
     if len(handle_parts) == 0 or handle_parts[-1] != "txt":
-        for variant in ["lcn.txt", "sn.txt", "dn.txt"]:
-            with open(file_handle + "_" + variant, "r") as fp:
-                _append_to_data_pool(fp, data_pool)
+        for variant in ["long_common_name.csv", "short_name.csv", "display_name.csv"]:
+            with open(file_handle + "_" + variant, "r") as csvfp:
+                rows = csv.reader(csvfp, delimiter=":")
+                _append_to_data_pool(rows, data_pool)
 
     # Handle is actually a file, can just open that
     else:
-        with open(file_handle, "r") as fp:
-            _append_to_data_pool(fp, data_pool)
+        with open(file_handle, "r") as csvfp:
+            rows = csv.reader(csvfp, delimiter=":")
+            _append_to_data_pool(rows, data_pool)
 
     # Pre-specified number of examples to generate
     # If num_examples is -1, that's "generate all" mode, where we
@@ -46,9 +48,8 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
         data_pool = data_pool[:num_examples]
 
     for element in data_pool:
-        pool_parts = element.split(":")
-        base_code = pool_parts[0].strip()
-        augmented_examples = pool_parts[1].strip().split("|")
+        base_code = element[1].strip()
+        augmented_examples = element[2].strip().split("|")
 
         # Randomly choose one of the augmented examples to pair
         chosen_ex = random.choice(augmented_examples)
@@ -60,10 +61,16 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
             fp.write(pair[0] + "|" + pair[1] + "\n")
 
 
-def _append_to_data_pool(fp: TextIOWrapper, data_pool):
+def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
     """
-    Simple helper method to append non-blank lines to a list.
+    Simple helper method to append non-empty data rows to a list representing
+    a pool of aggregated data.
     """
-    for line in fp:
-        if line.strip() != "":
-            data_pool.append(line.strip())
+    for row in csvfp:
+        # Minimum one column for numeric code, original code string, variants
+        if len(row) >= 3:
+            data_pool.append(row)
+
+
+if __name__ == "__main__":
+    generate_positive_pairs(BASE_FILE_PATH, -1, OUT_FILE_PATH)
