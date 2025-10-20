@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from dibbs_text_to_code import main
+from aws_lambda import main
 
 
 class TestHandler:

@@ -1,6 +1,6 @@
 import io
 
-from dibbs_text_to_code import s3_handler
+from aws_lambda import s3_handler
 
 
 class TestCreateS3Client:
