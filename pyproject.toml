@@ -26,6 +26,7 @@ dependencies = [
     "spacy-lookups-data",
     "sentence-transformers",
     "scikit-learn",
+    "hnswlib",
     "pydantic-settings",
     # Typing
     "aws-lambda-typing",
