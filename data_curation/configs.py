@@ -1,4 +1,31 @@
-import data_curation.schemas.augmentation as schemas
+from data_curation.schemas import augmentation as schemas
+
+"""
+A configuration meant for generating a validation data set in which each base
+LOINC code has a single, highly processed text example associated with it.
+Enhancement is *always* performed to inject semantic variance and deviation,
+and additional operations are used to fine-tune data scrambling so that 
+models can't learn just word order but have to use meaning instead.
+This config works on the LLM theory that it is better to have a single,
+extremely high-quality representative of an output class than it is to have
+multiple low-grade variations of noise.
+"""
+ONE_SHOT_VALIDATION_AUGMENTATION: schemas.AugmentationConfig = {
+    "enhancement_all": {"min_enhances": 1, "max_enhances": 4, "enhancement_prob": 1.0},
+    "insertion": {
+        "min_inserts": 1,
+        "max_inserts": 2,
+        "insert_prob_after_enhance": 0.5,
+    },
+    "permutation": {"min_swaps": 1, "max_swaps": 3, "swap_prob": 0.5},
+    "deletion": {
+        "deletion_mode": "char",
+        "min_deletes": 1,
+        "max_deletes": 8,
+        "max_deletes_per_word": 2,
+        "deletion_prob": 0.5,
+    },
+}
 
 """
 A default augmentation configuration meant as a "representative" synthetic
@@ -78,7 +105,7 @@ A configuration intended for the generation of augmented LOINC files, with
 granular control over the levels of enhancement at the individual type level. 
 """
 LOINC_FILE_GENERATION_AUGMENTATION: schemas.LoincFileGenerationConfig = {
-    "long_common_name": DEFAULT_AUGMENTATION,
-    "short_name": DEFAULT_AUGMENTATION,
-    "display_name": DEFAULT_AUGMENTATION,
+    "long_common_name": ONE_SHOT_VALIDATION_AUGMENTATION,
+    "short_name": ONE_SHOT_VALIDATION_AUGMENTATION,
+    "display_name": ONE_SHOT_VALIDATION_AUGMENTATION,
 }

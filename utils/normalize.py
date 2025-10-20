@@ -20,7 +20,7 @@ def merge_enhancements(
     *dicts: typing.Dict[str, typing.Dict[str, typing.Any]],
 ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
     """
-     Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
+    Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
     Merges 'abbrv' and 'synonyms' lists, preserves order and uniqueness,
     keeps the first-seen 'code' for each key.
     :param typing.Dicts: Variable number of typing.Dictionaries to merge.
