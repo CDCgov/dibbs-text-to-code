@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 import time
 from typing import List
 
@@ -7,92 +8,15 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers import util
 from torch import Tensor
 
-MODEL_NAME = "all-MiniLM-L6-v2"
-SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20250911.csv"
-# use date in filename to keep track of versions
-DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
+MODEL_NAME = "intfloat/e5-base-v2"
 EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
-EMBEDDING_FILE = f"loinc_lab_names_{MODEL_NAME.replace('/', '_')}_{DATE}"
-VALIDATION_FILE = "../data/training_files/validation_toy.txt"
+EMBEDDING_FILE = "loinc_lab_names_intfloat_e5-base-v2_20251007"
+VALIDATION_FILE = "../data/training_files/validation_set_positive_pairs.txt"
 K_VALUES = [1, 3, 5, 10]
 
-
-def parse_snoinc_extracts(
-    extract_path: str,
-    short_name_col: int = 1,
-    long_name_col: int = 2,
-    display_name_col: int = 3,
-    skip_first: bool = True,
-):
-    """
-    Given a path to an extract file of information on various LOINC codes,
-    parse the rows of that file in to three discrete lists corresponding to
-    the long common names, short names, and display names of those codes.
-    The file is expected to be a pipe-delimited text file in which each
-    LOINC code is expected to represent a single line.
-
-    :param extract_path: The path to the extract file to parse.
-    :param short_name_col: The column of the pipe file containing the
-      short name for a given LOINC code.
-    :param long_name_col: The column of the pipe file containing the long
-      common name for a given LOINC code.
-    :param display_name_col: The column of the pipe file containing the
-      display name for a given LOINC code.
-    :param skip_first: Optionally, a boolean indicating whether to skip the
-      first line of the file, if it is a header row.
-    :returns: A tuple of three lists, one for eaech name variant.
-    """
-    long_common_names = []
-    short_names = []
-    display_names = []
-
-    with open(extract_path, "r", encoding="utf-8") as fp:
-        lines_seen = 0
-        for line in fp:
-            if lines_seen == 0:
-                lines_seen += 1
-                if skip_first:
-                    continue
-            if line.strip() != "":
-                names = line.strip().split("|")
-                # Skip lines that aren't real entries (formatting artifacts)
-                if len(names) >= 4:
-                    long_common_names.append(names[long_name_col].strip())
-                    short_names.append(names[short_name_col].strip())
-                    display_names.append(names[display_name_col].strip())
-
-    for name_list in [long_common_names, short_names, display_names]:
-        name_list = [x for x in name_list if not x == ""]
-
-    return long_common_names, short_names, display_names
-
-
-def embed_loinc_names(
-    model: SentenceTransformer, name_list: List[str], save_embeddings: bool = False
-):
-    """
-    Use a SentenceTransformers model to embed the standard name codes for
-    a given set of LOINC values. These embeddings form the "Vector DB" that
-    will be used for semantic search on the examples-to-evaluate. Optionally,
-    save the embeddings to disk since computing them is time-consuming.
-
-    :param model: The Sentence Transformers model to use for embedding.
-    :param name_list: A list of strings to embed into the Vector DB.
-    :param save_embeddings: Optionally, a boolean in dicating whether to persist
-      the computed embeddings to disk.
-    :returns: The computed embeddings.
-    """
-    name_list = name_list
-    corpus_embeddings = model.encode(name_list, show_progress_bar=True, convert_to_tensor=True)
-
-    # make sure just the directory exists
-    os.makedirs(EMBEDDING_CACHE_DIR, exist_ok=True)
-
-    if save_embeddings:
-        with open(EMBEDDING_CACHE_DIR + EMBEDDING_FILE, "wb") as fp:
-            pickle.dump({"codes": name_list, "embeddings": corpus_embeddings}, fp)
-
-    return corpus_embeddings
+# IMPORTANT: Change this value to calculate stats using more or less
+# examples drawn from the validation set.
+NUM_EXAMPLES_TO_VALIDATE = 1000
 
 
 def predict_and_evaluate_validation_set(
@@ -100,7 +24,7 @@ def predict_and_evaluate_validation_set(
     vector_db: Tensor,
     standard_loinc_names: List[str],
     examples: List[List[str]],
-    k: int,
+    k_vals: List[int],
 ) -> None:
     """
     Compute performance statistics for a given model on a given set of validation
@@ -121,13 +45,17 @@ def predict_and_evaluate_validation_set(
     :param k: An integer for how many neighbors to retrieve from the DB.
     :returns: None
     """
-    cosine_sims = []
-    times = []
-    examples_with_correct_output_in_top_k = 0.0
+    encoding_times = []
+    cosine_sims = {k: [] for k in k_vals}
+    times = {k: [] for k in k_vals}
+    examples_with_correct_output_in_top_k = {k: 0.0 for k in k_vals}
+
+    random.shuffle(examples)
+    examples = examples[:NUM_EXAMPLES_TO_VALIDATE]
 
     for e in examples:
-        nonstandard_in = e[0].strip()
-        correct_code = e[1].strip()
+        correct_code = e[0].strip()
+        nonstandard_in = e[1].strip()
 
         # This utility performs exact neighbor semantic search
         # If approximate is desired, see
@@ -135,38 +63,45 @@ def predict_and_evaluate_validation_set(
         # for details
         start = time.time()
         enc = model.encode(nonstandard_in, convert_to_tensor=True)
-        hits = util.semantic_search(enc, vector_db, top_k=k)
-        hits = hits[0]
+        encoding_times.append(time.time() - start)
 
-        # Store some metrics
-        times.append(time.time() - start)
-        cosine_sims.append(hits[0]["score"])
+        for k in k_vals:
+            start = time.time()
+            hits = util.semantic_search(enc, vector_db, top_k=k)
+            hits = hits[0]
 
-        # Check if correct answer is in the returned search results
-        correct_in_top_k = False
-        for h in hits:
-            mapped_sentence = standard_loinc_names[h["corpus_id"]]  # ty: ignore
-            if mapped_sentence == correct_code:
-                correct_in_top_k = True
-                break
-        if correct_in_top_k:
-            examples_with_correct_output_in_top_k += 1.0
+            # Store some metrics
+            times[k].append(time.time() - start)
+            cosine_sims[k].append(hits[0]["score"])
 
-    mean_cosine_sim = round(float(sum(cosine_sims)) / float(len(cosine_sims)), 3)
-    mean_encoding_search_time = round(float(sum(times)) / float(len(times)), 3)
-    top_k_accuracy = round(examples_with_correct_output_in_top_k / float(len(examples)), 5)
+            # Check if correct answer is in the returned search results
+            correct_in_top_k = False
+            for h in hits:
+                mapped_sentence = standard_loinc_names[h["corpus_id"]]  # ty: ignore
+                if mapped_sentence == correct_code:
+                    correct_in_top_k = True
+                    break
+            if correct_in_top_k:
+                examples_with_correct_output_in_top_k[k] += 1.0
 
-    print(f"    Top-K Accuracy: {top_k_accuracy * 100.0}%")
-    print(f"    Mean Cosine Similarity: {mean_cosine_sim}")
-    print(f"    Mean Search Time: {mean_encoding_search_time}")
+    mean_encoding_time = round(float(sum(encoding_times)) / float(len(encoding_times)), 3)
+    print(f"  Mean Encoding Time: {mean_encoding_time} seconds")
+
+    for k in k_vals:
+        mean_cosine_sim = round(float(sum(cosine_sims[k])) / float(len(cosine_sims[k])), 3)
+        mean_encoding_search_time = round(float(sum(times[k])) / float(len(times[k])), 3)
+        top_k_accuracy = round(examples_with_correct_output_in_top_k[k] / float(len(examples)), 5)
+
+        print(f"  Trial: Value for Top-K at K = {k}")
+
+        print(f"    Top-K Accuracy: {top_k_accuracy * 100.0}%")
+        print(f"    Mean Cosine Similarity: {mean_cosine_sim}")
+        print(f"    Mean Search Time: {mean_encoding_search_time}")
 
 
 if __name__ == "__main__":
     print("Instantiating language model...")
     model = SentenceTransformer(MODEL_NAME)
-
-    print("Extracting SNOINC data to form standardized names...")
-    lcns, sns, dns = parse_snoinc_extracts(SNOINC_CODES_FILE)
 
     print("Checking for cached embeddings...")
     if os.path.exists(EMBEDDING_CACHE_DIR + EMBEDDING_FILE):
@@ -175,20 +110,16 @@ if __name__ == "__main__":
             cache_data = pickle.load(fp)
             name_codes = cache_data["codes"]
             embeddings = cache_data["embeddings"]
+
+            print("Loading validation set...")
+            examples = []
+            with open(VALIDATION_FILE, "r") as fp:
+                for line in fp:
+                    if line.strip() != "":
+                        examples.append(line.strip().split("|"))
+
+            print("Predicting and computing stats for validation set...")
+            predict_and_evaluate_validation_set(model, embeddings, name_codes, examples, K_VALUES)
+
     else:
-        print("No cache found, performing embedding.")
-        name_codes = lcns + sns + dns
-        print("  This might take a while...")
-        embeddings = embed_loinc_names(model, name_codes, save_embeddings=True)
-
-    print("Loading validation set...")
-    examples = []
-    with open(VALIDATION_FILE, "r") as fp:
-        for line in fp:
-            if line.strip() != "":
-                examples.append(line.split("|"))
-
-    print("Predicting and computing stats for validation set...")
-    for k in K_VALUES:
-        print(f"  Trial: Value for Top-K is {k}")
-        predict_and_evaluate_validation_set(model, embeddings, name_codes, examples, k)
+        print("No embeddings found, please run embedding.py to compute vectors first.")
