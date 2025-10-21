@@ -5,19 +5,19 @@ import pathlib
 
 def code_root() -> pathlib.Path:
     """
-    Returns the root directory of the dibbs_text_to_code source code.
+    Returns the root directory of the aws_lambda source code.
     """
     root = pathlib.Path(__file__).resolve()
-    while root.name != "dibbs-text-to-code":
+    while root.name != "aws_lambda":
         if root.parent == root:
-            raise FileNotFoundError("dibbs_text_to_code project root not found.")
+            raise FileNotFoundError("aws_lambda project root not found.")
         root = root.parent
     return root
 
 
 def repo_root(start: pathlib.Path | None = None) -> pathlib.Path | None:
     """
-    Returns the root directory of the dibbs_text_to_code repository, or None if not found.
+    Returns the root directory of the aws_lambda repository, or None if not found.
     """
     start = start or pathlib.Path(__file__).resolve()
     for directory in [start] + list(start.parents):

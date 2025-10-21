@@ -28,7 +28,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          pytest --cov=dibbs_text_to_code
+          pytest --cov=aws_lambda
 
       - name: Generate coverage report
         run: |

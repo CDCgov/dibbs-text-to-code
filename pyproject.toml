@@ -15,7 +15,7 @@ dependencies = [
     "boto3",
     # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
     # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
-    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x 
+    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x
     # to ensure compatibility across all hardware.
     # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
     # versions and rely on spacy and sentence-transformers to manage their own dependencies.
@@ -27,6 +27,7 @@ dependencies = [
     "sentence-transformers",
     "scikit-learn",
     "pydantic-settings",
+    "fastapi",
     # Typing
     "aws-lambda-typing",
 ]
@@ -60,7 +61,7 @@ where = ["src"]
 namespaces = false
 
 [tool.setuptools_scm]
-write_to = "src/dibbs_text_to_code/_version.py"
+write_to = "src/aws_lambda/_version.py"
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
 fallback_version = "0.0.0"
@@ -110,7 +111,7 @@ filterwarnings = [
 [tool.coverage.run]
 omit = [
     # Omit the generated version file from coverage
-    "src/dibbs_text_to_code/_version.py",
+    "src/aws_lambda/_version.py",
 ]
 
 [tool.ty.src]

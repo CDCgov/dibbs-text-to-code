@@ -7,8 +7,8 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 ARG ENVIRONMENT=prod
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Initialize the dibbs_text_to_code directory
-RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/dibbs_text_to_code"
+# Initialize the aws_lambda directory
+RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/aws_lambda"
 
 # Install build tools for compiling C++ extensions
 RUN microdnf install -y gcc-c++ make && microdnf clean all
@@ -27,4 +27,4 @@ COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
 ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src"
 
-CMD [ "dibbs_text_to_code.main.handler" ]
+CMD [ "aws_lambda.main.handler" ]
