@@ -740,7 +740,11 @@ def get_hl7_encounter_act_codes():  # noqa: D103
                         result_row["description"] = ""
 
                     hl7_rows.append(result_row)
-        # Hard coded external encounter code that 'SHOULD' be used if it is an External Encounter
+        # Hard coded external encounter
+        # This is the specified code, based upon the eICR specificiation, if an encounter is
+        # not associated with a specific 'patient visit'. You use the PHC2237 code for "External Encounter"
+        # in an eICR when a public health trigger occurs outside of a specific patient encounter,
+        # meaning it is not related to a particular visit or hospitalization
         external_encounter = {
             "code": "PHC2237",
             "text": "External Encounter",
