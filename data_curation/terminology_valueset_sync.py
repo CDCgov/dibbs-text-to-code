@@ -45,12 +45,18 @@ LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Obse
 HL7_LAB_INTERP_URL = (
     "https://terminology.hl7.org/2.1.0/CodeSystem-v3-ObservationInterpretation.json"
 )
+HL7_ENCOUNTER_CODE_URL = "https://terminology.hl7.org/6.5.0/CodeSystem-v3-ActCode.json"
 UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
 UMLS_LOINC_CODE = ""
 UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
 UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
+VSAC_MEDICATIONS_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4/$expand"
+VSAC_VACCINES_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.6/$expand"
+VSAC_PROBLEMS_URL = (
+    "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.88.12.3221.7.4/$expand"
+)
 
 # Get Terminology Usernames and Passwords
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -685,6 +691,133 @@ def _filter_loinc_term(text: str) -> bool:
     return result
 
 
+def get_hl7_encounter_act_codes():  # noqa: D103
+    hl7_filename = f"hl7_encounter_code_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    hl7_response = requests.get(HL7_ENCOUNTER_CODE_URL)
+    encounter_act_code = "_ActEncounterCode"
+    hl7_rows = []
+
+    if hl7_response.status_code != 200:
+        print(
+            f"ERROR Retrieving HL7 Encounter Act Codes: {hl7_response.status_code}: {hl7_response.text}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    hl7_codes = hl7_response.json().get("concept")
+
+    if hl7_codes is not None:
+        record_count = len(hl7_codes)
+        print(f"HL7 ACT Codes to process through to get the Encounter Codes: {record_count}")
+
+        for hl7_row in hl7_codes:
+            hl7_code = hl7_row.get("code")
+            hl7_text = hl7_row.get("display")
+            hl7_definition = hl7_row.get("definition")
+
+            # get list of properties and ensure that the code/name is part
+            # of the specific Encounter Act Code Subset
+            hl7_properties = hl7_row.get("property")
+
+            for property in hl7_properties:
+                property_code = property.get("code")
+                property_value = property.get("valueCode")
+
+                if (
+                    property_code
+                    and property_code == "subsumedBy"
+                    and property_value
+                    and property_value == encounter_act_code
+                ):
+                    result_row = {
+                        "code": hl7_code,
+                        "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", hl7_text).strip(),
+                    }
+                    if hl7_definition:
+                        result_row["description"] = re.sub(
+                            regex_patterns.MULTIPLE_SPACE, " ", hl7_definition
+                        ).strip()
+                    else:
+                        result_row["description"] = ""
+
+                    hl7_rows.append(result_row)
+        # Hard coded external encounter
+        # This is the specified code, based upon the eICR specificiation, if an encounter is
+        # not associated with a specific 'patient visit'. You use the PHC2237 code for "External Encounter"
+        # in an eICR when a public health trigger occurs outside of a specific patient encounter,
+        # meaning it is not related to a particular visit or hospitalization
+        external_encounter = {
+            "code": "PHC2237",
+            "text": "External Encounter",
+            "description": "External Encounter",
+        }
+        hl7_rows.append(external_encounter)
+        print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
+        save_valueset_csv_file(hl7_filename, hl7_rows)
+
+
+def get_vsac_rxnorm_medications():  # noqa: D103
+    medication_filename = (
+        f"vsac_rxnorm_medications_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    )
+    _process_vsac_codes(VSAC_MEDICATIONS_URL, medication_filename, "RXNORM Medications")
+
+
+def get_vsac_cvx_vaccines():  # noqa: D103
+    vaccine_filename = f"vsac_cvx_vaccines_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    _process_vsac_codes(VSAC_VACCINES_URL, vaccine_filename, "CVX Vaccines")
+
+
+# problems are also known as "Diagnosis/Symptom Codes"
+def get_vsac_snomed_problems():  # noqa: D103
+    problem_filename = f"vsac_snomed_problems_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    _process_vsac_codes(VSAC_PROBLEMS_URL, problem_filename, "SNOMED Problems (Diagnosis/Symptoms)")
+
+
+def _process_vsac_codes(api_url: str, filename: str, vs_type: str):  # noqa: D103
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+
+    record_offset = 0
+    params = {"offset": record_offset}
+    vsac_response = requests.get(api_url, params=params, auth=("apikey", UMLS_API_KEY))
+    record_count = 0
+    total_records = 1
+    data_rows = []
+
+    while vsac_response.status_code == 200 and record_count < total_records:
+        # get the offset and record counts from the 'expansion'
+        vsac_expansion = vsac_response.json().get("expansion")
+        if vsac_expansion:
+            if total_records == 1:
+                total_records = vsac_expansion.get("total")
+                print(f"Total {vs_type} to be processed: {total_records}")
+            count_params = vsac_expansion.get("parameter")
+            for vs_param in count_params:
+                if vs_param.get("name") and vs_param.get("name") == "count":
+                    record_count += vs_param.get("valueInteger")
+
+            # get all the codes for the valueset
+            vs_codes = vsac_expansion.get("contains")
+
+            for vs_code in vs_codes:
+                code = vs_code.get("code")
+                text = vs_code.get("display")
+
+                if code and text:
+                    result_row = {
+                        "code": code,
+                        "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", text).strip(),
+                    }
+                    data_rows.append(result_row)
+
+        if total_records != record_count:
+            params = {"offset": record_count}
+            vsac_response = requests.get(api_url, params=params, auth=("apikey", UMLS_API_KEY))
+
+    print(f"{len(data_rows)} Codes Extracted")
+    save_valueset_csv_file(filename, data_rows)
+
+
 def main(  # noqa: D103
     all_vs: bool,
     lab_orders: bool,
@@ -694,6 +827,10 @@ def main(  # noqa: D103
     lab_names: bool,
     loinc_abbr_syn: bool,
     loinc_umls_syn: bool,
+    encounter_code: bool,
+    medication: bool,
+    vaccine: bool,
+    problem: bool,
 ):  # noqa: D103
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
@@ -717,6 +854,18 @@ def main(  # noqa: D103
     if all_vs or loinc_umls_syn:
         print("Getting LOINC UMLS Related Names...")
         get_loinc_umls_related_results()
+    if all_vs or encounter_code:
+        print("Getting HL7 Encounter Act Codes...")
+        get_hl7_encounter_act_codes()
+    if all_vs or medication:
+        print("Getting VSAC RXNORM Medication Codes...")
+        get_vsac_rxnorm_medications()
+    if all_vs or vaccine:
+        print("Getting VSAC CVX Vaccine Codes...")
+        get_vsac_cvx_vaccines()
+    if all_vs or problem:
+        print("Getting VSAC SNOMED Problem (Diagnosis/Symptom) Codes...")
+        get_vsac_snomed_problems()
 
 
 if __name__ == "__main__":
@@ -743,6 +892,26 @@ if __name__ == "__main__":
         action="store_true",
         help="For Loinc UMLS Related Names (Atomic & Crosswalk)",
     )
+    parser.add_argument(
+        "--encounter_code",
+        action="store_true",
+        help="For HL7 Encounter Act Codes",
+    )
+    parser.add_argument(
+        "--medication",
+        action="store_true",
+        help="For VSAC RXNORM Medication Codes",
+    )
+    parser.add_argument(
+        "--vaccine",
+        action="store_true",
+        help="For VSAC CVX Vaccine Codes",
+    )
+    parser.add_argument(
+        "--problem",
+        action="store_true",
+        help="For VSAC SNOMED Problem (Diagnosis/Symptom) Codes",
+    )
 
     args = parser.parse_args()
     main(
@@ -754,4 +923,8 @@ if __name__ == "__main__":
         args.lab_names,
         args.loinc_abbr_syn,
         args.loinc_umls_syn,
+        args.encounter_code,
+        args.medication,
+        args.vaccine,
+        args.problem,
     )
