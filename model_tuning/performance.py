@@ -4,13 +4,24 @@ import random
 import time
 from typing import List
 
+import hnswlib
 from sentence_transformers import SentenceTransformer
-from sentence_transformers import util
-from torch import Tensor
 
+# MODEL VARIABLES
 MODEL_NAME = "intfloat/e5-base-v2"
+EMBEDDING_SIZE = 768
+
+# EMBEDDING VARIABLES
 EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
 EMBEDDING_FILE = "loinc_lab_names_intfloat_e5-base-v2_20251007"
+
+# ANN INDEX VARIABLES
+INDEX_FP = "./hnswlib.index"
+EF_CONSTRUCTION = 200
+M_VALUE = 64
+EF_SEARCH = 100
+
+# VALIDATION VARIABLES
 VALIDATION_FILE = "../data/training_files/validation_set_positive_pairs.txt"
 K_VALUES = [1, 3, 5, 10]
 
@@ -21,7 +32,7 @@ NUM_EXAMPLES_TO_VALIDATE = 1000
 
 def predict_and_evaluate_validation_set(
     model: SentenceTransformer,
-    vector_db: Tensor,
+    ann_index: hnswlib.Index,
     standard_loinc_names: List[str],
     examples: List[List[str]],
     k_vals: List[int],
@@ -35,14 +46,15 @@ def predict_and_evaluate_validation_set(
     scoring result, and mean time to encode an input and perform semantic search.
 
     :param model: The sentence transformer model to evaluate.
-    :param vector_db: A list of pre-computed embeddings on the corpus in which
-      to semantic search (these are the embedded standard LOINC codes).
+    :param ann_index: A pre-computed HNSW index file over the embeddings that
+      we want to match nonstandard inputs to.
     :param standard_loinc_names: A list of strings representing the names of
       the LOINC codes embedded in the `vector_db`. Note that the order of
       strings in the list should match the order of embeddings in the DB.
     :param examples: A list of lists of strings representing the experimental
       examples to evaluate.
-    :param k: An integer for how many neighbors to retrieve from the DB.
+    :param k_vals: A list of integers indicating how many neighbors should be
+      retrieved from the DB across a range of trials.
     :returns: None
     """
     encoding_times = []
@@ -57,20 +69,19 @@ def predict_and_evaluate_validation_set(
         correct_code = e[0].strip()
         nonstandard_in = e[1].strip()
 
-        # This utility performs exact neighbor semantic search
-        # If approximate is desired, see
-        # https://sbert.net/examples/sentence_transformer/applications/semantic-search/README.html#approximate-nearest-neighbor     # noqa
-        # for details
         start = time.time()
-        enc = model.encode(nonstandard_in, convert_to_tensor=True)
+        enc = model.encode(nonstandard_in)
         encoding_times.append(time.time() - start)
 
         for k in k_vals:
             start = time.time()
-            hits = util.semantic_search(enc, vector_db, top_k=k)
-            hits = hits[0]
+            embedding_ids, distances = ann_index.knn_query(enc, k=k)
+            hits = [
+                {"corpus_id": id, "score": 1 - dist}
+                for id, dist in zip(embedding_ids[0], distances[0])
+            ]
+            hits = sorted(hits, key=lambda x: x["score"], reverse=True)
 
-            # Store some metrics
             times[k].append(time.time() - start)
             cosine_sims[k].append(hits[0]["score"])
 
@@ -110,6 +121,21 @@ if __name__ == "__main__":
             cache_data = pickle.load(fp)
             name_codes = cache_data["codes"]
             embeddings = cache_data["embeddings"]
+            embeddings = embeddings.cpu().numpy()
+
+            index = hnswlib.Index(space="cosine", dim=EMBEDDING_SIZE)
+            print("Checking for cached ANN index...")
+            if os.path.exists(INDEX_FP):
+                print("  Found cached index. Loading it...")
+                index.load_index(INDEX_FP)
+            else:
+                print("No locally cached index found. Creating hierarchical index...")
+                index.init_index(
+                    max_elements=len(embeddings), ef_construction=EF_CONSTRUCTION, M=M_VALUE
+                )
+                index.add_items(embeddings, list(range(len(embeddings))))
+                index.save_index(INDEX_FP)
+            index.set_ef(EF_SEARCH)
 
             print("Loading validation set...")
             examples = []
@@ -119,7 +145,9 @@ if __name__ == "__main__":
                         examples.append(line.strip().split("|"))
 
             print("Predicting and computing stats for validation set...")
-            predict_and_evaluate_validation_set(model, embeddings, name_codes, examples, K_VALUES)
+            predict_and_evaluate_validation_set(
+                model, index, embeddings, name_codes, examples, K_VALUES
+            )
 
     else:
         print("No embeddings found, please run embedding.py to compute vectors first.")
