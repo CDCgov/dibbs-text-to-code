@@ -26,6 +26,9 @@ dependencies = [
     "spacy-lookups-data",
     "sentence-transformers",
     "scikit-learn",
+    # HNSWLIB might actually not be needed in our main dependencies, but we won't know that
+    # until we get into AWS and see how OpenSearch structures things. We'll leave this in 
+    # main for now, but will remove in prod if we're able to migrate it to a dev dependency.
     "hnswlib",
     "pydantic-settings",
     # Typing

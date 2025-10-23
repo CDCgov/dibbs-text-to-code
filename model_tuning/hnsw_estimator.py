@@ -16,13 +16,34 @@ EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
 EMBEDDING_FILE = "loinc_lab_names_intfloat_e5-base-v2_20251007"
 
 # GRID-SEARCH ANN PARAMS
-EF_CONSTRUCTION_INIT = 200
-M_INIT = 48
+# EF-value is described as the "speed/accuracy" tradeoff metric for HNSW
+# search. EF typically ranges from 50 to 1000, with a default value being
+# 200. Higher values of EF will increase recall compared to exact search,
+# (i.e. results will tend to look more like exact kNN), but will increase
+# search time in a nonlinear fashion.
+EF_CONSTRUCTION = 200
+# M-Value is the number of connections/neighbors made per "node" in the
+# search graph. It represents how many embedded vectors are considered to
+# be in the "small world" defined around each other vector. Higher values
+# of M increase recall compared to exact search, but also slow down
+# the search time.
+M_VALUE = 48
+# These are the range of EF values we want to test during our grid search.
+# The EF-value that an HNSW index is constructed with *does not* need to be
+# the EF-value that index is searched with. The search EF can range from
+# 0 to 1000, just like the initial EF used during construction. The initial
+# EF controls how many "small worlds" get attached as branches in the
+# search graph, while this "search EF" controls how many actually get
+# explored by the algorithm during ANN.
 EFS_TO_TEST = [50, 100, 200, 400, 600, 800, 1000]
 
 # VALIDATION VARIABLES
 VALIDATION_FILE = "../data/training_files/validation_set_positive_pairs.txt"
-K_TO_OPTIMIZE = 10
+# This is the "k" value in KNN, how many approximate neighbors we'll be
+# retrieving. The script does not optimize a search over K, but the choice of
+# K does directly influence the ordered-recall calculation (e.g. more neighbors
+# means a better sample to compare ANN to exact KNN).
+NUM_NEIGHBORS_TO_SEARCH = 10
 
 # IMPORTANT: Change this value to calculate stats using more or less
 # examples drawn from the validation set.
@@ -109,7 +130,7 @@ if __name__ == "__main__":
             hnsw_index = hnswlib.Index(space="cosine", dim=EMBEDDING_SIZE)
             bf_index = hnswlib.BFIndex(space="cosine", dim=EMBEDDING_SIZE)
             hnsw_index.init_index(
-                max_elements=len(embeddings), ef_construction=EF_CONSTRUCTION_INIT, M=M_INIT
+                max_elements=len(embeddings), ef_construction=EF_CONSTRUCTION, M=M_VALUE
             )
             bf_index.init_index(max_elements=len(embeddings))
 
@@ -119,7 +140,7 @@ if __name__ == "__main__":
             print("Performing grid-search on EF to identify optimal value...")
             for ef in EFS_TO_TEST:
                 hnsw_index.set_ef(ef)
-                run_recall_trial(model, hnsw_index, bf_index, examples, K_TO_OPTIMIZE, ef)
+                run_recall_trial(model, hnsw_index, bf_index, examples, NUM_NEIGHBORS_TO_SEARCH, ef)
 
     else:
         print("No embeddings found, please run embedding.py to compute vectors first.")
