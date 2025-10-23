@@ -33,7 +33,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
+local = [
     # development-only dependencies here
     "ruff",
     "ty",
@@ -51,16 +51,6 @@ prod = [
     # List any additional production-only dependencies here
 ]
 
-[build-system]
-requires = ["setuptools>=42", "wheel", "setuptools-scm[toml]>=6.0.1"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = false
 
 [tool.setuptools_scm]
 write_to = "src/aws_lambda/_version.py"
@@ -88,18 +78,19 @@ show-fixes = true
 #     "D105",
 #     "D106",
 # ] # Defaults
-select = [
-    "E4",
-    "E7",
-    "E9",
-    "F",
-    "I",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D106",
-] # Defaults
+# select = [
+#     "ALL"
+# ]
+# ignore =[
+#     "ANN204",
+#     "D100",
+#     "D202",
+#     "D212",
+#     "D413",
+#     "FBT001",
+#     "FBT002",
+#     "PLR0913",
+# ]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
@@ -112,22 +103,3 @@ select = [
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
 order-by-type = false
-
-[tool.pytest.ini_options]
-
-testpaths = ["tests/unit"]
-
-pythonpath = ["src", "."]
-filterwarnings = [
-    "ignore:typing.io is deprecated, import directly from typing instead:DeprecationWarning",
-]
-
-[tool.coverage.run]
-omit = [
-    # Omit the generated version file from coverage
-    "src/aws_lambda/_version.py",
-]
-
-[tool.ty.src]
-# Set the directory to check
-include = ["src/"]
