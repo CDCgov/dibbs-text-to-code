@@ -1,0 +1,15 @@
+[project]
+name = "api"
+dynamic = ["version"]
+description = ""
+dependencies = [
+    "fastapi"
+]
+
+[dependency-groups]
+dev = [
+  "fastapi[standard]"
+]
+
+[tool.ruff]
+extend = "../../pyproject.toml"

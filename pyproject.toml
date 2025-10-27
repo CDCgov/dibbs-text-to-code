@@ -1,72 +1,27 @@
 [project]
 name = "dibbs-text-to-code"
-dynamic = ["version"]
+version = "0.1.0"
 description = ""
 authors = [
     { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
     { name = "Brandon Mader", email = "brandon@skylight.digital" },
     { name = "Eric Buckley", email = "ericbuckley@skylight.digital" },
     { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
+    { name = "Joshua Nygaard", email = "jnygaard@skylight.digital" },
 ]
-license = { file = "LICENSE" }
+license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
-dependencies = [
-    "boto3",
-    # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
-    # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
-    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x
-    # to ensure compatibility across all hardware.
-    # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
-    # versions and rely on spacy and sentence-transformers to manage their own dependencies.
-    "torch==2.2.2",
-    "numpy < 2",
-    "spacy",
-    "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz",
-    "spacy-lookups-data",
-    "sentence-transformers",
-    "scikit-learn",
-    "pydantic-settings",
-    "fastapi",
-    # Typing
-    "aws-lambda-typing",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
-    # development-only dependencies here
     "ruff",
-    "ty",
     "pre-commit",
     "requests",
-    # Testing
     "pytest",
-    "pytest-cov",
-    "pytest-env",
-    "moto",
-    # FastAPI
-    "fastapi[standard]"
-]
-prod = [
-    # List any additional production-only dependencies here
 ]
 
-[build-system]
-requires = ["setuptools>=42", "wheel", "setuptools-scm[toml]>=6.0.1"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = false
-
-[tool.setuptools_scm]
-write_to = "src/aws_lambda/_version.py"
-version_scheme = "post-release"
-local_scheme = "dirty-tag"
-fallback_version = "0.0.0"
 
 [tool.ruff]
 exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
@@ -76,18 +31,6 @@ target-version = "py311"
 show-fixes = true
 
 [tool.ruff.lint]
-# select = [
-#     "E4",
-#     "E7",
-#     "E9",
-#     "F",
-#     "I",
-#     "D102",
-#     "D103",
-#     "D104",
-#     "D105",
-#     "D106",
-# ] # Defaults
 select = [
     "E4",
     "E7",
@@ -113,21 +56,5 @@ select = [
 force-single-line = true
 order-by-type = false
 
-[tool.pytest.ini_options]
-
-testpaths = ["tests/unit"]
-
-pythonpath = ["src", "."]
-filterwarnings = [
-    "ignore:typing.io is deprecated, import directly from typing instead:DeprecationWarning",
-]
-
-[tool.coverage.run]
-omit = [
-    # Omit the generated version file from coverage
-    "src/aws_lambda/_version.py",
-]
-
-[tool.ty.src]
-# Set the directory to check
-include = ["src/"]
+[tool.uv.workspace]
+members = ["packages/*"]

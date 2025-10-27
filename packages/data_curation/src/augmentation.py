@@ -8,12 +8,12 @@ import typing
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pydantic
-
-from data_curation import configs
 from data_curation.schemas import augmentation as schemas
 from utils import normalize
 from utils import path
-from utils import regex_patterns
+
+from packages.data_curation.src import configs
+from packages.utils.src import regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

@@ -32,7 +32,7 @@ import requests
 from dotenv import load_dotenv
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from utils import regex_patterns
+from packages.utils.src import regex_patterns
 
 load_dotenv()
 

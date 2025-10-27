@@ -1,0 +1,9 @@
+[project]
+name = "utils"
+dynamic = ["version"]
+description = ""
+dependencies = [
+]
+
+[tool.ruff]
+extend = "../../pyproject.toml"

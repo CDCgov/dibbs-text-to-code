@@ -1,0 +1,8 @@
+[project]
+name = "data_curation"
+dynamic = ["version"]
+description = ""
+dependencies = [
+  "requests",
+  "python-dotenv"
+]
