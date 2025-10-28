@@ -4,10 +4,6 @@ alias help := _default
 @_default:
     just --list --list-submodules
 
-[group('alias')]
-[doc('Alias for `dev`')]
-mod d './.justscripts/just/dev.just'
-
 [group('sub-command')]
 [doc('Run dev-related docker compose commands')]
 mod dev './.justscripts/just/dev.just'
@@ -29,3 +25,7 @@ sync:
 [doc("Run type checking")]
 ty:
     uv run ty check
+
+[doc("Run Ruff check")]
+ruff:
+    uv run ruff check
