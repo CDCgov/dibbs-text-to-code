@@ -21,3 +21,11 @@ bootstrap:
 [doc("Run tests")]
 test:
     uv run pytest
+
+[doc("Sync Python environment")]
+sync:
+    uv sync --all-packages
+
+[doc("Run type checking")]
+ty:
+    uv run ty check
