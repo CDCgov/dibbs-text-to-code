@@ -16,7 +16,7 @@ alias b := bootstrap
 
 [doc("Initialize the development environment")]
 bootstrap:
-    uv sync && pre-commit install
+    uv sync --all-packages && pre-commit install
 
 [doc("Run tests")]
 test:
