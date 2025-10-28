@@ -25,7 +25,7 @@ dev = [
 exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
 line-length = 100
 indent-width = 4
-target-version = "py311"
+target-version = "py312"
 show-fixes = true
 fix = true
 
@@ -57,3 +57,7 @@ order-by-type = false
 
 [tool.uv.workspace]
 members = ["packages/*"]
+
+[tool.ty.src]
+# Set the directory to check
+include = ["packages/*/*"]

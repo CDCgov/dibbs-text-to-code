@@ -27,9 +27,7 @@ def repo_root(start: pathlib.Path | None = None) -> pathlib.Path | None:
 
 
 def read_json(path: str) -> dict:
-    """
-    Loads a JSON file.
-    """
+    """Loads a JSON file."""
     if not pathlib.Path(path).is_absolute():
         # if path is relative, append to the project root
         path = str(pathlib.Path(code_root(), path))
