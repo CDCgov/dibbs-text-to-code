@@ -14,6 +14,10 @@ mod dev './.justscripts/just/dev.just'
 
 alias b := bootstrap
 
-[doc("Initialize the development environment. ")]
+[doc("Initialize the development environment")]
 bootstrap:
     uv sync && pre-commit install
+
+[doc("Run tests")]
+test:
+    uv run pytest

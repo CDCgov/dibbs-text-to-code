@@ -29,18 +29,25 @@
 - [Docker Compose](https://docs.docker.com/compose/install/) [optional]
 
 ### Setup
+#### Requirements
+- [just](https://just.systems) - command runner
+- [uv](https://docs.astral.sh/uv/) - to manage Python
+- [pre-commit](https://pre-commit.com/) - Pre-commit hooks
 
-Set up a Python virtual environment and install the required development dependencies:
-NOTE: Sourcing the script is recommended over simply executing the script. This allows
-the virtual environment to stay active in your shell.
-
-```bash
-source dev_scripts/bootstrap.sh
+After installing the above requirements run `just bootstrap` to initiate the Python enviroment and install pre-commit:
+```sh
+just bootstap
 ```
 
-**NOTE:** If you are running in on a Windows machine, will need to run the bootstrap
-file directly with `./dev_scripts/bootstrap.sh` in a bash terminal and then activate the
-virtual environment by running `.\.venv\Scripts\Activate.ps1`in a powershell terminal.
+To start the demo site and API:
+```sh
+just dev up -d
+```
+
+To run tests:
+```sh
+just test
+```
 
 ### Build and Verify
 
