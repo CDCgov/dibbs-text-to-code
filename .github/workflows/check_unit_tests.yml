@@ -28,7 +28,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          pytest --cov=aws_lambda
+          pytest --cov=packages/*/src
 
       - name: Generate coverage report
         run: |
