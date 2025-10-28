@@ -64,3 +64,12 @@ include=["packages/*/src"]
 
 [tool.ty.rules]
 too-many-positional-arguments = "ignore"
+
+
+[tool.coverage.run]
+source = ["packages"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
