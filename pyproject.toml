@@ -22,6 +22,21 @@ dev = [
     "pytest-cov",
 ]
 
+[tool.coverage.run]
+source = ["packages"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+
+[tool.ty.src]
+include=[
+    "packages/api/src",
+    "packages/aws-lambda/src"
+]
+
 [tool.ruff]
 exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
 line-length = 100
@@ -58,21 +73,3 @@ order-by-type = false
 
 [tool.uv.workspace]
 members = ["packages/*"]
-
-[tool.ty.src]
-include=[
-    "packages/api/src",
-    "packages/aws-lambda/src"
-]
-
-[tool.ty.rules]
-too-many-positional-arguments = "ignore"
-
-
-[tool.coverage.run]
-source = ["packages"]
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__pycache__/*",
-]
