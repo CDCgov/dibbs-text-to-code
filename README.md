@@ -34,9 +34,9 @@
 - [uv](https://docs.astral.sh/uv/) - to manage Python
 - [pre-commit](https://pre-commit.com/) - Pre-commit hooks
 
-After installing the above requirements run `just bootstrap` to initiate the Python enviroment and install pre-commit:
+After installing the above requirements run `just bootstrap` to initiate the Python environment and install pre-commit:
 ```sh
-just bootstap
+just bootstrap
 ```
 
 To start the demo site and API:
