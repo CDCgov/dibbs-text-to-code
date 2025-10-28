@@ -1,6 +1,6 @@
 import typing
 
-import packages.utils.src.regex_patterns as rp
+import utils.regex_patterns as rp
 
 
 def normalize_text(text: str) -> str:

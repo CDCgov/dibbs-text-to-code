@@ -1,6 +1,6 @@
 [project]
 name = "api"
-dynamic = ["version"]
+version = "0.1.0"
 description = ""
 dependencies = [
     "fastapi"

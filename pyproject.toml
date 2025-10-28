@@ -14,14 +14,13 @@ readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "ruff",
     "pre-commit",
     "requests",
     "pytest",
 ]
-
 
 [tool.ruff]
 exclude = [".git", ".pytest_cache", "__pycache__", "docs"]

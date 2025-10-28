@@ -12,8 +12,8 @@ from data_curation.schemas import augmentation as schemas
 from utils import normalize
 from utils import path
 
-from packages.data_curation.src import configs
-from packages.utils.src import regex_patterns
+from data_curation import configs
+from utils import regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
