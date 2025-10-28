@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+
 
 @pytest.fixture(scope="function")
 def cleanup_tmp_files():

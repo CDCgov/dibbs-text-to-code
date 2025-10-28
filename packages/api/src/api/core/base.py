@@ -1,10 +1,9 @@
 import os
 from typing import Literal
 
-from fastapi import FastAPI
-
 from config import DIBBS_CONTACT
 from config import LICENSES
+from fastapi import FastAPI
 
 
 class BaseService:

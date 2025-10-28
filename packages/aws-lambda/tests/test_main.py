@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from aws_lambda import main
 
 
