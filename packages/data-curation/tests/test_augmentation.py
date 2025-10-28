@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import augmentation
 from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
+
 from utils import normalize
 from utils import path
 
@@ -276,7 +277,7 @@ class TestBuildAugmentedLoincFiles:
         if working_dir.name == "unit":
             input_path = pathlib.Path("assets") / "loinc_lab_names_20250930.csv"
         elif working_dir.name == "dibbs-text-to-code":
-            input_path = pathlib.Path("tests") / "unit" / "assets" / "loinc_lab_names_20250930.csv"
+            input_path = "packages/data-curation/tests/assets/loinc_lab_names_20250930.csv"
         else:
             raise RuntimeError(f"Unexpected working directory: {working_dir}")
         num_sn = 2
