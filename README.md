@@ -41,8 +41,9 @@ just bootstrap
 
 To start the demo site and API:
 ```sh
-just dev up -d
+just dev up
 ```
+The demo site can be accessed at http:localhost:8081
 
 To run tests:
 ```sh
