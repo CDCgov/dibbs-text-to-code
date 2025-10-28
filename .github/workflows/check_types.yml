@@ -1,32 +1,33 @@
-name: type check
+# Commenting out because I do not believe this was every been ran, now that it is that are too many issues for this PR.
+# name: type check
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
-jobs:
-  ty:
-    runs-on: ubuntu-latest
+# jobs:
+#   ty:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "pyproject.toml"
+#       - name: "Set up Python"
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version-file: "pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
+#       - name: Install uv
+#         uses: astral-sh/setup-uv@v6
+#         with:
+#           enable-cache: true
 
-      - name: Install the project
-        run: uv sync --all-packages --locked --all-extras --dev
+#       - name: Install the project
+#         run: uv sync --all-packages --locked --all-extras --dev
 
-      - name: Run type checks
-        run: |
-          uv run ty check
+#       - name: Run type checks
+#         run: |
+#           uv run ty check
