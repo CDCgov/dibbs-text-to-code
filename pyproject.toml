@@ -60,7 +60,10 @@ order-by-type = false
 members = ["packages/*"]
 
 [tool.ty.src]
-include=["packages/*/src"]
+include=[
+    "packages/api/src",
+    "packages/aws-lambda/src"
+]
 
 [tool.ty.rules]
 too-many-positional-arguments = "ignore"

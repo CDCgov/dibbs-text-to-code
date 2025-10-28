@@ -2,12 +2,13 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from config import ENVIRONMENT
-from core.base import BaseService
 from fastapi import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+
+from api.config import ENVIRONMENT
+from api.core.base import BaseService
 
 # create router
 router = APIRouter(prefix="/api")
