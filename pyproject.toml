@@ -57,3 +57,9 @@ order-by-type = false
 
 [tool.uv.workspace]
 members = ["packages/*"]
+
+[tool.ty.src]
+include=["packages/*/src"]
+
+[tool.ty.rules]
+too-many-positional-arguments = "ignore"
