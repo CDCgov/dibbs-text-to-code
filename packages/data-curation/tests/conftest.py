@@ -5,6 +5,7 @@ import pytest
 
 @pytest.fixture(scope="function")
 def cleanup_tmp_files():
+    """Cleanup temporary test files."""
     # Setup: Ensure the tmp directory exists
     os.makedirs("./tmp", exist_ok=True)
     yield

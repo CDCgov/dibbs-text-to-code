@@ -7,6 +7,7 @@ import pytest
 
 @pytest.fixture(scope="function")
 def moto_setup(monkeypatch):
+    """Setup test AWS."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", "us-east-1")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")

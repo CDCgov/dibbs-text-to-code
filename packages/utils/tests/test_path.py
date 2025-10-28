@@ -9,11 +9,13 @@ from utils import path as utils
 
 
 def test_code_root():
+    "Test code root."
     root = utils.code_root()
     assert root.name == "dibbs-text-to-code"
 
 
 def test_code_root_not_found():
+    """Test code root when not found."""
     with unittest.mock.patch("pathlib.Path.resolve") as mock_resolve:
         mock_resolve.return_value = pathlib.Path("/")
         with pytest.raises(FileNotFoundError):
@@ -21,11 +23,13 @@ def test_code_root_not_found():
 
 
 def test_repo_root():
+    """Test repo root."""
     root = utils.repo_root()
     assert root is not None
 
 
 def test_repo_root_not_found():
+    """Test repo root, when not found."""
     with unittest.mock.patch("pathlib.Path.resolve") as mock_resolve:
         mock_resolve.return_value = pathlib.Path("/")
         root = utils.repo_root()
@@ -33,6 +37,7 @@ def test_repo_root_not_found():
 
 
 def test_read_json_relative():
+    """Test read JSON with relative path."""
     tmp = utils.code_root() / "test.json"
     with open(tmp, "w") as fobj:
         fobj.write('{"key": "value"}')
@@ -41,6 +46,7 @@ def test_read_json_relative():
 
 
 def test_read_json_absolute():
+    """Test read JSON with absolute path."""
     fd, path = tempfile.mkstemp(suffix=".json")
     try:
         with os.fdopen(fd, "w") as fobj:
@@ -51,6 +57,7 @@ def test_read_json_absolute():
 
 
 def test_load_loinc_enhancements():
+    """Test load LOINC enhancements CWD."""
     print("test_load_loinc_enhancements cwd", os.getcwd())
     enhancements = utils.load_loinc_enhancements(os.getcwd())
     assert isinstance(enhancements, dict)

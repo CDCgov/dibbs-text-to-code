@@ -24,6 +24,7 @@ from utils import normalize as utils
 )
 class TestNormalizeText:
     def test_normalize_text(self, text, expected):
+        """Test normalize text."""
         assert utils.normalize_text(text) == expected
 
 
@@ -42,6 +43,7 @@ class TestNormalizeText:
 )
 class TestMergeTwoLists:
     def test_merge_two_lists(self, existing, new, expected):
+        """Test merge two lists."""
         merged = utils.merge_two_lists(existing, new)
         assert merged == expected
 
@@ -134,5 +136,6 @@ class TestMergeTwoLists:
 )
 class TestMergeEnhancements:
     def test_merge_enhancements(self, dict1, dict2, expected):
+        """Test merge enhancements."""
         merged = utils.merge_enhancements(dict1, dict2)
         assert merged == expected

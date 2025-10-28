@@ -6,11 +6,13 @@ from aws_lambda import main
 
 class TestHandler:
     def test_handler(self):
+        """Test handler."""
         resp = main.handler({}, {})
         assert resp == {"message": "DIBBS Text to Code!", "event": {}, "file_contents": []}
 
     @pytest.mark.parametrize("num_records", [1, 3])
     def test_handler_reads_multiple_files(self, moto_setup, num_records):
+        """Test handler reads multiple files"""
         expected_contents = []
 
         # Create S3 events
@@ -36,6 +38,7 @@ class TestHandler:
         assert len(result["file_contents"]) == num_records
 
     def test_handler_no_records(self):
+        """Test handler with no records"""
         event = {"Records": []}
         context = {}
 

@@ -7,9 +7,8 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
-
 from data_curation import augmentation
+from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 from utils import normalize
 from utils import path
 
@@ -37,6 +36,7 @@ assert len(LOINC_ENHANCEMENTS) > 0
 )
 class TestScrambleWordOrder:
     def test_scramble_word_order(self, text, max_perms, expected):
+        """Test scramble word order."""
         result = augmentation.scramble_word_order(text, max_perms=max_perms)
         assert result == expected
 
@@ -47,10 +47,12 @@ class TestCharDeletion:
     LOINC_LAB_TEXT_3 = "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration in an ontological view. Additionally, it can be used to communicate a laboratory order, either alone or in combination with specimen or other information in the order. It may NOT be used to report back the measured patient value."
 
     def test_random_deletion_bad_method(self):
+        """Test random deletion bad method."""
         result = augmentation.random_char_deletion(self.LOINC_LAB_TEXT_3, 1, 10, 2, "test")
         assert result == self.LOINC_LAB_TEXT_3
 
     def test_random_char_deletion(self):
+        """Test random character deletion."""
         test_string = self.LOINC_LAB_TEXT_1
         expected_result = "5Hydroytryptophan [Measureent] n rie"
         result = augmentation.random_char_deletion(test_string, 3, 8, 2, "char")
@@ -64,6 +66,7 @@ class TestCharDeletion:
         assert result == expected_result
 
     def test_random_char_deletion_word(self):
+        """Test random char deletion word."""
         test_string = self.LOINC_LAB_TEXT_2
         expected_result = "6-oxo-piperidine-2-carbxylate and 6(R+S)-oxo-propylpiperidine-2-carboxylate panel  Urine and Serum or Plasma"
         result = augmentation.random_char_deletion(test_string, 1, 10, 3, "word")
@@ -96,6 +99,7 @@ class TestCharDeletion:
 )
 class TestInsertLoincRelatedNames:
     def test_insert_loinc_related_names(self, text, loinc_names, max_inserts, expected):
+        """Test insert LOINC related names."""
         result = augmentation.insert_loinc_related_names(
             text, loinc_names, min_inserts=2, max_inserts=max_inserts
         )
@@ -104,6 +108,12 @@ class TestInsertLoincRelatedNames:
 
 class TestGenerateDisjointIntervals:
     def test_generate_disjoint_intervals(self):
+        """
+        Test generate disjoint internals with 3 test cases:
+            1) already disjoint intervals
+            2) empty list
+            3) overlap with a singleton and interval
+        """
         # Test case 1: already disjoint intervals
         words = [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))]
         filtered = augmentation._generate_disjoint_intervals(words)
@@ -125,6 +135,7 @@ class TestGenerateDisjointIntervals:
 
 class TestFilterCandidatesForEnhancement:
     def test_filter_candidates_for_enhancement(self):
+        """Test filter candidates for enhancements."""
         # Case 1: Empty list
         assert augmentation._filter_candidates_for_enhancement([], LOINC_ENHANCEMENTS) == []
 
@@ -179,12 +190,14 @@ class TestFilterCandidatesForEnhancement:
 )
 class TestGenerateEnhancementCandidates:
     def test_generate_enhancement_candidates(self, words, expected):
+        """Test generate enhancement candidates."""
         result = augmentation._generate_enhancement_candidates(words)
         assert result == expected
 
 
 class TestEnhanceLoinc:
     def test_enhance_loinc(self):
+        """Test enhance LOINC."""
         # Case 1: sanity check empty string
         assert augmentation.enhance_loinc_str("", "all", 5) == ""
 
@@ -211,6 +224,7 @@ class TestEnhanceLoinc:
 
 class TestEnhanceLoincError:
     def test_enhance_loinc_str_raise_error(self):
+        """Test enhance LOINC string with error."""
         text = "Blood Glucose Measurement"
 
         with pytest.raises(ValueError):
@@ -250,12 +264,14 @@ class TestEnhanceLoincError:
 )
 class TestGenerateAugmentedTrainingSamples:
     def test_generate_augmented_examples(self, text, related_names, num_examples, config, expected):
+        """Test generate augmented examples."""
         result = augmentation.generate_augmented_examples(text, related_names, num_examples, config)
         assert result == expected
 
 
 class TestBuildAugmentedLoincFiles:
     def test_build_augmented_loinc_files(self, cleanup_tmp_files):
+        """Test build augmented LOINC files."""
         working_dir = pathlib.Path.cwd()
         if working_dir.name == "unit":
             input_path = pathlib.Path("assets") / "loinc_lab_names_20250930.csv"
