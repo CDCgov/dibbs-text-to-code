@@ -57,7 +57,3 @@ order-by-type = false
 
 [tool.uv.workspace]
 members = ["packages/*"]
-
-[tool.ty.src]
-# Set the directory to check
-include = ["packages/*/*"]

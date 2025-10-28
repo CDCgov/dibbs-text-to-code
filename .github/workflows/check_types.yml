@@ -29,4 +29,4 @@ jobs:
 
       - name: Run type checks
         run: |
-          uv run ty check --python=$(which python)
+          uv run ty check
