@@ -34,7 +34,7 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          coverage xml -o coverage.xml
+          uv run coverage xml -o coverage.xml
 
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v4
