@@ -10,7 +10,7 @@ from utils import path as utils
 
 def test_code_root():
     root = utils.code_root()
-    assert root.name == "aws-lambda"
+    assert root.name == "dibbs-text-to-code"
 
 
 def test_code_root_not_found():

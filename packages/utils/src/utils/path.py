@@ -8,7 +8,7 @@ def code_root() -> pathlib.Path:
     Returns the root directory of the aws_lambda source code.
     """
     root = pathlib.Path(__file__).resolve()
-    while root.name != "aws-lambda":
+    while root.name != "dibbs-text-to-code":
         if root.parent == root:
             raise FileNotFoundError("aws_lambda project root not found.")
         root = root.parent
