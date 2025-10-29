@@ -1,7 +1,6 @@
 [project]
 name = "model-tuning"
 version = "0.1.0"
-description = ""
 dependencies = [
     "en_core_web_sm",
     "hnswlib",

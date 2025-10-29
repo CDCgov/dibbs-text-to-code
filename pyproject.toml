@@ -3,31 +3,31 @@ name = "dibbs-text-to-code"
 version = "0.1.0"
 description = ""
 authors = [
-    { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
+    { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
     { name = "Brandon Mader", email = "brandon@skylight.digital" },
     { name = "Eric Buckley", email = "ericbuckley@skylight.digital" },
-    { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
     { name = "Joshua Nygaard", email = "jnygaard@skylight.digital" },
+    { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
 ]
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
 [dependency-groups]
 dev = [
-    "ty",
-    "ruff",
     "pre-commit",
-    "requests",
-    "pytest",
     "pytest-cov",
+    "pytest",
+    "requests",
+    "ruff",
+    "ty",
 ]
 
 [tool.coverage.run]
 source = ["packages"]
 omit = [
-    "*/tests/*",
-    "*/test_*.py",
     "*/__pycache__/*",
+    "*/test_*.py",
+    "*/tests/*",
 ]
 
 

@@ -1,11 +1,7 @@
 [project]
 name = "data-curation"
 version = "0.1.0"
-description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "Josh Nygaard", email = "josh.nygaard@gmail.com" }
-]
 dependencies = [
   "requests",
   "python-dotenv"
