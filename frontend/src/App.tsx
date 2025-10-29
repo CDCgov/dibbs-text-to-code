@@ -1,8 +1,11 @@
+import { Header, Layout } from "./components/Layout";
 
 
 function App() {
   return (
-    <Header />
+    <Layout>
+      <p>Hello</p>
+    </Layout>
   );
 }
 

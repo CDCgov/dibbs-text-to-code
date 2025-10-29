@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
-// import DibbsLogo from '../../assets/dibbs-logo.svg';
-import DibbsLogo from '../../assets/';
+import DibbsLogo from '../../assets/dibbs-logo.svg';
 import CdcLogo from '../../assets/cdc-logo.svg';
 import { ProvideFeedbackButton } from '../ProvideFeedbackButton';
 
@@ -11,16 +10,15 @@ import { ExternalLink } from '../ExternalLink';
 
 interface LayoutProps {
   children: React.ReactNode;
-  displayName: string;
 }
 
-export function Layout({ displayName, children }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <a className="usa-skipnav" href="#main-content">
         Skip to main content
       </a>
-      <Header displayName={displayName} />
+      <Header />
       <main
         id="main-content"
         className="bg-primary-container flex grow flex-col"
@@ -70,7 +68,7 @@ export function Header({ displayName }: HeaderProps) {
           <h1 className="flex items-center gap-3">
             <img src={DibbsLogo} alt="DIBBs" />
             <span className="font-merriweather text-2xl text-white">
-              eCR Refiner
+              Dibbs Text to Code
             </span>
           </h1>
         </Link>
