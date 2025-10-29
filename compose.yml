@@ -28,7 +28,6 @@ services:
       - opensearch-data:/usr/share/opensearch/data
     ports:
       - 9200:9200
-      - 9600:9600 # Required for OpenSearch Dashboards
     networks:
       - opensearch-net
 volumes:
