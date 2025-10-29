@@ -19,7 +19,7 @@ services:
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - DISABLE_SECURITY_PLUGIN=true # Disable security for local dev
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PWD} # Required for 2.12+, may need to store this as a secret and pull from there
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PWD-TEST_PSWD!} # Required for 2.12+, may need to store this as a secret and pull from there
     ulimits:
       memlock:
         soft: -1
