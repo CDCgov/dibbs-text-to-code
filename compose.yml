@@ -8,3 +8,31 @@ services:
       - ./src:/var/task/src
     healthcheck:
       test: [ "CMD", "curl", "-sf", "http://localhost:8080/2015-03-31/functions/function/invocations", "-XPOST", "-d", "{}" ]
+
+  opensearch-node:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node
+    environment:
+      - cluster.name=ttc-opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - DISABLE_SECURITY_PLUGIN=true # Disable security for local dev
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PWD} # Required for 2.12+, may need to store this as a secret and pull from there
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600 # Required for OpenSearch Dashboards
+    networks:
+      - opensearch-net
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net:

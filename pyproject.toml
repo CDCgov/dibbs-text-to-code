@@ -33,6 +33,7 @@ dependencies = [
     "pydantic-settings",
     # Typing
     "aws-lambda-typing",
+    "opensearch-py",
 ]
 
 [project.optional-dependencies]
