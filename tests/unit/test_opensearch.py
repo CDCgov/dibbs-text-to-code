@@ -5,7 +5,7 @@ from opensearchpy import RequestsHttpConnection
 
 
 def test_opensearch_container_functionality():
-    opensearch_pwd = os.environ["OPENSEARCH_PWD"]
+    opensearch_pwd = os.environ.get("OPENSEARCH_PWD", "TEST_PSWD!")
     # Configuration for your OpenSearch instance
     host = "localhost"
     port = 9200
