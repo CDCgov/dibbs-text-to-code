@@ -22,5 +22,5 @@ To use the environment, you need to attach it to your compute instance one time,
 3. Once the compute instance is running, click on the 3 dots to the right of your compute instance selection and choose "Open terminal" from the dropdown.
 4. Once in the terminal, create the conda environment by running `conda env create -f dibbs_env.yml`
 5. Activate the environment by running `conda activate dibbs_env`
-6. Register the environment as a Jupyter kernel by running `python -m ipykernel install --user --name dibbs_env --display-name "DIBBs Env"
+6. Register the environment as a Jupyter kernel by running `python -m ipykernel install --user --name dibbs_env --display-name "DIBBs Env"`
 7. Refresh your notebook environment, starting your compute instance and selecting the `DIBBs Env` kernel.
