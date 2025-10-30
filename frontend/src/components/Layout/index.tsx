@@ -68,7 +68,7 @@ export function Header({ displayName }: HeaderProps) {
           <h1 className="flex items-center gap-3">
             <img src={DibbsLogo} alt="DIBBs" />
             <span className="font-merriweather text-2xl text-white">
-              Dibbs Text to Code
+              Text to Code
             </span>
           </h1>
         </Link>
