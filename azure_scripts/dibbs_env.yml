@@ -6,4 +6,4 @@ dependencies:
       - numpy
       - torch
       - sentence-transformers
-      - ipykernel # required attaching the environment to Azure ML compute
+      - ipykernel # required for attaching the environment to Azure ML compute
