@@ -21,7 +21,7 @@ function App() {
           <p className="mt-2">The Text-to-Code project introduces a shared service integrated with the AIMS pipeline that can automatically map unstructured or local-coded fields in eICRs to standard codes (e.g. LOINC, SNOMED CT).</p>
           <div className="mt-10">
             <h2 className="">Convert your text for one code at a time</h2>
-            <div className="bg-blue-cool-5 max-w-100 rounded-lg p-8 mt-4">
+            <div className="bg-blue-cool-5 max-w-100 rounded-lg p-8 mt-8">
               <FormGroup className="!mt-0">
                 <Label htmlFor="text-input">
                   <span className="text-lg font-bold">Nonstandard text input</span>
