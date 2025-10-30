@@ -1,0 +1,9 @@
+name: dibbs_env
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - numpy
+      - torch
+      - sentence-transformers
+      - ipykernel # required attaching the environment to Azure ML compute
