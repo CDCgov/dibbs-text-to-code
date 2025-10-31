@@ -28,7 +28,12 @@ async def health_check():
 @router.get("/process/{item}")
 def read_item(item: str):
     """Dummy endpoint"""
-    return {"item": {item}, "time": datetime.now(ZoneInfo("America/New_York"))}
+    return {
+        "code": "8887-0",
+        "codeSystem": "LOINC",
+        "displayName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
+        "time": datetime.now(ZoneInfo("America/New_York")),
+    }
 
 
 # Instantiate FastAPI via DIBBs' BaseService class

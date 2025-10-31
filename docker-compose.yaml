@@ -4,6 +4,7 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     command: sh -c "npm i && npm run dev"
     ports:
       - "8081:8081"

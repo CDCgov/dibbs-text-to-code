@@ -1,31 +1,68 @@
-import { CharacterCount, Form, FormGroup, Icon, Label } from "@trussworks/react-uswds";
-import { Layout } from "./components/Layout";
-import { useState } from "react";
-import { Button } from "./components/Button";
-import { Title } from "./components/Title";
+import {
+  Button,
+  CharacterCount,
+  Form,
+  FormGroup,
+  Icon,
+  Label,
+} from '@trussworks/react-uswds';
+import { Layout } from './components/Layout';
+import { useState } from 'react';
+import { Title } from './components/Title';
+
+interface Result {
+  code: string;
+  codeSystem: string;
+  displayName: string;
+}
 
 
 function App() {
-  const [textInput, setTextInput] = useState("");
+  const [textInput, setTextInput] = useState('');
   const maxInputLength = 200;
+  const [result, setResult] = useState<Result>();
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTextInput(event.target.value);
-  }
+  };
+
+  const handleSubmit = async (data) => {
+        try {
+      const response = await fetch('http://localhost:8080/api/process/' + textInput, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      console.log(err)
+    }
+  };
 
   return (
     <Layout>
       <div className="flex justify-center">
         <div className="max-w-320">
           <Title className="pt-10">Welcome to Text to Code!</Title>
-          <p className="mt-2">The Text-to-Code project introduces a shared service integrated with the AIMS pipeline that can automatically map unstructured or local-coded fields in eICRs to standard codes (e.g. LOINC, SNOMED CT).</p>
-            <h2 className="mt-10">Convert your text for one code at a time</h2>
-          <div className="flex justify-around">
-            <div className="bg-blue-cool-5 max-w-100 rounded-lg p-8 mt-4">
-              <Form onSubmit={""}>
+          <p className="mt-2">
+            The Text-to-Code project introduces a shared service integrated with
+            the AIMS pipeline that can automatically map unstructured or
+            local-coded fields in eICRs to standard codes (e.g. LOINC, SNOMED
+            CT).
+          </p>
+          <h2 className="mt-10">Convert your text for one code at a time</h2>
+          <div className="flex content-between">
+            <div className="bg-blue-cool-5 mt-4 max-w-100 rounded-lg p-8">
+              <Form onSubmit={handleSubmit}>
                 <FormGroup className="!mt-0">
                   <Label htmlFor="text-input">
-                    <span className="text-lg font-bold">Nonstandard text input</span>
+                    <span className="text-lg font-bold">
+                      Nonstandard text input
+                    </span>
                   </Label>
                   <div>
                     <CharacterCount
@@ -37,13 +74,17 @@ function App() {
                       value={textInput}
                       onChange={handleChange}
                       required
-                      isTextArea>
-                    </CharacterCount>
+                      isTextArea
+                    ></CharacterCount>
                   </div>
                   <div className="mt-4">
-                    <Button type="submit" disabled={textInput.trim().length === 0}>
+                    <button
+                      type="button"
+                      id="fetchDataBtn"
+                      onClick={handleSubmit}
+                    >
                       Submit
-                    </Button>
+                    </button>
                     <strong className="ml-4 !font-light" role="note">
                       Note: Do not input PII/PHI
                     </strong>
@@ -51,25 +92,26 @@ function App() {
                 </FormGroup>
               </Form>
             </div>
-            <div className="bg-blue-cool-5 max-w-100 rounded-lg p-8 mt-4">
-              <h3 className="text-lg font-bold">
-                Standardized output
-              </h3>
-              <span className="font-extralight">
-                Placeholder
-              </span>
-              <dl className="outline outline-gray-cool-10 p-4">
-                <dt>Code</dt>
-                <dd></dd>
-                <dt>Code system</dt>
-                <dd></dd>
-                <dt>Display name</dt>
-                <dd></dd>
-              </dl>
-              <Button>
-                <Icon.ContentCopy/> Copy
-              </Button>
-            </div>
+
+            {result ? (
+              <div className="bg-blue-cool-5 mt-4 max-w-100 rounded-lg p-8">
+                <h3 className="text-lg font-bold">Standardized output</h3>
+                <span className="font-extralight">Placeholder</span>
+                <dl className="outline-gray-cool-10 p-4 outline">
+                  <dt>Code</dt>
+                  <dd>{result.code}</dd>
+                  <dt>Code system</dt>
+                  <dd>{result.codeSystem}</dd>
+                  <dt>Display name</dt>
+                  <dd>{result.displayName}</dd>
+                </dl>
+                <button>
+                  <Icon.ContentCopy /> Copy
+                </button>
+              </div>
+            ) : (
+              ''
+            )}
           </div>
         </div>
       </div>
