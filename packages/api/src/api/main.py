@@ -29,6 +29,7 @@ async def health_check():
 def read_item(item: str):
     """Dummy endpoint"""
     return {
+        "input": item,
         "code": "8887-0",
         "codeSystem": "LOINC",
         "displayName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
