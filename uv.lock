@@ -8,6 +8,7 @@ members = [
     "aws-lambda",
     "data-curation",
     "dibbs-text-to-code",
+    "utils",
 ]
 
 [[package]]
@@ -1160,6 +1161,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795 },
 ]
+
+[[package]]
+name = "utils"
+version = "0.1.0"
+source = { editable = "packages/utils" }
 
 [[package]]
 name = "uvicorn"
