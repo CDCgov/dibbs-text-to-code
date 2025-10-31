@@ -52,12 +52,20 @@ function App() {
               </Form>
             </div>
             <div className="bg-blue-cool-5 max-w-100 rounded-lg p-8 mt-4">
-              <h3>
+              <h3 className="text-lg font-bold">
                 Standardized output
               </h3>
               <span className="font-extralight">
                 Placeholder
               </span>
+              <dl className="outline outline-gray-cool-10 p-4">
+                <dt>Code</dt>
+                <dd></dd>
+                <dt>Code system</dt>
+                <dd></dd>
+                <dt>Display name</dt>
+                <dd></dd>
+              </dl>
               <Button>
                 <Icon.ContentCopy/> Copy
               </Button>
