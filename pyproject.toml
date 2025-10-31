@@ -76,4 +76,5 @@ members = [
     "packages/api",
     "packages/aws-lambda",
     "packages/data-curation",
+    "packages/utils"
     ]
