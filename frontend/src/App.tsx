@@ -72,7 +72,7 @@ function App() {
                   isTextArea
                 />
               </div>
-              <div className="mt-4">
+              <div className="flex mt-4">
                 <Button type="button" id="fetchDataBtn" onClick={handleSubmit}>
                   Submit
                 </Button>
