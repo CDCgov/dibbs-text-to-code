@@ -47,7 +47,7 @@ function App() {
   return (
     <Layout>
       <div className="flex justify-center">
-        <div className="max-w-320">
+        <div className="max-w-7xl">
           <Title className="pt-10">Welcome to Text to Code!</Title>
           <p className="mt-2">
             The Text-to-Code project introduces a shared service integrated with

@@ -51,7 +51,7 @@ export function Header({ displayName }: HeaderProps) {
           <MenuItem>
             <a
               href="/api/logout"
-              className="!border-gray-cool-40 block w-full rounded-md border px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:text-gray-900"
+              className="border-gray-cool-40! block w-full rounded-md border px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900"
             >
               Log out
             </a>
