@@ -55,7 +55,7 @@ function App() {
             CT).
           </p>
           <h2 className="mt-10">Convert your text for one code at a time</h2>
-          <div className="flex content-between">
+          <div className="flex gap-8">
             <div className="bg-blue-cool-5 mt-4 max-w-100 rounded-lg p-8">
               <Form onSubmit={handleSubmit}>
                 <FormGroup className="!mt-0">
@@ -94,7 +94,7 @@ function App() {
             </div>
 
             {result ? (
-              <div className="bg-blue-cool-5 mt-4 max-w-100 rounded-lg p-8">
+              <div className="bg-blue-cool-5 mt-4 max-w-100 rounded-lg p-8 max-w-full">
                 <h3 className="text-lg font-bold">Standardized output</h3>
                 <span className="font-extralight">Placeholder</span>
                 <dl className="outline-gray-cool-10 p-4 outline">
