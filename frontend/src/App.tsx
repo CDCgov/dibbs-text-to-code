@@ -7,6 +7,7 @@ import { Layout } from './components/Layout';
 import { useState } from 'react';
 import { Title } from './components/Title';
 import { Panel } from './components/Panel';
+import { DescriptionLine } from './components/DescriptionLine';
 
 interface Result {
   input: string;
@@ -85,12 +86,9 @@ function App() {
               <Panel title="Standardized output">
                 <span className="font-extralight">{result.input}</span>
                 <dl className="outline-gray-cool-10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4 outline mt-6 mb-4">
-                  <dt>Code:</dt>
-                  <dd>{result.code}</dd>
-                  <dt>Code system:</dt>
-                  <dd>{result.codeSystem}</dd>
-                  <dt>Display name:</dt>
-                  <dd>{result.displayName}</dd>
+                  <DescriptionLine name="Code" details={result.code} />
+                  <DescriptionLine name="Code System" details={result.codeSystem} />
+                  <DescriptionLine name="Display Name" details={result.displayName} />
                 </dl>
                 <Button type={'button'} outline>
                   <Icon.ContentCopy /> Copy
