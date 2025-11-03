@@ -1,5 +1,6 @@
 import {
   Button,
+  ButtonGroup,
   CharacterCount,
   Icon,
 } from '@trussworks/react-uswds';
@@ -9,11 +10,16 @@ import { Title } from './components/Title';
 import { Panel } from './components/Panel';
 import { DescriptionLine } from './components/DescriptionLine';
 
-interface Result {
-  input: string;
+interface Coding {
   code: string;
   codeSystem: string;
-  displayName: string;
+  shortName: string;
+  longName: string;
+}
+
+interface Result {
+  input: string;
+  codings: Coding[];
 }
 
 function App() {
@@ -44,6 +50,26 @@ function App() {
       console.log(err);
     }
   };
+  const handleSubmitBad = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:8080/api/process/' + textInput + '?is_bad=true',
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setResult(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <Layout>
@@ -59,40 +85,71 @@ function App() {
           <h2 className="mt-10">Convert your text for one code at a time</h2>
           <div className="flex gap-8">
             <Panel title="Nonstandard text input">
-              <div>
-                <CharacterCount
-                  className="bg-gray-100"
-                  id="text-input"
-                  name="text-input"
-                  placeholder="Measles genotype A probe"
-                  maxLength={maxInputLength}
-                  value={textInput}
-                  onChange={handleChange}
-                  required
-                  isTextArea
-                />
-              </div>
-              <div className="flex mt-4">
-                <Button type="button" id="fetchDataBtn" onClick={handleSubmit}>
-                  Submit
-                </Button>
+              <CharacterCount
+                className="bg-gray-100"
+                id="text-input"
+                name="text-input"
+                placeholder="Measles genotype A probe"
+                maxLength={maxInputLength}
+                value={textInput}
+                onChange={handleChange}
+                required
+                isTextArea
+              />
+              <div className="mt-4 flex">
+                <ButtonGroup type="segmented">
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSubmitBad}
+                  >
+                    Bad
+                  </Button>
+                </ButtonGroup>
                 <strong className="ml-4 font-light!" role="note">
                   Note: Do not input PII/PHI
                 </strong>
               </div>
             </Panel>
 
-            {result ? (
+            {result?.codings.length == 1 ? (
               <Panel title="Standardized output">
                 <span className="font-extralight">{result.input}</span>
-                <dl className="outline-gray-cool-10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4 outline mt-6 mb-4">
-                  <DescriptionLine name="Code" details={result.code} />
-                  <DescriptionLine name="Code System" details={result.codeSystem} />
-                  <DescriptionLine name="Display Name" details={result.displayName} />
+                <dl className="outline-gray-cool-10 mt-6 mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4 outline">
+                  <DescriptionLine
+                    name="Code"
+                    details={result.codings[0].code}
+                  />
+                  <DescriptionLine
+                    name="Code System"
+                    details={result.codings[0].codeSystem}
+                  />
+                  <DescriptionLine
+                    name="Display Name"
+                    details={result.codings[0].longName}
+                  />
                 </dl>
-                <Button type={'button'} outline>
+                <Button type="button">
                   <Icon.ContentCopy /> Copy
                 </Button>
+              </Panel>
+            ) : result?.codings.length && result.codings.length > 1 ? (
+              <Panel title="We were unable to find a matching code for this text." warning>
+                <p>Closest matches:</p>
+                <ul className="ml-6 list-disc">
+                  {result.codings.map((coding) => (
+                    <li>
+                      <Button type="button" className='leading-6' unstyled>
+                        {coding.shortName}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
               </Panel>
             ) : (
               ''

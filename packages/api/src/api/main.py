@@ -26,15 +26,40 @@ async def health_check():
 
 
 @router.get("/process/{item}")
-def read_item(item: str):
+def read_item(item: str, is_bad=False):
     """Dummy endpoint"""
-    return {
-        "input": item,
-        "code": "8887-0",
-        "codeSystem": "LOINC",
-        "displayName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
-        "time": datetime.now(ZoneInfo("America/New_York")),
-    }
+    if is_bad:
+        return {
+            "input": item,
+            "time": datetime.now(ZoneInfo("America/New_York")),
+            "codings": [
+                {
+                    "code": "88875-0",
+                    "codeSystem": "LOINC",
+                    "longName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
+                    "shortName": "MeVA vac str N gene Spec Ql NAA+probe",
+                },
+                {
+                    "code": "88876-8",
+                    "codeSystem": "LOINC",
+                    "longName": "Measles virus genotype A vaccine strain N gene [Cycle Threshold #] in Specimen by NAA with probe detection",
+                    "shortName": "MeVA vac str N gene Ct Spec Qn NAA+probe",
+                },
+            ],
+        }
+    else:
+        return {
+            "input": item,
+            "time": datetime.now(ZoneInfo("America/New_York")),
+            "codings": [
+                {
+                    "code": "88875-0",
+                    "codeSystem": "LOINC",
+                    "longName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
+                    "shortName": "MeVA vac str N gene Spec Ql NAA+probe",
+                }
+            ],
+        }
 
 
 # Instantiate FastAPI via DIBBs' BaseService class
