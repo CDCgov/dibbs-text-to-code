@@ -30,6 +30,12 @@ services:
       - 9200:9200
     networks:
       - opensearch-net
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-u", "admin:${OPENSEARCH_PWD-TEST_PSWD!}", "--fail", "--silent", "https://localhost:9200/_cluster/health?wait_for_status=green"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 volumes:
   opensearch-data:
 
