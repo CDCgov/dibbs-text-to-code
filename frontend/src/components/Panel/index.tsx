@@ -5,7 +5,7 @@ interface PanelProps {
 
 export function Panel({ children, title }: PanelProps) {
   return (
-    <div className="bg-blue-cool-5 mt-4 max-w-full rounded-lg p-8 max-h-max">
+    <div className="bg-blue-cool-5 mt-4 max-w-full rounded-lg p-8">
       <h3 className="text-lg font-bold">
         {title}
       </h3>
