@@ -103,18 +103,22 @@ function App() {
             </Panel>
 
             {currentCoding ? (
-              <Panel title="Standardized output">
-                {result?.codings && result.codings.length > 1 ? (
-                  <Button
-                    type="button"
-                    unstyled
-                    onClick={() => setCurrentCoding(undefined)}
-                  >
-                    Back to all similar codes
-                  </Button>
-                ) : (
-                  ''
-                )}
+              <Panel
+                title="Standardized output"
+                header={
+                  result?.codings && result.codings.length > 1 ? (
+                    <Button
+                      type="button"
+                      unstyled
+                      onClick={() => setCurrentCoding(undefined)}
+                    >
+                      Back to all similar codes
+                    </Button>
+                  ) : (
+                    ''
+                  )
+                }
+              >
                 <span className="font-extralight">
                   {currentCoding.shortName}
                 </span>
