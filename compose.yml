@@ -10,7 +10,7 @@ services:
       test: [ "CMD", "curl", "-sf", "http://localhost:8080/2015-03-31/functions/function/invocations", "-XPOST", "-d", "{}" ]
 
   opensearch-node:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:3.0.0
     container_name: opensearch-node
     environment:
       - cluster.name=ttc-opensearch-cluster
