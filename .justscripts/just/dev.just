@@ -1,4 +1,3 @@
-set shell := ["powershell.exe", "-c"]
 set working-directory := '../..'
 
 alias u := up
