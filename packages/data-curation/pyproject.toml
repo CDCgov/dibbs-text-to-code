@@ -1,0 +1,12 @@
+[project]
+name = "data-curation"
+version = "0.1.0"
+readme = "README.md"
+dependencies = [
+  "requests",
+  "python-dotenv"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
