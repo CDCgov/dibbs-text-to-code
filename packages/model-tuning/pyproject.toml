@@ -13,7 +13,7 @@ dependencies = [
     # to ensure compatibility across all hardware.
     # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
     # versions and rely on spacy and sentence-transformers to manage their own dependencies.
-    "torch==2.2.2",
+    "torch==2.8.0",
 ]
 
 [tool.uv.sources]
