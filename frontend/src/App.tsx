@@ -133,7 +133,7 @@ function App() {
                     details={currentCoding.longName}
                   />
                 </dl>
-                <Button type="button">
+                <Button type="button" outline>
                   <Icon.ContentCopy /> Copy
                 </Button>
               </Panel>
