@@ -1,3 +1,6 @@
+
+set windows-shell := ["powershell.exe", "-c"]
+
 alias h := _default
 alias help := _default
 

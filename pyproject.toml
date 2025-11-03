@@ -72,4 +72,9 @@ force-single-line = true
 order-by-type = false
 
 [tool.uv.workspace]
-members = ["packages/*"]
+members = [
+    "packages/api",
+    "packages/aws-lambda",
+    "packages/data-curation",
+    "packages/utils"
+    ]
