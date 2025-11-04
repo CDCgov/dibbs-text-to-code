@@ -90,10 +90,10 @@ function App() {
               <div className="mt-4 flex">
                 <ButtonGroup type="segmented">
                   <Button type="button" onClick={handleSubmit}>
-                    Submit
+                    Submit <span className='text-xs'>(match)</span>
                   </Button>
                   <Button type="button" onClick={handleSubmitBad}>
-                    Bad
+                    Submit <span className='text-xs'>(no match)</span>
                   </Button>
                 </ButtonGroup>
                 <strong className="ml-4 font-light!" role="note">
