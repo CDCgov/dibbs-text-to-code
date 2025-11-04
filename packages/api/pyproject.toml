@@ -3,7 +3,8 @@ name = "api"
 version = "0.1.0"
 description = ""
 dependencies = [
-    "fastapi"
+    "fastapi",
+    "opensearch-py==3.0.0"
 ]
 
 [dependency-groups]

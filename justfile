@@ -1,4 +1,3 @@
-
 set windows-shell := ["powershell.exe", "-c"]
 
 alias h := _default
