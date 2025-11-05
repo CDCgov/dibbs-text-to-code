@@ -2,8 +2,8 @@ name: "post open pulls to slack"
 
 on:
   schedule:
-    # Run weekdays at 13:00 Eastern / 10:00 Pacific
-    - cron: "0 17 * * 1-5"
+    # Run weekdays at 10:00 Eastern / 07:00 Pacific
+    - cron: "0 15 * * 1-5"
 
 jobs:
   list-open-prs:
