@@ -14,10 +14,6 @@ repos:
       - id: check-yaml
         args:
           - --unsafe
-      # - ensure files end with newline
-      - id: end-of-file-fixer
-      # - remove trailing whitespace
-      - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.2 # Ruff version
@@ -25,3 +21,8 @@ repos:
       - id: ruff-check # Run the linter
         args: [--fix]
       - id: ruff-format # Run the formatter
+
+  - repo: https://github.com/JoC0de/pre-commit-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier

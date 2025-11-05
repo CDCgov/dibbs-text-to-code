@@ -41,3 +41,5 @@ coverage.xml
 
 # Training files
 data/training_files/embeddings
+
+node_modules
