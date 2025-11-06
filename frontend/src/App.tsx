@@ -1,95 +1,171 @@
-import { useState } from 'react'
-import './App.css'
-import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
-import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-SyntaxHighlighter.registerLanguage('json', json);
-interface Result {
-  code: string;
-}
+import {
+  Button,
+  ButtonGroup,
+  CharacterCount,
+  Icon,
+} from '@trussworks/react-uswds';
+import { Layout } from './components/Layout';
+import { useState } from 'react';
+import { Title } from './components/Title';
+import { Panel } from './components/Panel';
+import { DescriptionLine } from './components/DescriptionLine';
+import { Coding, Result } from './types';
 
 function App() {
-  const [loading, setLoading] = useState(false);
   const [textInput, setTextInput] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const maxInputLength = 200;
+  const [result, setResult] = useState<Result>();
+  const [currentCoding, setCurrentCoding] = useState<Coding | undefined>();
+
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextInput(event.target.value);
+  };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
     try {
-      const response = await fetch('http://localhost:8080/api/process/' + textInput, {
-        method: 'GET',
-      });
+      const response = await fetch(
+        'http://localhost:8080/api/process/' + textInput,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: Result = await response.json();
+      setResult(data);
+      setCurrentCoding(data.codings[0]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const handleSubmitBad = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:8080/api/process/' + textInput + '?is_bad=true',
+        {
+          method: 'GET',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log(data);
       setResult(data);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(`API Error: ${err.message}`);
-      } else {
-        setError(err as string);
-      }
-      console.error('Error calling API:', err);
-    } finally {
-      setLoading(false);
+      console.log(err);
     }
   };
 
   return (
-    <>
-      <header>
-        <h1>Dibbs Text to Code</h1>
-      </header>
-
-      <main>
-        <section>
-          <p>Click the button below to retrieve data from the API.</p>
-          <form>
-            <div>
-              <label htmlFor="textInput">Text Input:</label>
-              <input
-                type="text"
-                id="textInput"
-                name="textInput"
+    <Layout>
+      <div className="flex justify-center">
+        <div className="max-w-7xl">
+          <Title className="pt-10">Welcome to Text to Code!</Title>
+          <p className="mt-2">
+            The Text-to-Code project introduces a shared service integrated with
+            the AIMS pipeline that can automatically map unstructured or
+            local-coded fields in eICRs to standard codes (e.g. LOINC, SNOMED
+            CT).
+          </p>
+          <h2 className="mt-10">Convert your text for one code at a time</h2>
+          <div className="flex gap-8">
+            <Panel title="Nonstandard text input">
+              <CharacterCount
+                className="bg-gray-100"
+                id="text-input"
+                name="text-input"
+                placeholder="Measles genotype A probe"
+                maxLength={maxInputLength}
                 value={textInput}
-                onChange={(e) => setTextInput(e.target.value)} />
-            </div>
-            <button
-              type="button"
-              id="fetchDataBtn"
-              onClick={handleSubmit}
-              disabled={loading}>
-              {loading ? <div>Waiting for results... <span className='spinner'>⚙</span></div> : "Get data"}
-            </button>
-          </form>
-        </section>
+                onChange={handleChange}
+                required
+                isTextArea
+              />
+              <div className="mt-4 flex">
+                <ButtonGroup type="segmented">
+                  <Button type="button" onClick={handleSubmit}>
+                    Submit <span className='text-xs'>(match)</span>
+                  </Button>
+                  <Button type="button" onClick={handleSubmitBad}>
+                    Submit <span className='text-xs'>(no match)</span>
+                  </Button>
+                </ButtonGroup>
+                <strong className="ml-4 font-light!" role="note">
+                  Note: Do not input PII/PHI
+                </strong>
+              </div>
+            </Panel>
 
-        <section aria-live="polite" aria-label="Data output">
-          <h2>Output</h2>
-          {error ? error : ""}
-          <output id="dataOutput" htmlFor="fetchDataBtn" style={{
-            textAlign: "left",
-            display: "block",
-          }}>
-            {result ? (
-              <SyntaxHighlighter language='json' style={style}>
-                {JSON.stringify(result, null, 2)}
-              </SyntaxHighlighter>
+            {currentCoding ? (
+              <Panel
+                title="Standardized output"
+                header={
+                  result?.codings && result.codings.length > 1 ? (
+                    <Button
+                      type="button"
+                      unstyled
+                      onClick={() => setCurrentCoding(undefined)}
+                    >
+                      Back to all similar codes
+                    </Button>
+                  ) : (
+                    ''
+                  )
+                }
+              >
+                <span className="font-extralight">
+                  {currentCoding.shortName}
+                </span>
+                <dl className="outline-gray-cool-10 mt-6 mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-4 outline">
+                  <DescriptionLine name="Code" details={currentCoding.code} />
+                  <DescriptionLine
+                    name="Code System"
+                    details={currentCoding.codeSystem}
+                  />
+                  <DescriptionLine
+                    name="Display Name"
+                    details={currentCoding.longName}
+                  />
+                </dl>
+                <Button type="button" outline>
+                  <Icon.ContentCopy /> Copy
+                </Button>
+              </Panel>
+            ) : result?.codings.length && result.codings.length > 1 ? (
+              <Panel
+                title="We were unable to find a matching code for this text."
+                warning
+              >
+                <p>Closest matches:</p>
+                <ul className="ml-6 list-disc">
+                  {result.codings.map((coding) => (
+                    <li>
+                      <Button
+                        type="button"
+                        className="leading-6"
+                        unstyled
+                        onClick={() => setCurrentCoding(coding)}
+                      >
+                        {coding.shortName}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
             ) : (
-              "No data yet. Click the button to retrieve data."
+              ''
             )}
-          </output>
-        </section>
-      </main>
-    </>
-  )
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
 }
 
-export default App
+export default App;

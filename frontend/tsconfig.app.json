@@ -27,5 +27,5 @@
     "src",
     "playwright.config.ts",
     "vitest.config.ts"
-  ]
+, "tests"  ]
 }
