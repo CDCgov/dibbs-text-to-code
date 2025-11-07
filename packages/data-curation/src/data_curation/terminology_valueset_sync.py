@@ -64,7 +64,7 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 # File settings
-SNOINC_DIRECTORY = "../data/snoinc_extracts"
+SNOINC_DIRECTORY = "./data/snoinc_extracts"
 TMP_DIRECTORY = "./tmp"
 
 # Data Filter Criteria
@@ -446,6 +446,8 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     display_name = loinc_result.get("DisplayName")
     related_names = loinc_result.get("RELATEDNAMES2")
     defintion_desc = loinc_result.get("DefinitionDescription")
+    lab_type = loinc_result.get("ORDER_OBS")
+    result_row["lab_type"] = lab_type
 
     if short_name is not None:
         result_row["short_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", short_name).strip()

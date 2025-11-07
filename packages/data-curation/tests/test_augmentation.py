@@ -7,9 +7,9 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import augmentation
 from data_curation.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 
+from data_curation import augmentation
 from utils import normalize
 from utils import path
 
