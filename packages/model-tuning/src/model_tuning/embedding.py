@@ -10,21 +10,35 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.parse_and_extract_loinc_names import parse_snoinc_extracts
 
-SNOINC_CODES_FILE = os.getcwd() + "/data/snoinc_extracts/loinc_lab_names_20251107.csv"
-DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
 EMBEDDING_CACHE_DIR = os.getcwd() + "/data/training_files/embeddings/"
 
 BATCH_SIZE = 32
 CHUNK_SIZE = 8192
 JSONL_CHUNK_SIZE = 1000
 MODELS = [
-    "intfloat/e5-base-v2",
-    #         "intfloat/e5-large-v2",
-    #         "BAAI/bge-base-en-v1.5",
+    # "intfloat/e5-base-v2",
+    # "intfloat/e5-large-v2",
+    # "BAAI/bge-base-en-v1.5",
     # "BAAI/bge-large-en-v1.5",
     # "Snowflake/snowflake-arctic-embed-l-v2.0",
     # "Qwen/Qwen3-Embedding-4B",
 ]
+
+
+def get_snoinc_file_path(file_path: str) -> str:
+    """
+    Returns the path to the SNOINC codes file.
+    """
+    # Get the newest file in the snoinc_extracts directory
+    snoinc_dir = file_path
+    files = os.listdir(snoinc_dir)
+    snoinc_files = [f for f in files if f.startswith("loinc_lab_names_") and f.endswith(".csv")]
+    snoinc_files.sort(reverse=True)
+    if not snoinc_files:
+        raise FileNotFoundError("No SNOINC codes file found in the snoinc_extracts directory.")
+    SNOINC_CODES_FILE = os.path.join(snoinc_dir, snoinc_files[0])
+
+    return SNOINC_CODES_FILE
 
 
 def embed_loinc_names(
@@ -118,7 +132,9 @@ def embed_loinc_names(
 
 
 if __name__ == "__main__":
-    print("Extracting SNOINC data to form standardized names...")
+    SNOINC_CODES_FILE = get_snoinc_file_path(os.getcwd() + "/data/snoinc_extracts/")
+    DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
+    print(f"Extracting {DATE} SNOINC data to form standardized names...")
     lcns, sns, dns = parse_snoinc_extracts(SNOINC_CODES_FILE)
     name_codes = lcns + sns + dns
 
