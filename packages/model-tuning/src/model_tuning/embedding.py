@@ -1,5 +1,5 @@
+import json
 import os
-import pickle
 import sys
 from typing import List
 
@@ -10,12 +10,21 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.parse_and_extract_loinc_names import parse_snoinc_extracts
 
-SNOINC_CODES_FILE = "../data/snoinc_extracts/loinc_lab_names_20251008.csv"
+SNOINC_CODES_FILE = os.getcwd() + "/data/snoinc_extracts/loinc_lab_names_20251107.csv"
 DATE = SNOINC_CODES_FILE.split("_")[-1].split(".")[0]
-EMBEDDING_CACHE_DIR = "../data/training_files/embeddings/"
+EMBEDDING_CACHE_DIR = os.getcwd() + "/data/training_files/embeddings/"
 
 BATCH_SIZE = 32
 CHUNK_SIZE = 8192
+JSONL_CHUNK_SIZE = 1000
+MODELS = [
+    "intfloat/e5-base-v2",
+    #         "intfloat/e5-large-v2",
+    #         "BAAI/bge-base-en-v1.5",
+    # "BAAI/bge-large-en-v1.5",
+    # "Snowflake/snowflake-arctic-embed-l-v2.0",
+    # "Qwen/Qwen3-Embedding-4B",
+]
 
 
 def embed_loinc_names(
@@ -37,6 +46,27 @@ def embed_loinc_names(
     # Make sure just the directory exists
     os.makedirs(EMBEDDING_CACHE_DIR, exist_ok=True)
 
+    model_dir = os.path.join(EMBEDDING_CACHE_DIR, dest)
+    os.makedirs(model_dir, exist_ok=True)
+
+    current_chunk = []
+    chunk_index = 0
+
+    def flush_chunk():
+        nonlocal current_chunk, chunk_index
+        if not current_chunk:
+            return
+        chunk_index += 1
+        chunk_filename = os.path.join(
+            model_dir,
+            f"{dest}_embeddings_chunk_{chunk_index:04d}.jsonl",
+        )
+        with open(chunk_filename, "w") as f:
+            for doc in current_chunk:
+                f.write(json.dumps(doc) + "\n")
+        print(f"Wrote JSONL chunk {chunk_index}")
+        current_chunk = []
+
     if use_incremental_mini_batching:
         # We'll iterate in chunk-sized intervals to not overload the GPU
         start = 0
@@ -50,51 +80,54 @@ def embed_loinc_names(
                 mini_batch, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
             )
             batch_embeddings = batch_embeddings.to("cpu")
-            try:
-                # No direct appending to pickle file, so read it, extend it,
-                # overwrite it. Torch.cat is super efficient so this isn't a
-                # problem as long as we move to CPU.
-                with open(EMBEDDING_CACHE_DIR + dest, "rb") as fp:
-                    cache_data = pickle.load(fp)
-                name_codes: List = cache_data["codes"]
-                saved_embeddings: torch.Tensor = cache_data["embeddings"]
-                name_codes.extend(mini_batch)
-                extended_embeddings = torch.cat((saved_embeddings, batch_embeddings), dim=0)
 
-                with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
-                    pickle.dump({"codes": name_codes, "embeddings": extended_embeddings}, fp)
-
-            except FileNotFoundError:
-                # File doesn't exist, so just create it
-                with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
-                    pickle.dump({"codes": mini_batch, "embeddings": batch_embeddings}, fp)
+            for idx, code in enumerate(mini_batch):
+                global_index = start + idx
+                current_chunk.append(
+                    {
+                        "id": str(global_index),
+                        "description": code,
+                        "descriptionVector": batch_embeddings[idx].tolist(),
+                    }
+                )
+                if len(current_chunk) >= JSONL_CHUNK_SIZE:
+                    flush_chunk()
 
             start += CHUNK_SIZE
+
+        flush_chunk()
 
     else:
         corpus_embeddings = model.encode(
             name_list, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
         )
-        with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
-            pickle.dump({"codes": name_list, "embeddings": corpus_embeddings}, fp)
+        corpus_embeddings = corpus_embeddings.to("cpu")
+
+        for i, code in enumerate(name_list):
+            current_chunk.append(
+                {
+                    "id": str(i),
+                    "description": code,
+                    "descriptionVector": corpus_embeddings[i].tolist(),
+                }
+            )
+            if len(current_chunk) >= JSONL_CHUNK_SIZE:
+                flush_chunk()
+
+        flush_chunk()
 
 
 if __name__ == "__main__":
-    models = [
-        "Qwen/Qwen3-Embedding-0.6B",
-    ]
-
     print("Extracting SNOINC data to form standardized names...")
     lcns, sns, dns = parse_snoinc_extracts(SNOINC_CODES_FILE)
     name_codes = lcns + sns + dns
 
-    for mn in models:
-        embedding_file = f"loinc_lab_names_{mn.replace('/', '_')}_{DATE}"
+    for mn in MODELS:
+        model_name_safe = mn.replace("/", "_")
+        embedding_prefix = f"loinc_lab_names_{model_name_safe}_{DATE}"
 
         print("Instantiating language model", mn)
         model = SentenceTransformer(mn)
 
         print("Performing embedding, this might take a while...")
-        embeddings = embed_loinc_names(
-            model, name_codes, embedding_file, use_incremental_mini_batching=True
-        )
+        embed_loinc_names(model, name_codes, embedding_prefix, use_incremental_mini_batching=True)
