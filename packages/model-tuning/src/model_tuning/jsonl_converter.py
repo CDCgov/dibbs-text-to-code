@@ -34,18 +34,22 @@ def clean_embedding_data(data: dict) -> tuple[dict, np.ndarray]:
     """
     codes = data["codes"]
     embeddings = data["embeddings"]
+    loinc_types = data["loinc_types"]
     # Convert to numpy if tensor
     if isinstance(embeddings, torch.Tensor):
         print("Converting embeddings from torch.Tensor to numpy array")
         embeddings = embeddings.cpu().numpy()
-    return codes, embeddings
+    return codes, embeddings, loinc_types
 
 
-def write_jsonl_files(codes: list, embeddings: np.ndarray, model: str, chunk_size=CHUNK_SIZE):
+def write_jsonl_files(
+    codes: list, embeddings: np.ndarray, loinc_types: list, model: str, chunk_size=CHUNK_SIZE
+):
     """
     Writes the codes and embeddings to JSONL files in chunks.
     :param codes: List of LOINC standard names.
     :param embeddings: Numpy array of embeddings.
+    :param loinc_types: List of LOINC types corresponding to the codes.
     :param model: Model name used in the output file names.
     :param chunk_size: Number of entries per JSONL file.
     """
@@ -59,6 +63,7 @@ def write_jsonl_files(codes: list, embeddings: np.ndarray, model: str, chunk_siz
                 "id": str(i + j),
                 "description": codes[i + j],
                 "descriptionVector": embeddings[i + j].tolist(),
+                "type": loinc_types[i + j].tolist(),
             }
             for j in range(min(chunk_size, len(codes) - i))
         ]
@@ -70,5 +75,5 @@ def write_jsonl_files(codes: list, embeddings: np.ndarray, model: str, chunk_siz
 
 if __name__ == "__main__":
     data = open_embedding_file(input_file)
-    codes, embeddings = clean_embedding_data(data)
-    write_jsonl_files(codes, embeddings, model)
+    codes, embeddings, loinc_types = clean_embedding_data(data)
+    write_jsonl_files(codes, embeddings, loinc_types, model)
