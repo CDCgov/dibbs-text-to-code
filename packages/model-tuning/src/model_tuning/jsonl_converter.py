@@ -63,8 +63,7 @@ def write_jsonl_files(codes: list, embeddings: np.ndarray, model: str, chunk_siz
             for j in range(min(chunk_size, len(codes) - i))
         ]
         with open(f"{output_folder}/{model}_{i // chunk_size:05d}.jsonl", "w") as f:
-            for doc in chunk:
-                f.write(json.dumps(doc) + "\n")
+            f.writelines(json.dumps(doc) + "\n" for doc in chunk)
 
         print(f"Wrote chunk {i // CHUNK_SIZE}")
 
