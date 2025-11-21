@@ -313,8 +313,9 @@ code|text
   - Store your newly created LOINC Username in an environment variable: `LOINC_USERNAME`
   - Store your newly created LOINC Password in an environment variable: `LOINC_PWD`
 
-- [Download LOINC Relma](https://loinc.org/file-access/download-id/8763/)
+- [Download LOINC Relma](https://loinc.org/file-access/download-id/8763/) - :warning: For Windows Users Only :warning:
   - Locate and remember where the Relma.mdb database is (Typically located: `C:<path_to_relma_installation>\RELMA\RELMA.MDB`)
+    :warning: **_Note that MAC Users will have difficulty installing Relma at this time due to inconsistencies with the Windows VMs available and what Relma supports - if you need to get the MS-Access Relma DB contact a team member that uses Windows_** :warning:
 
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
   - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
@@ -379,7 +380,8 @@ There are a handful of CLI commands you can use to generate the extract files. H
 ---
 
 - [**Loinc Abbreviations & Synonyms**](#loinc-part-synonyms--abbreviations)
-  - Make sure you have download the [LOINC Relma database](#dependencies) and have located it
+  - Make sure you have download the [LOINC Relma](#dependencies) and have located the MS-Access Database file
+    :warning: **_If you are a MAC OS User, you will need to get the MS-Access DB file from a team member that uses Windows_** :warning:
   - Open the Relma.mdb file
     ![RELMA](./assets/RELMADB.jpg)
   - Select the `Create` Option in the Menu and then select `SQL Query`
@@ -464,7 +466,8 @@ There are a handful of CLI commands you can use to generate the extract files. H
 #### Direct Relma DB Queries
 
 - [**Loinc Codes With Core Component Descriptions**](#loinc-part-descriptions)
-  - Make sure you have download the [LOINC Relma database](#dependencies) and have located it
+  - Make sure you have download the [LOINC Relma](#dependencies) and have located the MS-Access Database file
+    :warning: **_If you are a MAC OS User, you will need to get the MS-Access DB file from a team member that uses Windows_** :warning:
   - Open the Relma.mdb file
     ![RELMA](./assets/RELMADB.jpg)
   - Select the `Create` Option in the Menu and then select `SQL Query`
