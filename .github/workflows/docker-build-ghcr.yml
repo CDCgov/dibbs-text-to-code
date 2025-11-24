@@ -50,7 +50,7 @@ jobs:
         run: |
           # Get the branch/ref and version tag
           REF_NAME="${{ github.event.inputs.ref || github.ref_name }}"
-          VERSION_TAG="${{ github.event.inputs.version_tag }}"
+          VERSION_TAG=$(dev_scripts/version.sh)
 
           # Sanitize ref so it's a valid image tag
           if [ -z "$VERSION_TAG" ]; then
