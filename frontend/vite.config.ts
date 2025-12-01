@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 const uswdsIncludePaths = [
-  'node_modules/@uswds',
-  'node_modules/@uswds/uswds/packages',
+  '../node_modules/@uswds',
+  '../node_modules/@uswds/uswds/packages',
 ];
 
 // https://vite.dev/config/
@@ -16,7 +16,7 @@ export default defineConfig({
     environment: 'jsdom',
     // prevent Vitest from running Playwright tests or dependency's tests.
     exclude: ['e2e', 'e2e/**/*', 'node_modules'],
-    setupFiles: 'tests/setup.ts'
+    setupFiles: 'tests/setup.ts',
   },
   css: {
     preprocessorOptions: {

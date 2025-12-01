@@ -15,7 +15,7 @@ COPY ./frontend ./
 RUN npm run build
 
 # Package production app
-FROM python:3.14-slim
+FROM python:3.12-slim
 
 RUN apt-get update && \
     apt-get upgrade -y
@@ -27,10 +27,9 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install -r requirements.txt
 
-COPY ./refiner/app /code/app
-COPY ./refiner/assets /code/assets
-COPY ./refiner/README.md /code/README.md
-COPY --from=client-builder /src/dist /code/dist
+COPY ./packages/api/src/api /code/app
+COPY ./packages/api/pyproject.toml /code/pyproject.toml
+COPY --from=client-builder /frontend/dist /code/dist
 
 EXPOSE 8080
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
