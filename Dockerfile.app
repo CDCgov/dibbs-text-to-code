@@ -24,11 +24,13 @@ RUN pip install --upgrade pip  --break-system-packages
 
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install -r requirements.txt
-
 COPY ./packages/api/src/api /code/app
 COPY ./packages/api/pyproject.toml /code/pyproject.toml
+
+# Create a requirements.txt from the pyproject.toml
+RUN uv pip compile /code/pyproject.toml -o /code/requirements.txt
+RUN pip install -r requirements.txt
+
 COPY --from=client-builder /frontend/dist /code/dist
 
 EXPOSE 8080
