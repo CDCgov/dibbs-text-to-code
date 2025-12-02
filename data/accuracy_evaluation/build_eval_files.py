@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# sample run: python data/accuracy_evaluation/build_eval_files.py
+# TES API Key can be obtained at https://tes.tools.aimsplatform.org/
 TES_API_KEY = os.environ.get("TES_API_KEY")
 TES_BASE_URL = "https://tes.tools.aimsplatform.org/api/fhir/ValueSet/"
-TES_ENDPOINTS = ["lrtc", "lotc"]
+TES_ENDPOINTS = ["lrtc", "lotc"]  # Endpoints for LOINC-related value sets
 
 headers = {"x-api-key": TES_API_KEY, "Accept": "application/fhir+json"}
 
@@ -60,9 +62,9 @@ def build_mapping_files(oids: set) -> tuple[dict, dict]:
     return oid_to_conditions, loinc_to_oids
 
 
-def save_files(mapping: dict, filename: str):
+def export_mapping_files(mapping: dict, filename: str):
     """
-    Saves the mapping dictionary to a JSON file.
+    Exports the mapping dictionary to a JSON file.
     :param mapping: Dictionary to save.
     :param filename: Output filename.
     """
@@ -73,5 +75,5 @@ def save_files(mapping: dict, filename: str):
 if __name__ == "__main__":
     oids = get_ersd_valuesets(TES_ENDPOINTS)
     oid_to_conditions, loinc_to_oids = build_mapping_files(oids)
-    save_files(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
-    save_files(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
+    export_mapping_files(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
+    export_mapping_files(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
