@@ -153,8 +153,14 @@ def export_mapping_files(mapping: dict, filename: str):
 
 
 if __name__ == "__main__":
+    # Build ERSD mapping files
     response, oids = get_ersd_valuesets(TES_ENDPOINTS)
     oid_to_conditions, loinc_to_oids = build_ersd_mapping_files(response, oids)
+
+    # Build TES mapping files
+    # oids = get_tes_valuesets(TES_ENDPOINTS)
+    # tes_oid_to_conditions, tes_loinc_to_oids = build_tes_mapping_files(oids)
+
     evaluate_mapping_files(oid_to_conditions, loinc_to_oids)
     export_mapping_files(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
     export_mapping_files(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
