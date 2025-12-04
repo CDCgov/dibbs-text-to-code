@@ -166,14 +166,6 @@ if __name__ == "__main__":
     response, oids = get_ersd_valuesets(VSTYPE_ENDPOINTS)
     oid_to_conditions, loinc_to_oids = build_ersd_mapping_files(response, oids)
 
-    # Build TES mapping files
-    # tes_oids = get_tes_valuesets(VSTYPE_ENDPOINTS)
-    # tes_oid_to_conditions, tes_loinc_to_oids = build_tes_mapping_files(tes_oids)
-
     evaluate_mapping_files(oid_to_conditions, loinc_to_oids)
     export_mapping_files(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
     export_mapping_files(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
-
-    # evaluate_mapping_files(tes_oid_to_conditions, tes_loinc_to_oids)
-    # export_mapping_files(tes_loinc_to_oids, "data/accuracy_evaluation/tes_loinc_to_oids.txt")
-    # export_mapping_files(tes_oid_to_conditions, "data/accuracy_evaluation/tes_oid_to_conditions.txt")
