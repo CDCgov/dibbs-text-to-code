@@ -31,10 +31,11 @@ def get_ersd_valuesets(endpoints: list) -> tuple[dict, list]:
     oids = []
     for item in response.json().get("entry"):
         if item["resource"].get("id") in endpoints:
-            oid_list = item["resource"].get("compose").get("include")[0].get("valueSet")
-            for oid in oid_list:
-                if oid.split("/")[-1] not in oids:
-                    oids.append(oid.split("/")[-1])
+            oid_url_list = item["resource"].get("compose").get("include")[0].get("valueSet")
+            for oid_url in oid_url_list:
+                oid = oid_url.split("/")[-1]
+                if oid not in oids:
+                    oids.append(oid)
     return response, oids
 
 
