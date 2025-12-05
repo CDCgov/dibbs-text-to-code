@@ -10,7 +10,7 @@ load_dotenv()
 # TES API Key can be obtained at https://tes.tools.aimsplatform.org/
 TES_API_KEY = os.environ.get("TES_API_KEY")
 TES_BASE_URL = "https://tes.tools.aimsplatform.org/api/fhir/ValueSet/"
-headers = {"x-api-key": TES_API_KEY, "Accept": "application/fhir+json"}
+TES_HEADERS = {"x-api-key": TES_API_KEY, "Accept": "application/fhir+json"}
 
 # ERSD, key can be obtained at https://ersd.aimsplatform.org/#/api-keys
 ERSD_API_KEY = os.environ.get("ERSD_API_KEY")
@@ -49,7 +49,7 @@ def get_tes_valuesets(endpoints: list) -> list:
     oids = []
     for endpoint in endpoints:
         url = f"{TES_BASE_URL}{endpoint}"
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=TES_HEADERS)
         for resp in response.json().get("compose").get("include"):
             oid = resp.get("valueSet")[0].split("/")[-1]
             if oid not in oids:
@@ -99,7 +99,7 @@ def build_tes_mapping_files(oids: list) -> tuple[dict, dict]:
     loinc_to_oids = {}
     for oid in oids:
         url = f"{TES_BASE_URL}{oid}"
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=TES_HEADERS)
         snomed = (
             response.json()
             .get("useContext")[0]
