@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "raw_text": "Leishmania serum immuno",
+    "standardized_text": "Leishmania brasilensis IgM Ab [Titer] in Serum by Immunofluorescence",
+    "returned_loinc": "44820-9",
+    "expected_loinc": "44820-9",
+    "status": "first-degree match"
+  },
+  {
+    "id": "2",
+    "raw_text": "Hepatitis D virus RNA plasma NAA probe dect",
+    "standardized_text": "Hepatitis D virus RNA [#/volume] (viral load) in Serum or Plasma by NAA with probe detection",
+    "returned_loinc": "80426-0",
+    "expected_loinc": "85512-2",
+    "status": "second-degree match"
+  },
+  {
+    "id": "3",
+    "raw_text": "Chlamydia trachomatis rRNA urine probe",
+    "standardized_text": "Chlamydia trachomatis rRNA [Presence] in Urine by NAA with probe detection",
+    "returned_loinc": "16601-7",
+    "expected_loinc": "42931-ee4eereq6",
+    "status": "no match"
+  }
+]
