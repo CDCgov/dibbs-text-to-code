@@ -1,19 +1,13 @@
-import json
+from utils import export_json
+from utils import import_json
 
-
-def import_json(file_path: str) -> dict:
-    """
-    Imports a JSON file and returns its content as a dictionary.
-    :param file_path: Path to the JSON file.
-    """
-    with open(file_path, "r") as f:
-        data = json.load(f)
-    return data
+# sample run: python data/accuracy_evaluation/evaluation.py
+# could make this a sys.argv parameter or just update directly as needed, for now hardcoding
+input_file = "data/accuracy_evaluation/sample_evaluation_file.txt"
 
 
 loinc_to_oids_file = "data/accuracy_evaluation/loinc_to_oids.txt"
 oid_to_conditions_file = "data/accuracy_evaluation/oid_to_conditions.txt"
-input_file = "data/accuracy_evaluation/sample_evaluation_file.txt"
 
 
 def accuracy_evaluation(
@@ -41,16 +35,24 @@ def accuracy_evaluation(
         expected_conditions = sorted(list(set(oid_to_conditions.get(oid) for oid in expected_oids)))
 
         print(
-            f"Evaluating LOINC: returned {returned_loinc}, expected {expected_loinc}\n"
+            f"Evaluating LOINC:\n"
+            f"returned LOINC: {returned_loinc}\n"
+            f"expected LOINC: {expected_loinc}\n"
             f"returned OIDs: {returned_oids}\n"
             f"expected OIDs: {expected_oids}\n"
             f"returned conditions: {returned_conditions}\n"
             f"expected conditions: {expected_conditions}\n"
         )
-        if returned_loinc == expected_loinc and returned_loinc is not None:
+        if returned_loinc is None:
+            status = "no LOINC returned"
+        elif returned_oids is None:
+            status = "no OIDs returned, investigate LOINC validity"
+        elif returned_conditions is None:
+            status = "no conditions returned, investigate OID validity"
+        elif returned_loinc == expected_loinc:
             status = "first-degree match"
         elif returned_oids == expected_oids and len(returned_conditions) == 1:
-            status = "second-degree match"
+            status = "second-degree match, one unique condition"
         elif returned_conditions == expected_conditions and len(returned_conditions) == 1:
             status = "third-degree match, one unique condition"
         elif returned_conditions == expected_conditions and len(returned_conditions) > 1:
@@ -69,5 +71,5 @@ def accuracy_evaluation(
 
 if __name__ == "__main__":
     results = accuracy_evaluation(loinc_to_oids_file, oid_to_conditions_file, input_file)
-    with open("data/accuracy_evaluation/evaluation_results.json", "w") as f:
-        json.dump(results, f, indent=2)
+    input_file_name = input_file.split("/")[-1].split(".")[0]
+    export_json(results, f"data/accuracy_evaluation/evaluation_results_{input_file_name}.json")

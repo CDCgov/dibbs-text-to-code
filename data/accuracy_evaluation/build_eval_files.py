@@ -1,8 +1,8 @@
-import json
 import os
 
 import requests
 from dotenv import load_dotenv
+from utils import export_json
 
 load_dotenv()
 
@@ -151,21 +151,11 @@ def evaluate_mapping_files(oid_to_conditions: dict, loinc_to_oids: dict):
         print(k, multiple_conditions[k])
 
 
-def export_mapping_files(mapping: dict, filename: str):
-    """
-    Exports the mapping dictionary to a JSON file.
-    :param mapping: Dictionary to save.
-    :param filename: Output filename.
-    """
-    with open(filename, "w") as f:
-        json.dump(mapping, f, indent=2)
-
-
 if __name__ == "__main__":
     # Build ERSD mapping files
     response, oids = get_ersd_valuesets(VSTYPE_ENDPOINTS)
     oid_to_conditions, loinc_to_oids = build_ersd_mapping_files(response, oids)
 
     evaluate_mapping_files(oid_to_conditions, loinc_to_oids)
-    export_mapping_files(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
-    export_mapping_files(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
+    export_json(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
+    export_json(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
