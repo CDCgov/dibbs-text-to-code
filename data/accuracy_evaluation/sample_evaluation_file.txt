@@ -16,9 +16,23 @@
      {
           "id": "3",
           "raw_text": "Chlamydia trachomatis rRNA urine probe",
-          "standardized_text": "Chlamydia trachomatis rRNA [Presence] in Urine by NAA with probe detection",
+          "standardized_text": "Chlamydia trachomatis Ag [Presence] in Blood by Immunoassay",
           "returned_loinc": "16601-7",
-          "expected_loinc": "42931-6" 
+          "expected_loinc": "14468-3" 
+     },
+     {
+            "id": "4",
+            "raw_text": "virus RNA probe detection",
+            "standardized_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+            "returned_loinc": "60262-3",
+            "expected_loinc": "49527-5"
+     },
+     {
+            "id": "5",
+            "raw_text": "Influenza virus A H9 RNA [Presence] in Isolate by NAA with probe detection",
+            "standardized_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+            "returned_loinc": "60530-3",
+            "expected_loinc": "49527-5"
      }
 ]
 

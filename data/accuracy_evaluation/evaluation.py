@@ -40,9 +40,16 @@ def accuracy_evaluation(
         returned_conditions = sorted(list(set(oid_to_conditions.get(oid) for oid in returned_oids)))
         expected_conditions = sorted(list(set(oid_to_conditions.get(oid) for oid in expected_oids)))
 
+        print(
+            f"Evaluating LOINC: returned {returned_loinc}, expected {expected_loinc}\n"
+            f"returned OIDs: {returned_oids}\n"
+            f"expected OIDs: {expected_oids}\n"
+            f"returned conditions: {returned_conditions}\n"
+            f"expected conditions: {expected_conditions}\n"
+        )
         if returned_loinc == expected_loinc and returned_loinc is not None:
             status = "first-degree match"
-        elif returned_oids == expected_oids and returned_oids:
+        elif returned_oids == expected_oids and len(returned_conditions) == 1:
             status = "second-degree match"
         elif returned_conditions == expected_conditions and len(returned_conditions) == 1:
             status = "third-degree match, one unique condition"
@@ -50,6 +57,8 @@ def accuracy_evaluation(
             status = "third-degree match, multiple unique conditions"
         else:
             status = "no match"
+        print(f"Status: {status}")
+        print("-----")
 
         result_item = dict(item)
         result_item["status"] = status
