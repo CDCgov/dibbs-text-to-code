@@ -1,3 +1,8 @@
+"""
+Core Text to Code code. This is the shared logic used for both the API/demo site and the Lambda.
+"""
+
+
 class SchematronError:
     location: str
 
