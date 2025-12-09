@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build:": "tsc -b && VITE_GIT_HASH=$(git rev-parse --short HEAD) vite build --base=/dist",
+    "build": "tsc -b && VITE_GIT_HASH=$(git rev-parse --short HEAD) vite build --base=/dist",
     "dev": "vite",
     "e2e:dev": "npx playwright test --ui",
     "e2e:report": "npx playwright show-report",
