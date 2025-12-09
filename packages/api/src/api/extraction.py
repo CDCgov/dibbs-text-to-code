@@ -40,7 +40,7 @@ def is_text_viable(data_field: str, text: str) -> bool:
     # first test word count if such a rule is present in the
     # config for the specified data element
     word_count_rule = data_field_rules.get("text_word_count")
-    if word_count_rule:
+    if word_count_rule and word_count_rule > 0:
         result = _meets_word_count(text, word_count_rule)
 
     return result
