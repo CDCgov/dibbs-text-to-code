@@ -1,6 +1,9 @@
 # Build client
 FROM node:22-alpine3.22 AS client-builder
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /src
 
 # install git to capture hash
