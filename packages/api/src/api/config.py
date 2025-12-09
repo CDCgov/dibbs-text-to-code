@@ -30,9 +30,7 @@ def _get_env_variable(name: str) -> str:
     Returns:
         str: Name of the environment variable
     """
-    print(f"VAR: {name}")
     value = os.getenv(name)
-    print(f"VAL: {value}")
     if value is None:
         raise OSError(f"Missing environment variable: {name}")
     return value
