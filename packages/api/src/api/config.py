@@ -53,15 +53,13 @@ DATA_FIELDS = ["lab_order", "lab_result", "lab_value", "lab_interp"]
 # TODO: Does this work for us or is there something better?
 DATA_FIELD_TEXT_RULES = {
     "lab_order": {
-        "text_length": 2,  # anything that is greater than 2
-        # putting this here for now, but we may not need/want this
-        # but was thinking about it as I was storing the rules
+        "text_word_count": 2,  # anything that is greater than 2
+        # putting x_paths here for now, but we may not need/want this
         "x_paths": ["some path", "some other path"],  # store the X-Paths in order of importance
     },
     "lab_result": {
-        "text_length": 2,  # anything that is greater than 2
-        # putting this here for now, but we may not need/want this
-        # but was thinking about it as I was storing the rules
+        "text_word_count": 2,  # anything that is greater than 2
+        # putting x_paths here for now, but we may not need/want this
         "x_paths": ["some path", "some other path"],  # store the X-Paths in order of importance
     },
     "lab_value": {},

@@ -12,7 +12,7 @@ class TestConfig:
             df_rules = self.data_field_rules[df]
             assert df_rules is not None
             if df in ("lab_order", "lab_result"):
-                assert df_rules["text_length"] is not None and df_rules["text_length"] > 0
+                assert df_rules["text_word_count"] is not None and df_rules["text_word_count"] > 0
 
     def test_rules_wrong_data_field(self):  # noqa: D102, D103
         assert self.data_field_rules.get("MY FIELD") is None
