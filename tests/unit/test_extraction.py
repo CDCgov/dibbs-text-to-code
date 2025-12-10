@@ -1,4 +1,4 @@
-from api import extraction
+from src.dibbs_text_to_code import extraction
 
 
 class TestExtraction:

@@ -1,9 +1,10 @@
-from api import config
+from src.dibbs_text_to_code.configs import DATA_FIELD_TEXT_RULES
+from src.dibbs_text_to_code.configs import DATA_FIELDS
 
 
-class TestConfig:
-    data_fields = config.DATA_FIELDS
-    data_field_rules = config.DATA_FIELD_TEXT_RULES
+class TestConfigs:
+    data_fields = DATA_FIELDS
+    data_field_rules = DATA_FIELD_TEXT_RULES
 
     def test_data_fields_and_rules(self):  # noqa: D102, D103
         assert len(self.data_fields) > 0
