@@ -1,4 +1,4 @@
-import configs
+from dibbs_text_to_code import configs
 
 
 def _is_valid_data_field(data_field: str) -> bool:
