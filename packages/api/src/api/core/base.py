@@ -8,8 +8,7 @@ from api.config import LICENSES
 
 
 class BaseService:
-    """
-    Base service class for DIBBs FastAPI applications.
+    """Base service class for DIBBs FastAPI applications.
 
     This reusable class provides common functionality for DIBBs services including:
     - FastAPI application setup with standard metadata
@@ -25,8 +24,7 @@ class BaseService:
         license_info: Literal["CreativeCommonsZero", "MIT"] = "CreativeCommonsZero",
         openapi_url: str = "/openapi.json",
     ):
-        """
-        Initialize a BaseService instance.
+        """Initialize a BaseService instance.
 
         Args:
             service_name: Name of the service.
@@ -54,8 +52,7 @@ class BaseService:
         )
 
     def start(self) -> FastAPI:
-        """
-        Initialize and return the configured FastAPI instance.
+        """Initialize and return the configured FastAPI instance.
 
         Returns:
             FastAPI: Configured FastAPI instance with DIBBs metadata.

@@ -18,8 +18,7 @@ DIBBS_CONTACT = {
 
 
 def _get_env_variable(name: str) -> str:
-    """
-    Grabs a variable by name from the environment. Throws an error if the variable is not present.
+    """Grabs a variable by name from the environment. Throws an error if the variable is not present.
 
     Args:
         name (str): Name of the environment variable

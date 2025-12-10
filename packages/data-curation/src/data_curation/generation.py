@@ -6,8 +6,7 @@ OUT_FILE_PATH = "../data/training_files/validation_set_positive_pairs.txt"
 
 
 def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
-    """
-    Given the location of one or more files of LOINC codes and some corresponding
+    """Given the location of one or more files of LOINC codes and some corresponding
     augmented examples for those codes, this function compiles a list of
     positive pairs that can be read for model training. A positive pair is a
     tuple of the form (original_loinc_code, augmented_example_of_code).
@@ -20,7 +19,6 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
     :param out_file: The destination at which to write the positive pair file.
     :returns: None
     """
-
     handle_parts = file_handle.split(".")
     data_pool = []
     pairs = []
@@ -29,13 +27,13 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
     # conventions to open the three appropriate ones
     if len(handle_parts) == 0 or handle_parts[-1] != "txt":
         for variant in ["long_common_name.csv", "short_name.csv", "display_name.csv"]:
-            with open(file_handle + "_" + variant, "r") as csvfp:
+            with open(file_handle + "_" + variant) as csvfp:
                 rows = csv.reader(csvfp, delimiter=":")
                 _append_to_data_pool(rows, data_pool)
 
     # Handle is actually a file, can just open that
     else:
-        with open(file_handle, "r") as csvfp:
+        with open(file_handle) as csvfp:
             rows = csv.reader(csvfp, delimiter=":")
             _append_to_data_pool(rows, data_pool)
 
@@ -57,13 +55,11 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
 
     # Now we just write the created examples to the output file
     with open(out_file, "w") as fp:
-        for pair in pairs:
-            fp.write(pair[0] + "|" + pair[1] + "\n")
+        fp.writelines(pair[0] + "|" + pair[1] + "\n" for pair in pairs)
 
 
 def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
-    """
-    Simple helper method to append non-empty data rows to a list representing
+    """Simple helper method to append non-empty data rows to a list representing
     a pool of aggregated data.
     """
     for row in csvfp:

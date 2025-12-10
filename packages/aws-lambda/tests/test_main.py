@@ -25,7 +25,7 @@ class TestHandler:
             moto_setup.put_object(Bucket=moto_setup.bucket_name, Key=key, Body=content)
 
             s3_event = {
-                "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": key}}
+                "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": key}},
             }
             records.append({"body": json.dumps(s3_event)})
         # Create event and fake context

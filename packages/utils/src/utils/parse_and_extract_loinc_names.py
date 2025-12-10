@@ -8,8 +8,7 @@ def parse_snoinc_extracts(
     display_name_col: int = 3,
     skip_first: bool = True,
 ):
-    """
-    Given a path to an extract file of information on various LOINC codes,
+    """Given a path to an extract file of information on various LOINC codes,
     parse the rows of that file in to three discrete lists corresponding to
     the long common names, short names, and display names of those codes.
     The file is expected to be a pipe-delimited text file in which each
@@ -30,7 +29,7 @@ def parse_snoinc_extracts(
     short_names = []
     display_names = []
 
-    with open(extract_path, "r", encoding="utf-8") as fp:
+    with open(extract_path, encoding="utf-8") as fp:
         lines_seen = 0
         for line in fp:
             if lines_seen == 0:

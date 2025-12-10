@@ -1,5 +1,4 @@
-"""
-cpu_convert.py
+"""cpu_convert.py
 
 
 Simple script for converting collections of embedded vectors that were

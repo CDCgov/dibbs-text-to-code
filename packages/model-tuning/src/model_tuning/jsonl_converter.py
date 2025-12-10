@@ -17,8 +17,7 @@ model = input_file.split("/")[-1]
 
 
 def open_embedding_file(input_file: str) -> dict:
-    """
-    Opens a pickle file containing embeddings.
+    """Opens a pickle file containing embeddings.
     TODO: do we need to use Google Docs API here instead?
     :param input_file: Path to the pickle file containing embeddings.
     """
@@ -28,8 +27,7 @@ def open_embedding_file(input_file: str) -> dict:
 
 
 def clean_embedding_data(data: dict) -> tuple[dict, np.ndarray]:
-    """
-    Cleans the embedding data by ensuring embeddings are in numpy array format.
+    """Cleans the embedding data by ensuring embeddings are in numpy array format.
     :param data: Dictionary containing codes and embeddings.
     """
     codes = data["codes"]
@@ -43,10 +41,13 @@ def clean_embedding_data(data: dict) -> tuple[dict, np.ndarray]:
 
 
 def write_jsonl_files(
-    codes: list, embeddings: np.ndarray, loinc_types: list, model: str, chunk_size=CHUNK_SIZE
+    codes: list,
+    embeddings: np.ndarray,
+    loinc_types: list,
+    model: str,
+    chunk_size=CHUNK_SIZE,
 ):
-    """
-    Writes the codes and embeddings to JSONL files in chunks.
+    """Writes the codes and embeddings to JSONL files in chunks.
     :param codes: List of LOINC standard names.
     :param embeddings: Numpy array of embeddings.
     :param loinc_types: List of LOINC types corresponding to the codes.

@@ -1,7 +1,6 @@
 import os
 import pickle
 import sys
-from typing import List
 
 import torch
 from sentence_transformers import SentenceTransformer
@@ -19,10 +18,12 @@ CHUNK_SIZE = 8192
 
 
 def embed_loinc_names(
-    model: SentenceTransformer, name_list: List[str], dest: str, use_incremental_mini_batching=False
+    model: SentenceTransformer,
+    name_list: list[str],
+    dest: str,
+    use_incremental_mini_batching=False,
 ):
-    """
-    Use a SentenceTransformers model to embed the standard name codes for
+    """Use a SentenceTransformers model to embed the standard name codes for
     a given set of LOINC values. These embeddings form the "Vector DB" that
     will be used for semantic search on the examples-to-evaluate.
 
@@ -47,7 +48,10 @@ def embed_loinc_names(
             print("Mini-batching from", start, "to", end - 1)
 
             batch_embeddings: torch.Tensor = model.encode(
-                mini_batch, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
+                mini_batch,
+                batch_size=BATCH_SIZE,
+                show_progress_bar=True,
+                convert_to_tensor=True,
             )
             batch_embeddings = batch_embeddings.to("cpu")
             try:
@@ -56,7 +60,7 @@ def embed_loinc_names(
                 # problem as long as we move to CPU.
                 with open(EMBEDDING_CACHE_DIR + dest, "rb") as fp:
                     cache_data = pickle.load(fp)
-                name_codes: List = cache_data["codes"]
+                name_codes: list = cache_data["codes"]
                 saved_embeddings: torch.Tensor = cache_data["embeddings"]
                 name_codes.extend(mini_batch)
                 extended_embeddings = torch.cat((saved_embeddings, batch_embeddings), dim=0)
@@ -73,7 +77,10 @@ def embed_loinc_names(
 
     else:
         corpus_embeddings = model.encode(
-            name_list, batch_size=BATCH_SIZE, show_progress_bar=True, convert_to_tensor=True
+            name_list,
+            batch_size=BATCH_SIZE,
+            show_progress_bar=True,
+            convert_to_tensor=True,
         )
         with open(EMBEDDING_CACHE_DIR + dest, "wb") as fp:
             pickle.dump({"codes": name_list, "embeddings": corpus_embeddings}, fp)
@@ -96,5 +103,8 @@ if __name__ == "__main__":
 
         print("Performing embedding, this might take a while...")
         embeddings = embed_loinc_names(
-            model, name_codes, embedding_file, use_incremental_mini_batching=True
+            model,
+            name_codes,
+            embedding_file,
+            use_incremental_mini_batching=True,
         )

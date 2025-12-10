@@ -1,5 +1,4 @@
-"""
-build_hnsw_index.py
+"""build_hnsw_index.py
 
 
 Simple script for creating an HNSW index for a specific set of model

@@ -9,7 +9,7 @@ from utils import path as utils
 
 
 def test_code_root():
-    "Test code root."
+    """Test code root."""
     root = utils.code_root()
     assert root.name == "dibbs-text-to-code"
 

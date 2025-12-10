@@ -8,12 +8,12 @@ import typing
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pydantic
-
-from data_curation import configs
-from data_curation.schemas import augmentation as schemas
 from utils import normalize
 from utils import path
 from utils import regex_patterns
+
+from data_curation import configs
+from data_curation.schemas import augmentation as schemas
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
@@ -27,8 +27,7 @@ def scramble_word_order(
     max_perms: int,
     min_perms: int = 1,
 ) -> str:
-    """
-    Scrambles the order of words in the input text by moving a specified
+    """Scrambles the order of words in the input text by moving a specified
     number of words to new positions.
 
     :param text: The input text to scramble.
@@ -55,7 +54,10 @@ def scramble_word_order(
 
 
 def _word_deletion(
-    del_count: int, words: list[str], word_details: dict, max_dels: int
+    del_count: int,
+    words: list[str],
+    word_details: dict,
+    max_dels: int,
 ) -> list[int]:
     delete_indices = []
 
@@ -85,7 +87,7 @@ def _word_deletion(
     return delete_indices
 
 
-def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> typing.Tuple[int, dict]:
+def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> tuple[int, dict]:
     for key, word_deets in word_details.items():
         if char_idx in range(int(word_deets["start"]), int(word_deets["end"]) + 1):
             return int(key), word_deets
@@ -94,7 +96,10 @@ def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> typing.
 
 
 def _char_deletion(
-    del_count: int, char_indices: list[int], word_details: dict, max_dels: int
+    del_count: int,
+    char_indices: list[int],
+    word_details: dict,
+    max_dels: int,
 ) -> list[int]:
     delete_indices = []
 
@@ -137,8 +142,7 @@ def random_char_deletion(
     max_per_word: int = 2,
     method: typing.Literal["char", "word"] = "char",
 ) -> str:
-    """
-    This function randomly deletes characters from a string.  Two modes can be
+    """This function randomly deletes characters from a string.  Two modes can be
     selected.
     'word' mode will randomly select words, which will then have characters
     randomly selected for deletion as long as the number of deletions per each word
@@ -159,7 +163,6 @@ def random_char_deletion(
         The default is set to 'char'
     :return: The text with characters deleted.
     """
-
     words = text.strip().split()
     char_indices = [i for i, char in enumerate(text) if char not in (" ")]
     words_details = {}
@@ -205,10 +208,12 @@ def random_char_deletion(
 
 
 def insert_loinc_related_names(
-    text: str, loinc_names: list[str], max_inserts: int, min_inserts: int = 1
+    text: str,
+    loinc_names: list[str],
+    max_inserts: int,
+    min_inserts: int = 1,
 ) -> str:
-    """
-    Inserts 1 or more LOINC related names into the input text at random positions.
+    """Inserts 1 or more LOINC related names into the input text at random positions.
 
     :param text: The input text to modify.
     :param loinc_names: A list of LOINC related names to insert.
@@ -243,8 +248,7 @@ def enhance_loinc_str(
     max_enhancements: int,
     min_enhancements: int = 1,
 ) -> str:
-    """
-    Enhances the input text by applying specified enhancement techniques.
+    """Enhances the input text by applying specified enhancement techniques.
     :param text: The input text to enhance.
     :param enhancement_type: The type of enhancement to apply. Options are:
         - "abbrv": Replace words with their abbrveviations.
@@ -264,7 +268,8 @@ def enhance_loinc_str(
     # Step 2: check each one for eligibility for a LOINC enhancement and
     # filter to only those that have one
     enhancemenet_eligible_strings = _filter_candidates_for_enhancement(
-        candidates, LOINC_ENHANCEMENTS
+        candidates,
+        LOINC_ENHANCEMENTS,
     )
 
     if len(enhancemenet_eligible_strings) < 1:
@@ -286,7 +291,8 @@ def enhance_loinc_str(
         num_enhancements = len(maximal_candidate_set)
     else:
         num_enhancements = random.randint(
-            min_enhancements, min(max_enhancements, len(maximal_candidate_set))
+            min_enhancements,
+            min(max_enhancements, len(maximal_candidate_set)),
         )
 
     # Step 5: Actually perform enhancement and return
@@ -297,12 +303,11 @@ def enhance_loinc_str(
 
 def _apply_enhancements(
     words: list[str, list[int]],
-    disjoint_candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
+    disjoint_candidates: list[tuple[str, tuple[int, int]]],
     enhancement_type: typing.Annotated[schemas.EnhancementType, pydantic.Field()],
     num_enhancements: int,
 ) -> list[str, list[int]]:
-    """
-    Apply LOINC enhancement to a provided tokenized copy of a code string. The
+    """Apply LOINC enhancement to a provided tokenized copy of a code string. The
     code string and a list of possible candidates that are eligible to be
     enhanced are used to randomly sample some strings for replacement, and
     then the original string is modified in reverse to leverage index-based
@@ -323,7 +328,7 @@ def _apply_enhancements(
     # work backwards by string index; otherwise, we could change single words
     # into multiples early in the string and ruin the indices of all words
     # that come later
-    enhancements_to_apply: list[typing.Tuple[list[int], str]] = []
+    enhancements_to_apply: list[tuple[list[int], str]] = []
     while enhancements_applied < num_enhancements and num_tries < MAX_AUGMENTATION_TRIES:
         num_tries += 1
 
@@ -373,10 +378,9 @@ def _apply_enhancements(
 
 
 def _generate_disjoint_intervals(
-    candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
-) -> list[typing.Tuple[str, list[int]]]:
-    """
-    Given a list of tuples that include string index intervals, construct the
+    candidates: list[tuple[str, tuple[int, int]]],
+) -> list[tuple[str, list[int]]]:
+    """Given a list of tuples that include string index intervals, construct the
     largest possible list of those intervals such that no interval intersects
     with or overlaps another. This allows us to combine both singleton tokens
     and substrings in the same enhancement search, so that we can perform both
@@ -387,7 +391,6 @@ def _generate_disjoint_intervals(
     :returns: A list containing the largest set of the original tuples whose
       occurrence intervals do not overlap.
     """
-
     # We start by sorting the candidates according to their interval's
     # *end* index--we can build the maximally disjoint set in a single
     # pass by adding as many intervals as possible before the next
@@ -407,11 +410,10 @@ def _generate_disjoint_intervals(
 
 
 def _filter_candidates_for_enhancement(
-    candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
+    candidates: list[tuple[str, tuple[int, int]]],
     loinc_enhancements: dict,
 ) -> list[str, list[int]]:
-    """
-    Given a list of candidate words and substrings, filter the list to only contain
+    """Given a list of candidate words and substrings, filter the list to only contain
     tuples for which the candidate has one or more enhancements available in the
     LOINC_ENHANCEMENTS dictionary.
 
@@ -440,10 +442,9 @@ def _filter_candidates_for_enhancement(
 
 
 def _generate_enhancement_candidates(
-    words: list[typing.Tuple[str, list[int]]],
-) -> list[typing.Tuple[str, typing.Tuple[int, int]]]:
-    """
-    From a tokenized string, generate a list of all possible candidate strings and
+    words: list[tuple[str, list[int]]],
+) -> list[tuple[str, tuple[int, int]]]:
+    """From a tokenized string, generate a list of all possible candidate strings and
     substrings that might have LOINC enhancements available to them. A substring
     will be included in the final list if either: a) it is constructed of a single
     word (represented by an interval whose start and end indices are the same, e.g.
@@ -473,12 +474,11 @@ def _generate_enhancement_candidates(
 
 def generate_augmented_examples(
     input_code: str,
-    related_names: typing.List[str],
+    related_names: list[str],
     num_examples: int,
     config: schemas.AugmentationConfig,
 ):
-    """
-    Given a LOINC code string, generates a specified number of augmented
+    """Given a LOINC code string, generates a specified number of augmented
     training examples, which are returned as a list. Each augmented example is
     probabilistically operated on by a scrambling or enhancement function
     above to create a semantically and syntactically variant instance. The
@@ -493,7 +493,6 @@ def generate_augmented_examples(
       thresholds, options, and probabilities used to modify the example.
     :returns: A list of augmented training examples.
     """
-
     augmented_examples = []
     for _ in range(num_examples):
         ex_code = input_code
@@ -552,7 +551,9 @@ def generate_augmented_examples(
         prob = random.uniform(0.0, 1.0)
         if prob <= config["permutation"]["swap_prob"]:
             ex_code = scramble_word_order(
-                ex_code, config["permutation"]["max_swaps"], config["permutation"]["min_swaps"]
+                ex_code,
+                config["permutation"]["max_swaps"],
+                config["permutation"]["min_swaps"],
             )
 
         # Last come the deletions: must be the final operation because
@@ -582,8 +583,7 @@ def build_augmented_loinc_files(
     num_dn: int = 5,
     output_path_base: str = "../data/training_files/augmented_loinc",
 ) -> None:
-    """
-    Generates augmented LOINC data files for the long common names, short
+    """Generates augmented LOINC data files for the long common names, short
     common names, and display names based on the provided configurations.
 
     :param input_path: The path to the base LOINC name file.
@@ -595,7 +595,6 @@ def build_augmented_loinc_files(
     :param output_files_base: The base path for the output files.
     :return: None
     """
-
     num_map = {"short_name": num_sn, "long_common_name": num_lcn, "display_name": num_dn}
 
     # Read in data/loinc_lab_names_XXXX.csv
@@ -625,7 +624,10 @@ def build_augmented_loinc_files(
         for key, base_value in values.items():
             if base_value != "":
                 augmented_examples = generate_augmented_examples(
-                    base_value, related_names, num_map[key], config[key]
+                    base_value,
+                    related_names,
+                    num_map[key],
+                    config[key],
                 )
 
                 # Append data to respective files

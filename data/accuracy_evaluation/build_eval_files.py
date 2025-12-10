@@ -23,8 +23,7 @@ VSTYPE_ENDPOINTS = ["lrtc", "lotc"]
 
 
 def get_ersd_valuesets(endpoints: list) -> tuple[dict, list]:
-    """
-    Fetches LOINC value sets from ERSD API.
+    """Fetches LOINC value sets from ERSD API.
     :param endpoints: List of TES API endpoints to fetch value sets from.
     """
     response = requests.get(ERSD_BASE_URL)
@@ -42,8 +41,7 @@ def get_ersd_valuesets(endpoints: list) -> tuple[dict, list]:
 
 
 def get_tes_valuesets(endpoints: list) -> list:
-    """
-    Fetches LOINC value sets from TES API endpoints.
+    """Fetches LOINC value sets from TES API endpoints.
     :param endpoints: List of TES API endpoints to fetch value sets from.
     """
     oids = []
@@ -58,8 +56,7 @@ def get_tes_valuesets(endpoints: list) -> list:
 
 
 def build_ersd_mapping_files(response: dict, oids: list) -> tuple[dict, dict]:
-    """
-    Builds mapping files for OIDs to conditions and LOINC codes to OIDs from ERSD response.
+    """Builds mapping files for OIDs to conditions and LOINC codes to OIDs from ERSD response.
     :param response: ERSD API response containing value sets.
     :param oids: List of OIDs to build mappings for.
     """
@@ -84,14 +81,13 @@ def build_ersd_mapping_files(response: dict, oids: list) -> tuple[dict, dict]:
                 loinc_to_oids[loinc].append(oid)
 
     # deduplicate OIDs for each LOINC code
-    for loinc in loinc_to_oids.keys():
+    for loinc in loinc_to_oids:
         loinc_to_oids[loinc] = list(set(loinc_to_oids[loinc]))
     return oid_to_conditions, loinc_to_oids
 
 
 def build_tes_mapping_files(oids: list) -> tuple[dict, dict]:
-    """
-    Builds mapping files for OIDs to conditions and LOINC codes to OIDs.
+    """Builds mapping files for OIDs to conditions and LOINC codes to OIDs.
     TODO: Potentially refactor to build using rs-grouper
     :param oids: Set of OIDs to build mappings for.
     """
@@ -116,14 +112,13 @@ def build_tes_mapping_files(oids: list) -> tuple[dict, dict]:
             loinc_to_oids[loinc].append(oid)
 
     # deduplicate OIDs for each LOINC code
-    for loinc in loinc_to_oids.keys():
+    for loinc in loinc_to_oids:
         loinc_to_oids[loinc] = list(set(loinc_to_oids[loinc]))
     return oid_to_conditions, loinc_to_oids
 
 
 def evaluate_mapping_files(oid_to_conditions: dict, loinc_to_oids: dict):
-    """
-    Evaluates the mapping files for consistency.
+    """Evaluates the mapping files for consistency.
     :param oid_to_conditions: OID to conditions mapping.
     :param loinc_to_oids: LOINC to OIDs mapping.
     """
@@ -152,8 +147,7 @@ def evaluate_mapping_files(oid_to_conditions: dict, loinc_to_oids: dict):
 
 
 def export_mapping_files(mapping: dict, filename: str):
-    """
-    Exports the mapping dictionary to a JSON file.
+    """Exports the mapping dictionary to a JSON file.
     :param mapping: Dictionary to save.
     :param filename: Output filename.
     """

@@ -4,9 +4,7 @@ import pathlib
 
 
 def code_root() -> pathlib.Path:
-    """
-    Returns the root directory of the aws_lambda source code.
-    """
+    """Returns the root directory of the aws_lambda source code."""
     root = pathlib.Path(__file__).resolve()
     while root.name != "dibbs-text-to-code":
         if root.parent == root:
@@ -16,9 +14,7 @@ def code_root() -> pathlib.Path:
 
 
 def repo_root(start: pathlib.Path | None = None) -> pathlib.Path | None:
-    """
-    Returns the root directory of the aws_lambda repository, or None if not found.
-    """
+    """Returns the root directory of the aws_lambda repository, or None if not found."""
     start = start or pathlib.Path(__file__).resolve()
     for directory in [start] + list(start.parents):
         if (directory / "pyproject.toml").is_file():
@@ -31,13 +27,12 @@ def read_json(path: str) -> dict:
     if not pathlib.Path(path).is_absolute():
         # if path is relative, append to the project root
         path = str(pathlib.Path(code_root(), path))
-    with open(path, "r") as fobj:
+    with open(path) as fobj:
         return json.load(fobj)
 
 
 def load_loinc_enhancements(cwd: str):
-    """
-    Loads LOINC enhancements from JSON files.
+    """Loads LOINC enhancements from JSON files.
 
     :param cwd: The current working file directory.
     :return: A dictionary of LOINC enhancements.
@@ -60,7 +55,7 @@ def load_loinc_enhancements(cwd: str):
 
     # Compute how many levels up we need to go to reach the project root
     levels = (len(parts) - 1) - base_idx
-    level_prefix = pathlib.Path(*([".."] * levels)) if levels > 0 else pathlib.Path(".")
+    level_prefix = pathlib.Path(*([".."] * levels)) if levels > 0 else pathlib.Path()
 
     # Use glob pattern relative to the computed prefix
     pattern = str(level_prefix / "data" / "snoinc_extracts" / "*_abbrv_syn_*.json")

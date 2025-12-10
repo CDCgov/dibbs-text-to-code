@@ -12,7 +12,7 @@ total_count = 0
 
 # get the loinc lab codes and types into a dictionary list for use
 # later instead of reading through this file for each embedding file
-with open(SNOINC_CODE_TYPE_FILE, mode="r", encoding="utf-8") as file:
+with open(SNOINC_CODE_TYPE_FILE, encoding="utf-8") as file:
     csv_reader = csv.reader(file, delimiter="|")
     # Optionally skip the header row
     header = next(csv_reader)
@@ -44,7 +44,8 @@ with open(SNOINC_CODE_TYPE_FILE, mode="r", encoding="utf-8") as file:
             null_rec = f"{code}|{long_name}|NULL FIELDS: {','.join(null_fields)}"
             empty_loinc_descriptions.append(null_rec)
     empty_loinc_descriptions.insert(
-        0, f"TOTAL LOINC CODES WITH NULL TEXT OF SOME TYPE: {total_count}"
+        0,
+        f"TOTAL LOINC CODES WITH NULL TEXT OF SOME TYPE: {total_count}",
     )
     empty_loinc_descriptions.insert(0, f"TOTAL EMBEDDINGS WITH NULL TEXT: {null_embeddings}")
 

@@ -17,8 +17,7 @@ router = APIRouter(prefix="/api")
 # define health check endpoint at the service level
 @router.get("/healthcheck", tags=["internal"], include_in_schema=False)
 async def health_check():
-    """
-    Check service health status.
+    """Check service health status.
 
     Returns: Status text
     """
@@ -47,19 +46,18 @@ def read_item(item: str, is_bad=False):
                 },
             ],
         }
-    else:
-        return {
-            "input": item,
-            "time": datetime.now(ZoneInfo("America/New_York")),
-            "codings": [
-                {
-                    "code": "88875-0",
-                    "codeSystem": "LOINC",
-                    "longName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
-                    "shortName": "MeVA vac str N gene Spec Ql NAA+probe",
-                }
-            ],
-        }
+    return {
+        "input": item,
+        "time": datetime.now(ZoneInfo("America/New_York")),
+        "codings": [
+            {
+                "code": "88875-0",
+                "codeSystem": "LOINC",
+                "longName": "Measles virus genotype A vaccine strain N gene [Presence] in Specimen by NAA with probe detection",
+                "shortName": "MeVA vac str N gene Spec Ql NAA+probe",
+            },
+        ],
+    }
 
 
 # Instantiate FastAPI via DIBBs' BaseService class
@@ -94,8 +92,7 @@ if ENVIRONMENT["ENV"] != "local":
         include_in_schema=False,
     )
     async def serve_index(full_path: str) -> HTMLResponse:
-        """
-        Intercept incoming requests.
+        """Intercept incoming requests.
 
         Modifies the `dist/index.html` file to include the environment, and return the file.
 
@@ -105,7 +102,6 @@ if ENVIRONMENT["ENV"] != "local":
         Returns:
             HTMLResponse: Modified `dist/index.html` file
         """
-
         index_file = Path("dist/index.html").read_text()
         app_env = ENVIRONMENT["ENV"]
         html = index_file.replace("%APP_ENV%", app_env)

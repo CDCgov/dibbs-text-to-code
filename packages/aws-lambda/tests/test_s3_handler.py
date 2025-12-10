@@ -17,11 +17,13 @@ class TestGetFileContentFromS3Event:
     def test_get_file_content_from_s3_event(self, moto_setup):
         """Test get file content from S3 event."""
         moto_setup.put_object(
-            Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
+            Bucket=moto_setup.bucket_name,
+            Key="test.txt",
+            Body=b"This eICR has errors",
         )
 
         event = {
-            "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}}
+            "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}},
         }
 
         content = s3_handler.get_file_content_from_s3_event(event)

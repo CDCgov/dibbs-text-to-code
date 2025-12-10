@@ -69,7 +69,7 @@ TMP_DIRECTORY = "./tmp"
 
 # Data Filter Criteria
 LOINC_TEXT_TO_FILTER = [
-    "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
+    "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration",
 ]
 
 
@@ -192,7 +192,9 @@ def get_loinc_umls_related_results():  # noqa: D103
         print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
 
         save_json_file(
-            directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
+            directory_path=TMP_DIRECTORY,
+            filename=url_filename,
+            contents=umls_loinc_results,
         )
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")
@@ -205,12 +207,12 @@ def get_loinc_umls_related_results():  # noqa: D103
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     if LOINC_USERNAME is None or LOINC_PWD is None:
         raise KeyError(
-            "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
+            "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!",
         )
     loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != 200:
         print(
-            f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
+            f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}",
         )
         return None
 
@@ -233,9 +235,9 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
             next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
             if next_loinc_response.status_code != 200:
                 print(
-                    f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
+                    f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}",
                 )
-                return
+                return None
             loinc_codes = next_loinc_response.json()
             current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
             next_url_call = loinc_codes.get("ResponseSummary").get("Next")
@@ -244,17 +246,14 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
 
     if loinc_valueset_type not in ("UMLS Atoms"):
         return loinc_rows
-    else:
-        return loinc_umls_urls
+    return loinc_umls_urls
 
 
 def get_loinc_umls_urls(loinc_results, loinc_rows_list):
-    """
-    This function will just generate and store the UMLS Urls that need
+    """This function will just generate and store the UMLS Urls that need
     to be used for each LOINC code.  They can be processed separately by another
     function.  Performance issues resulted in trying to do it all at once.
     """
-
     # loop through all the LOINC codes for labs (orders and results)
     for loinc_result in loinc_results:
         # get the LOINC Code and store it for use in the
@@ -279,7 +278,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
         raise KeyError("Directory where file is expected is missing!")
 
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             umls_urls = json.load(file)
     except FileNotFoundError:
         print(f"Error: {file_path} not found. Please ensure the file exists.")
@@ -299,7 +298,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
     if os.path.exists(full_partial_file_path):
         try:
-            with open(full_partial_file_path, "r", newline="", encoding="utf-8") as file:
+            with open(full_partial_file_path, newline="", encoding="utf-8") as file:
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
                 process_loinc_code = False
@@ -325,7 +324,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 if loinc_code_count % 500 == 0:
                     save_json_file(TMP_DIRECTORY, umls_filename_err, umls_loinc_rows, True)
                     print(
-                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
+                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!",
                     )
 
                 # LOINC ATOMIC TERMS PROCESSING
@@ -353,7 +352,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                         related_name = atom_result.get("name")
                         if related_name and related_name not in related_names:
                             related_names.append(
-                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip(),
                             )
                             atom_row_count += 1
 
@@ -398,7 +397,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                             and related_name not in related_names
                         ):
                             related_names.append(
-                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip(),
                             )
                             crs_row_count += 1
 
@@ -462,20 +461,26 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     # More human centered name for the concept
     if display_name is not None:
         result_row["display_name"] = re.sub(
-            regex_patterns.MULTIPLE_SPACE, " ", display_name
+            regex_patterns.MULTIPLE_SPACE,
+            " ",
+            display_name,
         ).strip()
     # Paragraph of information concerning the concept/code/term in question
     if defintion_desc is not None:
         if not _filter_loinc_term(defintion_desc):
             result_row["definition_desc"] = re.sub(
-                regex_patterns.MULTIPLE_SPACE, " ", defintion_desc
+                regex_patterns.MULTIPLE_SPACE,
+                " ",
+                defintion_desc,
             ).strip()
         else:
             result_row["definition_desc"] = ""
     # ';' separated list of related terms to the concept/code/term in question
     if related_names is not None:
         result_row["related_names"] = re.sub(
-            regex_patterns.MULTIPLE_SPACE, " ", related_names
+            regex_patterns.MULTIPLE_SPACE,
+            " ",
+            related_names,
         ).strip()
 
     loinc_order_rows.append(result_row)
@@ -518,7 +523,10 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
 
 
 def save_json_file(  # noqa: D103
-    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
+    directory_path: str,
+    filename: str,
+    contents: dict,
+    append_to_file: bool = False,
 ):
     if not filename.strip() or not directory_path.strip():
         print("No filename & path supplied.  Failed to save JSON File!")
@@ -588,8 +596,7 @@ def _get_loinc_abbrv_syns(
 
 
 def create_loinc_part_abbrv_syn_dicts():
-    """
-    Creates single file dictionary for each of the different
+    """Creates single file dictionary for each of the different
     LOINC parts, which contains each LOINC Part Code, Name
     and Abbreviations and Synonyms
     """
@@ -611,7 +618,7 @@ def create_loinc_part_abbrv_syn_dicts():
 
     row_count = 1
 
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
             # NOTE: the below print statement can be used
@@ -633,7 +640,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     component_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
             elif axis_name == "METHOD":
                 existing_row = method_dict.get(part_name)
@@ -641,7 +653,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     method_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
             elif axis_name == "PROPERTY":
                 existing_row = property_dict.get(part_name)
@@ -649,7 +666,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     property_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
             elif axis_name == "SYSTEM":
                 existing_row = system_dict.get(part_name)
@@ -657,7 +679,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     system_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
             elif axis_name == "TIME":
                 existing_row = time_dict.get(part_name)
@@ -665,7 +692,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     time_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
             elif axis_name == "SCALE":
                 existing_row = scale_dict.get(part_name)
@@ -673,7 +705,12 @@ def create_loinc_part_abbrv_syn_dicts():
                     existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
                     scale_dict[part_name] = existing_row
                 existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                    part_code,
+                    part_name,
+                    repl_name,
+                    pref_abrv,
+                    synonym,
+                    existing_row,
                 )
     print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
@@ -736,7 +773,9 @@ def get_hl7_encounter_act_codes():  # noqa: D103
                     }
                     if hl7_definition:
                         result_row["description"] = re.sub(
-                            regex_patterns.MULTIPLE_SPACE, " ", hl7_definition
+                            regex_patterns.MULTIPLE_SPACE,
+                            " ",
+                            hl7_definition,
                         ).strip()
                     else:
                         result_row["description"] = ""
@@ -775,7 +814,7 @@ def get_vsac_snomed_problems():  # noqa: D103
     _process_vsac_codes(VSAC_PROBLEMS_URL, problem_filename, "SNOMED Problems (Diagnosis/Symptoms)")
 
 
-def _process_vsac_codes(api_url: str, filename: str, vs_type: str):  # noqa: D103
+def _process_vsac_codes(api_url: str, filename: str, vs_type: str):
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
@@ -833,7 +872,7 @@ def main(  # noqa: D103
     medication: bool,
     vaccine: bool,
     problem: bool,
-):  # noqa: D103
+):
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
         print("Getting LOINC Lab Orders...")
@@ -872,7 +911,7 @@ def main(  # noqa: D103
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="A script to pull down various Medical Terminology Value Set Codes and Texts, specify which sets."
+        description="A script to pull down various Medical Terminology Value Set Codes and Texts, specify which sets.",
     )
     parser.add_argument(
         "--lab_names",

@@ -2,7 +2,6 @@ import os
 import pickle
 import random
 import time
-from typing import List
 
 import hnswlib
 from sentence_transformers import SentenceTransformer
@@ -33,12 +32,11 @@ NUM_EXAMPLES_TO_VALIDATE = 1000
 def predict_and_evaluate_validation_set(
     model: SentenceTransformer,
     ann_index: hnswlib.Index,
-    standard_loinc_names: List[str],
-    examples: List[List[str]],
-    k_vals: List[int],
+    standard_loinc_names: list[str],
+    examples: list[list[str]],
+    k_vals: list[int],
 ) -> None:
-    """
-    Compute performance statistics for a given model on a given set of validation
+    """Compute performance statistics for a given model on a given set of validation
     data. The data is expected to be a list of lists in which the first element
     of each pair is the trial nonstandard free-text input, and the second element
     is the standardized code that should be mapped to. Computed statistics include
@@ -60,7 +58,7 @@ def predict_and_evaluate_validation_set(
     encoding_times = []
     cosine_sims = {k: [] for k in k_vals}
     times = {k: [] for k in k_vals}
-    examples_with_correct_output_in_top_k = {k: 0.0 for k in k_vals}
+    examples_with_correct_output_in_top_k = dict.fromkeys(k_vals, 0.0)
 
     random.shuffle(examples)
     examples = examples[:NUM_EXAMPLES_TO_VALIDATE]
@@ -131,7 +129,9 @@ if __name__ == "__main__":
             else:
                 print("No locally cached index found. Creating hierarchical index...")
                 index.init_index(
-                    max_elements=len(embeddings), ef_construction=EF_CONSTRUCTION, M=M_VALUE
+                    max_elements=len(embeddings),
+                    ef_construction=EF_CONSTRUCTION,
+                    M=M_VALUE,
                 )
                 index.add_items(embeddings, list(range(len(embeddings))))
                 index.save_index(INDEX_FP)
@@ -139,14 +139,19 @@ if __name__ == "__main__":
 
             print("Loading validation set...")
             examples = []
-            with open(VALIDATION_FILE, "r") as fp:
+            with open(VALIDATION_FILE) as fp:
                 for line in fp:
                     if line.strip() != "":
                         examples.append(line.strip().split("|"))
 
             print("Predicting and computing stats for validation set...")
             predict_and_evaluate_validation_set(
-                model, index, embeddings, name_codes, examples, K_VALUES
+                model,
+                index,
+                embeddings,
+                name_codes,
+                examples,
+                K_VALUES,
             )
 
     else:

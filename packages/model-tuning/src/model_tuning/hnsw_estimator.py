@@ -2,7 +2,6 @@ import os
 import pickle
 import random
 import time
-from typing import List
 
 import hnswlib
 from sentence_transformers import SentenceTransformer
@@ -54,12 +53,11 @@ def run_recall_trial(
     model: SentenceTransformer,
     hnsw_index: hnswlib.Index,
     bf_index: hnswlib.Index,
-    examples: List[List[str]],
+    examples: list[list[str]],
     k: int,
     ef: int,
 ) -> None:
-    """
-    Perform a single search in a grid of trials to compare approximate search
+    """Perform a single search in a grid of trials to compare approximate search
     with exact search. Importantly, the goal of a recall trial is *not* to
     maximize accuracy. Model analysis is a separate task. The goal of ANN
     hyperparameter optimization is to get the approximate search to behave
@@ -119,7 +117,7 @@ if __name__ == "__main__":
 
             print("Loading validation set...")
             examples = []
-            with open(VALIDATION_FILE, "r") as fp:
+            with open(VALIDATION_FILE) as fp:
                 for line in fp:
                     if line.strip() != "":
                         examples.append(line.strip().split("|"))
@@ -130,7 +128,9 @@ if __name__ == "__main__":
             hnsw_index = hnswlib.Index(space="cosine", dim=EMBEDDING_SIZE)
             bf_index = hnswlib.BFIndex(space="cosine", dim=EMBEDDING_SIZE)
             hnsw_index.init_index(
-                max_elements=len(embeddings), ef_construction=EF_CONSTRUCTION, M=M_VALUE
+                max_elements=len(embeddings),
+                ef_construction=EF_CONSTRUCTION,
+                M=M_VALUE,
             )
             bf_index.init_index(max_elements=len(embeddings))
 
