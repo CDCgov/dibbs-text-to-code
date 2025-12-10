@@ -1,9 +1,8 @@
-from dibbs_text_to_code.configs import DATA_FIELD_TEXT_RULES
-from dibbs_text_to_code.configs import DATA_FIELDS
+import configs
 
 
 def _is_valid_data_field(data_field: str) -> bool:
-    if data_field.strip() not in DATA_FIELDS:
+    if data_field.strip() not in configs.DATA_FIELDS:
         return False
     else:
         return True
@@ -33,7 +32,7 @@ def is_text_viable(data_field: str, text: str) -> bool:
         return False
 
     # get all the data rules for the field
-    data_field_rules = DATA_FIELD_TEXT_RULES.get(data_field)
+    data_field_rules = configs.DATA_FIELD_TEXT_RULES.get(data_field)
 
     if not data_field_rules:
         return False
