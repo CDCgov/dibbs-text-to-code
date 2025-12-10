@@ -21,3 +21,5 @@ DATA_FIELD_TEXT_RULES = {
     "lab_value": {},
     "lab_interp": {},
 }
+
+MODEL_NAME = "Qwen/Qwen3-Embedding-8B"

@@ -2,21 +2,15 @@ from dibbs_text_to_code import configs
 
 
 def _is_valid_data_field(data_field: str) -> bool:
-    if data_field.strip() not in configs.DATA_FIELDS:
-        return False
-    else:
-        return True
+    return data_field.strip() in configs.DATA_FIELDS
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:
-    if len(text.split()) > word_count:
-        return True
-    return False
+    return len(text.split()) > word_count
 
 
 def is_text_viable(data_field: str, text: str) -> bool:
-    """
-    Verifies if a text string is viable for evaluation within
+    """Verifies if a text string is viable for evaluation within
     the TTC model for a specified data field (ie. 'Lab Result')
 
     :param data_field: The data field/element, from an eICR, that

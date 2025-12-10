@@ -1,4 +1,4 @@
-from dibbs_text_to_code import extraction
+from dibbs_text_to_code.services import extraction
 
 
 class TestExtraction:
