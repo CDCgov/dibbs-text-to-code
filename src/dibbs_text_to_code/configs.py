@@ -23,3 +23,4 @@ DATA_FIELD_TEXT_RULES = {
 }
 
 MODEL_NAME = "Qwen/Qwen3-Embedding-8B"
+
