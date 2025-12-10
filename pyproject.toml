@@ -46,25 +46,40 @@ show-fixes = true
 fix = true
 
 [tool.ruff.lint]
-select = [
-    "E4",
-    "E7",
-    "E9",
-    "F",
-    "I",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D106",
-] # Defaults
+select = ["ALL"]
+
+ignore = [
+    "AIR",
+    "CPY",
+    "D100",
+    "DJ",
+    "DTZ",
+    "FBT",
+    "PD",
+    "S",
+    "T20",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
-"tests/*.py" = [
+# Ignore various rules in test modules.
+"**/test_*.py" = [
+    "ANN001",
+    "ARG002",
+    "D100",
+    "D101",
     "D102",
     "D103",
-] # Ignore the public docstring rules in test files
+    "SLF",
+]
+
+# configure docstring checking to use Google style
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Allow `__init__` to not have a return type
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
 
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
