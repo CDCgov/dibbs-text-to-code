@@ -11,7 +11,8 @@ def _get_sentence_transformer():
 
 
 def embed(input_text: str) -> Tensor:
-    """Takes a text string and embeds it as vectors using a model as defined in config.py.
+    """Takes a text string and embeds it as vectors
+    using a model as defined in config.py.
 
     :param input_text: Text string to embed.
     :returns: Tensor representation of input text.

@@ -61,7 +61,11 @@ select = [
     "E9",
     "F",
     "I",
-    "D"
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106"
 ] # Defaults
 
 ignore = [
@@ -79,9 +83,6 @@ ignore = [
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
 order-by-type = false
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
 
 [tool.uv.workspace]
 members = [
