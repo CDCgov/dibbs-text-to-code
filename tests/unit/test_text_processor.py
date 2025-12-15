@@ -1,4 +1,4 @@
-from dibbs_text_to_code.services import text_processor
+from dibbs_text_to_code import text_processor
 
 
 class TestExtraction:  # noqa: D101
