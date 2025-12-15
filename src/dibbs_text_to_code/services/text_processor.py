@@ -3,11 +3,10 @@ from torch import Tensor
 
 from dibbs_text_to_code import configs
 
-_model = None
 
-
-def _set_sentence_transformer():
-    _model = SentenceTransformer(configs.MODEL_NAME)
+def _set_sentence_transformer(model_name: str = configs.MODEL_NAME) -> SentenceTransformer:
+    model = SentenceTransformer(model_name)
+    return model
 
 
 def embed(input_text: str) -> Tensor:
@@ -17,9 +16,8 @@ def embed(input_text: str) -> Tensor:
     :param input_text: Text string to embed.
     :returns: Tensor representation of input text.
     """
-    if _model is None:
-        _set_sentence_transformer()
-    return _model.encode(input_text)
+    model = _set_sentence_transformer(configs.MODEL_NAME)
+    return model.encode(input_text)
 
 
 def _is_valid_data_field(data_field: str) -> bool:
