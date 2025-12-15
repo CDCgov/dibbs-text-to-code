@@ -6,8 +6,8 @@ from dibbs_text_to_code import configs
 _model = None
 
 
-def _set_sentence_transformer(this):
-    this._model = SentenceTransformer(configs.MODEL_NAME)
+def _set_sentence_transformer():
+    _model = SentenceTransformer(configs.MODEL_NAME)
 
 
 def embed(input_text: str) -> Tensor:
