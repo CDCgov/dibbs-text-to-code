@@ -57,7 +57,8 @@ class TestTextProcessor:  # noqa: D101
         embedding = text_processor.embed(input_text)
 
         assert embedding is not None
-        assert len(embedding) == 384
+        assert len(embedding) == 768
+        # this is only for the small model - 384
         # this is only for the Qwen model - 4096  # number of dimensions
         assert len(embedding.shape) == 1  # Assuming a 1D tensor for a single string
 
@@ -66,6 +67,7 @@ class TestTextProcessor:  # noqa: D101
         embedding = text_processor.embed(input_text)
 
         assert embedding is not None
-        assert len(embedding) == 384
+        assert len(embedding) == 768
+        # this is only for the small model - 384
         # this is only for the Qwen model - 4096  # number of dimensions
         assert len(embedding.shape) == 1  # Assuming a 1D tensor for a single string
