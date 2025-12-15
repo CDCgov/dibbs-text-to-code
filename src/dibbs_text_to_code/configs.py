@@ -22,5 +22,6 @@ DATA_FIELD_TEXT_RULES = {
     "lab_interp": {},
 }
 
-MODEL_NAME = "Qwen/Qwen3-Embedding-8B"
-
+MODEL_NAME = "all-MiniLM-L6-v2"
+# NOT sure this is correct "Snowflake/snowflake-arctic-embed-m-long"
+# TOO BIG TO RUN TESTS against ----  "Qwen/Qwen3-Embedding-8B"
