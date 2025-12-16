@@ -21,3 +21,7 @@ DATA_FIELD_TEXT_RULES = {
     "lab_value": {},
     "lab_interp": {},
 }
+
+MODEL_NAME = "Snowflake/snowflake-arctic-embed-m"
+# smaller model to get tests to run faster and with less memor "all-MiniLM-L6-v2" -- size 384
+# TOO BIG TO RUN TESTS against ----  "Qwen/Qwen3-Embedding-8B"

@@ -12,6 +12,16 @@ authors = [
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
+dependencies = [
+    # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
+    # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
+    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x
+    # to ensure compatibility across all hardware.
+    # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
+    # versions and rely on spacy and sentence-transformers to manage their own dependencies.
+    "torch==2.9.1",
+    "sentence-transformers==5.2.0"
+]
 [dependency-groups]
 dev = [
     "pre-commit",
@@ -56,8 +66,12 @@ select = [
     "D103",
     "D104",
     "D105",
-    "D106",
+    "D106"
 ] # Defaults
+
+ignore = [
+    "D100"
+]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
@@ -85,4 +99,6 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dibbs_text_to_code"]
+packages = [
+    "src/dibbs_text_to_code"
+    ]

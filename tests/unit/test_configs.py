@@ -2,7 +2,7 @@ from dibbs_text_to_code.configs import DATA_FIELD_TEXT_RULES
 from dibbs_text_to_code.configs import DATA_FIELDS
 
 
-class TestConfigs:
+class TestConfigs:  # noqa: D101
     data_fields = DATA_FIELDS
     data_field_rules = DATA_FIELD_TEXT_RULES
 
