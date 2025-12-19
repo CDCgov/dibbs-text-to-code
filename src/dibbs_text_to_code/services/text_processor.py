@@ -81,7 +81,7 @@ def is_text_viable(data_field: str, text: str) -> bool:
     return result
 
 
-def get_data_fields_from_schematron_error(schematron_output: str) -> list[str]:
+def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
     """Using the output from the Schematron validation, find errors that
     correspond to specific data elements/fields within the eICR that
     TTC needs to try to find codes for.
@@ -93,29 +93,36 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> list[str]:
         to find data within the eICR for TTC processing.
     """
     data_fields_with_context = {}
+    if not schematron_output.strip():
+        return data_fields_with_context
 
     xml_root = etree.fromstring(schematron_output.encode("utf-8"))
-
     # loop through schematron validation results
-    for result in xml_root.findall("Results"):
+    # TODO: I tried using the 'finall' method, but it was erroring out
+    #  for now just loop through children tags under the root
+    for result in xml_root:
         try:
-            vr = result.find("validationResult")
-            issue = vr.find("issue")
-            msg = issue.find("message").text
-            # check if the msg alings with any of the
-            # specified schematron errors for various data fields
-            for data_field, error_msgs in SCHEMATRON_ERRORS.items():
-                if msg in error_msgs:
-                    xpath = issue.find("context").text
-                    if data_fields_with_context.get(data_field) is None:
-                        data_fields_with_context[data_field] = []
-                    # if the xpath for a particular data field is already
-                    # account for, don't duplicate it
-                    if xpath not in data_fields_with_context[data_field]:
-                        data_fields_with_context[data_field].append(xpath)
+            for vr in result.findall("validationResult"):
+                if vr is None:
+                    continue
+                issue = vr.find("issue")
+                msg = issue.find("message").text
+                if issue is None or msg is None:
+                    continue
+                # check if the msg alings with any of the
+                # specified schematron errors for various data fields
+                for data_field, error_msgs in SCHEMATRON_ERRORS.items():
+                    if msg in error_msgs:
+                        xpath = issue.find("context").text
+                        if data_fields_with_context.get(data_field) is None:
+                            data_fields_with_context[data_field] = []
+                        # if the xpath for a particular data field is already
+                        # account for, don't duplicate it
+                        if xpath not in data_fields_with_context[data_field]:
+                            data_fields_with_context[data_field].append(xpath)
 
         except Exception as e:
+            # TODO: we may want to log this somewhere instead of print
             print(f"Error parsing schematron output: {e}")
             continue
-        print(f"Message: {msg}")
     return data_fields_with_context

@@ -1,5 +1,7 @@
 from dibbs_text_to_code.configs import DATA_FIELD_TEXT_RULES
 from dibbs_text_to_code.configs import DATA_FIELDS
+from dibbs_text_to_code.configs import MODEL_NAME
+from dibbs_text_to_code.configs import SCHEMATRON_ERRORS
 
 
 class TestConfigs:  # noqa: D101
@@ -18,3 +20,15 @@ class TestConfigs:  # noqa: D101
     def test_rules_wrong_data_field(self):
         assert self.data_field_rules.get("MY FIELD") is None
         assert "MY FIELD" not in self.data_fields
+
+    def test_model_name(self):
+        assert MODEL_NAME is not None
+        assert isinstance(MODEL_NAME, str)
+
+    def test_schematron_errors(self):
+        assert len(SCHEMATRON_ERRORS) > 0
+
+        for df, errors in SCHEMATRON_ERRORS.items():
+            assert df in self.data_fields
+            assert isinstance(errors, list)
+            assert len(errors) > 0
