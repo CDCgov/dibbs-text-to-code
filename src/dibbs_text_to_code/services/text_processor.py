@@ -1,12 +1,16 @@
+from lxml import etree
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code import configs
+from dibbs_text_to_code.configs import DATA_FIELD_TEXT_RULES
+from dibbs_text_to_code.configs import DATA_FIELDS
+from dibbs_text_to_code.configs import MODEL_NAME
+from dibbs_text_to_code.configs import SCHEMATRON_ERRORS
 
 MODEL: SentenceTransformer | None = None
 
 
-def _set_sentence_transformer(model_name: str = configs.MODEL_NAME):
+def _set_sentence_transformer(model_name: str = MODEL_NAME):
     global MODEL
     if MODEL is None:
         model = SentenceTransformer(model_name)
@@ -20,7 +24,7 @@ def embed(input_text: str) -> Tensor:
     :param input_text: Text string to embed.
     :returns: Tensor representation of input text.
     """
-    _set_sentence_transformer(configs.MODEL_NAME)
+    _set_sentence_transformer(MODEL_NAME)
     return MODEL.encode(input_text)
 
 
@@ -32,7 +36,7 @@ def _is_valid_data_field(data_field: str) -> bool:
     :returns: A boolean (True or False) if the data field is
         within focus, or not, for the TTC module.
     """
-    return data_field.strip() in configs.DATA_FIELDS
+    return data_field.strip() in DATA_FIELDS
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:
@@ -63,7 +67,7 @@ def is_text_viable(data_field: str, text: str) -> bool:
         return False
 
     # get all the data rules for the field
-    data_field_rules = configs.DATA_FIELD_TEXT_RULES.get(data_field)
+    data_field_rules = DATA_FIELD_TEXT_RULES.get(data_field)
 
     if not data_field_rules:
         return False
@@ -75,3 +79,43 @@ def is_text_viable(data_field: str, text: str) -> bool:
         result = _meets_word_count(text, word_count_rule)
 
     return result
+
+
+def get_data_fields_from_schematron_error(schematron_output: str) -> list[str]:
+    """Using the output from the Schematron validation, find errors that
+    correspond to specific data elements/fields within the eICR that
+    TTC needs to try to find codes for.
+
+    :param schematron_output: The data from the Schematron validation
+        run against the eICR document, containing errors that may
+        be relevant for TTC processing.
+    :returns: Dictionary of Data Field name and list of XPaths of where
+        to find data within the eICR for TTC processing.
+    """
+    data_fields_with_context = {}
+
+    xml_root = etree.fromstring(schematron_output.encode("utf-8"))
+
+    # loop through schematron validation results
+    for result in xml_root.findall("Results"):
+        try:
+            vr = result.find("validationResult")
+            issue = vr.find("issue")
+            msg = issue.find("message").text
+            # check if the msg alings with any of the
+            # specified schematron errors for various data fields
+            for data_field, error_msgs in SCHEMATRON_ERRORS.items():
+                if msg in error_msgs:
+                    xpath = issue.find("context").text
+                    if data_fields_with_context.get(data_field) is None:
+                        data_fields_with_context[data_field] = []
+                    # if the xpath for a particular data field is already
+                    # account for, don't duplicate it
+                    if xpath not in data_fields_with_context[data_field]:
+                        data_fields_with_context[data_field].append(xpath)
+
+        except Exception as e:
+            print(f"Error parsing schematron output: {e}")
+            continue
+        print(f"Message: {msg}")
+    return data_fields_with_context

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report>
+    <ReportHeader>
+        <ValidationStatus>Complete</ValidationStatus>
+        <DateOfTest>20251205</DateOfTest>
+        <TimeOfTest>201228.0317 +0000</TimeOfTest>
+    </ReportHeader>
+    <Results severity="schemaViolation" specification="cda_r2">
+        <issue>
+            <message>cvc-type.2: The type definition cannot be abstract for element value.</message>
+        </issue>
+        <issue>
+            <message>cvc-complex-type.3.2.2: Attribute 'code' is not allowed to appear in element
+                'value'.</message>
+        </issue>
+        <issue>
+            <message>cvc-complex-type.3.2.2: Attribute 'codeSystem' is not allowed to appear in
+                element 'value'.</message>
+        </issue>
+        <issue>
+            <message>cvc-complex-type.3.2.2: Attribute 'displayName' is not allowed to appear in
+                element 'value'.</message>
+        </issue>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="fatals">
+                <message>Fatal: SHALL contain exactly one [1..1]
+                    ClinicalDocument/componentOf/encompassingEncounter</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(cda:componentOf/cda:encompassingEncounter) = 1</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="severe-warnings">
+                <message>Severe Warning (Report Date/Time): ClinicalDocument/effectiveTime SHALL NOT
+                    contain [0..0] @nullFlavor</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>cda:effectiveTime[not(@nullFlavor)]</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="severe-warnings">
+                <message>Severe Warning (Report Date/Time): ClinicalDocument/effectiveTime SHALL
+                    contain at least yyyymmdd.</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>string-length(cda:effectiveTime/@value)&gt;=8</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                <test not(cda:code) or cda:code/@code or cda:code/cda:translation/@code</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[19]/observation[1]</context>
+                <test>not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+</Report>
