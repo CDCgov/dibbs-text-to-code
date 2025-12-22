@@ -1,8 +1,10 @@
 import csv
 import random
 
-BASE_FILE_PATH = "../data/training_files/augmented_loinc"
-OUT_FILE_PATH = "../data/training_files/validation_set_positive_pairs.txt"
+# sample run: python3 packages/data-curation/src/data_curation/generation.py
+BASE_FILE_PATH = "data/training_files/augmented_loinc"
+OUT_FILE_PATH = "data/training_files/validation_set_positive_pairs.txt"
+OUT_FILE_PATH_60K = "data/training_files/validation_set_60k_pairs.txt"
 
 
 def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
@@ -48,17 +50,17 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
         data_pool = data_pool[:num_examples]
 
     for element in data_pool:
-        base_code = element[1].strip()
+        loinc_code = element[0].strip()
+        canonical_name = element[1].strip()
         augmented_examples = element[2].strip().split("|")
 
-        # Randomly choose one of the augmented examples to pair
         chosen_ex = random.choice(augmented_examples)
-        pairs.append((base_code, chosen_ex.strip()))
+        pairs.append((loinc_code, canonical_name, chosen_ex.strip()))
 
     # Now we just write the created examples to the output file
     with open(out_file, "w") as fp:
         for pair in pairs:
-            fp.write(pair[0] + "|" + pair[1] + "\n")
+            fp.write(pair[0] + "|" + pair[1] + "|" + pair[2] + "\n")
 
 
 def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
@@ -74,3 +76,4 @@ def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
 
 if __name__ == "__main__":
     generate_positive_pairs(BASE_FILE_PATH, -1, OUT_FILE_PATH)
+    generate_positive_pairs(BASE_FILE_PATH, 60000, OUT_FILE_PATH_60K)
