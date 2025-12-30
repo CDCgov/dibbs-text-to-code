@@ -126,3 +126,85 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
             print(f"Error parsing schematron output: {e}")
             continue
     return data_fields_with_context
+
+
+def _enhance_base_xpath(base_xpath: str, namespace: str) -> str:
+    """Enhance a base XPath with the specified namespace.
+
+    :param base_xpath: The base XPath to enhance.
+    :param namespace: The namespace to apply to the base XPath.
+    :returns: The enhanced XPath with the specified namespace.
+    """
+    # split the xpath into parts
+    parts = base_xpath.strip().split("/")
+    enhanced_parts = []
+    for part in parts:
+        if part == "ClinicalDocument":
+            continue
+        if (
+            part
+            and not part.startswith(namespace + ":")
+            and part.startswith("@") is False
+            and part.endswith("()") is False
+        ):
+            enhanced_parts.append(f"{namespace}:{part}")
+        else:
+            enhanced_parts.append(part)
+    enhanced_xpath = "." + "/".join(enhanced_parts)
+    return enhanced_xpath
+
+
+def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> list:
+    """Using the eICR data and a base XPath, find text candidates
+    for a specified data field/element to be used in the TTC module.
+
+    :param eicr_data: The eICR data as an XML string.
+    :param base_xpath: The base XPath to use to find text candidates
+        within the eICR for the specified data field.
+    :param data_field: The data field/element of interest for TTC processing.
+    :returns: A list of text candidates found within the eICR for
+        the specified data field/element for TTC processing.
+    """
+
+    text_candidates = []
+    namespaces = {"cda": "urn:hl7-org:v3"}
+    if (
+        eicr_data.strip() is None
+        or base_xpath.strip() is None
+        or not _is_valid_data_field(data_field)
+    ):
+        return text_candidates
+
+    # first get list of xpaths per data field from config
+    xpaths = DATA_FIELD_TEXT_RULES.get(data_field, {}).get("x_paths", [])
+    # print(f"Configured XPaths for data field {data_field}: {xpaths}")
+
+    # enhance the base xpath with the namespace
+    base_xpath = _enhance_base_xpath(base_xpath, "cda")
+
+    try:
+        xml_root = etree.fromstring(eicr_data.encode("utf-8"))
+        # print(f"ROOT: {xml_root.tag}")
+        nodes = xml_root.xpath(base_xpath, namespaces=namespaces)
+        # print(f"Found {len(nodes)} nodes for base XPath: {base_xpath}")
+        for node in nodes:
+            # print("HERE")
+            # print(f"Processing node: {etree.tostring(node, pretty_print=True).decode('utf-8')}")
+            for xpath in xpaths:
+                enhanced_xpath = _enhance_base_xpath(xpath, "cda")
+                print(f"Evaluating XPath: {enhanced_xpath}")
+                sub_nodes = node.xpath(enhanced_xpath, namespaces=namespaces)
+                # print(f"IM A LIST {len(sub_nodes)}")
+                for i, sub_node in enumerate(sub_nodes):
+                    # print(f"SUB NODE LEN: {len(sub_node.strip())}")
+                    if len(sub_node.strip()) > 0:
+                        print(f"SUB NODE: {sub_node.strip()}")
+                        # TODO: do we need to store the base xpath
+                        # and more specific xpath used to get the text WITH the text like below?
+                        # text_candidates[sub_node.strip()] = {"base_xpath": base_xpath, "x_path": enhanced_xpath, "iteration": i}
+                        text_candidates.append(sub_node.strip())
+    except Exception as e:
+        # TODO: we may want to log this somewhere instead of print
+        print(f"Error extracting text from eicr message: {e}")
+        return text_candidates
+    return text_candidates

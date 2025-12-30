@@ -6,12 +6,17 @@ current_dir = Path(__file__).parent
 
 
 class TestTextProcessor:  # noqa: D101
-    def setup_files(self):
+    def get_schematron_output_file(self):
         schematron_path = current_dir / "assets" / "test_schematron_errors.xml"
         with open(schematron_path, "r", encoding="utf-8") as f:
             schematron_output = f.read()
-            print(len(schematron_output))
         return schematron_output
+
+    def get_test_eicr_file(self):
+        eicr_path = current_dir / "assets" / "test_eicr_covid.xml"
+        with open(eicr_path, "r", encoding="utf-8") as f:
+            eicr_output = f.read()
+        return eicr_output
 
     def test_is_text_viable_wrong_field(self):
         data_field = "LABs"
@@ -84,7 +89,8 @@ class TestTextProcessor:  # noqa: D101
         assert len(embedding.shape) == 1  # Assuming a 1D tensor for a single string
 
     def test_get_schematron_error_data_fields(self):
-        schematron_errors = self.setup_files()
+        schematron_errors = self.get_schematron_output_file()
+        eicr_xml = self.get_test_eicr_file()
         result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
         assert result != {}
@@ -93,8 +99,31 @@ class TestTextProcessor:  # noqa: D101
         assert "lab_order" in result
         assert len(result["lab_order"]) == 1
 
+        xpath = result["lab_result"][1]
+        result = text_processor.get_text_candidates(eicr_xml, xpath, "lab_result")
+        assert len(result) == 7
+        assert (
+            result[0]
+            == "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
+        )
+        assert result[6] == "SARS-like Virus"
+
     def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""
         result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
         assert result == {}
+
+    def test_get_schematron_error_data_fields_empty(self):
+        schematron_errors = self.get_schematron_output_file()
+        result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
+
+        assert result != {}
+        assert "lab_result" in result
+        assert len(result["lab_result"]) == 2
+        assert "lab_order" in result
+        assert len(result["lab_order"]) == 1
+
+        xpath = result["lab_result"][1]
+        result = text_processor.get_text_candidates("", xpath, "lab_result")
+        assert len(result) == 0

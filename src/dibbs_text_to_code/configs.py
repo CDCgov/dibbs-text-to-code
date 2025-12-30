@@ -11,12 +11,25 @@ DATA_FIELD_TEXT_RULES = {
     "lab_order": {
         "text_word_count": 2,  # anything that is greater than 2
         # putting x_paths here for now, but we may not need/want this
-        "x_paths": ["some path", "some other path"],  # store the X-Paths in order of importance
+        "x_paths": [
+            "/code/@displayName",
+            "/code/originalText/text()",
+            "/code/translation/@displayName",
+            "/code/translation/originalText/text()",
+            "/code/translation/text/text()",
+        ],
     },
     "lab_result": {
         "text_word_count": 2,  # anything that is greater than 2
         # putting x_paths here for now, but we may not need/want this
-        "x_paths": ["some path", "some other path"],  # store the X-Paths in order of importance
+        "x_paths": [
+            "/code/@displayName",
+            "/code/originalText/text()",
+            "/code/text/text()",
+            "/code/translation/@displayName",
+            "/code/translation/originalText/text()",
+            "/code/translation/text/text()",
+        ],
     },
     "lab_value": {},
     "lab_interp": {},
