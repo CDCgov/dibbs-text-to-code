@@ -168,40 +168,29 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
 
     text_candidates = []
     namespaces = {"cda": "urn:hl7-org:v3"}
-    print(f"BASE XPATH:yeah{base_xpath.strip()}BLAH")
     if (
         eicr_data.strip() is None
         or base_xpath.strip() is None
         or not base_xpath.strip()
         or not _is_valid_data_field(data_field)
     ):
-        print("HERE")
         return text_candidates
 
     # first get list of xpaths per data field from config
     xpaths = DATA_FIELD_TEXT_RULES.get(data_field, {}).get("x_paths", [])
-    # print(f"Configured XPaths for data field {data_field}: {xpaths}")
 
     # enhance the base xpath with the namespace
     base_xpath = _enhance_base_xpath(base_xpath, "cda")
 
     try:
         xml_root = etree.fromstring(eicr_data.encode("utf-8"))
-        # print(f"ROOT: {xml_root.tag}")
         nodes = xml_root.xpath(base_xpath, namespaces=namespaces)
-        # print(f"Found {len(nodes)} nodes for base XPath: {base_xpath}")
         for node in nodes:
-            # print("HERE")
-            # print(f"Processing node: {etree.tostring(node, pretty_print=True).decode('utf-8')}")
             for xpath in xpaths:
                 enhanced_xpath = _enhance_base_xpath(xpath, "cda")
-                print(f"Evaluating XPath: {enhanced_xpath}")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=namespaces)
-                # print(f"IM A LIST {len(sub_nodes)}")
                 for i, sub_node in enumerate(sub_nodes):
-                    # print(f"SUB NODE LEN: {len(sub_node.strip())}")
                     if len(sub_node.strip()) > 0:
-                        print(f"SUB NODE: {sub_node.strip()}")
                         # TODO: do we need to store the base xpath
                         # and more specific xpath used to get the text WITH the text like below?
                         # text_candidates[sub_node.strip()] = {"base_xpath": base_xpath, "x_path": enhanced_xpath, "iteration": i}
