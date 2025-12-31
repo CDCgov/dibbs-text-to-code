@@ -91,16 +91,16 @@ class TestTextProcessor:  # noqa: D101
     def test_get_schematron_error_data_fields(self):
         schematron_errors = self.get_schematron_output_file()
         eicr_xml = self.get_test_eicr_file()
-        result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
+        error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
-        assert result != {}
-        assert "lab_result" in result
-        assert len(result["lab_result"]) == 2
-        assert "lab_order" in result
-        assert len(result["lab_order"]) == 1
+        assert error_result != {}
+        assert "lab_result" in error_result
+        assert len(error_result["lab_result"]) == 2
+        assert "lab_order" in error_result
+        assert len(error_result["lab_order"]) == 1
 
-        xpath = result["lab_result"][1]
-        result = text_processor.get_text_candidates(eicr_xml, xpath, "lab_result")
+        xpaths = error_result["lab_result"][1]
+        result = text_processor.get_text_candidates(eicr_xml, xpaths, "lab_result")
         assert len(result) == 7
         assert (
             result[0]
@@ -117,12 +117,6 @@ class TestTextProcessor:  # noqa: D101
     def test_get_schematron_error_data_fields_empty(self):
         schematron_errors = self.get_schematron_output_file()
         result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
-
-        assert result != {}
-        assert "lab_result" in result
-        assert len(result["lab_result"]) == 2
-        assert "lab_order" in result
-        assert len(result["lab_order"]) == 1
 
         xpath = result["lab_result"][1]
         result = text_processor.get_text_candidates("", xpath, "lab_result")
