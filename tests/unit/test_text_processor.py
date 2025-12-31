@@ -114,10 +114,26 @@ class TestTextProcessor:  # noqa: D101
 
         assert result == {}
 
-    def test_get_schematron_error_data_fields_empty(self):
+    def test_get_schematron_error_data_fields_empty_ecr(self):
         schematron_errors = self.get_schematron_output_file()
-        result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
+        error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
-        xpath = result["lab_result"][1]
+        xpath = error_result["lab_result"][1]
         result = text_processor.get_text_candidates("", xpath, "lab_result")
+        assert len(result) == 0
+
+    def test_get_schematron_error_data_fields_empty_xpath(self):
+        eicr_xml = self.get_test_eicr_file()
+
+        result = text_processor.get_text_candidates(eicr_xml, "", "lab_result")
+        assert len(result) == 0
+
+    def test_get_schematron_error_data_fields_wrong_datatype(self):
+        eicr_xml = self.get_test_eicr_file()
+        schematron_errors = self.get_schematron_output_file()
+        error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
+
+        xpath = error_result["lab_result"][1]
+
+        result = text_processor.get_text_candidates(eicr_xml, xpath, "my_field")
         assert len(result) == 0

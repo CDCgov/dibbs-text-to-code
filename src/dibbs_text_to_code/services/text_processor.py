@@ -168,11 +168,14 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
 
     text_candidates = []
     namespaces = {"cda": "urn:hl7-org:v3"}
+    print(f"BASE XPATH:yeah{base_xpath.strip()}BLAH")
     if (
         eicr_data.strip() is None
         or base_xpath.strip() is None
+        or not base_xpath.strip()
         or not _is_valid_data_field(data_field)
     ):
+        print("HERE")
         return text_candidates
 
     # first get list of xpaths per data field from config
