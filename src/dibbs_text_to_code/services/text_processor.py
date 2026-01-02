@@ -128,7 +128,7 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
     return data_fields_with_context
 
 
-def _enhance_base_xpath(base_xpath: str, namespace: str) -> str:
+def _enhance_xpath_with_namespace(xpath: str, namespace: str) -> str:
     """Enhance a base XPath with the specified namespace.
 
     :param base_xpath: The base XPath to enhance.
@@ -136,7 +136,7 @@ def _enhance_base_xpath(base_xpath: str, namespace: str) -> str:
     :returns: The enhanced XPath with the specified namespace.
     """
     # split the xpath into parts
-    parts = base_xpath.strip().split("/")
+    parts = xpath.strip().split("/")
     enhanced_parts = []
     for part in parts:
         if part == "ClinicalDocument":
@@ -180,14 +180,14 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     xpaths = DATA_FIELD_TEXT_RULES.get(data_field, {}).get("x_paths", [])
 
     # enhance the base xpath with the namespace
-    base_xpath = _enhance_base_xpath(base_xpath, "cda")
+    base_xpath = _enhance_xpath_with_namespace(base_xpath, "cda")
 
     try:
         xml_root = etree.fromstring(eicr_data.encode("utf-8"))
         nodes = xml_root.xpath(base_xpath, namespaces=namespaces)
         for node in nodes:
             for xpath in xpaths:
-                enhanced_xpath = _enhance_base_xpath(xpath, "cda")
+                enhanced_xpath = _enhance_xpath_with_namespace(xpath, "cda")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=namespaces)
                 for i, sub_node in enumerate(sub_nodes):
                     if len(sub_node.strip()) > 0:
