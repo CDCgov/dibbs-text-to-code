@@ -14,6 +14,7 @@ DATA_FIELD_TEXT_RULES = {
         "x_paths": [
             "/code/@displayName",
             "/code/originalText/text()",
+            "/code/text/text()",
             "/code/translation/@displayName",
             "/code/translation/originalText/text()",
             "/code/translation/text/text()",
