@@ -98,7 +98,7 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
 
     xml_root = etree.fromstring(schematron_output.encode("utf-8"))
     # loop through schematron validation results
-    # TODO: I tried using the 'finall' method, but it was erroring out
+    # TODO: I tried using the 'findall' method, but it was erroring out
     #  for now just loop through children tags under the root
     for result in xml_root:
         try:
