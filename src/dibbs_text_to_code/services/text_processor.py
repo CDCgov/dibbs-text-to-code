@@ -190,7 +190,8 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
                 for i, sub_node in enumerate(sub_nodes):
                     if len(sub_node.strip()) > 0:
                         # TODO: do we need to store the base xpath
-                        # and more specific xpath used to get the text WITH the text like below?
+                        # and more specific xpath used to get the text WITH the text itself?
+                        # See below example:
                         # text_candidates[sub_node.strip()] = {"base_xpath": base_xpath, "x_path": enhanced_xpath, "iteration": i}
                         text_candidates.append(sub_node.strip())
     except Exception as e:
