@@ -90,7 +90,6 @@ class TestTextProcessor:  # noqa: D101
 
     def test_get_schematron_error_data_fields(self):
         schematron_errors = self.get_schematron_output_file()
-        eicr_xml = self.get_test_eicr_file()
         error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
         assert error_result != {}
@@ -98,6 +97,11 @@ class TestTextProcessor:  # noqa: D101
         assert len(error_result["lab_result"]) == 2
         assert "lab_order" in error_result
         assert len(error_result["lab_order"]) == 1
+
+    def test_get_text_candidates(self):
+        schematron_errors = self.get_schematron_output_file()
+        eicr_xml = self.get_test_eicr_file()
+        error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
         xpaths = error_result["lab_result"][1]
         result = text_processor.get_text_candidates(eicr_xml, xpaths, "lab_result")
@@ -114,7 +118,7 @@ class TestTextProcessor:  # noqa: D101
 
         assert result == {}
 
-    def test_get_schematron_error_data_fields_empty_ecr(self):
+    def test_get_text_candidates_empty_ecr(self):
         schematron_errors = self.get_schematron_output_file()
         error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
 
@@ -122,13 +126,13 @@ class TestTextProcessor:  # noqa: D101
         result = text_processor.get_text_candidates("", xpath, "lab_result")
         assert len(result) == 0
 
-    def test_get_schematron_error_data_fields_empty_xpath(self):
+    def test_get_text_candidates_empty_xpath(self):
         eicr_xml = self.get_test_eicr_file()
 
         result = text_processor.get_text_candidates(eicr_xml, "", "lab_result")
         assert len(result) == 0
 
-    def test_get_schematron_error_data_fields_wrong_datatype(self):
+    def test_text_candidates_wrong_datatype(self):
         eicr_xml = self.get_test_eicr_file()
         schematron_errors = self.get_schematron_output_file()
         error_result = text_processor.get_data_fields_from_schematron_error(schematron_errors)
