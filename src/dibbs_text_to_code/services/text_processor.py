@@ -129,7 +129,7 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
 
 
 def _enhance_xpath_with_namespace(xpath: str, namespace: str) -> str:
-    """Enhance a base XPath with the specified namespace.
+    """Enhance an XPath with the specified namespace.
 
     :param base_xpath: The base XPath to enhance.
     :param namespace: The namespace to apply to the base XPath.
