@@ -101,5 +101,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/dibbs_text_to_code"
+    "src/dibbs_text_to_code/services",
+    "src/dibbs_text_to_code/configs"
     ]
