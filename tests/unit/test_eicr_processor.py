@@ -37,11 +37,16 @@ class TestEICRProcessor:  # noqa: D101
         xpaths = error_result["lab_result"][1]
         result = eicr_processor.get_text_candidates(eicr_xml, xpaths, "lab_result")
         assert len(result) == 7
-        assert (
-            result[0]
-            == "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
-        )
-        assert result[6] == "SARS-like Virus"
+        count = 0
+        for key, value in result.items():
+            if count == 0:
+                assert (
+                    value
+                    == "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
+                )
+            if count == 6:
+                assert value == "SARS-like Virus"
+            count += 1
 
     def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""

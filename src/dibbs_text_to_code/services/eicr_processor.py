@@ -94,7 +94,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
         the specified data field/element for TTC processing.
     """
 
-    text_candidates = []
+    text_candidates = {}
     # first get data field config settings - this acts
     # as a validation of correct data field being passed
     config_settings = get_data_field_config(data_field)
@@ -110,20 +110,14 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
 
     try:
         xml_root = ET.fromstring(eicr_data.encode("utf-8"))
-        print(f"ROOT: {xml_root.tag}")
         nodes = xml_root.xpath(enhanced_base_xpath, namespaces=NAMESPACES)
-        print(f"NODES FOUND: {len(nodes)}")
         for node in nodes:
             for sub_xpath in sub_xpaths:
                 enhanced_xpath = _enhance_xpath_with_namespace(sub_xpath, "cda")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=NAMESPACES)
                 for i, sub_node in enumerate(sub_nodes):
                     if len(sub_node.strip()) > 0:
-                        # TODO: do we need to store the base xpath
-                        # and more specific xpath used to get the text WITH the text itself?
-                        # See below example:
-                        # text_candidates[sub_node.strip()] = {"base_xpath": base_xpath, "x_path": enhanced_xpath, "iteration": i}
-                        text_candidates.append(sub_node.strip())
+                        text_candidates[base_xpath + sub_xpath + f"[{i}]"] = sub_node.strip()
     except Exception as e:
         # TODO: we may want to log this somewhere instead of print
         print(f"Error extracting text from eicr message: {e}")
