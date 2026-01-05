@@ -13,7 +13,7 @@ def get_data_field_config(data_field: str):
         within focus, or None, for the TTC module.
     """
     try:
-        data_field_config_class = eicr_config.DATA_FIELD_CONFIG_CLASSES[data_field.strip()]
+        data_field_config_class = eicr_config[data_field.strip()].value.__class__
         return data_field_config_class()
     except KeyError:
         return None

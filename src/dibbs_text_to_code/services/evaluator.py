@@ -49,8 +49,13 @@ def is_text_viable(data_field: str, text: str) -> bool:
         viable for TTC or not.
     """
     result = False
+    # verify the data type is a proper one
     data_field_config = get_data_field_config(data_field)
     if data_field_config is None:
+        return result
+
+    # ensure the data type is 'in scope' for TTC processing
+    if len(data_field_config.schematron_errors) == 0:
         return result
 
     # first test word count if such a rule is present in the

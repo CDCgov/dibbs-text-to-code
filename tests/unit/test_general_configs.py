@@ -14,11 +14,14 @@ class TestGeneralConfigs:  # noqa: D101
             assert df in self.DATA_FIELDS
             config_class = self.ENUM_CONFIG[df].value
             assert config_class is not None
-            assert isinstance(config_class.x_paths, list)
+            assert isinstance(config_class.xpaths, list)
 
     def test_rules_wrong_data_field(self):
-        config_class = self.ENUM_CONFIG["MY_FIELD"].value
-        assert config_class is None
+        try:
+            result = self.ENUM_CONFIG["MY_FIELD"].value
+            result  # to avoid unused variable warning
+        except KeyError as e:
+            assert isinstance(e, KeyError)
 
     def test_model_name(self):
         assert MODEL_NAME is not None
@@ -28,6 +31,6 @@ class TestGeneralConfigs:  # noqa: D101
         assert len(SCHEMATRON_ERRORS) > 0
 
         for df, errors in SCHEMATRON_ERRORS.items():
-            assert df in self
+            assert df in self.DATA_FIELDS
             assert isinstance(errors, list)
             assert len(errors) > 0

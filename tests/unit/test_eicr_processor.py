@@ -23,6 +23,7 @@ class TestEICRProcessor:  # noqa: D101
         error_result = eicr_processor.get_data_fields_from_schematron_error(schematron_errors)
 
         assert error_result != {}
+        print(f"Error Result: {error_result}")
         assert "lab_result" in error_result
         assert len(error_result["lab_result"]) == 2
         assert "lab_order" in error_result

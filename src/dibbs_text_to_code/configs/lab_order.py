@@ -25,6 +25,16 @@ class LabOrderConfig(pydantic.BaseModel):
     ]
     """The list of Sub XPath expressions to extract text in various locations from the lab order element."""
 
+    """
+    "/code/@displayName",
+    "/cda:code/@displayName",
+    "/cda:code/originalText/text()",
+    "/cda:code/cda:text/text()",
+        "/code/translation/@displayName",
+        "/code/translation/originalText/text()",
+        "/code/translation/text/text()",
+    """
+
     schematron_errors: typing.List[str] = [
         "Text to Code: Lab Test Name Ordered does not have a @code attribute",
         "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",

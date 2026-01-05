@@ -3,13 +3,6 @@ from lxml import etree as ET
 from .utils import get_data_field_by_schematron_error
 from .utils import get_data_field_config
 
-# register the namespaces for the entire element tree
-# ET.register_namespace(None, "urn:hl7-org:v3")
-ET.register_namespace("cda", "urn:hl7-org:v3")
-ET.register_namespace("sdtc", "urn:hl7-org:sdtc")
-ET.register_namespace("voc", "http://www.lantanagroup.com/voc")
-ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-# ET.register_namespace("schemaLocation", "urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd")
 NAMESPACES = {
     "cda": "urn:hl7-org:v3",
     "sdtc": "urn:hl7-org:sdtc",
@@ -51,10 +44,10 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
                     xpath = issue.find("context").text
                     if data_fields_with_context.get(err_data_field) is None:
                         data_fields_with_context[err_data_field] = []
-                        # if the xpath for a particular data field is already
-                        # accounted for, don't duplicate it
-                        if xpath not in data_fields_with_context[err_data_field]:
-                            data_fields_with_context[err_data_field].append(xpath)
+                    # if the xpath for a particular data field is already
+                    # accounted for, don't duplicate it
+                    if xpath not in data_fields_with_context[err_data_field]:
+                        data_fields_with_context[err_data_field].append(xpath)
 
         except Exception as e:
             # TODO: we may want to log this somewhere instead of print
@@ -102,11 +95,15 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     """
 
     text_candidates = []
-    # first get list of xpaths per data field from config
-    sub_xpaths = get_data_field_config(data_field).x_paths
+    # first get data field config settings - this acts
+    # as a validation of correct data field being passed
+    config_settings = get_data_field_config(data_field)
 
-    if eicr_data.strip() is None or not base_xpath.strip() or len(sub_xpaths) == 0:
+    if eicr_data.strip() is None or not base_xpath.strip() or config_settings is None:
         return text_candidates
+
+    # get list of xpaths per data field from config
+    sub_xpaths = config_settings.xpaths
 
     # enhance the base xpath with the namespace
     enhanced_base_xpath = _enhance_xpath_with_namespace(base_xpath, "cda")
