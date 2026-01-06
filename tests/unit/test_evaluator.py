@@ -1,4 +1,4 @@
-from configs.general import MODEL_NAME
+from configs.general import _model_name
 from services import evaluator
 
 
@@ -6,7 +6,7 @@ class TestEvaluator:  # noqa: D101
     def test_set_sentence_transformer(self):
         assert evaluator._model is None
 
-        evaluator._set_sentence_transformer(MODEL_NAME)
+        evaluator._set_sentence_transformer(_model_name)
 
         assert isinstance(evaluator._model, evaluator.SentenceTransformer)
 

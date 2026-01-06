@@ -1,7 +1,6 @@
+from configs.general import get_configuration_for_data_element
+from configs.general import get_data_element_from_schematron_error
 from lxml import etree as ET
-
-from .utils import get_data_field_by_schematron_error
-from .utils import get_data_field_config
 
 NAMESPACES = {
     "cda": "urn:hl7-org:v3",
@@ -39,7 +38,7 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
                     continue
                 # check if the msg aligns with any of the
                 # specified schematron errors for various data fields
-                err_data_field = get_data_field_by_schematron_error(msg)
+                err_data_field = get_data_element_from_schematron_error(msg)
                 if err_data_field is not None:
                     xpath = issue.find("context").text
                     if data_fields_with_context.get(err_data_field) is None:
@@ -97,7 +96,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     text_candidates = {}
     # first get data field config settings - this acts
     # as a validation of correct data field being passed
-    config_settings = get_data_field_config(data_field)
+    config_settings = get_configuration_for_data_element(data_field)
 
     if not eicr_data.strip() or not base_xpath.strip() or config_settings is None:
         return text_candidates

@@ -1,8 +1,7 @@
-from configs.general import MODEL_NAME
+from configs.general import _model_name
+from configs.general import get_configuration_for_data_element
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
-
-from .utils import get_data_field_config
 
 _model: SentenceTransformer | None = None
 
@@ -10,14 +9,14 @@ _model: SentenceTransformer | None = None
 # TODO: later when determine how this module fits
 # into the lamda we may need to refactor how we are
 # lazy loading the model
-def _set_sentence_transformer(model_name: str = MODEL_NAME):
+def _set_sentence_transformer(model: str = _model_name) -> None:
     """
     Sets the SentenceTransformer model to be used for embedding text.
     """
     # TODO: this can be removed once we make this file a class
     # and create a constructor to initialize the model
     global _model
-    _model = SentenceTransformer(model_name)
+    _model = SentenceTransformer(model)
 
 
 def embed(input_text: str) -> Tensor:
@@ -31,8 +30,7 @@ def embed(input_text: str) -> Tensor:
     # into the lamda we may need to refactor how we are
     # lazy loading the model
     if _model is None:
-        print("HERE")
-        _set_sentence_transformer(MODEL_NAME)
+        _set_sentence_transformer(_model_name)
     return _model.encode(input_text)
 
 
@@ -61,7 +59,7 @@ def is_text_viable(data_field: str, text: str) -> bool:
     """
     result = False
     # verify the data type is a proper one
-    data_field_config = get_data_field_config(data_field)
+    data_field_config = get_configuration_for_data_element(data_field)
     if data_field_config is None:
         return result
 
