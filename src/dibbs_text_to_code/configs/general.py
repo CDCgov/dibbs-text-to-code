@@ -16,7 +16,7 @@ class eicr_config(Enum):
 
 
 MODEL_NAME = "Snowflake/snowflake-arctic-embed-m"
-# smaller model to get tests to run faster and with less memor "all-MiniLM-L6-v2" -- size 384
+# smaller model to get tests to run faster and with less memory "all-MiniLM-L6-v2" -- size 384
 # TOO BIG TO RUN TESTS against ----  "Qwen/Qwen3-Embedding-8B"
 
 
