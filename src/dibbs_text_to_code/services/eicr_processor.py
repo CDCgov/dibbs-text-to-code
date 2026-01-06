@@ -99,7 +99,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     # as a validation of correct data field being passed
     config_settings = get_data_field_config(data_field)
 
-    if eicr_data.strip() is None or not base_xpath.strip() or config_settings is None:
+    if not eicr_data.strip() or not base_xpath.strip() or config_settings is None:
         return text_candidates
 
     # get list of xpaths per data field from config
