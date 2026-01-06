@@ -12,7 +12,7 @@ class TestEICRProcessor:  # noqa: D101
     def file_setup(self):
         if self.SCHEMATRON_ERROR_FILE is None:
             schematron_path = current_dir / "assets" / "test_schematron_errors.xml"
-            with open(schematron_path, "r", encoding="utf-8") as f:
+            with schematron_path.open() as f:
                 schematron_output = f.read()
             self.SCHEMATRON_ERROR_FILE = schematron_output
 
