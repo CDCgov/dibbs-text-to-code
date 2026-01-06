@@ -18,7 +18,7 @@ class TestEICRProcessor:  # noqa: D101
 
         if self.TEST_EICR_FILE is None:
             eicr_path = current_dir / "assets" / "test_eicr_covid.xml"
-            with open(eicr_path, "r", encoding="utf-8") as f:
+            with eicr_path.open() as f:
                 eicr_output = f.read()
             self.TEST_EICR_FILE = eicr_output
 
