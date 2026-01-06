@@ -8,7 +8,7 @@ from configs.lab_value import LabValueConfig
 
 # store all relevant data fields/elements along with their
 # configuration class settings
-class EicrConfig(Enum):
+class eicr_config(Enum):
     lab_order = LabOrderConfig()
     lab_result = LabResultConfig()
     lab_value = LabValueConfig()

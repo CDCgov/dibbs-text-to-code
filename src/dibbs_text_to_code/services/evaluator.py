@@ -4,14 +4,20 @@ from torch import Tensor
 
 from .utils import get_data_field_config
 
-MODEL: SentenceTransformer | None = None
+_model: SentenceTransformer | None = None
 
 
+# TODO: later when determine how this module fits
+# into the lamda we may need to refactor how we are
+# lazy loading the model
 def _set_sentence_transformer(model_name: str = MODEL_NAME):
-    global MODEL
-    if MODEL is None:
-        model = SentenceTransformer(model_name)
-        MODEL = model
+    """
+    Sets the SentenceTransformer model to be used for embedding text.
+    """
+    # TODO: this can be removed once we make this file a class
+    # and create a constructor to initialize the model
+    global _model
+    _model = SentenceTransformer(model_name)
 
 
 def embed(input_text: str) -> Tensor:
@@ -21,8 +27,13 @@ def embed(input_text: str) -> Tensor:
     :param input_text: Text string to embed.
     :returns: Tensor representation of input text.
     """
-    _set_sentence_transformer(MODEL_NAME)
-    return MODEL.encode(input_text)
+    # TODO: later when determine how this module fits
+    # into the lamda we may need to refactor how we are
+    # lazy loading the model
+    if _model is None:
+        print("HERE")
+        _set_sentence_transformer(MODEL_NAME)
+    return _model.encode(input_text)
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:

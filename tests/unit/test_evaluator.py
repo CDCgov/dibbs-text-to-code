@@ -1,14 +1,14 @@
+from configs.general import MODEL_NAME
 from services import evaluator
 
 
 class TestEvaluator:  # noqa: D101
     def test_set_sentence_transformer(self):
-        assert evaluator.MODEL is None
+        assert evaluator._model is None
 
-        evaluator._set_sentence_transformer()
+        evaluator._set_sentence_transformer(MODEL_NAME)
 
-        assert evaluator.MODEL is not None
-        assert isinstance(evaluator.MODEL, evaluator.SentenceTransformer)
+        assert isinstance(evaluator._model, evaluator.SentenceTransformer)
 
     def test_meets_word_count(self):
         text_value = "This is a simple test string"
