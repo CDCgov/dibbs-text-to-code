@@ -13,7 +13,7 @@
     "standardized_text": "Hepatitis D virus RNA [#/volume] (viral load) in Serum or Plasma by NAA with probe detection",
     "returned_loinc": "80426-0",
     "expected_loinc": "85512-2",
-    "status": "second-degree match"
+    "status": "second-degree match, one unique condition"
   },
   {
     "id": "3",

@@ -1,0 +1,1698 @@
+[
+  {
+    "id": "0_1",
+    "raw_text": "Crawfish IA quant IgG",
+    "expected_text": "Crawfish IgG IA Qn",
+    "returned_text": "Chlamydia trachomatis IgG Ab [Measurement] in Serum",
+    "expected_loinc": "107684-3",
+    "returned_loinc": "111311-7"
+  },
+  {
+    "id": "0_3",
+    "raw_text": "Crawfish IA quant IgG",
+    "expected_text": "Crawfish IgG IA Qn",
+    "returned_text": "Chlamydia trachomatis IgG Ab [Measurement] in Serum",
+    "expected_loinc": "107684-3",
+    "returned_loinc": "111311-7"
+  },
+  {
+    "id": "0_5",
+    "raw_text": "Crawfish IA quant IgG",
+    "expected_text": "Crawfish IgG IA Qn",
+    "returned_text": "Chlamydia trachomatis IgG Ab [Measurement] in Serum",
+    "expected_loinc": "107684-3",
+    "returned_loinc": "111311-7"
+  },
+  {
+    "id": "0_10",
+    "raw_text": "Crawfish IA quant IgG",
+    "expected_text": "Crawfish IgG IA Qn",
+    "returned_text": "Chlamydia trachomatis IgG Ab [Measurement] in Serum",
+    "expected_loinc": "107684-3",
+    "returned_loinc": "111311-7"
+  },
+  {
+    "id": "1_1",
+    "raw_text": "PTN/Creat 2 ous Ur-to",
+    "expected_text": "PETN/Creat 24h Ur-sRto",
+    "returned_text": "Glucose/Creatinine [Measurement] in Urine",
+    "expected_loinc": "44351-5",
+    "returned_loinc": "110522-0"
+  },
+  {
+    "id": "1_3",
+    "raw_text": "PTN/Creat 2 ous Ur-to",
+    "expected_text": "PETN/Creat 24h Ur-sRto",
+    "returned_text": "Glucose/Creatinine [Measurement] in Urine",
+    "expected_loinc": "44351-5",
+    "returned_loinc": "110522-0"
+  },
+  {
+    "id": "1_5",
+    "raw_text": "PTN/Creat 2 ous Ur-to",
+    "expected_text": "PETN/Creat 24h Ur-sRto",
+    "returned_text": "Glucose/Creatinine [Measurement] in Urine",
+    "expected_loinc": "44351-5",
+    "returned_loinc": "110522-0"
+  },
+  {
+    "id": "1_10",
+    "raw_text": "PTN/Creat 2 ous Ur-to",
+    "expected_text": "PETN/Creat 24h Ur-sRto",
+    "returned_text": "Glucose/Creatinine [Measurement] in Urine",
+    "expected_loinc": "44351-5",
+    "returned_loinc": "110522-0"
+  },
+  {
+    "id": "2_1",
+    "raw_text": "SLEV IgM suds Ql (CSF)",
+    "expected_text": "SLEV IgM IA Ql (CSF)",
+    "returned_text": "Bartonella henselae and Bartonella quintana IgG and IgM panel - Cerebral spinal fluid",
+    "expected_loinc": "42006-7",
+    "returned_loinc": "43437-3"
+  },
+  {
+    "id": "2_3",
+    "raw_text": "SLEV IgM suds Ql (CSF)",
+    "expected_text": "SLEV IgM IA Ql (CSF)",
+    "returned_text": "Bartonella henselae and Bartonella quintana IgG and IgM panel - Cerebral spinal fluid",
+    "expected_loinc": "42006-7",
+    "returned_loinc": "43437-3"
+  },
+  {
+    "id": "2_5",
+    "raw_text": "SLEV IgM suds Ql (CSF)",
+    "expected_text": "SLEV IgM IA Ql (CSF)",
+    "returned_text": "Bartonella henselae and Bartonella quintana IgG and IgM panel - Cerebral spinal fluid",
+    "expected_loinc": "42006-7",
+    "returned_loinc": "43437-3"
+  },
+  {
+    "id": "2_10",
+    "raw_text": "SLEV IgM suds Ql (CSF)",
+    "expected_text": "SLEV IgM IA Ql (CSF)",
+    "returned_text": "Bartonella henselae and Bartonella quintana IgG and IgM panel - Cerebral spinal fluid",
+    "expected_loinc": "42006-7",
+    "returned_loinc": "43437-3"
+  },
+  {
+    "id": "5_1",
+    "raw_text": "B. quintaa rRNA (Specimn) Probe Ql",
+    "expected_text": "B. quintana rRNA Probe Ql (Specimen)",
+    "returned_text": "Bacterial vaginosis and vaginitis rRNA panel - Vaginal fluid by Probe",
+    "expected_loinc": "17546-3",
+    "returned_loinc": "46999-9"
+  },
+  {
+    "id": "5_3",
+    "raw_text": "B. quintaa rRNA (Specimn) Probe Ql",
+    "expected_text": "B. quintana rRNA Probe Ql (Specimen)",
+    "returned_text": "Bacterial vaginosis and vaginitis rRNA panel - Vaginal fluid by Probe",
+    "expected_loinc": "17546-3",
+    "returned_loinc": "46999-9"
+  },
+  {
+    "id": "5_5",
+    "raw_text": "B. quintaa rRNA (Specimn) Probe Ql",
+    "expected_text": "B. quintana rRNA Probe Ql (Specimen)",
+    "returned_text": "Bacterial vaginosis and vaginitis rRNA panel - Vaginal fluid by Probe",
+    "expected_loinc": "17546-3",
+    "returned_loinc": "46999-9"
+  },
+  {
+    "id": "5_10",
+    "raw_text": "B. quintaa rRNA (Specimn) Probe Ql",
+    "expected_text": "B. quintana rRNA Probe Ql (Specimen)",
+    "returned_text": "Bacterial vaginosis and vaginitis rRNA panel - Vaginal fluid by Probe",
+    "expected_loinc": "17546-3",
+    "returned_loinc": "46999-9"
+  },
+  {
+    "id": "6_1",
+    "raw_text": "aflatoxicosis (Specimen) Mycotoxin [Mass/Vol]",
+    "expected_text": "Aflatoxin (Specimen) [Mass/Vol]",
+    "returned_text": "Centers for Environmental Health metabolic toxin panel [Mass/volume] - Urine",
+    "expected_loinc": "23653-9",
+    "returned_loinc": "55120-0"
+  },
+  {
+    "id": "6_3",
+    "raw_text": "aflatoxicosis (Specimen) Mycotoxin [Mass/Vol]",
+    "expected_text": "Aflatoxin (Specimen) [Mass/Vol]",
+    "returned_text": "Centers for Environmental Health metabolic toxin panel [Mass/volume] - Urine",
+    "expected_loinc": "23653-9",
+    "returned_loinc": "55120-0"
+  },
+  {
+    "id": "6_5",
+    "raw_text": "aflatoxicosis (Specimen) Mycotoxin [Mass/Vol]",
+    "expected_text": "Aflatoxin (Specimen) [Mass/Vol]",
+    "returned_text": "Centers for Environmental Health metabolic toxin panel [Mass/volume] - Urine",
+    "expected_loinc": "23653-9",
+    "returned_loinc": "55120-0"
+  },
+  {
+    "id": "6_10",
+    "raw_text": "aflatoxicosis (Specimen) Mycotoxin [Mass/Vol]",
+    "expected_text": "Aflatoxin (Specimen) [Mass/Vol]",
+    "returned_text": "Centers for Environmental Health metabolic toxin panel [Mass/volume] - Urine",
+    "expected_loinc": "23653-9",
+    "returned_loinc": "55120-0"
+  },
+  {
+    "id": "7_1",
+    "raw_text": "Reserch Nuse encounte Pont in time Research Nrse",
+    "expected_text": "Research Nurse Note",
+    "returned_text": "Activity pursuit patterns section",
+    "expected_loinc": "83936-5",
+    "returned_loinc": "46052-7"
+  },
+  {
+    "id": "7_3",
+    "raw_text": "Reserch Nuse encounte Pont in time Research Nrse",
+    "expected_text": "Research Nurse Note",
+    "returned_text": "Activity pursuit patterns section",
+    "expected_loinc": "83936-5",
+    "returned_loinc": "46052-7"
+  },
+  {
+    "id": "7_5",
+    "raw_text": "Reserch Nuse encounte Pont in time Research Nrse",
+    "expected_text": "Research Nurse Note",
+    "returned_text": "Activity pursuit patterns section",
+    "expected_loinc": "83936-5",
+    "returned_loinc": "46052-7"
+  },
+  {
+    "id": "7_10",
+    "raw_text": "Reserch Nuse encounte Pont in time Research Nrse",
+    "expected_text": "Research Nurse Note",
+    "returned_text": "Activity pursuit patterns section",
+    "expected_loinc": "83936-5",
+    "returned_loinc": "46052-7"
+  },
+  {
+    "id": "8_1",
+    "raw_text": "Easter lily immunoglobulin e RAST (S) [Presence]",
+    "expected_text": "Easter lily IgE RAST (S) [Presence]",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "102411-6",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "8_3",
+    "raw_text": "Easter lily immunoglobulin e RAST (S) [Presence]",
+    "expected_text": "Easter lily IgE RAST (S) [Presence]",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "102411-6",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "8_5",
+    "raw_text": "Easter lily immunoglobulin e RAST (S) [Presence]",
+    "expected_text": "Easter lily IgE RAST (S) [Presence]",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "102411-6",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "8_10",
+    "raw_text": "Easter lily immunoglobulin e RAST (S) [Presence]",
+    "expected_text": "Easter lily IgE RAST (S) [Presence]",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "102411-6",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "9_1",
+    "raw_text": "lev-thyroxine spec (T4) [Mass/volume] in Serum or --7th post Plasma L-thyroxine ?tm challene",
+    "expected_text": "Thyroxine (T4) [Mass/volume] in Serum or Plasma --7th specimen post XXX challenge",
+    "returned_text": "Calcidiol and Calciferol and Calcitriol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "12928-8",
+    "returned_loinc": "43134-6"
+  },
+  {
+    "id": "9_3",
+    "raw_text": "lev-thyroxine spec (T4) [Mass/volume] in Serum or --7th post Plasma L-thyroxine ?tm challene",
+    "expected_text": "Thyroxine (T4) [Mass/volume] in Serum or Plasma --7th specimen post XXX challenge",
+    "returned_text": "Calcidiol and Calciferol and Calcitriol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "12928-8",
+    "returned_loinc": "43134-6"
+  },
+  {
+    "id": "9_5",
+    "raw_text": "lev-thyroxine spec (T4) [Mass/volume] in Serum or --7th post Plasma L-thyroxine ?tm challene",
+    "expected_text": "Thyroxine (T4) [Mass/volume] in Serum or Plasma --7th specimen post XXX challenge",
+    "returned_text": "Calcidiol and Calciferol and Calcitriol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "12928-8",
+    "returned_loinc": "43134-6"
+  },
+  {
+    "id": "9_10",
+    "raw_text": "lev-thyroxine spec (T4) [Mass/volume] in Serum or --7th post Plasma L-thyroxine ?tm challene",
+    "expected_text": "Thyroxine (T4) [Mass/volume] in Serum or Plasma --7th specimen post XXX challenge",
+    "returned_text": "Calcidiol and Calciferol and Calcitriol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "12928-8",
+    "returned_loinc": "43134-6"
+  },
+  {
+    "id": "11_1",
+    "raw_text": "Your Ordinal hld ha a hard tme keeping track of his or he homework in past 4 weeks - frequency [PROMS.PARENTPROY]",
+    "expected_text": "Your child has a hard time keeping track of his or her homework in past 4 weeks - frequency [PROMIS.PARENTPROXY]",
+    "returned_text": "Everyday Cognition - Study Partner Report Form [ECog.Partner]",
+    "expected_loinc": "90154-6",
+    "returned_loinc": "89090-5"
+  },
+  {
+    "id": "11_3",
+    "raw_text": "Your Ordinal hld ha a hard tme keeping track of his or he homework in past 4 weeks - frequency [PROMS.PARENTPROY]",
+    "expected_text": "Your child has a hard time keeping track of his or her homework in past 4 weeks - frequency [PROMIS.PARENTPROXY]",
+    "returned_text": "Everyday Cognition - Study Partner Report Form [ECog.Partner]",
+    "expected_loinc": "90154-6",
+    "returned_loinc": "89090-5"
+  },
+  {
+    "id": "11_5",
+    "raw_text": "Your Ordinal hld ha a hard tme keeping track of his or he homework in past 4 weeks - frequency [PROMS.PARENTPROY]",
+    "expected_text": "Your child has a hard time keeping track of his or her homework in past 4 weeks - frequency [PROMIS.PARENTPROXY]",
+    "returned_text": "Everyday Cognition - Study Partner Report Form [ECog.Partner]",
+    "expected_loinc": "90154-6",
+    "returned_loinc": "89090-5"
+  },
+  {
+    "id": "11_10",
+    "raw_text": "Your Ordinal hld ha a hard tme keeping track of his or he homework in past 4 weeks - frequency [PROMS.PARENTPROY]",
+    "expected_text": "Your child has a hard time keeping track of his or her homework in past 4 weeks - frequency [PROMIS.PARENTPROXY]",
+    "returned_text": "Everyday Cognition - Study Partner Report Form [ECog.Partner]",
+    "expected_loinc": "90154-6",
+    "returned_loinc": "89090-5"
+  },
+  {
+    "id": "12_1",
+    "raw_text": "America immune husedut mite globuli g l (S) Allergen",
+    "expected_text": "American house dust mite IgG Ql (S)",
+    "returned_text": "American house dust mite IgG Ab [Measurement] in Serum",
+    "expected_loinc": "51534-6",
+    "returned_loinc": "109350-9"
+  },
+  {
+    "id": "12_3",
+    "raw_text": "America immune husedut mite globuli g l (S) Allergen",
+    "expected_text": "American house dust mite IgG Ql (S)",
+    "returned_text": "American house dust mite IgG Ab [Measurement] in Serum",
+    "expected_loinc": "51534-6",
+    "returned_loinc": "109350-9"
+  },
+  {
+    "id": "12_5",
+    "raw_text": "America immune husedut mite globuli g l (S) Allergen",
+    "expected_text": "American house dust mite IgG Ql (S)",
+    "returned_text": "American house dust mite IgG Ab [Measurement] in Serum",
+    "expected_loinc": "51534-6",
+    "returned_loinc": "109350-9"
+  },
+  {
+    "id": "12_10",
+    "raw_text": "America immune husedut mite globuli g l (S) Allergen",
+    "expected_text": "American house dust mite IgG Ql (S)",
+    "returned_text": "American house dust mite IgG Ab [Measurement] in Serum",
+    "expected_loinc": "51534-6",
+    "returned_loinc": "109350-9"
+  },
+  {
+    "id": "13_1",
+    "raw_text": "AP uspecified Ag tsse, ImStn Ql Ranm",
+    "expected_text": "APP Ag Tiss Ql ImStn",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Urethra",
+    "expected_loinc": "49459-1",
+    "returned_loinc": "108568-7"
+  },
+  {
+    "id": "13_3",
+    "raw_text": "AP uspecified Ag tsse, ImStn Ql Ranm",
+    "expected_text": "APP Ag Tiss Ql ImStn",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Urethra",
+    "expected_loinc": "49459-1",
+    "returned_loinc": "108568-7"
+  },
+  {
+    "id": "13_5",
+    "raw_text": "AP uspecified Ag tsse, ImStn Ql Ranm",
+    "expected_text": "APP Ag Tiss Ql ImStn",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Urethra",
+    "expected_loinc": "49459-1",
+    "returned_loinc": "108568-7"
+  },
+  {
+    "id": "13_10",
+    "raw_text": "AP uspecified Ag tsse, ImStn Ql Ranm",
+    "expected_text": "APP Ag Tiss Ql ImStn",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Urethra",
+    "expected_loinc": "49459-1",
+    "returned_loinc": "108568-7"
+  },
+  {
+    "id": "14_1",
+    "raw_text": "plain films L-spine Views AP W R+L-bending",
+    "expected_text": "XR L-spine Views AP W R+L-bending",
+    "returned_text": "Active range of motion panel Quantitative",
+    "expected_loinc": "42403-6",
+    "returned_loinc": "41359-1"
+  },
+  {
+    "id": "14_3",
+    "raw_text": "plain films L-spine Views AP W R+L-bending",
+    "expected_text": "XR L-spine Views AP W R+L-bending",
+    "returned_text": "Active range of motion panel Quantitative",
+    "expected_loinc": "42403-6",
+    "returned_loinc": "41359-1"
+  },
+  {
+    "id": "14_5",
+    "raw_text": "plain films L-spine Views AP W R+L-bending",
+    "expected_text": "XR L-spine Views AP W R+L-bending",
+    "returned_text": "Active range of motion panel Quantitative",
+    "expected_loinc": "42403-6",
+    "returned_loinc": "41359-1"
+  },
+  {
+    "id": "14_10",
+    "raw_text": "plain films L-spine Views AP W R+L-bending",
+    "expected_text": "XR L-spine Views AP W R+L-bending",
+    "returned_text": "Active range of motion panel Quantitative",
+    "expected_loinc": "42403-6",
+    "returned_loinc": "41359-1"
+  },
+  {
+    "id": "15_1",
+    "raw_text": "op allergy+immunology Nurse encounter",
+    "expected_text": "Allergy and Immunology Nurse Outpatient Note",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "83566-0",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "15_3",
+    "raw_text": "op allergy+immunology Nurse encounter",
+    "expected_text": "Allergy and Immunology Nurse Outpatient Note",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "83566-0",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "15_5",
+    "raw_text": "op allergy+immunology Nurse encounter",
+    "expected_text": "Allergy and Immunology Nurse Outpatient Note",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "83566-0",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "15_10",
+    "raw_text": "op allergy+immunology Nurse encounter",
+    "expected_text": "Allergy and Immunology Nurse Outpatient Note",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "83566-0",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "16_1",
+    "raw_text": "micro observation [Identifier] in tiss by Alcian blue stain.with periodic acid-Schiff",
+    "expected_text": "Microscopic observation [Identifier] in Tissue by Alcian blue stain.with periodic acid-Schiff",
+    "returned_text": "Amphiphysin Ab [Measurement] in Serum",
+    "expected_loinc": "10768-0",
+    "returned_loinc": "110027-0"
+  },
+  {
+    "id": "16_3",
+    "raw_text": "micro observation [Identifier] in tiss by Alcian blue stain.with periodic acid-Schiff",
+    "expected_text": "Microscopic observation [Identifier] in Tissue by Alcian blue stain.with periodic acid-Schiff",
+    "returned_text": "Amphiphysin Ab [Measurement] in Serum",
+    "expected_loinc": "10768-0",
+    "returned_loinc": "110027-0"
+  },
+  {
+    "id": "16_5",
+    "raw_text": "micro observation [Identifier] in tiss by Alcian blue stain.with periodic acid-Schiff",
+    "expected_text": "Microscopic observation [Identifier] in Tissue by Alcian blue stain.with periodic acid-Schiff",
+    "returned_text": "Amphiphysin Ab [Measurement] in Serum",
+    "expected_loinc": "10768-0",
+    "returned_loinc": "110027-0"
+  },
+  {
+    "id": "16_10",
+    "raw_text": "micro observation [Identifier] in tiss by Alcian blue stain.with periodic acid-Schiff",
+    "expected_text": "Microscopic observation [Identifier] in Tissue by Alcian blue stain.with periodic acid-Schiff",
+    "returned_text": "Amphiphysin Ab [Measurement] in Serum",
+    "expected_loinc": "10768-0",
+    "returned_loinc": "110027-0"
+  },
+  {
+    "id": "17_1",
+    "raw_text": "immunoglobulin g HC Ag tissue Ql ImStn",
+    "expected_text": "IgG HC Ag Tiss Ql ImStn",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "10492-7",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "17_3",
+    "raw_text": "immunoglobulin g HC Ag tissue Ql ImStn",
+    "expected_text": "IgG HC Ag Tiss Ql ImStn",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "10492-7",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "17_5",
+    "raw_text": "immunoglobulin g HC Ag tissue Ql ImStn",
+    "expected_text": "IgG HC Ag Tiss Ql ImStn",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "10492-7",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "17_10",
+    "raw_text": "immunoglobulin g HC Ag tissue Ql ImStn",
+    "expected_text": "IgG HC Ag Tiss Ql ImStn",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "10492-7",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "18_1",
+    "raw_text": "nadone [Mass/Vol] (",
+    "expected_text": "Cyclohexanone (U) [Mass/Vol]",
+    "returned_text": "Ethanol [Measurement] in Saliva (oral fluid)",
+    "expected_loinc": "21236-5",
+    "returned_loinc": "109641-1"
+  },
+  {
+    "id": "18_3",
+    "raw_text": "nadone [Mass/Vol] (",
+    "expected_text": "Cyclohexanone (U) [Mass/Vol]",
+    "returned_text": "Ethanol [Measurement] in Saliva (oral fluid)",
+    "expected_loinc": "21236-5",
+    "returned_loinc": "109641-1"
+  },
+  {
+    "id": "18_5",
+    "raw_text": "nadone [Mass/Vol] (",
+    "expected_text": "Cyclohexanone (U) [Mass/Vol]",
+    "returned_text": "Ethanol [Measurement] in Saliva (oral fluid)",
+    "expected_loinc": "21236-5",
+    "returned_loinc": "109641-1"
+  },
+  {
+    "id": "18_10",
+    "raw_text": "nadone [Mass/Vol] (",
+    "expected_text": "Cyclohexanone (U) [Mass/Vol]",
+    "returned_text": "Ethanol [Measurement] in Saliva (oral fluid)",
+    "expected_loinc": "21236-5",
+    "returned_loinc": "109641-1"
+  },
+  {
+    "id": "20_1",
+    "raw_text": "Chlorphentermin Ur-aCnc",
+    "expected_text": "Chlorphentermin Ur-aCnc",
+    "returned_text": "Chlorphentermine [Measurement] in Urine",
+    "expected_loinc": "16610-8",
+    "returned_loinc": "108410-2"
+  },
+  {
+    "id": "20_3",
+    "raw_text": "Chlorphentermin Ur-aCnc",
+    "expected_text": "Chlorphentermin Ur-aCnc",
+    "returned_text": "Chlorphentermine [Measurement] in Urine",
+    "expected_loinc": "16610-8",
+    "returned_loinc": "108410-2"
+  },
+  {
+    "id": "20_5",
+    "raw_text": "Chlorphentermin Ur-aCnc",
+    "expected_text": "Chlorphentermin Ur-aCnc",
+    "returned_text": "Chlorphentermine [Measurement] in Urine",
+    "expected_loinc": "16610-8",
+    "returned_loinc": "108410-2"
+  },
+  {
+    "id": "20_10",
+    "raw_text": "Chlorphentermin Ur-aCnc",
+    "expected_text": "Chlorphentermin Ur-aCnc",
+    "returned_text": "Chlorphentermine [Measurement] in Urine",
+    "expected_loinc": "16610-8",
+    "returned_loinc": "108410-2"
+  },
+  {
+    "id": "21_1",
+    "raw_text": "racion] Intt LP [Catalytic",
+    "expected_text": "ALP Intest 2 [Catalytic fraction]",
+    "returned_text": "Ethanol [Presence] in Exhaled gas",
+    "expected_loinc": "53578-1",
+    "returned_loinc": "104133-4"
+  },
+  {
+    "id": "21_3",
+    "raw_text": "racion] Intt LP [Catalytic",
+    "expected_text": "ALP Intest 2 [Catalytic fraction]",
+    "returned_text": "Ethanol [Presence] in Exhaled gas",
+    "expected_loinc": "53578-1",
+    "returned_loinc": "104133-4"
+  },
+  {
+    "id": "21_5",
+    "raw_text": "racion] Intt LP [Catalytic",
+    "expected_text": "ALP Intest 2 [Catalytic fraction]",
+    "returned_text": "Ethanol [Presence] in Exhaled gas",
+    "expected_loinc": "53578-1",
+    "returned_loinc": "104133-4"
+  },
+  {
+    "id": "21_10",
+    "raw_text": "racion] Intt LP [Catalytic",
+    "expected_text": "ALP Intest 2 [Catalytic fraction]",
+    "returned_text": "Ethanol [Presence] in Exhaled gas",
+    "expected_loinc": "53578-1",
+    "returned_loinc": "104133-4"
+  },
+  {
+    "id": "22_1",
+    "raw_text": "Melanate homogentistic acid [Mass/Vol] (U)",
+    "expected_text": "Homogentisate (U) [Mass/Vol]",
+    "returned_text": "Ethylmalonate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2433-1",
+    "returned_loinc": "108357-5"
+  },
+  {
+    "id": "22_3",
+    "raw_text": "Melanate homogentistic acid [Mass/Vol] (U)",
+    "expected_text": "Homogentisate (U) [Mass/Vol]",
+    "returned_text": "Ethylmalonate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2433-1",
+    "returned_loinc": "108357-5"
+  },
+  {
+    "id": "22_5",
+    "raw_text": "Melanate homogentistic acid [Mass/Vol] (U)",
+    "expected_text": "Homogentisate (U) [Mass/Vol]",
+    "returned_text": "Ethylmalonate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2433-1",
+    "returned_loinc": "108357-5"
+  },
+  {
+    "id": "22_10",
+    "raw_text": "Melanate homogentistic acid [Mass/Vol] (U)",
+    "expected_text": "Homogentisate (U) [Mass/Vol]",
+    "returned_text": "Ethylmalonate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2433-1",
+    "returned_loinc": "108357-5"
+  },
+  {
+    "id": "23_1",
+    "raw_text": "Methmhet Qut SerPl-mCnc",
+    "expected_text": "Methamphet SerPl-mCnc",
+    "returned_text": "Amphetamines panel - Meconium by Confirmatory method",
+    "expected_loinc": "3778-8",
+    "returned_loinc": "69021-4"
+  },
+  {
+    "id": "23_3",
+    "raw_text": "Methmhet Qut SerPl-mCnc",
+    "expected_text": "Methamphet SerPl-mCnc",
+    "returned_text": "Amphetamines panel - Meconium by Confirmatory method",
+    "expected_loinc": "3778-8",
+    "returned_loinc": "69021-4"
+  },
+  {
+    "id": "23_5",
+    "raw_text": "Methmhet Qut SerPl-mCnc",
+    "expected_text": "Methamphet SerPl-mCnc",
+    "returned_text": "Amphetamines panel - Meconium by Confirmatory method",
+    "expected_loinc": "3778-8",
+    "returned_loinc": "69021-4"
+  },
+  {
+    "id": "23_10",
+    "raw_text": "Methmhet Qut SerPl-mCnc",
+    "expected_text": "Methamphet SerPl-mCnc",
+    "returned_text": "Amphetamines panel - Meconium by Confirmatory method",
+    "expected_loinc": "3778-8",
+    "returned_loinc": "69021-4"
+  },
+  {
+    "id": "24_1",
+    "raw_text": "thrombocytes Quantitative Rees-Ecker (Bld) [Entitic mean QNT vol]",
+    "expected_text": "Platelet Rees-Ecker (Bld) [Entitic mean vol]",
+    "returned_text": "Erythrocytes [Measurement] in Dialysis fluid",
+    "expected_loinc": "776-5",
+    "returned_loinc": "109724-5"
+  },
+  {
+    "id": "24_3",
+    "raw_text": "thrombocytes Quantitative Rees-Ecker (Bld) [Entitic mean QNT vol]",
+    "expected_text": "Platelet Rees-Ecker (Bld) [Entitic mean vol]",
+    "returned_text": "Erythrocytes [Measurement] in Dialysis fluid",
+    "expected_loinc": "776-5",
+    "returned_loinc": "109724-5"
+  },
+  {
+    "id": "24_5",
+    "raw_text": "thrombocytes Quantitative Rees-Ecker (Bld) [Entitic mean QNT vol]",
+    "expected_text": "Platelet Rees-Ecker (Bld) [Entitic mean vol]",
+    "returned_text": "Erythrocytes [Measurement] in Dialysis fluid",
+    "expected_loinc": "776-5",
+    "returned_loinc": "109724-5"
+  },
+  {
+    "id": "24_10",
+    "raw_text": "thrombocytes Quantitative Rees-Ecker (Bld) [Entitic mean QNT vol]",
+    "expected_text": "Platelet Rees-Ecker (Bld) [Entitic mean vol]",
+    "returned_text": "Erythrocytes [Measurement] in Dialysis fluid",
+    "expected_loinc": "776-5",
+    "returned_loinc": "109724-5"
+  },
+  {
+    "id": "25_1",
+    "raw_text": "Additional treatment [Identifier] in urn",
+    "expected_text": "Additional treatment [Identifier] in Urine",
+    "returned_text": "Adulterants panel - Urine",
+    "expected_loinc": "104217-5",
+    "returned_loinc": "58715-4"
+  },
+  {
+    "id": "25_3",
+    "raw_text": "Additional treatment [Identifier] in urn",
+    "expected_text": "Additional treatment [Identifier] in Urine",
+    "returned_text": "Adulterants panel - Urine",
+    "expected_loinc": "104217-5",
+    "returned_loinc": "58715-4"
+  },
+  {
+    "id": "25_5",
+    "raw_text": "Additional treatment [Identifier] in urn",
+    "expected_text": "Additional treatment [Identifier] in Urine",
+    "returned_text": "Adulterants panel - Urine",
+    "expected_loinc": "104217-5",
+    "returned_loinc": "58715-4"
+  },
+  {
+    "id": "25_10",
+    "raw_text": "Additional treatment [Identifier] in urn",
+    "expected_text": "Additional treatment [Identifier] in Urine",
+    "returned_text": "Adulterants panel - Urine",
+    "expected_loinc": "104217-5",
+    "returned_loinc": "58715-4"
+  },
+  {
+    "id": "26_1",
+    "raw_text": "SLV imue m glouin S) [easuremet]",
+    "expected_text": "SLEV IgM (S) [Measurement]",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Cervix",
+    "expected_loinc": "110747-3",
+    "returned_loinc": "109732-8"
+  },
+  {
+    "id": "26_3",
+    "raw_text": "SLV imue m glouin S) [easuremet]",
+    "expected_text": "SLEV IgM (S) [Measurement]",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Cervix",
+    "expected_loinc": "110747-3",
+    "returned_loinc": "109732-8"
+  },
+  {
+    "id": "26_5",
+    "raw_text": "SLV imue m glouin S) [easuremet]",
+    "expected_text": "SLEV IgM (S) [Measurement]",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Cervix",
+    "expected_loinc": "110747-3",
+    "returned_loinc": "109732-8"
+  },
+  {
+    "id": "26_10",
+    "raw_text": "SLV imue m glouin S) [easuremet]",
+    "expected_text": "SLEV IgM (S) [Measurement]",
+    "returned_text": "Chlamydia trachomatis Ag [Measurement] in Cervix",
+    "expected_loinc": "110747-3",
+    "returned_loinc": "109732-8"
+  },
+  {
+    "id": "27_1",
+    "raw_text": "Level ceftaz Quant Spec-mCnc",
+    "expected_text": "cefTAZidime Spec-mCnc",
+    "returned_text": "Basic metabolic and hematocrit panel - Blood",
+    "expected_loinc": "21151-6",
+    "returned_loinc": "101655-9"
+  },
+  {
+    "id": "27_3",
+    "raw_text": "Level ceftaz Quant Spec-mCnc",
+    "expected_text": "cefTAZidime Spec-mCnc",
+    "returned_text": "Basic metabolic and hematocrit panel - Blood",
+    "expected_loinc": "21151-6",
+    "returned_loinc": "101655-9"
+  },
+  {
+    "id": "27_5",
+    "raw_text": "Level ceftaz Quant Spec-mCnc",
+    "expected_text": "cefTAZidime Spec-mCnc",
+    "returned_text": "Basic metabolic and hematocrit panel - Blood",
+    "expected_loinc": "21151-6",
+    "returned_loinc": "101655-9"
+  },
+  {
+    "id": "27_10",
+    "raw_text": "Level ceftaz Quant Spec-mCnc",
+    "expected_text": "cefTAZidime Spec-mCnc",
+    "returned_text": "Basic metabolic and hematocrit panel - Blood",
+    "expected_loinc": "21151-6",
+    "returned_loinc": "101655-9"
+  },
+  {
+    "id": "28_1",
+    "raw_text": "dpgm (RBC) PG Erythrocytes [Caalytic actvity/Vol]",
+    "expected_text": "Diphosphoglycerate mutase (RBC) [Catalytic activity/Vol]",
+    "returned_text": "2,3-Diphosphoglycerate [Measurement] in Red Blood Cells",
+    "expected_loinc": "11044-5",
+    "returned_loinc": "109637-9"
+  },
+  {
+    "id": "28_3",
+    "raw_text": "dpgm (RBC) PG Erythrocytes [Caalytic actvity/Vol]",
+    "expected_text": "Diphosphoglycerate mutase (RBC) [Catalytic activity/Vol]",
+    "returned_text": "2,3-Diphosphoglycerate [Measurement] in Red Blood Cells",
+    "expected_loinc": "11044-5",
+    "returned_loinc": "109637-9"
+  },
+  {
+    "id": "28_5",
+    "raw_text": "dpgm (RBC) PG Erythrocytes [Caalytic actvity/Vol]",
+    "expected_text": "Diphosphoglycerate mutase (RBC) [Catalytic activity/Vol]",
+    "returned_text": "2,3-Diphosphoglycerate [Measurement] in Red Blood Cells",
+    "expected_loinc": "11044-5",
+    "returned_loinc": "109637-9"
+  },
+  {
+    "id": "28_10",
+    "raw_text": "dpgm (RBC) PG Erythrocytes [Caalytic actvity/Vol]",
+    "expected_text": "Diphosphoglycerate mutase (RBC) [Catalytic activity/Vol]",
+    "returned_text": "2,3-Diphosphoglycerate [Measurement] in Red Blood Cells",
+    "expected_loinc": "11044-5",
+    "returned_loinc": "109637-9"
+  },
+  {
+    "id": "30_1",
+    "raw_text": "ahv1 Ab (S) [Measurement]",
+    "expected_text": "Alcelaphine herpesvirus 1 Ab (S) [Measurement]",
+    "returned_text": "Arbovirus Ab [Measurement] in Serum",
+    "expected_loinc": "110029-6",
+    "returned_loinc": "109202-2"
+  },
+  {
+    "id": "30_3",
+    "raw_text": "ahv1 Ab (S) [Measurement]",
+    "expected_text": "Alcelaphine herpesvirus 1 Ab (S) [Measurement]",
+    "returned_text": "Arbovirus Ab [Measurement] in Serum",
+    "expected_loinc": "110029-6",
+    "returned_loinc": "109202-2"
+  },
+  {
+    "id": "30_5",
+    "raw_text": "ahv1 Ab (S) [Measurement]",
+    "expected_text": "Alcelaphine herpesvirus 1 Ab (S) [Measurement]",
+    "returned_text": "Arbovirus Ab [Measurement] in Serum",
+    "expected_loinc": "110029-6",
+    "returned_loinc": "109202-2"
+  },
+  {
+    "id": "30_10",
+    "raw_text": "ahv1 Ab (S) [Measurement]",
+    "expected_text": "Alcelaphine herpesvirus 1 Ab (S) [Measurement]",
+    "returned_text": "Arbovirus Ab [Measurement] in Serum",
+    "expected_loinc": "110029-6",
+    "returned_loinc": "109202-2"
+  },
+  {
+    "id": "31_1",
+    "raw_text": "Urea in [Mass/volume] n2 Peritoneal dialysis fld --2 hour dwell spec",
+    "expected_text": "Urea nitrogen [Mass/volume] in Peritoneal dialysis fluid --2 hour dwell specimen",
+    "returned_text": "Glucose tolerance 2 hours gestational panel - Urine and Serum or Plasma",
+    "expected_loinc": "12970-0",
+    "returned_loinc": "24353-5"
+  },
+  {
+    "id": "31_3",
+    "raw_text": "Urea in [Mass/volume] n2 Peritoneal dialysis fld --2 hour dwell spec",
+    "expected_text": "Urea nitrogen [Mass/volume] in Peritoneal dialysis fluid --2 hour dwell specimen",
+    "returned_text": "Glucose tolerance 2 hours gestational panel - Urine and Serum or Plasma",
+    "expected_loinc": "12970-0",
+    "returned_loinc": "24353-5"
+  },
+  {
+    "id": "31_5",
+    "raw_text": "Urea in [Mass/volume] n2 Peritoneal dialysis fld --2 hour dwell spec",
+    "expected_text": "Urea nitrogen [Mass/volume] in Peritoneal dialysis fluid --2 hour dwell specimen",
+    "returned_text": "Glucose tolerance 2 hours gestational panel - Urine and Serum or Plasma",
+    "expected_loinc": "12970-0",
+    "returned_loinc": "24353-5"
+  },
+  {
+    "id": "31_10",
+    "raw_text": "Urea in [Mass/volume] n2 Peritoneal dialysis fld --2 hour dwell spec",
+    "expected_text": "Urea nitrogen [Mass/volume] in Peritoneal dialysis fluid --2 hour dwell specimen",
+    "returned_text": "Glucose tolerance 2 hours gestational panel - Urine and Serum or Plasma",
+    "expected_loinc": "12970-0",
+    "returned_loinc": "24353-5"
+  },
+  {
+    "id": "32_1",
+    "raw_text": "atvn Q (tl) Ranm",
+    "expected_text": "LORazepam Ql (Stl)",
+    "returned_text": "Amphetamine+Methamphetamine [Measurement] in Urine",
+    "expected_loinc": "12380-2",
+    "returned_loinc": "110323-3"
+  },
+  {
+    "id": "32_3",
+    "raw_text": "atvn Q (tl) Ranm",
+    "expected_text": "LORazepam Ql (Stl)",
+    "returned_text": "Amphetamine+Methamphetamine [Measurement] in Urine",
+    "expected_loinc": "12380-2",
+    "returned_loinc": "110323-3"
+  },
+  {
+    "id": "32_5",
+    "raw_text": "atvn Q (tl) Ranm",
+    "expected_text": "LORazepam Ql (Stl)",
+    "returned_text": "Amphetamine+Methamphetamine [Measurement] in Urine",
+    "expected_loinc": "12380-2",
+    "returned_loinc": "110323-3"
+  },
+  {
+    "id": "32_10",
+    "raw_text": "atvn Q (tl) Ranm",
+    "expected_text": "LORazepam Ql (Stl)",
+    "returned_text": "Amphetamine+Methamphetamine [Measurement] in Urine",
+    "expected_loinc": "12380-2",
+    "returned_loinc": "110323-3"
+  },
+  {
+    "id": "33_1",
+    "raw_text": "speed pos Conirm nminal (U)",
+    "expected_text": "Amphetamines pos Confirm Nom (U)",
+    "returned_text": "ADL self performance or support Set",
+    "expected_loinc": "19265-8",
+    "returned_loinc": "46007-1"
+  },
+  {
+    "id": "33_3",
+    "raw_text": "speed pos Conirm nminal (U)",
+    "expected_text": "Amphetamines pos Confirm Nom (U)",
+    "returned_text": "ADL self performance or support Set",
+    "expected_loinc": "19265-8",
+    "returned_loinc": "46007-1"
+  },
+  {
+    "id": "33_5",
+    "raw_text": "speed pos Conirm nminal (U)",
+    "expected_text": "Amphetamines pos Confirm Nom (U)",
+    "returned_text": "ADL self performance or support Set",
+    "expected_loinc": "19265-8",
+    "returned_loinc": "46007-1"
+  },
+  {
+    "id": "33_10",
+    "raw_text": "speed pos Conirm nminal (U)",
+    "expected_text": "Amphetamines pos Confirm Nom (U)",
+    "returned_text": "ADL self performance or support Set",
+    "expected_loinc": "19265-8",
+    "returned_loinc": "46007-1"
+  },
+  {
+    "id": "34_1",
+    "raw_text": "Red Pint in (S) tie Cdar immune gobulin e radillergosorbent test class",
+    "expected_text": "Red Cedar IgE RAST class (S)",
+    "returned_text": "C reactive protein [Measurement] in Serum or Plasma",
+    "expected_loinc": "15616-6",
+    "returned_loinc": "111006-3"
+  },
+  {
+    "id": "34_3",
+    "raw_text": "Red Pint in (S) tie Cdar immune gobulin e radillergosorbent test class",
+    "expected_text": "Red Cedar IgE RAST class (S)",
+    "returned_text": "C reactive protein [Measurement] in Serum or Plasma",
+    "expected_loinc": "15616-6",
+    "returned_loinc": "111006-3"
+  },
+  {
+    "id": "34_5",
+    "raw_text": "Red Pint in (S) tie Cdar immune gobulin e radillergosorbent test class",
+    "expected_text": "Red Cedar IgE RAST class (S)",
+    "returned_text": "C reactive protein [Measurement] in Serum or Plasma",
+    "expected_loinc": "15616-6",
+    "returned_loinc": "111006-3"
+  },
+  {
+    "id": "34_10",
+    "raw_text": "Red Pint in (S) tie Cdar immune gobulin e radillergosorbent test class",
+    "expected_text": "Red Cedar IgE RAST class (S)",
+    "returned_text": "C reactive protein [Measurement] in Serum or Plasma",
+    "expected_loinc": "15616-6",
+    "returned_loinc": "111006-3"
+  },
+  {
+    "id": "35_1",
+    "raw_text": "mycotoxin B3 (Specimen) [Mass/Mass]",
+    "expected_text": "Fumonisin B3 (Specimen) [Mass/Mass]",
+    "returned_text": "Aspergillus fumigatus 3 Ab [Measurement] in Serum",
+    "expected_loinc": "87571-6",
+    "returned_loinc": "109217-0"
+  },
+  {
+    "id": "35_3",
+    "raw_text": "mycotoxin B3 (Specimen) [Mass/Mass]",
+    "expected_text": "Fumonisin B3 (Specimen) [Mass/Mass]",
+    "returned_text": "Aspergillus fumigatus 3 Ab [Measurement] in Serum",
+    "expected_loinc": "87571-6",
+    "returned_loinc": "109217-0"
+  },
+  {
+    "id": "35_5",
+    "raw_text": "mycotoxin B3 (Specimen) [Mass/Mass]",
+    "expected_text": "Fumonisin B3 (Specimen) [Mass/Mass]",
+    "returned_text": "Aspergillus fumigatus 3 Ab [Measurement] in Serum",
+    "expected_loinc": "87571-6",
+    "returned_loinc": "109217-0"
+  },
+  {
+    "id": "35_10",
+    "raw_text": "mycotoxin B3 (Specimen) [Mass/Mass]",
+    "expected_text": "Fumonisin B3 (Specimen) [Mass/Mass]",
+    "returned_text": "Aspergillus fumigatus 3 Ab [Measurement] in Serum",
+    "expected_loinc": "87571-6",
+    "returned_loinc": "109217-0"
+  },
+  {
+    "id": "36_1",
+    "raw_text": "vaginls en CF",
+    "expected_text": "T vaginalis Genital Ql CF",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "6564-9",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "36_3",
+    "raw_text": "vaginls en CF",
+    "expected_text": "T vaginalis Genital Ql CF",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "6564-9",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "36_5",
+    "raw_text": "vaginls en CF",
+    "expected_text": "T vaginalis Genital Ql CF",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "6564-9",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "36_10",
+    "raw_text": "vaginls en CF",
+    "expected_text": "T vaginalis Genital Ql CF",
+    "returned_text": "Atopobium vaginae DNA [Measurement] in Vaginal fluid",
+    "expected_loinc": "6564-9",
+    "returned_loinc": "108326-0"
+  },
+  {
+    "id": "37_1",
+    "raw_text": "t so adult [Units/olume n Srum by i",
+    "expected_text": "Taenia solium adult Ab [Units/volume] in Serum by Immunoassay",
+    "returned_text": "Anthropometric Observations note",
+    "expected_loinc": "5375-1",
+    "returned_loinc": "108241-1"
+  },
+  {
+    "id": "37_3",
+    "raw_text": "t so adult [Units/olume n Srum by i",
+    "expected_text": "Taenia solium adult Ab [Units/volume] in Serum by Immunoassay",
+    "returned_text": "Anthropometric Observations note",
+    "expected_loinc": "5375-1",
+    "returned_loinc": "108241-1"
+  },
+  {
+    "id": "37_5",
+    "raw_text": "t so adult [Units/olume n Srum by i",
+    "expected_text": "Taenia solium adult Ab [Units/volume] in Serum by Immunoassay",
+    "returned_text": "Anthropometric Observations note",
+    "expected_loinc": "5375-1",
+    "returned_loinc": "108241-1"
+  },
+  {
+    "id": "37_10",
+    "raw_text": "t so adult [Units/olume n Srum by i",
+    "expected_text": "Taenia solium adult Ab [Units/volume] in Serum by Immunoassay",
+    "returned_text": "Anthropometric Observations note",
+    "expected_loinc": "5375-1",
+    "returned_loinc": "108241-1"
+  },
+  {
+    "id": "38_1",
+    "raw_text": "ebv Immune globulin G capsid immune MEIA globulin g Ab [Ratio] in Serum by ia --1st specimen/2nd spec",
+    "expected_text": "Epstein Barr virus capsid IgG Ab [Ratio] in Serum by Immunoassay --1st specimen/2nd specimen",
+    "returned_text": "Epstein Barr virus nuclear IgG Ab [Measurement] in Serum",
+    "expected_loinc": "32830-2",
+    "returned_loinc": "111357-0"
+  },
+  {
+    "id": "38_3",
+    "raw_text": "ebv Immune globulin G capsid immune MEIA globulin g Ab [Ratio] in Serum by ia --1st specimen/2nd spec",
+    "expected_text": "Epstein Barr virus capsid IgG Ab [Ratio] in Serum by Immunoassay --1st specimen/2nd specimen",
+    "returned_text": "Epstein Barr virus nuclear IgG Ab [Measurement] in Serum",
+    "expected_loinc": "32830-2",
+    "returned_loinc": "111357-0"
+  },
+  {
+    "id": "38_5",
+    "raw_text": "ebv Immune globulin G capsid immune MEIA globulin g Ab [Ratio] in Serum by ia --1st specimen/2nd spec",
+    "expected_text": "Epstein Barr virus capsid IgG Ab [Ratio] in Serum by Immunoassay --1st specimen/2nd specimen",
+    "returned_text": "Epstein Barr virus nuclear IgG Ab [Measurement] in Serum",
+    "expected_loinc": "32830-2",
+    "returned_loinc": "111357-0"
+  },
+  {
+    "id": "38_10",
+    "raw_text": "ebv Immune globulin G capsid immune MEIA globulin g Ab [Ratio] in Serum by ia --1st specimen/2nd spec",
+    "expected_text": "Epstein Barr virus capsid IgG Ab [Ratio] in Serum by Immunoassay --1st specimen/2nd specimen",
+    "returned_text": "Epstein Barr virus nuclear IgG Ab [Measurement] in Serum",
+    "expected_loinc": "32830-2",
+    "returned_loinc": "111357-0"
+  },
+  {
+    "id": "39_1",
+    "raw_text": "MEIA odies ENA SS-A 52kD Ab titer Fld suds",
+    "expected_text": "ENA SS-A 52kD Ab Titr Fld IA",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "63340-4",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "39_3",
+    "raw_text": "MEIA odies ENA SS-A 52kD Ab titer Fld suds",
+    "expected_text": "ENA SS-A 52kD Ab Titr Fld IA",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "63340-4",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "39_5",
+    "raw_text": "MEIA odies ENA SS-A 52kD Ab titer Fld suds",
+    "expected_text": "ENA SS-A 52kD Ab Titr Fld IA",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "63340-4",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "39_10",
+    "raw_text": "MEIA odies ENA SS-A 52kD Ab titer Fld suds",
+    "expected_text": "ENA SS-A 52kD Ab Titr Fld IA",
+    "returned_text": "Afipia felis IgM Ab [Measurement] in Serum",
+    "expected_loinc": "63340-4",
+    "returned_loinc": "110030-4"
+  },
+  {
+    "id": "40_1",
+    "raw_text": "revuloe 4hr Ur-Rat",
+    "expected_text": "Fructose 24h Ur-mRate",
+    "returned_text": "4-Hydroxyphenylacetate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2297-0",
+    "returned_loinc": "108545-5"
+  },
+  {
+    "id": "40_3",
+    "raw_text": "revuloe 4hr Ur-Rat",
+    "expected_text": "Fructose 24h Ur-mRate",
+    "returned_text": "4-Hydroxyphenylacetate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2297-0",
+    "returned_loinc": "108545-5"
+  },
+  {
+    "id": "40_5",
+    "raw_text": "revuloe 4hr Ur-Rat",
+    "expected_text": "Fructose 24h Ur-mRate",
+    "returned_text": "4-Hydroxyphenylacetate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2297-0",
+    "returned_loinc": "108545-5"
+  },
+  {
+    "id": "40_10",
+    "raw_text": "revuloe 4hr Ur-Rat",
+    "expected_text": "Fructose 24h Ur-mRate",
+    "returned_text": "4-Hydroxyphenylacetate/Creatinine [Measurement] in Urine",
+    "expected_loinc": "2297-0",
+    "returned_loinc": "108545-5"
+  },
+  {
+    "id": "41_1",
+    "raw_text": "B. aorus Ab qant )",
+    "expected_text": "B. abortus Ab Qn (S)",
+    "returned_text": "Brucella ovis Ab [Measurement] in Serum",
+    "expected_loinc": "11586-5",
+    "returned_loinc": "111368-7"
+  },
+  {
+    "id": "41_3",
+    "raw_text": "B. aorus Ab qant )",
+    "expected_text": "B. abortus Ab Qn (S)",
+    "returned_text": "Brucella ovis Ab [Measurement] in Serum",
+    "expected_loinc": "11586-5",
+    "returned_loinc": "111368-7"
+  },
+  {
+    "id": "41_5",
+    "raw_text": "B. aorus Ab qant )",
+    "expected_text": "B. abortus Ab Qn (S)",
+    "returned_text": "Brucella ovis Ab [Measurement] in Serum",
+    "expected_loinc": "11586-5",
+    "returned_loinc": "111368-7"
+  },
+  {
+    "id": "41_10",
+    "raw_text": "B. aorus Ab qant )",
+    "expected_text": "B. abortus Ab Qn (S)",
+    "returned_text": "Brucella ovis Ab [Measurement] in Serum",
+    "expected_loinc": "11586-5",
+    "returned_loinc": "111368-7"
+  },
+  {
+    "id": "42_1",
+    "raw_text": "Fty (Urine ast LMHP ed [#/Aea]",
+    "expected_text": "Fatty casts LM.HPF (Urine sed) [#/Area]",
+    "returned_text": "Estrogen [Measurement] in Urine",
+    "expected_loinc": "67813-6",
+    "returned_loinc": "110501-4"
+  },
+  {
+    "id": "42_3",
+    "raw_text": "Fty (Urine ast LMHP ed [#/Aea]",
+    "expected_text": "Fatty casts LM.HPF (Urine sed) [#/Area]",
+    "returned_text": "Estrogen [Measurement] in Urine",
+    "expected_loinc": "67813-6",
+    "returned_loinc": "110501-4"
+  },
+  {
+    "id": "42_5",
+    "raw_text": "Fty (Urine ast LMHP ed [#/Aea]",
+    "expected_text": "Fatty casts LM.HPF (Urine sed) [#/Area]",
+    "returned_text": "Estrogen [Measurement] in Urine",
+    "expected_loinc": "67813-6",
+    "returned_loinc": "110501-4"
+  },
+  {
+    "id": "42_10",
+    "raw_text": "Fty (Urine ast LMHP ed [#/Aea]",
+    "expected_text": "Fatty casts LM.HPF (Urine sed) [#/Area]",
+    "returned_text": "Estrogen [Measurement] in Urine",
+    "expected_loinc": "67813-6",
+    "returned_loinc": "110501-4"
+  },
+  {
+    "id": "43_1",
+    "raw_text": "Antbody Melin Autoantibdies immun globuli a srum Ql",
+    "expected_text": "Myelin IgA Ser Ql",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "17305-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "43_3",
+    "raw_text": "Antbody Melin Autoantibdies immun globuli a srum Ql",
+    "expected_text": "Myelin IgA Ser Ql",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "17305-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "43_5",
+    "raw_text": "Antbody Melin Autoantibdies immun globuli a srum Ql",
+    "expected_text": "Myelin IgA Ser Ql",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "17305-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "43_10",
+    "raw_text": "Antbody Melin Autoantibdies immun globuli a srum Ql",
+    "expected_text": "Myelin IgA Ser Ql",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "17305-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "44_1",
+    "raw_text": "CD52 cell exprssion evaluation FC Doc (Specme)",
+    "expected_text": "CD52 cell expression evaluation FC Doc (Specimen)",
+    "returned_text": "Acute leukemia panel - Specimen by Flow cytometry (FC)",
+    "expected_loinc": "100991-9",
+    "returned_loinc": "45270-6"
+  },
+  {
+    "id": "44_3",
+    "raw_text": "CD52 cell exprssion evaluation FC Doc (Specme)",
+    "expected_text": "CD52 cell expression evaluation FC Doc (Specimen)",
+    "returned_text": "Acute leukemia panel - Specimen by Flow cytometry (FC)",
+    "expected_loinc": "100991-9",
+    "returned_loinc": "45270-6"
+  },
+  {
+    "id": "44_5",
+    "raw_text": "CD52 cell exprssion evaluation FC Doc (Specme)",
+    "expected_text": "CD52 cell expression evaluation FC Doc (Specimen)",
+    "returned_text": "Acute leukemia panel - Specimen by Flow cytometry (FC)",
+    "expected_loinc": "100991-9",
+    "returned_loinc": "45270-6"
+  },
+  {
+    "id": "44_10",
+    "raw_text": "CD52 cell exprssion evaluation FC Doc (Specme)",
+    "expected_text": "CD52 cell expression evaluation FC Doc (Specimen)",
+    "returned_text": "Acute leukemia panel - Specimen by Flow cytometry (FC)",
+    "expected_loinc": "100991-9",
+    "returned_loinc": "45270-6"
+  },
+  {
+    "id": "45_1",
+    "raw_text": "SerPl-sCnc Dicarboxyeicosanoylcarn Plsm",
+    "expected_text": "Dicarboxyeicosanoylcarn SerPl-sCnc",
+    "returned_text": "Dermatan sulfate and heparan sulfate and keratan sulfate panel - DBS",
+    "expected_loinc": "74528-1",
+    "returned_loinc": "94586-5"
+  },
+  {
+    "id": "45_3",
+    "raw_text": "SerPl-sCnc Dicarboxyeicosanoylcarn Plsm",
+    "expected_text": "Dicarboxyeicosanoylcarn SerPl-sCnc",
+    "returned_text": "Dermatan sulfate and heparan sulfate and keratan sulfate panel - DBS",
+    "expected_loinc": "74528-1",
+    "returned_loinc": "94586-5"
+  },
+  {
+    "id": "45_5",
+    "raw_text": "SerPl-sCnc Dicarboxyeicosanoylcarn Plsm",
+    "expected_text": "Dicarboxyeicosanoylcarn SerPl-sCnc",
+    "returned_text": "Dermatan sulfate and heparan sulfate and keratan sulfate panel - DBS",
+    "expected_loinc": "74528-1",
+    "returned_loinc": "94586-5"
+  },
+  {
+    "id": "45_10",
+    "raw_text": "SerPl-sCnc Dicarboxyeicosanoylcarn Plsm",
+    "expected_text": "Dicarboxyeicosanoylcarn SerPl-sCnc",
+    "returned_text": "Dermatan sulfate and heparan sulfate and keratan sulfate panel - DBS",
+    "expected_loinc": "74528-1",
+    "returned_loinc": "94586-5"
+  },
+  {
+    "id": "46_1",
+    "raw_text": "immunoglobulin IgG Hu g ANA Nuc Msmt Ser",
+    "expected_text": "Hu2 IgG Msmt Ser",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "108999-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "46_3",
+    "raw_text": "immunoglobulin IgG Hu g ANA Nuc Msmt Ser",
+    "expected_text": "Hu2 IgG Msmt Ser",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "108999-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "46_5",
+    "raw_text": "immunoglobulin IgG Hu g ANA Nuc Msmt Ser",
+    "expected_text": "Hu2 IgG Msmt Ser",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "108999-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "46_10",
+    "raw_text": "immunoglobulin IgG Hu g ANA Nuc Msmt Ser",
+    "expected_text": "Hu2 IgG Msmt Ser",
+    "returned_text": "Basement membrane IgA Ab [Measurement] in Serum",
+    "expected_loinc": "108999-4",
+    "returned_loinc": "110013-0"
+  },
+  {
+    "id": "47_1",
+    "raw_text": "Infectious disease Diagnostic study evaluation and management ID",
+    "expected_text": "Infectious disease Diagnostic study note",
+    "returned_text": "Alcohol Use Disorder Identification Test [AUDIT]",
+    "expected_loinc": "78258-1",
+    "returned_loinc": "72110-0"
+  },
+  {
+    "id": "47_3",
+    "raw_text": "Infectious disease Diagnostic study evaluation and management ID",
+    "expected_text": "Infectious disease Diagnostic study note",
+    "returned_text": "Alcohol Use Disorder Identification Test [AUDIT]",
+    "expected_loinc": "78258-1",
+    "returned_loinc": "72110-0"
+  },
+  {
+    "id": "47_5",
+    "raw_text": "Infectious disease Diagnostic study evaluation and management ID",
+    "expected_text": "Infectious disease Diagnostic study note",
+    "returned_text": "Alcohol Use Disorder Identification Test [AUDIT]",
+    "expected_loinc": "78258-1",
+    "returned_loinc": "72110-0"
+  },
+  {
+    "id": "47_10",
+    "raw_text": "Infectious disease Diagnostic study evaluation and management ID",
+    "expected_text": "Infectious disease Diagnostic study note",
+    "returned_text": "Alcohol Use Disorder Identification Test [AUDIT]",
+    "expected_loinc": "78258-1",
+    "returned_loinc": "72110-0"
+  },
+  {
+    "id": "48_1",
+    "raw_text": "Aspergil m309 Ab [Measurement] Anti in Serum",
+    "expected_text": "Aspergillus terreus Ab [Measurement] in Serum",
+    "returned_text": "Aspergillus fumigatus Ab [Measurement] in Serum",
+    "expected_loinc": "109271-7",
+    "returned_loinc": "110003-1"
+  },
+  {
+    "id": "48_3",
+    "raw_text": "Aspergil m309 Ab [Measurement] Anti in Serum",
+    "expected_text": "Aspergillus terreus Ab [Measurement] in Serum",
+    "returned_text": "Aspergillus fumigatus Ab [Measurement] in Serum",
+    "expected_loinc": "109271-7",
+    "returned_loinc": "110003-1"
+  },
+  {
+    "id": "48_5",
+    "raw_text": "Aspergil m309 Ab [Measurement] Anti in Serum",
+    "expected_text": "Aspergillus terreus Ab [Measurement] in Serum",
+    "returned_text": "Aspergillus fumigatus Ab [Measurement] in Serum",
+    "expected_loinc": "109271-7",
+    "returned_loinc": "110003-1"
+  },
+  {
+    "id": "48_10",
+    "raw_text": "Aspergil m309 Ab [Measurement] Anti in Serum",
+    "expected_text": "Aspergillus terreus Ab [Measurement] in Serum",
+    "returned_text": "Aspergillus fumigatus Ab [Measurement] in Serum",
+    "expected_loinc": "109271-7",
+    "returned_loinc": "110003-1"
+  },
+  {
+    "id": "49_1",
+    "raw_text": "candida Autoantibody immune Immunoglobulin M globulin m S) [Measurement]",
+    "expected_text": "Candida sp IgM (S) [Measurement]",
+    "returned_text": "Candida sp IgM Ab [Measurement] in Serum",
+    "expected_loinc": "109175-0",
+    "returned_loinc": "109175-0"
+  },
+  {
+    "id": "49_3",
+    "raw_text": "candida Autoantibody immune Immunoglobulin M globulin m S) [Measurement]",
+    "expected_text": "Candida sp IgM (S) [Measurement]",
+    "returned_text": "Candida sp IgM Ab [Measurement] in Serum",
+    "expected_loinc": "109175-0",
+    "returned_loinc": "109175-0"
+  },
+  {
+    "id": "49_5",
+    "raw_text": "candida Autoantibody immune Immunoglobulin M globulin m S) [Measurement]",
+    "expected_text": "Candida sp IgM (S) [Measurement]",
+    "returned_text": "Candida sp IgM Ab [Measurement] in Serum",
+    "expected_loinc": "109175-0",
+    "returned_loinc": "109175-0"
+  },
+  {
+    "id": "49_10",
+    "raw_text": "candida Autoantibody immune Immunoglobulin M globulin m S) [Measurement]",
+    "expected_text": "Candida sp IgM (S) [Measurement]",
+    "returned_text": "Candida sp IgM Ab [Measurement] in Serum",
+    "expected_loinc": "109175-0",
+    "returned_loinc": "109175-0"
+  },
+  {
+    "id": "50_1",
+    "raw_text": "cortis [Mass/volume] in Serum or Plasma med --9 hours post 8 mg dexone PO overnight dose high or substance",
+    "expected_text": "Cortisol [Mass/volume] in Serum or Plasma --9 hours post 8 mg dexamethasone PO overnight high dose",
+    "returned_text": "Glucose, somatotropin and cortisol post insulin administration in Serum or Plasma",
+    "expected_loinc": "1442-3",
+    "returned_loinc": "101980-1"
+  },
+  {
+    "id": "50_3",
+    "raw_text": "cortis [Mass/volume] in Serum or Plasma med --9 hours post 8 mg dexone PO overnight dose high or substance",
+    "expected_text": "Cortisol [Mass/volume] in Serum or Plasma --9 hours post 8 mg dexamethasone PO overnight high dose",
+    "returned_text": "Glucose, somatotropin and cortisol post insulin administration in Serum or Plasma",
+    "expected_loinc": "1442-3",
+    "returned_loinc": "101980-1"
+  },
+  {
+    "id": "50_5",
+    "raw_text": "cortis [Mass/volume] in Serum or Plasma med --9 hours post 8 mg dexone PO overnight dose high or substance",
+    "expected_text": "Cortisol [Mass/volume] in Serum or Plasma --9 hours post 8 mg dexamethasone PO overnight high dose",
+    "returned_text": "Glucose, somatotropin and cortisol post insulin administration in Serum or Plasma",
+    "expected_loinc": "1442-3",
+    "returned_loinc": "101980-1"
+  },
+  {
+    "id": "50_10",
+    "raw_text": "cortis [Mass/volume] in Serum or Plasma med --9 hours post 8 mg dexone PO overnight dose high or substance",
+    "expected_text": "Cortisol [Mass/volume] in Serum or Plasma --9 hours post 8 mg dexamethasone PO overnight high dose",
+    "returned_text": "Glucose, somatotropin and cortisol post insulin administration in Serum or Plasma",
+    "expected_loinc": "1442-3",
+    "returned_loinc": "101980-1"
+  },
+  {
+    "id": "51_1",
+    "raw_text": "Deoxyribonucleic Qualitative Ureaplasma urealyticum deoxyribonucleic acid [Presence] wih in acid Vaginal fld by NAA probe detection",
+    "expected_text": "Ureaplasma urealyticum DNA [Presence] in Vaginal fluid by NAA with probe detection",
+    "returned_text": "Bacterial vaginosis DNA and score panel - Vaginal fluid by NAA with probe detection",
+    "expected_loinc": "106026-8",
+    "returned_loinc": "69571-8"
+  },
+  {
+    "id": "51_3",
+    "raw_text": "Deoxyribonucleic Qualitative Ureaplasma urealyticum deoxyribonucleic acid [Presence] wih in acid Vaginal fld by NAA probe detection",
+    "expected_text": "Ureaplasma urealyticum DNA [Presence] in Vaginal fluid by NAA with probe detection",
+    "returned_text": "Bacterial vaginosis DNA and score panel - Vaginal fluid by NAA with probe detection",
+    "expected_loinc": "106026-8",
+    "returned_loinc": "69571-8"
+  },
+  {
+    "id": "51_5",
+    "raw_text": "Deoxyribonucleic Qualitative Ureaplasma urealyticum deoxyribonucleic acid [Presence] wih in acid Vaginal fld by NAA probe detection",
+    "expected_text": "Ureaplasma urealyticum DNA [Presence] in Vaginal fluid by NAA with probe detection",
+    "returned_text": "Bacterial vaginosis DNA and score panel - Vaginal fluid by NAA with probe detection",
+    "expected_loinc": "106026-8",
+    "returned_loinc": "69571-8"
+  },
+  {
+    "id": "51_10",
+    "raw_text": "Deoxyribonucleic Qualitative Ureaplasma urealyticum deoxyribonucleic acid [Presence] wih in acid Vaginal fld by NAA probe detection",
+    "expected_text": "Ureaplasma urealyticum DNA [Presence] in Vaginal fluid by NAA with probe detection",
+    "returned_text": "Bacterial vaginosis DNA and score panel - Vaginal fluid by NAA with probe detection",
+    "expected_loinc": "106026-8",
+    "returned_loinc": "69571-8"
+  },
+  {
+    "id": "52_1",
+    "raw_text": "aspartlglucosaminidase Calc Quant quantitative Calc (S)",
+    "expected_text": "AGA gene Calc Qn (S)",
+    "returned_text": "Aspartate aminotransferase [Measurement] in Serum or Plasma",
+    "expected_loinc": "101540-3",
+    "returned_loinc": "110764-8"
+  },
+  {
+    "id": "52_3",
+    "raw_text": "aspartlglucosaminidase Calc Quant quantitative Calc (S)",
+    "expected_text": "AGA gene Calc Qn (S)",
+    "returned_text": "Aspartate aminotransferase [Measurement] in Serum or Plasma",
+    "expected_loinc": "101540-3",
+    "returned_loinc": "110764-8"
+  },
+  {
+    "id": "52_5",
+    "raw_text": "aspartlglucosaminidase Calc Quant quantitative Calc (S)",
+    "expected_text": "AGA gene Calc Qn (S)",
+    "returned_text": "Aspartate aminotransferase [Measurement] in Serum or Plasma",
+    "expected_loinc": "101540-3",
+    "returned_loinc": "110764-8"
+  },
+  {
+    "id": "52_10",
+    "raw_text": "aspartlglucosaminidase Calc Quant quantitative Calc (S)",
+    "expected_text": "AGA gene Calc Qn (S)",
+    "returned_text": "Aspartate aminotransferase [Measurement] in Serum or Plasma",
+    "expected_loinc": "101540-3",
+    "returned_loinc": "110764-8"
+  },
+  {
+    "id": "53_1",
+    "raw_text": "Liley Zone [Presence] in Amniotic fluid QL by spect",
+    "expected_text": "Liley Zone [Presence] in Amniotic fluid by Spectrophotometry",
+    "returned_text": "Acetylcholinesterase panel - Amniotic fluid",
+    "expected_loinc": "50964-6",
+    "returned_loinc": "76478-7"
+  },
+  {
+    "id": "53_3",
+    "raw_text": "Liley Zone [Presence] in Amniotic fluid QL by spect",
+    "expected_text": "Liley Zone [Presence] in Amniotic fluid by Spectrophotometry",
+    "returned_text": "Acetylcholinesterase panel - Amniotic fluid",
+    "expected_loinc": "50964-6",
+    "returned_loinc": "76478-7"
+  },
+  {
+    "id": "53_5",
+    "raw_text": "Liley Zone [Presence] in Amniotic fluid QL by spect",
+    "expected_text": "Liley Zone [Presence] in Amniotic fluid by Spectrophotometry",
+    "returned_text": "Acetylcholinesterase panel - Amniotic fluid",
+    "expected_loinc": "50964-6",
+    "returned_loinc": "76478-7"
+  },
+  {
+    "id": "53_10",
+    "raw_text": "Liley Zone [Presence] in Amniotic fluid QL by spect",
+    "expected_text": "Liley Zone [Presence] in Amniotic fluid by Spectrophotometry",
+    "returned_text": "Acetylcholinesterase panel - Amniotic fluid",
+    "expected_loinc": "50964-6",
+    "returned_loinc": "76478-7"
+  },
+  {
+    "id": "54_1",
+    "raw_text": "B. burgdorferi 29kD Ab immune blot Ql (CSF)",
+    "expected_text": "B. burgdorferi 29kD Ab IB Ql (CSF)",
+    "returned_text": "Burkholderia pseudomallei IgM Ab [Measurement] in Serum",
+    "expected_loinc": "12865-2",
+    "returned_loinc": "109190-9"
+  },
+  {
+    "id": "54_3",
+    "raw_text": "B. burgdorferi 29kD Ab immune blot Ql (CSF)",
+    "expected_text": "B. burgdorferi 29kD Ab IB Ql (CSF)",
+    "returned_text": "Burkholderia pseudomallei IgM Ab [Measurement] in Serum",
+    "expected_loinc": "12865-2",
+    "returned_loinc": "109190-9"
+  },
+  {
+    "id": "54_5",
+    "raw_text": "B. burgdorferi 29kD Ab immune blot Ql (CSF)",
+    "expected_text": "B. burgdorferi 29kD Ab IB Ql (CSF)",
+    "returned_text": "Burkholderia pseudomallei IgM Ab [Measurement] in Serum",
+    "expected_loinc": "12865-2",
+    "returned_loinc": "109190-9"
+  },
+  {
+    "id": "54_10",
+    "raw_text": "B. burgdorferi 29kD Ab immune blot Ql (CSF)",
+    "expected_text": "B. burgdorferi 29kD Ab IB Ql (CSF)",
+    "returned_text": "Burkholderia pseudomallei IgM Ab [Measurement] in Serum",
+    "expected_loinc": "12865-2",
+    "returned_loinc": "109190-9"
+  },
+  {
+    "id": "55_1",
+    "raw_text": "vitanerton n kerne [Mass/Vol]",
+    "expected_text": "Metharbital [Mass/Vol]",
+    "returned_text": "Allopurinol and Oxipurinol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "10542-9",
+    "returned_loinc": "43133-8"
+  },
+  {
+    "id": "55_3",
+    "raw_text": "vitanerton n kerne [Mass/Vol]",
+    "expected_text": "Metharbital [Mass/Vol]",
+    "returned_text": "Allopurinol and Oxipurinol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "10542-9",
+    "returned_loinc": "43133-8"
+  },
+  {
+    "id": "55_5",
+    "raw_text": "vitanerton n kerne [Mass/Vol]",
+    "expected_text": "Metharbital [Mass/Vol]",
+    "returned_text": "Allopurinol and Oxipurinol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "10542-9",
+    "returned_loinc": "43133-8"
+  },
+  {
+    "id": "55_10",
+    "raw_text": "vitanerton n kerne [Mass/Vol]",
+    "expected_text": "Metharbital [Mass/Vol]",
+    "returned_text": "Allopurinol and Oxipurinol panel [Mass/volume] - Serum or Plasma",
+    "expected_loinc": "10542-9",
+    "returned_loinc": "43133-8"
+  },
+  {
+    "id": "56_1",
+    "raw_text": "Hrpes simplex vius 1+2 IgM Ab [Presence] in Cerebral spinal fld b Immnofluorescece Spinal Flu",
+    "expected_text": "Herpes simplex virus 1+2 IgM Ab [Presence] in Cerebral spinal fluid by Immunofluorescence",
+    "returned_text": "Chlamydia trachomatis IgM Ab [Measurement] in Cerebral spinal fluid",
+    "expected_loinc": "33294-0",
+    "returned_loinc": "110870-3"
+  },
+  {
+    "id": "56_3",
+    "raw_text": "Hrpes simplex vius 1+2 IgM Ab [Presence] in Cerebral spinal fld b Immnofluorescece Spinal Flu",
+    "expected_text": "Herpes simplex virus 1+2 IgM Ab [Presence] in Cerebral spinal fluid by Immunofluorescence",
+    "returned_text": "Chlamydia trachomatis IgM Ab [Measurement] in Cerebral spinal fluid",
+    "expected_loinc": "33294-0",
+    "returned_loinc": "110870-3"
+  },
+  {
+    "id": "56_5",
+    "raw_text": "Hrpes simplex vius 1+2 IgM Ab [Presence] in Cerebral spinal fld b Immnofluorescece Spinal Flu",
+    "expected_text": "Herpes simplex virus 1+2 IgM Ab [Presence] in Cerebral spinal fluid by Immunofluorescence",
+    "returned_text": "Chlamydia trachomatis IgM Ab [Measurement] in Cerebral spinal fluid",
+    "expected_loinc": "33294-0",
+    "returned_loinc": "110870-3"
+  },
+  {
+    "id": "56_10",
+    "raw_text": "Hrpes simplex vius 1+2 IgM Ab [Presence] in Cerebral spinal fld b Immnofluorescece Spinal Flu",
+    "expected_text": "Herpes simplex virus 1+2 IgM Ab [Presence] in Cerebral spinal fluid by Immunofluorescence",
+    "returned_text": "Chlamydia trachomatis IgM Ab [Measurement] in Cerebral spinal fluid",
+    "expected_loinc": "33294-0",
+    "returned_loinc": "110870-3"
+  },
+  {
+    "id": "58_1",
+    "raw_text": "porphobili Erythrocytes synthase [Enzymatic ALA activity/mass] in Red Blood dehydratase cell",
+    "expected_text": "Porphobilinogen synthase [Enzymatic activity/mass] in Red Blood Cells",
+    "returned_text": "Erythrocyte enzyme panel - Red Blood Cells",
+    "expected_loinc": "79465-1",
+    "returned_loinc": "72695-0"
+  },
+  {
+    "id": "58_3",
+    "raw_text": "porphobili Erythrocytes synthase [Enzymatic ALA activity/mass] in Red Blood dehydratase cell",
+    "expected_text": "Porphobilinogen synthase [Enzymatic activity/mass] in Red Blood Cells",
+    "returned_text": "Erythrocyte enzyme panel - Red Blood Cells",
+    "expected_loinc": "79465-1",
+    "returned_loinc": "72695-0"
+  },
+  {
+    "id": "58_5",
+    "raw_text": "porphobili Erythrocytes synthase [Enzymatic ALA activity/mass] in Red Blood dehydratase cell",
+    "expected_text": "Porphobilinogen synthase [Enzymatic activity/mass] in Red Blood Cells",
+    "returned_text": "Erythrocyte enzyme panel - Red Blood Cells",
+    "expected_loinc": "79465-1",
+    "returned_loinc": "72695-0"
+  },
+  {
+    "id": "58_10",
+    "raw_text": "porphobili Erythrocytes synthase [Enzymatic ALA activity/mass] in Red Blood dehydratase cell",
+    "expected_text": "Porphobilinogen synthase [Enzymatic activity/mass] in Red Blood Cells",
+    "returned_text": "Erythrocyte enzyme panel - Red Blood Cells",
+    "expected_loinc": "79465-1",
+    "returned_loinc": "72695-0"
+  }
+]

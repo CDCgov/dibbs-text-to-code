@@ -3,7 +3,7 @@ from utils import import_json
 
 # sample run: python data/accuracy_evaluation/evaluation.py
 # could make this a sys.argv parameter or just update directly as needed, for now hardcoding
-input_file = "data/accuracy_evaluation/sample_evaluation_file.txt"
+input_file = "data/accuracy_evaluation/eval_results_snippet_with_codes.txt"
 
 
 loinc_to_oids_file = "data/accuracy_evaluation/loinc_to_oids.txt"
