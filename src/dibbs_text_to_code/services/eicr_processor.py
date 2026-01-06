@@ -37,7 +37,7 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
                 msg = issue.find("message").text
                 if issue is None or msg is None:
                     continue
-                # check if the msg alings with any of the
+                # check if the msg aligns with any of the
                 # specified schematron errors for various data fields
                 err_data_field = get_data_field_by_schematron_error(msg)
                 if err_data_field is not None:
