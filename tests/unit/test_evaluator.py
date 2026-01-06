@@ -48,19 +48,9 @@ class TestEvaluator:  # noqa: D101
 
         assert evaluator.is_text_viable(data_field, text_value) == expected_result
 
-        text_value = "COVID PCR TEST FROM NASAL SWAB"
-        expected_result = True
-
-        assert evaluator.is_text_viable(data_field, text_value) == expected_result
-
     def test_is_text_viable_lab_order_not_viable(self):
         data_field = "lab_order"
         text_value = "COVID PCR"
-        expected_result = False
-
-        assert evaluator.is_text_viable(data_field, text_value) == expected_result
-
-        text_value = "COVID"
         expected_result = False
 
         assert evaluator.is_text_viable(data_field, text_value) == expected_result

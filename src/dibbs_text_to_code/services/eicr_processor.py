@@ -120,7 +120,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
                         # NOTE: I've added the itereator at the end of the key to ensure uniqueness
                         # per key in the case that there may be multiple locations where the text
                         # candidate may be the same
-                        text_candidates[base_xpath + sub_xpath + f"[{i}]"] = sub_node.strip()
+                        text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
     except Exception as e:
         # TODO: we may want to log this somewhere instead of print
         print(f"Error extracting text from eicr message: {e}")

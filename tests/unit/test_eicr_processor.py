@@ -28,10 +28,7 @@ class TestEICRProcessor:  # noqa: D101
             self.SCHEMATRON_ERROR_FILE
         )
 
-        assert error_result != {}
-        assert "lab_result" in error_result
         assert len(error_result["lab_result"]) == 2
-        assert "lab_order" in error_result
         assert len(error_result["lab_order"]) == 1
 
     def test_get_text_candidates(self):
@@ -43,16 +40,18 @@ class TestEICRProcessor:  # noqa: D101
         xpaths = error_result["lab_result"][1]
         result = eicr_processor.get_text_candidates(self.TEST_EICR_FILE, xpaths, "lab_result")
         assert len(result) == 7
-        count = 0
-        for key, value in result.items():
-            if count == 0:
-                assert (
-                    value
-                    == "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
-                )
-            if count == 6:
-                assert value == "SARS-like Virus"
-            count += 1
+        assert (
+            result[
+                "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/@displayName[0]"
+            ]
+            == "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
+        )
+        assert (
+            result[
+                "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/translation/originalText/text()[0]"
+            ]
+            == "COVID-19 Spike IgG"
+        )
 
     def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""
