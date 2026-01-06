@@ -2,6 +2,26 @@ from services import evaluator
 
 
 class TestEvaluator:  # noqa: D101
+    def test_set_sentence_transformer(self):
+        assert evaluator.MODEL is None
+
+        evaluator._set_sentence_transformer()
+
+        assert evaluator.MODEL is not None
+        assert isinstance(evaluator.MODEL, evaluator.SentenceTransformer)
+
+    def test_meets_word_count(self):
+        text_value = "This is a simple test string"
+        word_count = 4
+        expected_result = True
+
+        assert evaluator._meets_word_count(text_value, word_count) == expected_result
+
+        word_count = 6
+        expected_result = False
+
+        assert evaluator._meets_word_count(text_value, word_count) == expected_result
+
     def test_is_text_viable_wrong_field(self):
         data_field = "LABs"
         text_value = "Here is my test"
