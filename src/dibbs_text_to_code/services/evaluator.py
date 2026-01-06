@@ -15,7 +15,7 @@ def _set_sentence_transformer(model_name: str = MODEL_NAME):
 
 
 def embed(input_text: str) -> Tensor:
-    """Takes a text string and embeds it as vectorspip
+    """Takes a text string and embeds it as a vector
     using a model as defined in config.py.
 
     :param input_text: Text string to embed.
