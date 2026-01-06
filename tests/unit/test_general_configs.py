@@ -1,10 +1,10 @@
-from configs.general import eicr_config
+from configs.general import EicrConfig
 from configs.general import MODEL_NAME
 from configs.general import SCHEMATRON_ERRORS
 
 
 class TestGeneralConfigs:  # noqa: D101
-    ENUM_CONFIG = eicr_config
+    ENUM_CONFIG = EicrConfig
     DATA_FIELDS = ("lab_order", "lab_result", "lab_value", "lab_interp")
 
     def test_eicr_config_enum(self):

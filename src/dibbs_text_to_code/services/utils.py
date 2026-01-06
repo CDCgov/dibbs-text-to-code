@@ -1,4 +1,4 @@
-from configs.general import eicr_config
+from configs.general import EicrConfig
 from configs.general import SCHEMATRON_ERRORS
 
 
@@ -13,7 +13,7 @@ def get_data_field_config(data_field: str):
         within focus, or None, for the TTC module.
     """
     try:
-        data_field_config_class = eicr_config[data_field.strip()].value.__class__
+        data_field_config_class = EicrConfig[data_field.strip()].value.__class__
         return data_field_config_class()
     except KeyError:
         return None
