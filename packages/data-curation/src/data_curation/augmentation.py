@@ -473,7 +473,7 @@ def _generate_enhancement_candidates(
 
 def generate_augmented_examples(
     input_code: str,
-    related_names: typing.List[str],
+    related_names: list[str],
     num_examples: int,
     config: schemas.AugmentationConfig,
 ):

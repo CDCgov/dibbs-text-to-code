@@ -1,6 +1,3 @@
-# Configuration settings for lab value processing in the TTC module
-import typing
-
 import pydantic
 
 
@@ -15,8 +12,8 @@ class LabValueConfig(pydantic.BaseModel):
     text_word_count: int = 1
     """The minimum word count required for text to be considered viable for TTC processing."""
 
-    xpaths: typing.List[str] = []
+    xpaths: list[str] = []
     """The list of Sub XPath expressions to extract text in various locations from the lab value element."""
 
-    schematron_errors: typing.List[str] = []
+    schematron_errors: list[str] = []
     """The list of Schematron error messages relevant to the lab value data field."""
