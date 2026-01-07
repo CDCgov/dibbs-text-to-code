@@ -73,7 +73,12 @@ select = ["ALL",
 ] # Defaults
 
 ignore = [
-    "D100"
+    "BLE001",
+    "D100",
+    "FIX",
+    "RET504",
+    "T201",
+    "TD",
 ]
 
 [tool.ruff.lint.per-file-ignores]

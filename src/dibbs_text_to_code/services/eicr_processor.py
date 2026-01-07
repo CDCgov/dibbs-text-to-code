@@ -1,6 +1,8 @@
+from collections import defaultdict
+
 from configs.general import get_configuration_for_data_element
 from configs.general import get_data_element_from_schematron_error
-from lxml import etree as ET
+from lxml import etree
 
 NAMESPACES = {
     "cda": "urn:hl7-org:v3",
@@ -11,9 +13,7 @@ NAMESPACES = {
 
 
 def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
-    """Using the output from the Schematron validation, find errors that
-    correspond to specific data elements/fields within the eICR that
-    TTC needs to try to find codes for.
+    """Find errors that correspond to specific data elements/fields.
 
     :param schematron_output: The data from the Schematron validation
         run against the eICR document, containing errors that may
@@ -21,37 +21,41 @@ def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
     :returns: Dictionary of Data Field name and list of XPaths of where
         to find data within the eICR for TTC processing.
     """
-    data_fields_with_context = {}
     if not schematron_output.strip():
-        return data_fields_with_context
+        return {}
 
-    xml_root = ET.fromstring(schematron_output.encode("utf-8"))
-    # loop through schematron validation results
+    xml_root = etree.fromstring(schematron_output.encode("utf-8"))
+    data_fields_with_context = defaultdict(list)
+
+    # Loop through schematron validation results
     for result in xml_root:
-        try:
-            for vr in result.findall("validationResult"):
-                if vr is None:
-                    continue
+        for vr in result.findall("validationResult"):
+            try:
                 issue = vr.find("issue")
-                msg = issue.find("message").text
-                if issue is None or msg is None:
+                if issue is None:
                     continue
-                # check if the msg aligns with any of the
-                # specified schematron errors for various data fields
-                err_data_field = get_data_element_from_schematron_error(msg)
-                if err_data_field is not None:
-                    xpath = issue.find("context").text
-                    if data_fields_with_context.get(err_data_field) is None:
-                        data_fields_with_context[err_data_field] = []
-                    # if the xpath for a particular data field is already
-                    # accounted for, don't duplicate it
-                    if xpath not in data_fields_with_context[err_data_field]:
-                        data_fields_with_context[err_data_field].append(xpath)
+                message_elem = issue.find("message")
+                context_elem = issue.find("context")
+                if (
+                    message_elem is None
+                    or message_elem.text is None
+                    or context_elem is None
+                    or context_elem.text is None
+                ):
+                    continue
+                # Check if message matches any specified schematron errors
+                err_data_field = get_data_element_from_schematron_error(message_elem.text)
+                if err_data_field is None:
+                    continue
+                xpath = context_elem.text
+                # Add xpath if not already present (avoiding duplicates)
+                if xpath not in data_fields_with_context[err_data_field]:
+                    data_fields_with_context[err_data_field].append(xpath)
 
-        except Exception as e:
-            # TODO: we may want to log this somewhere instead of print
-            print(f"Error parsing schematron output: {e}")
-            continue
+            except Exception as e:
+                # TODO: we may want to log this somewhere instead of print
+                print(f"Error parsing schematron output: {e}")
+                continue
     return data_fields_with_context
 
 
@@ -81,9 +85,8 @@ def _enhance_xpath_with_namespace(xpath: str, namespace: str) -> str:
     return enhanced_xpath
 
 
-def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> list:
-    """Using the eICR data and a base XPath, find text candidates
-    for a specified data field/element to be used in the TTC module.
+def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dict:
+    """Find text candidates for a specified data field/element.
 
     :param eicr_data: The eICR data as an XML string.
     :param base_xpath: The base XPath to use to find text candidates
@@ -92,7 +95,6 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     :returns: A list of text candidates found within the eICR for
         the specified data field/element for TTC processing.
     """
-
     text_candidates = {}
     # first get data field config settings - this acts
     # as a validation of correct data field being passed
@@ -108,7 +110,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> lis
     enhanced_base_xpath = _enhance_xpath_with_namespace(base_xpath, "cda")
 
     try:
-        xml_root = ET.fromstring(eicr_data.encode("utf-8"))
+        xml_root = etree.fromstring(eicr_data.encode("utf-8"))
         nodes = xml_root.xpath(enhanced_base_xpath, namespaces=NAMESPACES)
         for node in nodes:
             for sub_xpath in sub_xpaths:
