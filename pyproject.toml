@@ -79,6 +79,7 @@ ignore = [
     "RET504",
     "T201",
     "TD",
+    "SLF001"
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -110,6 +111,5 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/dibbs_text_to_code/services",
-    "src/dibbs_text_to_code/configs"
+    "src/dibbs_text_to_code"
     ]
