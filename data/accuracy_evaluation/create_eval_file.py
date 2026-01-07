@@ -27,9 +27,7 @@ def search_loinc(raw_query: str):
     return response.json()
 
 
-file_path = (
-    "/Users/rob/dibbs-text-to-code/data/accuracy_evaluation/eval_results_snippet_with_codes.jsonl"
-)
+file_path = "data/accuracy_evaluation/eval_results_snippet_with_codes.jsonl"
 with open(file_path, "r") as f:
     raw_eval_data = [json.loads(line) for line in f if line.strip()]
 
@@ -60,7 +58,7 @@ eval_data = [
 ]
 
 with open(
-    "/Users/rob/dibbs-text-to-code/data/accuracy_evaluation/eval_results_snippet_with_codes.txt",
+    "data/accuracy_evaluation/eval_results_snippet_with_codes.txt",
     "w",
 ) as f:
     json.dump(eval_data, f, indent=2)
