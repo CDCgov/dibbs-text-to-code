@@ -1,11 +1,14 @@
+import os
 from utils import export_json
 from utils import import_json
 
 # sample run: python data/accuracy_evaluation/evaluation.py
 # could make this a sys.argv parameter or just update directly as needed, for now hardcoding
-input_file = "data/accuracy_evaluation/eval_results_snippet_with_codes.txt"
+# other sample file to determine efficacy: data/accuracy_evaluation/sample_data/evaluation_results_sample_evaluation_file.json
+# LOINC codes can be added to a file lacking them using add_loinc_codes.py
+input_file = "data/accuracy_evaluation/sample_data/eval_results_snippet_with_loinc_codes.txt"
 
-
+# Mapping files generated from build_evaluation_files.py
 loinc_to_oids_file = "data/accuracy_evaluation/loinc_to_oids.txt"
 oid_to_conditions_file = "data/accuracy_evaluation/oid_to_conditions.txt"
 
@@ -66,6 +69,7 @@ def accuracy_evaluation(
                 status = "no match"
             result["status"] = status
 
+            # determine best status for the overall item (i.e., did any of the results achieve a match)
             best_status = "no match"
             if status_priority.get(status, 0) > status_priority.get(best_status, 0):
                 best_status = status
@@ -81,4 +85,4 @@ def accuracy_evaluation(
 if __name__ == "__main__":
     results = accuracy_evaluation(loinc_to_oids_file, oid_to_conditions_file, input_file)
     input_file_name = input_file.split("/")[-1].split(".")[0]
-    export_json(results, f"data/accuracy_evaluation/evaluation_results_{input_file_name}.json")
+    export_json(results, os.path.join(os.path.split(input_file)[0], f"evaluation_results_{input_file_name}.json"))

@@ -6,7 +6,7 @@ from utils import export_json
 
 load_dotenv()
 
-# sample run: python data/accuracy_evaluation/build_eval_files.py
+# sample run: python data/accuracy_evaluation/build_evaluation_files.py
 # TES API Key can be obtained at https://tes.tools.aimsplatform.org/
 TES_API_KEY = os.environ.get("TES_API_KEY")
 TES_BASE_URL = "https://tes.tools.aimsplatform.org/api/fhir/ValueSet/"
