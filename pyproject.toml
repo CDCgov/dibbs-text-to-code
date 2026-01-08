@@ -86,6 +86,7 @@ select = [
     "I",    # isort
     "N",    # pep8-naming
     "PL",   # Pylint
+    "PT",   # flake8-pytest-style
     "RET",  # flake8-return
     "RUF",  # Ruff-specific rules
     "S",    # flake8-bandit
