@@ -34,7 +34,7 @@ _model_name: str = "Snowflake/snowflake-arctic-embed-m"
 # TOO BIG TO RUN TESTS against ----  "Qwen/Qwen3-Embedding-8B"
 
 
-def get_configuration_for_data_element(data_field: str) -> ConfigType:
+def get_configuration_for_data_element(data_field: str) -> ConfigType | None:
     """Verify a specified data field is in focus for the TTC module.
 
     If a data field is valid, return the class configuration settings for that data field.

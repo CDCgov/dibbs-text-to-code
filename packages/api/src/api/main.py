@@ -113,7 +113,7 @@ if ENVIRONMENT["ENV"] != "local":
 
 else:
     app.add_middleware(
-        CORSMiddleware,
+        CORSMiddleware,  # ty:ignore[invalid-argument-type]
         allow_origins=["http://localhost:8081"],  # Client dev server
         allow_credentials=True,  # Allow sending session cookies
         allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
