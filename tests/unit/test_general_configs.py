@@ -1,8 +1,8 @@
 import pytest
 
+from dibbs_text_to_code.configs.general import EicrConfig
 from dibbs_text_to_code.configs.general import _model_name
 from dibbs_text_to_code.configs.general import _schematron_errors
-from dibbs_text_to_code.configs.general import EicrConfig
 from dibbs_text_to_code.configs.general import get_configuration_for_data_element
 from dibbs_text_to_code.configs.general import get_data_element_from_schematron_error
 

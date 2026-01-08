@@ -2,9 +2,7 @@ import pydantic
 
 
 class LabResultConfig(pydantic.BaseModel):
-    """
-    Schema for Lab Resulting configuration settings
-    """
+    """Schema for Lab Resulting configuration settings."""
 
     data_field: str = "lab_result"
     """The data field/element this configuration applies to."""

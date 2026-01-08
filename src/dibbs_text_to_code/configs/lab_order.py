@@ -2,9 +2,7 @@ import pydantic
 
 
 class LabOrderConfig(pydantic.BaseModel):
-    """
-    Schema for Lab Order configuration settings
-    """
+    """Schema for Lab Order configuration settings."""
 
     data_field: str = "lab_order"
     """The data field/element this configuration applies to."""

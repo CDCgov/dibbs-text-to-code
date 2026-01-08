@@ -28,7 +28,7 @@ class TestGetTextCandidates:
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
         expected_num_results = 7
-        expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"  # noqa: E501
+        expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
 
         xpaths = error_result["lab_result"][1]
         result = get_text_candidates(self.TEST_EICR_FILE, xpaths, "lab_result")
