@@ -113,3 +113,6 @@ build-backend = "hatchling.build"
 packages = [
     "src/dibbs_text_to_code"
     ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
