@@ -8,7 +8,7 @@ _model: SentenceTransformer | None = None
 
 
 # TODO: later when determine how this module fits
-# into the lamda we may need to refactor how we are
+# into the lambda we may need to refactor how we are
 # lazy loading the model
 def _set_sentence_transformer(model: str = _model_name) -> None:
     """Set the SentenceTransformer model to be used for embedding text."""
@@ -26,7 +26,7 @@ def embed(input_text: str) -> Tensor:
     :returns: Tensor representation of input text.
     """
     # TODO: later when determine how this module fits
-    # into the lamda we may need to refactor how we are
+    # into the lambda we may need to refactor how we are
     # lazy loading the model
     _set_sentence_transformer(_model_name)
 
