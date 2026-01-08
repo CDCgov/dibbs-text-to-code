@@ -22,51 +22,60 @@ def accuracy_evaluation(
     loinc_to_oids = import_json(loinc_to_oids_file)
     oid_to_conditions = import_json(oid_to_conditions_file)
     eval_data = import_json(input_file)
-    results = []
+
+    status_priority = {
+        "first-degree match": 5,
+        "second-degree match, one unique condition": 4,
+        "third-degree match, one unique condition": 3,
+        "third-degree match, multiple unique conditions": 2,
+        "no match": 1,
+        "no OIDs returned, investigate LOINC validity": 0,
+        "no conditions returned, investigate OID validity": 0,
+        "no LOINC returned": 0,
+    }
 
     for item in eval_data:
-        returned_loinc = item.get("returned_loinc")
         expected_loinc = item.get("expected_loinc")
+        for result in item.get("results"):
+            returned_loinc = result.get("returned_loinc")
 
-        returned_oids = sorted(loinc_to_oids.get(returned_loinc, []) if returned_loinc else [])
-        expected_oids = sorted(loinc_to_oids.get(expected_loinc, []) if expected_loinc else [])
+            returned_oids = sorted(loinc_to_oids.get(returned_loinc, []) if returned_loinc else [])
+            expected_oids = sorted(loinc_to_oids.get(expected_loinc, []) if expected_loinc else [])
 
-        returned_conditions = sorted(list(set(oid_to_conditions.get(oid) for oid in returned_oids)))
-        expected_conditions = sorted(list(set(oid_to_conditions.get(oid) for oid in expected_oids)))
+            returned_conditions = sorted(
+                list(set(oid_to_conditions.get(oid) for oid in returned_oids))
+            )
+            expected_conditions = sorted(
+                list(set(oid_to_conditions.get(oid) for oid in expected_oids))
+            )
+            if returned_loinc is None:
+                status = "no LOINC returned"
+            elif returned_loinc == expected_loinc:
+                status = "first-degree match"
+            elif returned_oids == expected_oids and len(returned_conditions) == 1:
+                status = "second-degree match, one unique condition"
+            elif returned_conditions == expected_conditions and len(returned_conditions) == 1:
+                status = "third-degree match, one unique condition"
+            elif returned_conditions == expected_conditions and len(returned_conditions) > 1:
+                status = "third-degree match, multiple unique conditions"
+            elif not returned_oids:
+                status = "no OIDs returned, investigate LOINC validity"
+            elif not returned_conditions:
+                status = "no conditions returned, investigate OID validity"
+            else:
+                status = "no match"
+            result["status"] = status
 
-        print(
-            f"Evaluating LOINC:\n"
-            f"returned LOINC: {returned_loinc}\n"
-            f"expected LOINC: {expected_loinc}\n"
-            f"returned OIDs: {returned_oids}\n"
-            f"expected OIDs: {expected_oids}\n"
-            f"returned conditions: {returned_conditions}\n"
-            f"expected conditions: {expected_conditions}\n"
-        )
-        if returned_loinc is None:
-            status = "no LOINC returned"
-        elif returned_oids is None:
-            status = "no OIDs returned, investigate LOINC validity"
-        elif returned_conditions is None:
-            status = "no conditions returned, investigate OID validity"
-        elif returned_loinc == expected_loinc:
-            status = "first-degree match"
-        elif returned_oids == expected_oids and len(returned_conditions) == 1:
-            status = "second-degree match, one unique condition"
-        elif returned_conditions == expected_conditions and len(returned_conditions) == 1:
-            status = "third-degree match, one unique condition"
-        elif returned_conditions == expected_conditions and len(returned_conditions) > 1:
-            status = "third-degree match, multiple unique conditions"
-        else:
-            status = "no match"
-        print(f"Status: {status}")
-        print("-----")
+            best_status = "no match"
+            if status_priority.get(status, 0) > status_priority.get(best_status, 0):
+                best_status = status
 
-        result_item = dict(item)
-        result_item["status"] = status
-        results.append(result_item)
+            if best_status == "first-degree match":
+                break
 
-    return results
+        item["status"] = best_status
+
+    return eval_data
 
 
 if __name__ == "__main__":
