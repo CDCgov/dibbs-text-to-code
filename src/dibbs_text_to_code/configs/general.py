@@ -1,9 +1,9 @@
 from enum import Enum
 
-from configs.lab_interp import LabInterpConfig
-from configs.lab_order import LabOrderConfig
-from configs.lab_result import LabResultConfig
-from configs.lab_value import LabValueConfig
+from dibbs_text_to_code.configs.lab_interp import LabInterpConfig
+from dibbs_text_to_code.configs.lab_order import LabOrderConfig
+from dibbs_text_to_code.configs.lab_result import LabResultConfig
+from dibbs_text_to_code.configs.lab_value import LabValueConfig
 
 # TODO: using examples provided by APHL - may need to confirm!
 _schematron_errors = {
@@ -17,10 +17,12 @@ _schematron_errors = {
     ],
 }
 
+ConfigType = LabOrderConfig | LabResultConfig | LabValueConfig | LabInterpConfig
 
-# store all relevant data fields/elements along with their
-# configuration class settings
+
 class EicrConfig(Enum):
+    """store all relevant data fields/elements along with their configuration class settings."""
+
     lab_order = LabOrderConfig()
     lab_result = LabResultConfig()
     lab_value = LabValueConfig()
@@ -32,9 +34,10 @@ _model_name: str = "Snowflake/snowflake-arctic-embed-m"
 # TOO BIG TO RUN TESTS against ----  "Qwen/Qwen3-Embedding-8B"
 
 
-def get_configuration_for_data_element(data_field: str):
-    """Verifies a specified data field is in focus for the TTC module
-    and if it is, will return the class configuration settings for that data field.
+def get_configuration_for_data_element(data_field: str) -> ConfigType | None:
+    """Verify a specified data field is in focus for the TTC module.
+
+    If a data field is valid, return the class configuration settings for that data field.
     Otherwise, returns None.
 
     :param data_field: The data field/element, from an eICR, that
@@ -50,8 +53,7 @@ def get_configuration_for_data_element(data_field: str):
 
 
 def get_data_element_from_schematron_error(schematron_error: str) -> str | None:
-    """Given a schematron error message, will return the data field/element
-    that the error message is associated with, if any.
+    """Return the data field/element that the error message is associated with, if any.
 
     :param schematron_error: The schematron error message being evaluated.
     :returns: The data field/element the schematron error is associated with,

@@ -2,9 +2,7 @@ import pydantic
 
 
 class LabInterpConfig(pydantic.BaseModel):
-    """
-    Schema for Lab Interpretation configuration settings
-    """
+    """Schema for Lab Interpretation configuration settings."""
 
     data_field: str = "lab_interp"
     """The data field/element this configuration applies to."""
