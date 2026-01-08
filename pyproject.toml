@@ -49,6 +49,9 @@ packages = ["src/dibbs_text_to_code"]
 include = ["src", "packages/api/src", "packages/aws-lambda/src"]
 
 [tool.ruff]
+# Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
+# but I would highly recommend enabling directories as we work on them, and enabling/disabling
+# rules at a more granular level as needed.
 exclude = [
     "__pycache__",
     ".git",
@@ -58,6 +61,9 @@ exclude = [
     "data",
     "docs",
     "model-tuning",
+    "packages/api",
+    "packages/aws-lambda",
+    "packages/utils",
 ]
 line-length = 100
 indent-width = 4
