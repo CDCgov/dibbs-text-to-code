@@ -13,6 +13,9 @@ license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
 dependencies = [
+    "lxml>=4.9.2",
+    "pydantic>=2.12.3",
+    "sentence-transformers==5.2.0",
     # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
     # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
     # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x
@@ -20,36 +23,49 @@ dependencies = [
     # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
     # versions and rely on spacy and sentence-transformers to manage their own dependencies.
     "torch==2.9.1",
-    "sentence-transformers==5.2.0",
-    "lxml>=4.9.2",
 ]
 [dependency-groups]
 dev = [
-    "pre-commit",
-    "pytest-cov",
-    "pytest",
-    "requests",
-    "ruff",
-    "ty",
+    "pre-commit>=4.5.1",
+    "pytest-cov>=7.0.0",
+    "pytest>=8.4.2",
+    "requests>=2.32.5",
+    "ruff>=0.14.10",
+    "ty>=0.0.10",
+    "types-lxml>=2026.1.1",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.coverage.run]
-source = ["packages"]
-omit = [
-    "*/__pycache__/*",
-    "*/test_*.py",
-    "*/tests/*",
-]
+source = ["src", "packages"]
+omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/dibbs_text_to_code"]
 
 [tool.ty.src]
-include=[
-    "packages/api/src",
-    "packages/aws-lambda/src"
-]
+include = ["src", "packages/api/src", "packages/aws-lambda/src"]
 
 [tool.ruff]
-exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
+# Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
+# but I would highly recommend enabling directories as we work on them, and enabling/disabling
+# rules at a more granular level as needed.
+exclude = [
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    "azure_scripts",
+    "data-curation",
+    "data",
+    "docs",
+    "model-tuning",
+    "packages/api",
+    "packages/aws-lambda",
+    "packages/utils",
+]
 line-length = 100
 indent-width = 4
 target-version = "py312"
@@ -58,48 +74,53 @@ fix = true
 
 [tool.ruff.lint]
 select = [
-    "E4",
-    "E7",
-    "E9",
-    "F",
-    "I",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D106"
-] # Defaults
-
-ignore = [
-    "D100"
+    "ANN",  # flake8-annotations
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "D",    # pydocstyle
+    "DOC",  # pydoclint
+    "E",    # pycodestyle error
+    "F",    # Pyflakes
+    "FAST", # FastAPI
+    "FURB", # refurb
+    "I",    # isort
+    "N",    # pep8-naming
+    "PL",   # Pylint
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "RUF",  # Ruff-specific rules
+    "S",    # flake8-bandit
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+    "W",    # pycodestyle warning
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["D"]
-"tests/*.py" = [
-    "D102",
-    "D103",
-] # Ignore the public docstring rules in test files
+ignore = [
+    "D100",   # undocumented-public-module
+    "E501",   # line-too-long - Handled by formatter
+    "RET504", # unnecessary-assign
+]
 
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
-order-by-type = false
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["D"]
+# Ignore the following rules in test files
+"**/test_*.py" = [
+    "D101", # undocumented-public-class
+    "D102", # undocumented-public-method
+    "D103", # undocumented-public-function
+    "S101", # assert
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.uv.workspace]
 members = [
     "packages/api",
     "packages/aws-lambda",
     "packages/data-curation",
-    "packages/utils"
-    ]
-
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = [
-    "src/dibbs_text_to_code"
-    ]
+    "packages/utils",
+]
