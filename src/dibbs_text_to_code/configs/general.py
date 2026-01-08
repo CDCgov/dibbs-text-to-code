@@ -9,11 +9,11 @@ from dibbs_text_to_code.configs.lab_value import LabValueConfig
 _schematron_errors = {
     "lab_order": [
         "Text to Code: Lab Test Name Ordered does not have a @code attribute",
-        "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",  # noqa: E501
+        "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
     ],
     "lab_result": [
         "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-        "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",  # noqa: E501
+        "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
     ],
 }
 

@@ -34,21 +34,19 @@ dev = [
     "types-lxml>=2026.1.1",
 ]
 
-[tool.coverage.run]
-source = ["packages"]
-omit = [
-    "*/__pycache__/*",
-    "*/test_*.py",
-    "*/tests/*",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
+[tool.coverage.run]
+source = ["src", "packages"]
+omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dibbs_text_to_code"]
 
 [tool.ty.src]
-include=[
-    "src",
-    "packages/api/src",
-    "packages/aws-lambda/src"
-]
+include = ["src", "packages/api/src", "packages/aws-lambda/src"]
 
 [tool.ruff]
 exclude = [".git", ".pytest_cache", "__pycache__", "docs"]
@@ -59,60 +57,37 @@ show-fixes = true
 fix = true
 
 [tool.ruff.lint]
-select = ["ALL",
-    # "E4",
-    # "E7",
-    # "E9",
-    # "F",
-    # "I",
-    # "D102",
-    # "D103",
-    # "D104",
-    # "D105",
-    # "D106"
-] # Defaults
-
+select = ["ALL"]
 ignore = [
-    "BLE001",
-    "D100",
-    "FIX",
-    "RET504",
-    "T201",
-    "TD",
-    "SLF001"
+    "D100",   # undocumented-public-module
+    "E501",   # line-too-long - Handled by formatter
+    "FIX",    # flake8-fixme
+    "RET504", # unnecessary-assign
+    "T201",   # print
+    "TD",     # flake8-todos
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["D"]
-"tests/*.py" = [
-    "D101",
-    "D102",
-    "D103",
-    "S101"
-] # Ignore the public docstring rules in test files
 
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
-order-by-type = false
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["D"]
+# Ignore the following rules in test files
+"**/test_.py" = [
+    "D101", # undocumented-public-class
+    "D102", # undocumented-public-method
+    "D103", # undocumented-public-function
+    "S101", # assert
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.uv.workspace]
 members = [
     "packages/api",
     "packages/aws-lambda",
     "packages/data-curation",
-    "packages/utils"
-    ]
-
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = [
-    "src/dibbs_text_to_code"
-    ]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+    "packages/utils",
+]
