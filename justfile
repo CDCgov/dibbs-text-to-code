@@ -14,7 +14,9 @@ alias b := bootstrap
 
 [doc("Initialize the development environment")]
 bootstrap:
-    uv sync --all-packages && pre-commit install && npm i --save-dev
+    uv sync --all-packages
+    pre-commit install
+    npm i --save-dev
 
 [doc("Run tests")]
 test:
