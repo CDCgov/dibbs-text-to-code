@@ -78,3 +78,13 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
         print(f"Error extracting text from eicr message: {e}")
         return text_candidates
     return text_candidates
+
+
+# def get_reference_value(reference_value: str) -> str | None:
+#     """Get the text of the first node with an ID attribute that matches the reference."""
+#     referenced_node = self.eicr.find(f'.//*[@ID="{reference_value.strip("#")}"]')
+
+#     if referenced_node is not None:
+#         return referenced_node.text
+
+#     return None

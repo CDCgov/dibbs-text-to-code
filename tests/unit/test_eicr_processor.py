@@ -3,7 +3,7 @@ from pathlib import Path
 from dibbs_text_to_code.services.eicr_processor import _enhance_xpath_with_namespace
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 
-current_dir = Path(__file__).parent.parent
+CURRENT_DIR = Path(__file__).parent.parent
 
 
 class TestEICRProcessor:
@@ -11,7 +11,7 @@ class TestEICRProcessor:
 
     def file_setup(self) -> None:
         if self.TEST_EICR_FILE is None:
-            eicr_path = current_dir / "assets" / "test_eicr_covid.xml"
+            eicr_path = CURRENT_DIR / "assets" / "test_eicr_covid.xml"
             with eicr_path.open() as f:
                 eicr_output = f.read()
             self.TEST_EICR_FILE = eicr_output
@@ -51,3 +51,15 @@ class TestEICRProcessor:
 
         result = _enhance_xpath_with_namespace(base_xpath, "cda")
         assert result == expected_xpath
+
+    # def test_get_reference_value(self) -> None:
+    #     eicr_path = CURRENT_DIR / "assets" / "test_eicr.xml"
+    #     with eicr_path.open() as eicr_file:
+    #         eicr_string = eicr_file.read()
+
+    #     eicr_processor = EicrProcessor(eicr_string)
+
+    #     expected = "120"
+    #     actual = eicr_processor.get_reference_value("#SystolicBP_2")
+
+    #     assert actual == expected
