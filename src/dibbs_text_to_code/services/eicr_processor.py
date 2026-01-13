@@ -1,4 +1,5 @@
 from lxml import etree
+from lxml.etree import Element
 
 from dibbs_text_to_code.configs.general import get_configuration_for_data_element
 
@@ -68,11 +69,23 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
                 enhanced_xpath = _enhance_xpath_with_namespace(sub_xpath, "cda")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=NAMESPACES)
                 for i, sub_node in enumerate(sub_nodes):
-                    if len(sub_node.strip()) > 0:
-                        # NOTE: I've added the iterator at the end of the key to ensure uniqueness
-                        # per key in the case that there may be multiple locations where the text
-                        # candidate may be the same
-                        text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
+                    if isinstance(sub_node, str):
+                        if len(sub_node.strip()) > 0:
+                            # NOTE: I've added the iterator at the end of the key to ensure uniqueness
+                            # per key in the case that there may be multiple locations where the text
+                            # candidate may be the same
+                            text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
+                    else:
+                        text = sub_node.text.strip()
+                        for child in sub_node:
+                            if child.tag == "{urn:hl7-org:v3}reference":
+                                text += get_reference_value(xml_root, child.get("value"))
+
+                            if child.tail:
+                                text += child.tail
+
+                            text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
+
     except Exception as e:
         # TODO: we may want to log this somewhere instead of print
         print(f"Error extracting text from eicr message: {e}")
@@ -80,11 +93,11 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
     return text_candidates
 
 
-# def get_reference_value(reference_value: str) -> str | None:
-#     """Get the text of the first node with an ID attribute that matches the reference."""
-#     referenced_node = self.eicr.find(f'.//*[@ID="{reference_value.strip("#")}"]')
+def get_reference_value(xml_root: Element, reference_value: str) -> str | None:
+    """Get the text of the first node with an ID attribute that matches the reference."""
+    referenced_node = xml_root.find(f'.//*[@ID="{reference_value.strip("#")}"]')
 
-#     if referenced_node is not None:
-#         return referenced_node.text
+    if referenced_node is not None:
+        return referenced_node.text.strip()
 
-#     return None
+    return None

@@ -46,6 +46,9 @@ class TestGetTextCandidates:
             == "COVID-19 Spike IgG"
         )
 
+    def test_text_candidates_reference(self) -> None:
+        self.file_setup()
+
     def test_text_candidates_wrong_datatype(self) -> None:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)

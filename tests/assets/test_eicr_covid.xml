@@ -416,6 +416,7 @@
                                                   displayName="Relevant diagnostic tests and/or laboratory data"/>
                     <title>Results</title>
                     <text>
+                        <p ID="my_reference">My Reference!</p>
                         <table>
                             <col width="15%"/>
                             <col width="15%"/>
@@ -527,8 +528,9 @@
                                                   displayName="SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
                                                   sdtc:valueSet="2.16.840.1.114222.4.11.7508"
                                                   sdtc:valueSetVersion="20200429" xsi:type="CD">
-                                        <originalText>COVID-19 Spike IgG Interpretation
-                                            <reference value="#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name"/>
+                                        <originalText>
+                                            COVID-19 Spike IgG Interpretation
+                                            <reference value="#my_reference"/>
                                         </originalText>
                                         <text>SARS-like Coronavirus</text>
                                         <translation code="17822" codeSystem="1.2.840.114350.1.13.478.3.7.2.768282" codeSystemName="Epic.LRR.ID" displayName="COVID-19 Spike IgG Interpretation"/>
