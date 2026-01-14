@@ -75,7 +75,8 @@ class TestEICRProcessor:
         xml_root = etree.fromstring(eicr_string.encode("utf-8"))
 
         actual = resolve_reference(
-            xml_root, "#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name"
+            xml_root,
+            "#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name",
         )
 
         assert actual is None
