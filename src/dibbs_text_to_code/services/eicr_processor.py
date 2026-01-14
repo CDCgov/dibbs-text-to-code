@@ -76,15 +76,17 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
                             # candidate may be the same
                             text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
                     else:
-                        text = sub_node.text.strip()
+                        text = [sub_node.text.strip()]
                         for child in sub_node:
                             if child.tag == "{urn:hl7-org:v3}reference":
-                                text += resolve_reference(xml_root, child.get("value"))
+                                text.append(resolve_reference(xml_root, child.get("value")))
 
                             if child.tail:
-                                text += child.tail
+                                text.append(child.tail.strip())
 
-                            text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
+                            text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = " ".join(
+                                list(filter(lambda x: x, text))
+                            )
 
     except Exception as e:
         # TODO: we may want to log this somewhere instead of print

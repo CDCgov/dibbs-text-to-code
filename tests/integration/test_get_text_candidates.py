@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 from dibbs_text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
@@ -27,7 +29,7 @@ class TestGetTextCandidates:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
-        expected_num_results = 7
+        expected_num_results = 5
         expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
 
         xpaths = error_result["lab_result"][1]
@@ -46,9 +48,6 @@ class TestGetTextCandidates:
             == "COVID-19 Spike IgG"
         )
 
-    def test_text_candidates_reference(self) -> None:
-        self.file_setup()
-
     def test_text_candidates_wrong_datatype(self) -> None:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
@@ -65,3 +64,30 @@ class TestGetTextCandidates:
         xpath = error_result["lab_result"][1]
         result = get_text_candidates("", xpath, "lab_result")
         assert len(result) == 0
+
+
+class TestGetTextCandidatesReferences:
+    @pytest.fixture(scope="class")
+    def results(self) -> dict[str, str]:
+        eicr_path = current_dir / "assets" / "reference_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+
+        return get_text_candidates(eicr_output, xpath, "lab_result")
+
+    def test_simple_reference(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
+        expected = "My reference"
+        assert results[key] == expected
+
+    def test_additional_text_in_original(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[0]"
+        expected = "This original text has additional text My reference Even more stuff here"
+        assert results[key] == expected
+
+    def test_complicated_reference(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[1]"
+        expected = "A more complicated reference With extra nodes"
+        assert results[key] == expected
