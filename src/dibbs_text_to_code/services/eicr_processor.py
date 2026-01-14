@@ -68,7 +68,6 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
             for sub_xpath in sub_xpaths:
                 enhanced_xpath = _enhance_xpath_with_namespace(sub_xpath, "cda")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=NAMESPACES)
-
                 for i, sub_node in enumerate(sub_nodes):
                     # NOTE: I've added the iterator at the end of the key to ensure uniqueness
                     # per key in the case that there may be multiple locations where the text
