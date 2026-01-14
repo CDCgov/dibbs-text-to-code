@@ -1,3 +1,4 @@
+import json
 import os
 from utils import export_json
 from utils import import_json
@@ -24,7 +25,8 @@ def accuracy_evaluation(
     """
     loinc_to_oids = import_json(loinc_to_oids_file)
     oid_to_conditions = import_json(oid_to_conditions_file)
-    eval_data = import_json(input_file)
+    with open(input_file, "r") as f:
+        eval_data = [json.loads(line) for line in f if line.strip()]
 
     status_priority = {
         "first-degree match": 5,
@@ -40,7 +42,7 @@ def accuracy_evaluation(
     for item in eval_data:
         expected_loinc = item.get("expected_loinc")
         for result in item.get("results"):
-            returned_loinc = result.get("returned_loinc")
+            returned_loinc = result.get("loinc_code")
 
             returned_oids = sorted(loinc_to_oids.get(returned_loinc, []) if returned_loinc else [])
             expected_oids = sorted(loinc_to_oids.get(expected_loinc, []) if expected_loinc else [])
