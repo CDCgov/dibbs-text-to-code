@@ -20,10 +20,10 @@ class EicrProcessor:
         :param self
         :param eicr_data: string of EICR
         """
-        self.xml_root = etree.fromstring(eicr_data.encode("utf-8"))
+        self._xml_root = etree.fromstring(eicr_data.encode("utf-8"))
 
     def _get_by_xpath(self, *xpath: str) -> Element:
-        return self.xml_root.xpath("/".join(xpath))
+        return self._xml_root.xpath("/".join(xpath))
 
     def get_text_candidates(self, base_xpath: str, data_field: str) -> dict[str, str]:
         """Find text candidates for a specified data field/element.
@@ -73,7 +73,7 @@ class EicrProcessor:
         if not reference_value:
             return None
 
-        referenced_node = self.xml_root.find(f'.//*[@ID="{reference_value.strip("#")}"]')
+        referenced_node = self._xml_root.find(f'.//*[@ID="{reference_value.strip("#")}"]')
 
         if referenced_node is not None:
             return " ".join(_get_text_recursively(referenced_node))
