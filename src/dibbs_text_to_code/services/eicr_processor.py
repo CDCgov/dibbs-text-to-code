@@ -1,14 +1,24 @@
+import re
+
 from lxml import etree
 from lxml.etree import Element
 
 from dibbs_text_to_code.configs.general import get_configuration_for_data_element
 
 NAMESPACES = {
-    "cda": "urn:hl7-org:v3",
-    "sdtc": "urn:hl7-org:sdtc",
-    "voc": "http://www.lantanagroup.com/voc",
-    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "ns": "urn:hl7-org:v3",
 }
+
+
+def _build_xpath(*paths: str) -> str:
+    """Automatically prefix all elements in an XPath."""
+    path = "/".join(paths)
+
+    result = re.sub(r"/([a-zA-Z_][\w.-]*?)(?=[/\[]|$)", r"/ns:\1", path)
+    # Handle start of path if it doesn't begin with /
+    if result and result[0] != "/":
+        result = f"ns:{result}"
+    return result
 
 
 class EicrProcessor:
@@ -23,7 +33,7 @@ class EicrProcessor:
         self._xml_root = etree.fromstring(eicr_data.encode("utf-8"))
 
     def _get_by_xpath(self, *xpath: str) -> Element:
-        return self._xml_root.xpath("/".join(xpath))
+        return self._xml_root.xpath(_build_xpath(*xpath), namespaces=NAMESPACES)
 
     def get_text_candidates(self, base_xpath: str, data_field: str) -> dict[str, str]:
         """Find text candidates for a specified data field/element.

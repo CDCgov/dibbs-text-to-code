@@ -7,18 +7,10 @@ from dibbs_text_to_code.services.eicr_processor import EicrProcessor
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 
 
-class TestEicrProcessor:
+class TestBasicEicrProcessor:
     @pytest.fixture(scope="class")
-    def covid_eicr(self) -> EicrProcessor:
-        eicr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
-        with eicr_path.open() as f:
-            eicr_output = f.read()
-
-        return EicrProcessor(eicr_output)
-
-    @pytest.fixture(scope="class")
-    def references_test_eicr(self) -> EicrProcessor:
-        eicr_path = EXAMPLE_EICRS_DIRECTORY / "reference_test_eicr.xml"
+    def basic_eicr(self) -> EicrProcessor:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
         with eicr_path.open() as f:
             eicr_output = f.read()
 
@@ -32,6 +24,42 @@ class TestEicrProcessor:
         """
         assert EicrProcessor("<tag />")
 
-    def test_get_text_candidates_empty_xpath(self, covid_eicr: EicrProcessor) -> None:
-        result = covid_eicr.get_text_candidates("", "lab_result")
+    def test_get_text_candidates_empty_xpath(self, basic_eicr: EicrProcessor) -> None:
+        result = basic_eicr.get_text_candidates("", "lab_result")
         assert len(result) == 0
+
+    def test_basic_eicr(self, basic_eicr: EicrProcessor) -> None:
+        xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+        result = basic_eicr.get_text_candidates(xpath, "lab_result")
+
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
+
+        assert result == {key: "A custom code."}
+
+
+class TestReferences:
+    @pytest.fixture(scope="class")
+    def results(self) -> dict[str, str]:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "reference_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        eicr_processor = EicrProcessor(eicr_output)
+        xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+
+        return eicr_processor.get_text_candidates(xpath, "lab_result")
+
+    def test_simple_reference(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
+        expected = "My reference"
+        assert results[key] == expected
+
+    def test_additional_text_in_original(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[0]"
+        expected = "This original text has additional text My reference Even more stuff here"
+        assert results[key] == expected
+
+    def test_complicated_reference(self, results: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[1]"
+        expected = "A more complicated reference With extra nodes"
+        assert results[key] == expected
