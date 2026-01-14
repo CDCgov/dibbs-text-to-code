@@ -29,7 +29,7 @@ class TestGetTextCandidates:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
-        expected_num_results = 6
+        expected_num_results = 7
         expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
 
         xpaths = error_result["lab_result"][1]
@@ -43,7 +43,7 @@ class TestGetTextCandidates:
         )
         assert (
             result[
-                "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/translation/originalText/text()[0]"
+                "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/translation/originalText[0]"
             ]
             == "COVID-19 Spike IgG"
         )
