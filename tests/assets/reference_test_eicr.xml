@@ -1,0 +1,67 @@
+<!-- Simplified eICR to test resolving references -->
+<ClinicalDocument>
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <entry>
+            <component>
+              <text>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        Simple Reference
+                      </th>
+                      <th>
+                        Additional Nodes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td ID="simple_reference_1">
+                        My reference
+                      </td>
+                      <td ID="complicated_reference_1">
+                        <content>
+                          A more complicated reference
+                        </content>
+                        <content>
+                          With extra nodes
+                        </content>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </text>
+              <observation>
+                <code>
+                  <code>
+                    <originalText>
+                      <reference value="#simple_reference_1" />
+                    </originalText>
+                    <text>SARS-like Coronavirus</text>
+                    <translation>
+                      <originalText>
+                        This original text has additional text
+                        <reference value="#simple_reference_1" />
+                        Even more stuff here
+                      </originalText>
+                    </translation>
+                    <translation>
+                      <originalText>
+                        <reference value="#complicated_reference_1" />
+                      </originalText>
+                    </translation>
+                  </code>
+                </code>
+              </observation>
+            </component>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

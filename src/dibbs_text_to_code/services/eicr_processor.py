@@ -79,7 +79,7 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
                         text = sub_node.text.strip()
                         for child in sub_node:
                             if child.tag == "{urn:hl7-org:v3}reference":
-                                text += get_reference_value(xml_root, child.get("value"))
+                                text += resolve_reference(xml_root, child.get("value"))
 
                             if child.tail:
                                 text += child.tail
@@ -93,11 +93,22 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dic
     return text_candidates
 
 
-def get_reference_value(xml_root: Element, reference_value: str) -> str | None:
+def resolve_reference(xml_root: Element, reference_value: str) -> str | None:
     """Get the text of the first node with an ID attribute that matches the reference."""
     referenced_node = xml_root.find(f'.//*[@ID="{reference_value.strip("#")}"]')
 
     if referenced_node is not None:
-        return referenced_node.text.strip()
+        return " ".join(_get_text_recursively(referenced_node))
 
     return None
+
+
+def _get_text_recursively(element: Element) -> list[str]:
+    text_elements = [element.text.strip()]
+
+    for child in element:
+        text_elements += _get_text_recursively(child)
+
+    text_elements.append(element.tail.strip())
+
+    return list(filter(lambda x: x, text_elements))

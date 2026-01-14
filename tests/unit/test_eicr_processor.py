@@ -1,7 +1,10 @@
 from pathlib import Path
 
+from lxml import etree
+
 from dibbs_text_to_code.services.eicr_processor import _enhance_xpath_with_namespace
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
+from dibbs_text_to_code.services.eicr_processor import resolve_reference
 
 CURRENT_DIR = Path(__file__).parent.parent
 
@@ -52,14 +55,38 @@ class TestEICRProcessor:
         result = _enhance_xpath_with_namespace(base_xpath, "cda")
         assert result == expected_xpath
 
-    # def test_get_reference_value(self) -> None:
-    #     eicr_path = CURRENT_DIR / "assets" / "test_eicr.xml"
-    #     with eicr_path.open() as eicr_file:
-    #         eicr_string = eicr_file.read()
+    def test_get_reference_value(self) -> None:
+        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
+        with eicr_path.open() as eicr_file:
+            eicr_string = eicr_file.read()
 
-    #     eicr_processor = EicrProcessor(eicr_string)
+        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
 
-    #     expected = "120"
-    #     actual = eicr_processor.get_reference_value("#SystolicBP_2")
+        expected = "My reference"
+        actual = resolve_reference(xml_root, "#simple_reference_1")
 
-    #     assert actual == expected
+        assert actual == expected
+
+    def test_resolve_reference_not_found(self) -> None:
+        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
+        with eicr_path.open() as eicr_file:
+            eicr_string = eicr_file.read()
+
+        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
+
+        actual = resolve_reference(
+            xml_root, "#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name"
+        )
+
+        assert actual is None
+
+    def test_resolve_reference_additional_nodes_in_reference(self) -> None:
+        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
+        with eicr_path.open() as eicr_file:
+            eicr_string = eicr_file.read()
+
+        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
+        expected = "A more complicated reference With extra nodes"
+        actual = resolve_reference(xml_root, "#complicated_reference_1")
+
+        assert actual == expected
