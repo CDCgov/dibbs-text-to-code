@@ -106,11 +106,14 @@ def resolve_reference(xml_root: Element, reference_value: str) -> str | None:
 
 
 def _get_text_recursively(element: Element) -> list[str]:
-    text_elements = [element.text.strip()]
+    text_elements = []
+    if element.text:
+        text_elements.append(element.text.strip())
 
     for child in element:
         text_elements += _get_text_recursively(child)
 
-    text_elements.append(element.tail.strip())
+    if element.tail:
+        text_elements.append(element.tail.strip())
 
     return list(filter(lambda x: x, text_elements))
