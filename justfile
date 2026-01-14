@@ -18,9 +18,9 @@ bootstrap:
     pre-commit install
     npm i --save-dev
 
-[doc("Run tests")]
-test:
-    uv run pytest
+[doc("Run tests, forwarding optional arguments to pytest")]
+test *ARGS:
+    uv run pytest {{ ARGS }}
 
 [doc("Sync Python environment")]
 sync:
