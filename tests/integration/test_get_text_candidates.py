@@ -29,7 +29,7 @@ class TestGetTextCandidates:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
-        expected_num_results = 5
+        expected_num_results = 6
         expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
 
         xpaths = error_result["lab_result"][1]
