@@ -59,7 +59,7 @@ class TestReferences:
 
         eicr_processor = EicrProcessor(eicr_output)
 
-        return eicr_processor.get_text_candidates(self.base_xpath, "lab_result")
+        return eicr_processor.get_text_candidates(BASE_XPATH, "lab_result")
 
     def test_simple_reference(self, results: list[Candidate]) -> None:
         full_xpath = f"/{BASE_XPATH}/code/originalText[0]"
