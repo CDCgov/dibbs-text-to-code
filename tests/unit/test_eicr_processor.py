@@ -7,15 +7,7 @@ from dibbs_text_to_code.services.eicr_processor import EicrProcessor
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 
 
-class TestBasicEicrProcessor:
-    @pytest.fixture(scope="class")
-    def basic_eicr(self) -> EicrProcessor:
-        eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
-        with eicr_path.open() as f:
-            eicr_output = f.read()
-
-        return EicrProcessor(eicr_output)
-
+class TestEmptyEicrProcessor:
     def test_init(self) -> None:
         """Test initialization of an EICR processor.
 
@@ -24,17 +16,34 @@ class TestBasicEicrProcessor:
         """
         assert EicrProcessor("<tag />")
 
-    def test_get_text_candidates_empty_xpath(self, basic_eicr: EicrProcessor) -> None:
-        result = basic_eicr.get_text_candidates("", "lab_result")
+    def test_get_text_candidates_empty_xpath(self) -> None:
+        result = EicrProcessor("<tag />").get_text_candidates("", "lab_result")
         assert len(result) == 0
 
-    def test_basic_eicr(self, basic_eicr: EicrProcessor) -> None:
-        xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
-        result = basic_eicr.get_text_candidates(xpath, "lab_result")
 
+class TestBasicEicrProcessor:
+    @pytest.fixture(scope="class")
+    def result(self) -> EicrProcessor:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        base_xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+        return EicrProcessor(eicr_output).get_text_candidates(base_xpath, "lab_result")
+
+    def test_attribute_candidate(self, result: dict[str, str]) -> None:
+        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/@displayName[0]"
+
+        assert result[key] == "A custom code in display name."
+
+    def test_text_candidate(self, result: dict[str, str]) -> None:
         key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
 
-        assert result == {key: "A custom code."}
+        assert result[key] == "A custom code in original text."
+
+    def test_candidate_count(self, result: dict[str, str]) -> None:
+        expected = 2
+        assert len(result) == expected
 
 
 class TestReferences:

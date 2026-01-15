@@ -10,9 +10,9 @@
           <entry>
             <component>
               <observation>
-                <code>
+                <code displayName="A custom code in display name.">
                   <originalText>
-                    A custom code.
+                    A custom code in original text.
                   </originalText>
                 </code>
               </observation>

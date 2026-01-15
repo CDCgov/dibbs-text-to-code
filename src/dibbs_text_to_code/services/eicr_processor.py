@@ -27,7 +27,6 @@ class EicrProcessor:
     def __init__(self, eicr_data: str):
         """Initialize an EicrProcessor.
 
-        :param self
         :param eicr_data: string of EICR
         """
         self._xml_root = etree.fromstring(eicr_data.encode("utf-8"))
