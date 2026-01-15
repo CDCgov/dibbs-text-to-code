@@ -36,12 +36,12 @@ class TestBasicEicrProcessor:
         return EicrProcessor(eicr_output).get_text_candidates(BASE_XPATH, "lab_result")
 
     def test_attribute_candidate(self, result: list[Candidate]) -> None:
-        full_xpath = f"/{BASE_XPATH}/code/@displayName[0]"
+        full_xpath = f"{BASE_XPATH}/code/@displayName[0]"
 
         assert result[0] == Candidate(value="A custom code in display name.", xpath=full_xpath)
 
     def test_text_candidate(self, result: list[Candidate]) -> None:
-        full_xpath = f"/{BASE_XPATH}/code/originalText[0]"
+        full_xpath = f"{BASE_XPATH}/code/originalText[0]"
 
         assert result[1] == Candidate(value="A custom code in original text.", xpath=full_xpath)
 
@@ -62,16 +62,16 @@ class TestReferences:
         return eicr_processor.get_text_candidates(BASE_XPATH, "lab_result")
 
     def test_simple_reference(self, results: list[Candidate]) -> None:
-        full_xpath = f"/{BASE_XPATH}/code/originalText[0]"
+        full_xpath = f"{BASE_XPATH}/code/originalText[0]"
         expected = "My reference"
         assert results[0] == Candidate(value=expected, xpath=full_xpath)
 
     def test_additional_text_in_original(self, results: list[Candidate]) -> None:
-        full_xpath = f"/{BASE_XPATH}/code/translation/originalText[0]"
+        full_xpath = f"{BASE_XPATH}/code/translation/originalText[0]"
         expected = "This original text has additional text My reference Even more stuff here"
         assert results[1] == Candidate(value=expected, xpath=full_xpath)
 
     def test_complicated_reference(self, results: list[Candidate]) -> None:
-        full_xpath = f"/{BASE_XPATH}/code/translation/originalText[1]"
+        full_xpath = f"{BASE_XPATH}/code/translation/originalText[1]"
         expected = "A more complicated reference With extra nodes"
         assert results[2] == Candidate(value=expected, xpath=full_xpath)
