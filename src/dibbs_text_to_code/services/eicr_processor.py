@@ -1,24 +1,19 @@
-import re
-
 from lxml import etree
 from lxml.etree import Element
 
 from dibbs_text_to_code.configs.general import get_configuration_for_data_element
-
-NAMESPACES = {
-    "ns": "urn:hl7-org:v3",
-}
+from dibbs_text_to_code.models import Candidate
 
 
-def _build_xpath(*paths: str) -> str:
-    """Automatically prefix all elements in an XPath."""
-    path = "/".join(paths)
-
-    result = re.sub(r"/([a-zA-Z_][\w.-]*?)(?=[/\[]|$)", r"/ns:\1", path)
-    # Handle start of path if it doesn't begin with /
-    if result and result[0] != "/":
-        result = f"ns:{result}"
-    return result
+def _create_xml_tree(xml: str) -> Element:
+    """Remove all namespaces from an XML tree."""
+    tree = etree.fromstring(xml.encode("utf-8"))
+    for elem in tree.iter():
+        # Remove namespace from tag
+        elem.tag = etree.QName(elem).localname
+    # Remove namespace declarations
+    etree.cleanup_namespaces(tree)
+    return tree
 
 
 class EicrProcessor:
@@ -29,12 +24,12 @@ class EicrProcessor:
 
         :param eicr_data: string of EICR
         """
-        self._xml_root = etree.fromstring(eicr_data.encode("utf-8"))
+        self._xml_root = _create_xml_tree(eicr_data)
 
-    def _get_by_xpath(self, *xpath: str) -> Element:
-        return self._xml_root.xpath(_build_xpath(*xpath), namespaces=NAMESPACES)
+    def _get_by_xpath(self, xpath: str) -> Element:
+        return self._xml_root.xpath(xpath)
 
-    def get_text_candidates(self, base_xpath: str, data_field: str) -> dict[str, str]:
+    def get_text_candidates(self, base_xpath: str, data_field: str) -> list[Candidate]:
         """Find text candidates for a specified data field/element.
 
         :param eicr_data: The eICR data as an XML string.
@@ -44,13 +39,13 @@ class EicrProcessor:
         :returns: A list of text candidates found within the eICR for
             the specified data field/element for TTC processing.
         """
-        text_candidates: dict[str, str] = {}
+        candidates: list[Candidate] = []
         # first get data field config settings - this acts
         # as a validation of correct data field being passed
         config_settings = get_configuration_for_data_element(data_field)
 
         if not base_xpath.strip() or config_settings is None:
-            return text_candidates
+            return candidates
 
         # get list of xpaths per data field from config
         sub_xpaths = config_settings.xpaths
@@ -59,23 +54,24 @@ class EicrProcessor:
             nodes = self._get_by_xpath(base_xpath)
             for _ in nodes:
                 for sub_xpath in sub_xpaths:
-                    sub_nodes = self._get_by_xpath(base_xpath, sub_xpath)
+                    full_xpath = f"{base_xpath}/{sub_xpath}"
+                    sub_nodes = self._get_by_xpath(full_xpath)
                     for i, sub_node in enumerate(sub_nodes):
                         key = f"{base_xpath}{sub_xpath}[{i}]"
 
                         if isinstance(sub_node, str):
                             if sub_node.strip():
-                                text_candidates[key] = sub_node.strip()
+                                candidates.append(Candidate(value=sub_node.strip(), xpath=key))
                         else:
                             text = self._extract_text_from_element(sub_node)
                             if text:
-                                text_candidates[key] = text
+                                candidates.append(Candidate(value=text, xpath=key))
 
         except Exception as e:
             # TODO: we may want to log this somewhere instead of print
             print(f"Error extracting text from eicr message: {e}")
-            return text_candidates
-        return text_candidates
+            return candidates
+        return candidates
 
     def resolve_reference(self, reference_value: str | None) -> str | None:
         """Get the text of the first node with an ID attribute that matches the reference."""
@@ -102,7 +98,7 @@ class EicrProcessor:
 
         for child in element:
             # Handle reference elements
-            if child.tag == "{urn:hl7-org:v3}reference":
+            if child.tag == "reference":
                 ref_text = self.resolve_reference(child.get("value"))
                 if ref_text:
                     text_parts.append(ref_text)
