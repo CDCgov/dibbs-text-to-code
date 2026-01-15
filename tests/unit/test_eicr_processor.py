@@ -7,6 +7,10 @@ from dibbs_text_to_code.services.eicr_processor import EicrProcessor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 
+BASE_XPATH = (
+    "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+)
+
 
 class TestEmptyEicrProcessor:
     def test_init(self) -> None:
@@ -29,18 +33,17 @@ class TestBasicEicrProcessor:
         with eicr_path.open() as f:
             eicr_output = f.read()
 
-        base_xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
-        return EicrProcessor(eicr_output).get_text_candidates(base_xpath, "lab_result")
+        return EicrProcessor(eicr_output).get_text_candidates(BASE_XPATH, "lab_result")
 
     def test_attribute_candidate(self, result: list[Candidate]) -> None:
-        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/@displayName[0]"
+        full_xpath = f"/{BASE_XPATH}/code/@displayName[0]"
 
-        assert result[0] == Candidate(value="A custom code in display name.", xpath=key)
+        assert result[0] == Candidate(value="A custom code in display name.", xpath=full_xpath)
 
     def test_text_candidate(self, result: list[Candidate]) -> None:
-        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
+        full_xpath = f"/{BASE_XPATH}/code/originalText[0]"
 
-        assert result[1] == Candidate(value="A custom code in original text.", xpath=key)
+        assert result[1] == Candidate(value="A custom code in original text.", xpath=full_xpath)
 
     def test_candidate_count(self, result: list[Candidate]) -> None:
         expected = 2
@@ -55,21 +58,20 @@ class TestReferences:
             eicr_output = f.read()
 
         eicr_processor = EicrProcessor(eicr_output)
-        xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
 
-        return eicr_processor.get_text_candidates(xpath, "lab_result")
+        return eicr_processor.get_text_candidates(self.base_xpath, "lab_result")
 
     def test_simple_reference(self, results: list[Candidate]) -> None:
-        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
+        full_xpath = f"/{BASE_XPATH}/code/originalText[0]"
         expected = "My reference"
-        assert results[0] == Candidate(value=expected, xpath=key)
+        assert results[0] == Candidate(value=expected, xpath=full_xpath)
 
     def test_additional_text_in_original(self, results: list[Candidate]) -> None:
-        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[0]"
+        full_xpath = f"/{BASE_XPATH}/code/translation/originalText[0]"
         expected = "This original text has additional text My reference Even more stuff here"
-        assert results[1] == Candidate(value=expected, xpath=key)
+        assert results[1] == Candidate(value=expected, xpath=full_xpath)
 
     def test_complicated_reference(self, results: list[Candidate]) -> None:
-        key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[1]"
+        full_xpath = f"/{BASE_XPATH}/code/translation/originalText[1]"
         expected = "A more complicated reference With extra nodes"
-        assert results[2] == Candidate(value=expected, xpath=key)
+        assert results[2] == Candidate(value=expected, xpath=full_xpath)
