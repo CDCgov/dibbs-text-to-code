@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+
+from dibbs_text_to_code.schemas import eicr
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 from dibbs_text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
@@ -30,8 +33,12 @@ class TestGetTextCandidates:
         expected_num_results = 7
         expected_result = "SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
 
-        xpaths = error_result["lab_result"][1]
-        result = get_text_candidates(self.TEST_EICR_FILE, xpaths, "lab_result")
+        xpaths = error_result["Lab Test Name Resulted"][1]
+
+        result = get_text_candidates(
+            self.TEST_EICR_FILE, xpaths, eicr.EicrDataField.LAB_TEST_NAME_RESULTED
+        )
+
         assert len(result) == expected_num_results
         assert (
             result[
@@ -50,15 +57,15 @@ class TestGetTextCandidates:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
-        xpath = error_result["lab_result"][1]
+        xpath = error_result[eicr.EicrDataField.LAB_TEST_NAME_RESULTED][1]
 
-        result = get_text_candidates(self.TEST_EICR_FILE, xpath, "my_field")
-        assert len(result) == 0
+        with pytest.raises(KeyError):
+            get_text_candidates(self.TEST_EICR_FILE, xpath, "invalid_field")
 
     def test_get_text_candidates_empty_ecr(self) -> None:
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
-        xpath = error_result["lab_result"][1]
-        result = get_text_candidates("", xpath, "lab_result")
+        xpath = error_result[eicr.EicrDataField.LAB_TEST_NAME_RESULTED][1]
+        result = get_text_candidates("", xpath, eicr.EicrDataField.LAB_TEST_NAME_RESULTED)
         assert len(result) == 0

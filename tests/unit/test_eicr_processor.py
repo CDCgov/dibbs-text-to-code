@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from dibbs_text_to_code.schemas import eicr
 from dibbs_text_to_code.services.eicr_processor import _enhance_xpath_with_namespace
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 
@@ -19,7 +20,9 @@ class TestEICRProcessor:
     def test_get_text_candidates_empty_xpath(self) -> None:
         self.file_setup()
 
-        result = get_text_candidates(self.TEST_EICR_FILE, "", "lab_result")
+        result = get_text_candidates(
+            self.TEST_EICR_FILE, "", eicr.EicrDataField.LAB_TEST_NAME_RESULTED
+        )
         assert len(result) == 0
 
     def test_enhance_xpath_with_namespace(self) -> None:
