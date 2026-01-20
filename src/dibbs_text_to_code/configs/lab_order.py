@@ -13,7 +13,6 @@ class LabOrderConfig(pydantic.BaseModel):
     xpaths: list[str] = [
         "/code/@displayName",
         "/code/originalText",
-        "/code/text",
         "/code/translation/@displayName",
         "/code/translation/originalText",
         "/code/translation/text",
