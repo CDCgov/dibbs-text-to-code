@@ -13,7 +13,7 @@ class TestGetTextCandidates:
     SCHEMATRON_ERROR_FILE = None
     TEST_EICR_FILE = None
 
-    def file_setup(self) -> None:
+    def file_setup(self):
         if self.SCHEMATRON_ERROR_FILE is None:
             schematron_path = current_dir / "assets" / "test_schematron_errors.xml"
             with schematron_path.open() as f:
@@ -26,7 +26,7 @@ class TestGetTextCandidates:
                 eicr_output = f.read()
             self.TEST_EICR_FILE = eicr_output
 
-    def test_get_text_candidates(self) -> None:
+    def test_get_text_candidates(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
@@ -40,12 +40,14 @@ class TestGetTextCandidates:
         )
 
         assert len(result) == expected_num_results
+
         assert (
             result[
                 "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/@displayName[0]"
             ]
             == expected_result
         )
+
         assert (
             result[
                 "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]/code/translation/originalText[0]"
@@ -53,7 +55,7 @@ class TestGetTextCandidates:
             == "COVID-19 Spike IgG"
         )
 
-    def test_text_candidates_wrong_datatype(self) -> None:
+    def test_text_candidates_wrong_datatype(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
@@ -62,7 +64,7 @@ class TestGetTextCandidates:
         with pytest.raises(KeyError):
             get_text_candidates(self.TEST_EICR_FILE, xpath, "invalid_field")
 
-    def test_get_text_candidates_empty_ecr(self) -> None:
+    def test_get_text_candidates_empty_ecr(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(self.SCHEMATRON_ERROR_FILE)
 
@@ -80,19 +82,19 @@ class TestGetTextCandidatesReferences:
 
         xpath = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
 
-        return get_text_candidates(eicr_output, xpath, "lab_result")
+        return get_text_candidates(eicr_output, xpath, eicr.EicrDataField.LAB_TEST_NAME_RESULTED)
 
-    def test_simple_reference(self, results: dict[str, str]) -> None:
+    def test_simple_reference(self, results: dict[str, str]):
         key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText[0]"
         expected = "My reference"
         assert results[key] == expected
 
-    def test_additional_text_in_original(self, results: dict[str, str]) -> None:
+    def test_additional_text_in_original(self, results: dict[str, str]):
         key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[0]"
         expected = "This original text has additional text My reference Even more stuff here"
         assert results[key] == expected
 
-    def test_complicated_reference(self, results: dict[str, str]) -> None:
+    def test_complicated_reference(self, results: dict[str, str]):
         key = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation/originalText[1]"
         expected = "A more complicated reference With extra nodes"
         assert results[key] == expected

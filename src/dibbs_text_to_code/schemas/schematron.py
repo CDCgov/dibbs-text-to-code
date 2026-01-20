@@ -42,8 +42,8 @@ class LabXPaths(enum.StrEnum):
     """The list of Sub XPath expressions to extract text in various locations from lab elements."""
 
     CODE_DISPLAY_NAME = "/code/@displayName"
-    CODE_ORIGINAL_TEXT = "/code/originalText/text()"
-    CODE_TEXT = "/code/text/text()"
+    CODE_ORIGINAL_TEXT = "/code/originalText"
+    CODE_TEXT = "/code/text"
     CODE_TRANSLATION_DISPLAY_NAME = "/code/translation/@displayName"
-    CODE_TRANSLATION_ORIGINAL_TEXT = "/code/translation/originalText/text()"
-    CODE_TRANSLATION_TEXT = "/code/translation/text/text()"
+    CODE_TRANSLATION_ORIGINAL_TEXT = "/code/translation/originalText"
+    CODE_TRANSLATION_TEXT = "/code/translation/text"
