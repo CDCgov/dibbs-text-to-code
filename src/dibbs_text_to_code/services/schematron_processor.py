@@ -2,10 +2,26 @@ from collections import defaultdict
 
 from lxml import etree
 
-from dibbs_text_to_code.configs.general import get_data_element_from_schematron_error
+from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.schemas import schematron
 
 
-def get_data_fields_from_schematron_error(schematron_output: str) -> dict:
+def get_data_element_from_schematron_error(schematron_error: str) -> eicr.EicrDataField | None:
+    """Return the data field that the error message is associated with, if any.
+
+    :param schematron_error: The schematron error message being evaluated.
+    :returns: The data field the schematron error is associated with,
+        or None if not found.
+    """
+    for error_enum, data_field in schematron._SCHEMATRON_ENUM_TO_FIELD.items():
+        if schematron_error in (e.value for e in error_enum):
+            return data_field
+    return None
+
+
+def get_data_fields_from_schematron_error(
+    schematron_output: str,
+) -> dict[eicr.EicrDataField, list[str]]:
     """Find errors that correspond to specific data elements/fields.
 
     :param schematron_output: The data from the Schematron validation
