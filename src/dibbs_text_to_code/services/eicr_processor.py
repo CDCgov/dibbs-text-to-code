@@ -1,4 +1,5 @@
 from lxml import etree
+from lxml.etree import Element
 
 from dibbs_text_to_code.schemas import eicr
 from dibbs_text_to_code.services import utils
@@ -68,13 +69,76 @@ def get_text_candidates(eicr_data: str, base_xpath: str, data_field: eicr.EicrDa
                 enhanced_xpath = _enhance_xpath_with_namespace(sub_xpath, "cda")
                 sub_nodes = node.xpath(enhanced_xpath, namespaces=NAMESPACES)
                 for i, sub_node in enumerate(sub_nodes):
-                    if len(sub_node.strip()) > 0:
-                        # NOTE: I've added the iterator at the end of the key to ensure uniqueness
-                        # per key in the case that there may be multiple locations where the text
-                        # candidate may be the same
-                        text_candidates[f"{base_xpath}{sub_xpath}[{i}]"] = sub_node.strip()
+                    # NOTE: I've added the iterator at the end of the key to ensure uniqueness
+                    # per key in the case that there may be multiple locations where the text
+                    # candidate may be the same
+                    key = f"{base_xpath}{sub_xpath}[{i}]"
+
+                    if isinstance(sub_node, str):
+                        if sub_node.strip():
+                            text_candidates[key] = sub_node.strip()
+                    else:
+                        text = _extract_text_from_element(sub_node, xml_root)
+                        if text:
+                            text_candidates[key] = text
+
     except Exception as e:
         # TODO: we may want to log this somewhere instead of print
         print(f"Error extracting text from eicr message: {e}")
         return text_candidates
     return text_candidates
+
+
+def resolve_reference(xml_root: Element, reference_value: str | None) -> str | None:
+    """Get the text of the first node with an ID attribute that matches the reference."""
+    if not reference_value:
+        return None
+
+    referenced_node = xml_root.find(f'.//*[@ID="{reference_value.strip("#")}"]')
+
+    if referenced_node is not None:
+        return " ".join(_get_text_recursively(referenced_node))
+
+    return None
+
+
+def _get_text_recursively(element: Element) -> list[str]:
+    text_elements = []
+    if element.text:
+        text_elements.append(element.text.strip())
+
+    for child in element:
+        text_elements += _get_text_recursively(child)
+
+    if element.tail:
+        text_elements.append(element.tail.strip())
+
+    return list(filter(lambda x: x, text_elements))
+
+
+def _extract_text_from_element(element: Element, xml_root: Element) -> str:
+    """Extract all text content from an element, including referenced content.
+
+    :param element: The element to extract text from.
+    :param xml_root: The root XML element for resolving references.
+    :returns: Concatenated text content from the element.
+    """
+    text_parts = []
+
+    if element.text:
+        text_parts.append(element.text.strip())
+
+    for child in element:
+        # Handle reference elements
+        if child.tag == "{urn:hl7-org:v3}reference":
+            ref_text = resolve_reference(xml_root, child.get("value"))
+            if ref_text:
+                text_parts.append(ref_text)
+        else:
+            # Recursively get text from child elements
+            text_parts.extend(_get_text_recursively(child))
+
+        if child.tail:
+            text_parts.append(child.tail.strip())
+
+    return " ".join(filter(None, text_parts))
