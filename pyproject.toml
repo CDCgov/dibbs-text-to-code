@@ -108,10 +108,11 @@ force-single-line = true
 "**/__init__.py" = ["D"]
 # Ignore the following rules in test files
 "**/test_*.py" = [
-    "D101", # undocumented-public-class
-    "D102", # undocumented-public-method
-    "D103", # undocumented-public-function
-    "S101", # assert
+    "D101",   # undocumented-public-class
+    "D102",   # undocumented-public-method
+    "D103",   # undocumented-public-function
+    "S101",   # assert
+    "ANN201", # missing-return-type-annotation
 ]
 
 [tool.ruff.lint.pydocstyle]
