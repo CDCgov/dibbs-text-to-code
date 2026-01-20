@@ -41,7 +41,7 @@ class TestGeneralConfigs:
         config = get_configuration_for_data_element(data_field)
 
         expected_word_count = 2
-        expected_num_xpaths = 6
+        expected_num_xpaths = 4
 
         assert config is not None
         assert hasattr(config, "schematron_errors")
