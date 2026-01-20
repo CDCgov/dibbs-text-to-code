@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from lxml.etree import XMLSyntaxError
 
 from dibbs_text_to_code.models import Candidate
 from dibbs_text_to_code.services.eicr_processor import EicrProcessor
@@ -24,6 +25,16 @@ class TestEmptyEicrProcessor:
     def test_get_text_candidates_empty_xpath(self) -> None:
         result = EicrProcessor("<tag />").get_text_candidates("", "lab_result")
         assert len(result) == 0
+
+
+class TestBadEicr:
+    def test_bad_eicr(self) -> None:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "bad_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        with pytest.raises(XMLSyntaxError):
+            EicrProcessor(eicr_output)
 
 
 class TestBasicEicrProcessor:
