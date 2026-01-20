@@ -15,7 +15,6 @@ class LabResultConfig(pydantic.BaseModel):
         "/code/originalText",
         "/code/translation/@displayName",
         "/code/translation/originalText",
-        "/code/translation/text",
     ]
     """The list of Sub XPath expressions to extract text in various locations from the lab result element."""
 
