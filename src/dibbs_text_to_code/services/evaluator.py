@@ -1,8 +1,9 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.configs.general import _model_name
-from dibbs_text_to_code.configs.general import get_configuration_for_data_element
+from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.schemas import registry
+from dibbs_text_to_code.services import utils
 
 _model: SentenceTransformer | None = None
 
@@ -10,7 +11,7 @@ _model: SentenceTransformer | None = None
 # TODO: later when determine how this module fits
 # into the lambda we may need to refactor how we are
 # lazy loading the model
-def _set_sentence_transformer(model: str = _model_name) -> None:
+def _set_sentence_transformer(model: str = registry._model_name) -> None:
     """Set the SentenceTransformer model to be used for embedding text."""
     # TODO: this can be removed once we make this file a class
     # and create a constructor to initialize the model
@@ -28,7 +29,7 @@ def embed(input_text: str) -> Tensor:
     # TODO: later when determine how this module fits
     # into the lambda we may need to refactor how we are
     # lazy loading the model
-    _set_sentence_transformer(_model_name)
+    _set_sentence_transformer(registry._model_name)
 
     if _model is None:
         msg = "Failed to initialize SentenceTransformer model"
@@ -48,31 +49,21 @@ def _meets_word_count(text: str, word_count: int) -> bool:
     return len(text.split()) > word_count
 
 
-def is_text_viable(data_field: str, text: str) -> bool:
+def is_text_viable(data_field: eicr.EicrDataField, text: str) -> bool:
     """Verify a text string is viable for evaluation for a specified data field, i.e. 'Lab Result'.
 
-    :param data_field: The data field/element, from an eICR, that
+    :param data_field: The data field, from an eICR, that
         is being evaluated within the TTC module.
     :param text: The text string being evaluated, for a given
         data_field, to see if it's viable for evaluation in
         the TTC module based upon data_field specific rules.
-    :returns: A boolean (True or False) if the text for a data_field is
-        viable for TTC or not.
+    :returns: A boolean if the text for a data_field is viable for TTC or not.
     """
-    result = False
-    # verify the data type is a proper one
-    data_field_config = get_configuration_for_data_element(data_field)
-    if data_field_config is None:
-        return result
+    # Get the config for the specified data field
+    data_field_config = utils.get_config_for_data_field(data_field)
 
-    # ensure the data type is 'in scope' for TTC processing
-    if len(data_field_config.schematron_errors) == 0:
-        return result
+    # Check if there is a word count rule defined for this data field
+    if data_field_config.min_word_count:
+        return _meets_word_count(text, data_field_config.min_word_count)
 
-    # first test word count if such a rule is present in the
-    # config for the specified data element
-    word_count_rule = data_field_config.text_word_count
-    if word_count_rule and word_count_rule > 0:
-        result = _meets_word_count(text, word_count_rule)
-
-    return result
+    return True
