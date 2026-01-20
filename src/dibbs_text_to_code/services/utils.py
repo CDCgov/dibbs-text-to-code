@@ -3,9 +3,7 @@ from dibbs_text_to_code import schemas
 ConfigType = type[schemas.labs.BaseLabField]
 
 
-def get_config_for_data_field(
-    data_field: schemas.eicr.EicrDataField, **kwargs: dict[str, any]
-) -> schemas.labs.BaseLabField | None:
+def get_config_for_data_field(data_field: schemas.eicr.EicrDataField) -> schemas.labs.BaseLabField:
     """Returns a fresh Pydantic config instance for a given data field.
 
     Uses defaults defined in the config model unless overridden.
@@ -19,4 +17,4 @@ def get_config_for_data_field(
     except KeyError as e:
         raise KeyError(f"No config registered for EicrDataField {data_field}") from e
 
-    return cls(**kwargs)
+    return cls()

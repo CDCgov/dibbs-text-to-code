@@ -7,12 +7,13 @@ from dibbs_text_to_code.schemas import schematron
 class BaseLabField(pydantic.BaseModel):
     """Shared configuration for lab-related TTC processing."""
 
-    data_field: eicr.EicrDataField = pydantic.Field(
-        description="The data field this configuration applies to."
+    # Made optional at type level for Ty appeasement, defaults filled in subclasses
+    data_field: eicr.EicrDataField | None = pydantic.Field(
+        default=None, description="The data field this configuration applies to."
     )
 
-    min_word_count: int = pydantic.Field(
-        description="Minimum word count required for text to be viable.", ge=0
+    min_word_count: int | None = pydantic.Field(
+        default=None, description="Minimum word count required for text to be viable.", ge=0
     )
 
     @pydantic.field_validator("xpaths", mode="after")
