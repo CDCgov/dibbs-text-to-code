@@ -17,12 +17,12 @@ def _create_xml_tree(xml: str) -> Element:
 
 
 class EicrProcessor:
-    """Processors an EICR."""
+    """Processors an eICR."""
 
     def __init__(self, eicr_data: str):
-        """Initialize an EicrProcessor.
+        """Initialize an eICR Processor.
 
-        :param eicr_data: string of EICR
+        :param eicr_data: string of eICR
         """
         self._xml_root = _create_xml_tree(eicr_data)
 

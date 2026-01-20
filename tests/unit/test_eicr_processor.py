@@ -14,9 +14,9 @@ BASE_XPATH = (
 
 class TestEmptyEicrProcessor:
     def test_init(self) -> None:
-        """Test initialization of an EICR processor.
+        """Test initialization of an eICR processor.
 
-        This feels like a silly unit test as an EICR processor does not have any public attributes,
+        This feels like a silly unit test as an eICR processor does not have any public attributes,
         but IDK initialization may become more complicated.
         """
         assert EicrProcessor("<tag />")
