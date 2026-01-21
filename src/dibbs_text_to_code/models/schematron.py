@@ -2,7 +2,7 @@ import enum
 
 import pydantic
 
-from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.models import eicr
 
 
 class LabTestNameOrderedSchematronErrors(enum.Enum):

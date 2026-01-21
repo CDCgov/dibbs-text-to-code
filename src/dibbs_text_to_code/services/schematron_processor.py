@@ -2,8 +2,8 @@ from collections import defaultdict
 
 from lxml import etree
 
-from dibbs_text_to_code.schemas import eicr
-from dibbs_text_to_code.schemas import schematron
+from dibbs_text_to_code.models import eicr
+from dibbs_text_to_code.models import schematron
 
 
 def get_data_element_from_schematron_error(schematron_error: str) -> eicr.EicrDataField | None:

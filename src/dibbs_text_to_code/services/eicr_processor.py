@@ -1,7 +1,7 @@
 from lxml import etree
 from lxml.etree import Element
 
-from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.models import eicr
 from dibbs_text_to_code.services import utils
 
 NAMESPACES = {

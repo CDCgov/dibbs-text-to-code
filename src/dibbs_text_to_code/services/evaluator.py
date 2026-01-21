@@ -1,8 +1,8 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.schemas import eicr
-from dibbs_text_to_code.schemas import registry
+from dibbs_text_to_code.models import eicr
+from dibbs_text_to_code.models import registry
 from dibbs_text_to_code.services import utils
 
 _model: SentenceTransformer | None = None

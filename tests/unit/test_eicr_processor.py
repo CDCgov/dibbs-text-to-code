@@ -2,7 +2,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.models import eicr
 from dibbs_text_to_code.services.eicr_processor import _enhance_xpath_with_namespace
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 from dibbs_text_to_code.services.eicr_processor import resolve_reference

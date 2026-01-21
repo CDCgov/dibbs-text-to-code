@@ -1,7 +1,7 @@
 import pytest
 
-from dibbs_text_to_code.schemas import labs
-from dibbs_text_to_code.schemas import schematron
+from dibbs_text_to_code.models import labs
+from dibbs_text_to_code.models import schematron
 
 
 class TestLabSchemas:

@@ -1,7 +1,7 @@
 import pydantic
 
-from dibbs_text_to_code.schemas import eicr
-from dibbs_text_to_code.schemas import schematron
+from dibbs_text_to_code.models import eicr
+from dibbs_text_to_code.models import schematron
 
 
 class BaseLabField(pydantic.BaseModel):

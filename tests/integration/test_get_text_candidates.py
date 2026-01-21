@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from dibbs_text_to_code.schemas import eicr
+from dibbs_text_to_code.models import eicr
 from dibbs_text_to_code.services.eicr_processor import get_text_candidates
 from dibbs_text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
