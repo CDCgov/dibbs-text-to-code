@@ -1,7 +1,8 @@
 from lxml import etree
 from lxml.etree import Element
 
-from dibbs_text_to_code.configs.general import get_configuration_for_data_element
+from dibbs_text_to_code.models import eicr
+from dibbs_text_to_code.services import utils
 
 NAMESPACES = {
     "cda": "urn:hl7-org:v3",
@@ -37,20 +38,20 @@ def _enhance_xpath_with_namespace(xpath: str, namespace: str) -> str:
     return enhanced_xpath
 
 
-def get_text_candidates(eicr_data: str, base_xpath: str, data_field: str) -> dict:
-    """Find text candidates for a specified data field/element.
+def get_text_candidates(eicr_data: str, base_xpath: str, data_field: eicr.EicrDataField) -> dict:
+    # TODO: Update output here to be better typed to reflect the allowable xpaths
+    """Find text candidates for a specified data field.
 
     :param eicr_data: The eICR data as an XML string.
     :param base_xpath: The base XPath to use to find text candidates
         within the eICR for the specified data field.
-    :param data_field: The data field/element of interest for TTC processing.
+    :param data_field: The data field of interest for TTC processing.
     :returns: A list of text candidates found within the eICR for
-        the specified data field/element for TTC processing.
+        the specified data field for TTC processing.
     """
     text_candidates = {}
-    # first get data field config settings - this acts
-    # as a validation of correct data field being passed
-    config_settings = get_configuration_for_data_element(data_field)
+    # get data field config settings
+    config_settings = utils.get_config_for_data_field(data_field)
 
     if not eicr_data.strip() or not base_xpath.strip() or config_settings is None:
         return text_candidates

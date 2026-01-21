@@ -14,11 +14,13 @@ alias b := bootstrap
 
 [doc("Initialize the development environment")]
 bootstrap:
-    uv sync --all-packages && pre-commit install && npm i --save-dev
+    uv sync --all-packages
+    pre-commit install
+    npm i --save-dev
 
-[doc("Run tests")]
-test:
-    uv run pytest
+[doc("Run tests, forwarding optional arguments to pytest")]
+test *ARGS:
+    uv run pytest {{ ARGS }}
 
 [doc("Sync Python environment")]
 sync:
