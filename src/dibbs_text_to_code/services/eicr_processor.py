@@ -79,7 +79,7 @@ class EicrProcessor:
     def _extract_text_from_element(self, element: Element) -> str:
         """Extract all text content from an element, including referenced content.
 
-        :param xml_root: The root XML element for resolving references.
+        :param element: The XML element.
         :returns: Concatenated text content from the element.
         """
         text_parts = []
