@@ -9,7 +9,7 @@ class TestEvaluator:
     def test_set_sentence_transformer(self):
         assert evaluator._model is None
 
-        evaluator._set_sentence_transformer(registry._model_name)
+        evaluator._set_sentence_transformer(registry._default_model)
 
         assert isinstance(evaluator._model, evaluator.SentenceTransformer)
 
@@ -62,22 +62,19 @@ class TestEvaluator:
         input_text = "Influenza virus A and B and SARS-CoV-2 (COVID-19)"
         embedding = evaluator.embed(input_text)
 
-        expected_embedding_length = 768
+        expected_embedding_length = 1024
 
         assert embedding is not None
         assert len(embedding) == expected_embedding_length
         # this is only for the small model - 384
-        # this is only for the Qwen model - 4096  # number of dimensions
         assert len(embedding.shape) == 1  # Assuming a 1D tensor for a single string
 
         input_text = "COVID"
 
         embedding = evaluator.embed(input_text)
 
-        expected_embedding_length = 768
+        expected_embedding_length = 1024
 
         assert embedding is not None
         assert len(embedding) == expected_embedding_length
-        # this is only for the small model - 384
-        # this is only for the Qwen model - 4096  # number of dimensions
         assert len(embedding.shape) == 1  # Assuming a 1D tensor for a single string

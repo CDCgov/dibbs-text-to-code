@@ -8,4 +8,5 @@ EICR_REGISTRY: dict[EicrDataField, type[BaseLabField]] = {
     EicrDataField.LAB_TEST_NAME_ORDERED: LabTestNameOrdered,
 }
 
-_model_name: str = "Snowflake/snowflake-arctic-embed-m"
+# Default model name for SentenceTransformer, representing the model TTC used most extensively
+_default_model: str = "intfloat/e5-large-v2"
