@@ -39,6 +39,7 @@ def _enhance_xpath_with_namespace(xpath: str, namespace: str) -> str:
 
 
 def get_text_candidates(eicr_data: str, base_xpath: str, data_field: eicr.EicrDataField) -> dict:
+    # TODO: Update output here to be better typed to reflect the allowable xpaths
     """Find text candidates for a specified data field.
 
     :param eicr_data: The eICR data as an XML string.

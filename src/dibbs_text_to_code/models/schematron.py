@@ -43,7 +43,6 @@ class LabXPaths(enum.StrEnum):
 
     CODE_DISPLAY_NAME = "/code/@displayName"
     CODE_ORIGINAL_TEXT = "/code/originalText"
-    CODE_TEXT = "/code/text"
+    CODE_TEXT = "/text"
     CODE_TRANSLATION_DISPLAY_NAME = "/code/translation/@displayName"
     CODE_TRANSLATION_ORIGINAL_TEXT = "/code/translation/originalText"
-    CODE_TRANSLATION_TEXT = "/code/translation/text"
