@@ -3,7 +3,7 @@ from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted
 from .registry import EICR_REGISTRY
-from .registry import _default_model
+from .registry import default_model
 from .schematron import _SCHEMATRON_ENUM_TO_FIELD
 from .schematron import LabTestNameOrderedSchematronErrors
 from .schematron import LabTestNameResultedSchematronErrors
@@ -23,5 +23,5 @@ __all__ = [
     "LabXPaths",
     "SchematronConfig",
     "SchematronErrors",
-    "_default_model",
+    "default_model",
 ]

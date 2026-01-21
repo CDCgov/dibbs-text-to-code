@@ -9,7 +9,7 @@ class TestEvaluator:
     def test_set_sentence_transformer(self):
         assert evaluator._model is None
 
-        evaluator._set_sentence_transformer(registry._default_model)
+        evaluator._set_sentence_transformer(registry.default_model)
 
         assert isinstance(evaluator._model, evaluator.SentenceTransformer)
 

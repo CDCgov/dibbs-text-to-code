@@ -11,7 +11,7 @@ _model: SentenceTransformer | None = None
 # TODO: later when determine how this module fits
 # into the lambda we may need to refactor how we are
 # lazy loading the model
-def _set_sentence_transformer(model: str = registry._default_model) -> None:
+def _set_sentence_transformer(model: str = registry.default_model) -> None:
     """Set the SentenceTransformer model to be used for embedding text."""
     # TODO: this can be removed once we make this file a class
     # and create a constructor to initialize the model
@@ -29,7 +29,7 @@ def embed(input_text: str) -> Tensor:
     # TODO: later when determine how this module fits
     # into the lambda we may need to refactor how we are
     # lazy loading the model
-    _set_sentence_transformer(registry._default_model)
+    _set_sentence_transformer(registry.default_model)
 
     if _model is None:
         msg = "Failed to initialize SentenceTransformer model"

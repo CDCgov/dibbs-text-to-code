@@ -9,4 +9,4 @@ EICR_REGISTRY: dict[EicrDataField, type[BaseLabField]] = {
 }
 
 # Default model name for SentenceTransformer, representing the model TTC used most extensively
-_default_model: str = "intfloat/e5-large-v2"
+default_model: str = "intfloat/e5-large-v2"
