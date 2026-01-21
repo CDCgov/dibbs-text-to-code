@@ -1,39 +1,36 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.configs.general import _model_name
+from dibbs_text_to_code.configs.general import _model_name as default_model_name
 from dibbs_text_to_code.configs.general import get_configuration_for_data_element
 
-_model: SentenceTransformer | None = None
 
+class Evaluator:
+    """Evaluates and transforms nonstandard text."""
 
-# TODO: later when determine how this module fits
-# into the lambda we may need to refactor how we are
-# lazy loading the model
-def _set_sentence_transformer(model: str = _model_name) -> None:
-    """Set the SentenceTransformer model to be used for embedding text."""
-    # TODO: this can be removed once we make this file a class
-    # and create a constructor to initialize the model
-    global _model  # noqa: PLW0603
-    if _model is None:
-        _model = SentenceTransformer(model)
+    _model: SentenceTransformer | None = None
 
+    def __init__(self, model_name: str = default_model_name):
+        """Initialize evaluator.
 
-def embed(input_text: str) -> Tensor:
-    """Take a text string and embeds it as a vector using a model as defined in config.py.
+        :model_name: Model name string.
+        """
+        self._model_name = model_name
 
-    :param input_text: Text string to embed.
-    :returns: Tensor representation of input text.
-    """
-    # TODO: later when determine how this module fits
-    # into the lambda we may need to refactor how we are
-    # lazy loading the model
-    _set_sentence_transformer(_model_name)
+    def _set_sentence_transformer(self) -> None:
+        """Set the SentenceTransformer model to be used for embedding text."""
+        if self._model is None:
+            self._model = SentenceTransformer(self._model_name)
 
-    if _model is None:
-        msg = "Failed to initialize SentenceTransformer model"
-        raise RuntimeError(msg)
-    return _model.encode(input_text)
+    def embed(self, input_text: str) -> Tensor:
+        """Take a text string and embeds it as a vector using a model as defined in config.py.
+
+        :param input_text: Text string to embed.
+        :returns: Tensor representation of input text.
+        """
+        self._set_sentence_transformer()
+
+        return self._model.encode(input_text)
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:
