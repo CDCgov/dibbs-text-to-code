@@ -10,7 +10,7 @@
           <entry>
             <component>
               <observation>
-                <code displayName="A custom code in display name.">
+                <code displayName=" A custom code in display name. ">
                   <originalText>
                     A custom code in original text.
                   </originalText>

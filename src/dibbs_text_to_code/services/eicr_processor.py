@@ -5,17 +5,6 @@ from dibbs_text_to_code.configs.general import get_configuration_for_data_elemen
 from dibbs_text_to_code.models import Candidate
 
 
-def _create_xml_tree(xml: str) -> Element:
-    """Remove all namespaces from an XML tree."""
-    tree = etree.fromstring(xml.encode("utf-8"))
-    for elem in tree.iter():
-        # Remove namespace from tag
-        elem.tag = etree.QName(elem).localname
-    # Remove namespace declarations
-    etree.cleanup_namespaces(tree)
-    return tree
-
-
 class EicrProcessor:
     """Processes an eICR."""
 
@@ -60,8 +49,9 @@ class EicrProcessor:
                         key = f"{base_xpath}{sub_xpath}[{i}]"
 
                         if isinstance(sub_node, str):
-                            if sub_node.strip():
-                                candidates.append(Candidate(value=sub_node.strip(), xpath=key))
+                            text: str = sub_node.strip()
+                            if text:
+                                candidates.append(Candidate(value=text, xpath=key))
                         else:
                             text = self._extract_text_from_element(sub_node)
                             if text:
@@ -75,6 +65,7 @@ class EicrProcessor:
 
     def resolve_reference(self, reference_value: str | None) -> str | None:
         """Get the text of the first node with an ID attribute that matches the reference."""
+        reference_value = reference_value.strip()
         if not reference_value:
             return None
 
@@ -112,8 +103,19 @@ class EicrProcessor:
         return " ".join(filter(None, text_parts))
 
 
+def _create_xml_tree(xml: str) -> Element:
+    """Remove all namespaces from an XML tree."""
+    tree = etree.fromstring(xml.encode("utf-8"))
+    for elem in tree.iter():
+        # Remove namespace from tag
+        elem.tag = etree.QName(elem).localname
+    # Remove namespace declarations
+    etree.cleanup_namespaces(tree)
+    return tree
+
+
 def _get_text_recursively(element: Element) -> list[str]:
-    text_elements = []
+    text_elements: list[str] = []
     if element.text:
         text_elements.append(element.text.strip())
 
