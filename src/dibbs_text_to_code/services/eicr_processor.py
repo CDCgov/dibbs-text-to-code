@@ -17,7 +17,7 @@ def _create_xml_tree(xml: str) -> Element:
 
 
 class EicrProcessor:
-    """Processors an eICR."""
+    """Processes an eICR."""
 
     def __init__(self, eicr_data: str):
         """Initialize an eICR Processor.
