@@ -21,17 +21,17 @@ class LabTestNameResultedSchematronErrors(enum.Enum):
 
 SchematronErrors = LabTestNameOrderedSchematronErrors | LabTestNameResultedSchematronErrors
 
-# Map each Schematron error enum to its corresponding EicrDataField
-_SCHEMATRON_ENUM_TO_FIELD: dict[type[enum.Enum], eicr.EicrDataField] = {
-    LabTestNameOrderedSchematronErrors: eicr.EicrDataField.LAB_TEST_NAME_ORDERED,
-    LabTestNameResultedSchematronErrors: eicr.EicrDataField.LAB_TEST_NAME_RESULTED,
+# Map each Schematron error enum to its corresponding DataField
+_SCHEMATRON_ENUM_TO_FIELD: dict[type[enum.Enum], eicr.DataField] = {
+    LabTestNameOrderedSchematronErrors: eicr.DataField.LAB_TEST_NAME_ORDERED,
+    LabTestNameResultedSchematronErrors: eicr.DataField.LAB_TEST_NAME_RESULTED,
 }
 
 
 class SchematronConfig(pydantic.BaseModel):
     """Config for Schematron configuration settings."""
 
-    data_field: eicr.EicrDataField
+    data_field: eicr.DataField
     """The data field this configuration applies to."""
 
     schematron_errors: list[SchematronErrors]

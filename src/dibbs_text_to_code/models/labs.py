@@ -8,7 +8,7 @@ class BaseLabField(pydantic.BaseModel):
     """Shared configuration for lab-related TTC processing."""
 
     # Made optional at type level for Ty appeasement, defaults filled in subclasses
-    data_field: eicr.EicrDataField | None = pydantic.Field(
+    data_field: eicr.DataField | None = pydantic.Field(
         default=None, description="The data field this configuration applies to."
     )
 
@@ -38,7 +38,7 @@ class BaseLabField(pydantic.BaseModel):
 class LabTestNameResulted(BaseLabField):
     """The schema a lab test name resulted data field after being extracted from the schematron."""
 
-    data_field: eicr.EicrDataField = eicr.EicrDataField.LAB_TEST_NAME_RESULTED
+    data_field: eicr.DataField = eicr.DataField.LAB_TEST_NAME_RESULTED
 
     min_word_count: int = 2
 
@@ -50,7 +50,7 @@ class LabTestNameResulted(BaseLabField):
 class LabTestNameOrdered(BaseLabField):
     """Config for lab test name ordered."""
 
-    data_field: eicr.EicrDataField = eicr.EicrDataField.LAB_TEST_NAME_ORDERED
+    data_field: eicr.DataField = eicr.DataField.LAB_TEST_NAME_ORDERED
 
     min_word_count: int = 2
 

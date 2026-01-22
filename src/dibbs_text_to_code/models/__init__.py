@@ -1,4 +1,4 @@
-from .eicr import EicrDataField
+from .eicr import DataField
 from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted
@@ -15,7 +15,8 @@ __all__ = [
     "EICR_REGISTRY",
     "_SCHEMATRON_ENUM_TO_FIELD",
     "BaseLabField",
-    "EicrDataField",
+    "Candidate",
+    "DataField",
     "LabTestNameOrdered",
     "LabTestNameOrderedSchematronErrors",
     "LabTestNameResulted",

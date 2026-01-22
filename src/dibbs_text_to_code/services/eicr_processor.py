@@ -2,7 +2,7 @@ from lxml import etree
 from lxml.etree import Element
 
 from dibbs_text_to_code.models.eicr import Candidate
-from dibbs_text_to_code.models.eicr import EicrDataField
+from dibbs_text_to_code.models.eicr import DataField
 from dibbs_text_to_code.services.utils import get_config_for_data_field
 
 
@@ -19,12 +19,9 @@ class EicrProcessor:
     def _get_by_xpath(self, xpath: str) -> Element:
         return self._xml_root.xpath(xpath)
 
-    def get_text_candidates(
-        self, eicr_data: str, base_xpath: str, data_field: EicrDataField
-    ) -> list[Candidate]:
+    def get_text_candidates(self, base_xpath: str, data_field: DataField) -> list[Candidate]:
         """Find text candidates for a specified data field/element.
 
-        :param eicr_data: The eICR data as an XML string.
         :param base_xpath: The base XPath to use to find text candidates
             within the eICR for the specified data field.
         :param data_field: The data field of interest for TTC processing.
