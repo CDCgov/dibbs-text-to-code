@@ -1,3 +1,5 @@
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Times are UTC. 12:00 UTC corresponds to 07:00/08:00 EST/EDT
 version: 2
 updates:
   - package-ecosystem: 'github-actions'
@@ -5,22 +7,26 @@ updates:
     open-pull-requests-limit: 2
     schedule:
       interval: 'weekly'
-      day: 'sunday'
+      day: 'monday'
+      time: 12:00
   - package-ecosystem: 'uv'
     directory: '/'
+    open-pull-requests-limit: 2
     schedule:
       interval: 'weekly'
-      day: 'sunday'
-    open-pull-requests-limit: 2
+      day: 'monday'
+      time: 12:00
   - package-ecosystem: 'npm'
     directory: '/'
     open-pull-requests-limit: 2
     schedule:
       interval: 'weekly'
-      day: 'sunday'
+      day: 'monday'
+      time: 12:00
   - package-ecosystem: 'docker'
     directory: '/'
     open-pull-requests-limit: 2
     schedule:
       interval: 'weekly'
-      day: 'sunday'
+      day: 'monday'
+      time: 00:00
