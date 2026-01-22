@@ -637,10 +637,10 @@ def build_augmented_loinc_files(
 
 if __name__ == "__main__":
     build_augmented_loinc_files(
-        "../data/snoinc_extracts/loinc_lab_names_20251008.csv",
+        "../../../../data/snoinc_extracts/loinc_lab_names_20251008.csv",
         configs.LOINC_FILE_GENERATION_AUGMENTATION,
         num_lcn=1,
         num_sn=1,
         num_dn=1,
-        output_path_base="../data/augmented_",
+        output_path_base="../../../../data/training_files/fine_tuning",
     )
