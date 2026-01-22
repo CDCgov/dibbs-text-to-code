@@ -4,8 +4,8 @@ import json
 import os
 
 # sample run: python3 packages/data-curation/src/data_curation/generation.py
-BASE_FILE_PATH = "data/training_files/augmented_loinc"
-OUT_FILE_PATH = "data/training_files/validation_set_positive_pairs.txt"
+BASE_FILE_PATH = "../../../data/training_files/fine_tuning"
+OUT_FILE_PATH = "../../../data/training_files/fine_tuning_positive_pairs.txt"
 OUT_FILE_PATH_60K = "data/training_files/validation_set_60k_pairs.txt"
 OUT_FILE_PATH_ERSD = "data/training_files/validation_set_ersd_pairs.txt"
 
