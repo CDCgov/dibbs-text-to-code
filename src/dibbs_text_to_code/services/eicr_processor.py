@@ -1,8 +1,9 @@
 from lxml import etree
 from lxml.etree import Element
 
-from dibbs_text_to_code.configs.general import get_configuration_for_data_element
-from dibbs_text_to_code.models import Candidate
+from dibbs_text_to_code.models.eicr import Candidate
+from dibbs_text_to_code.models.eicr import EicrDataField
+from dibbs_text_to_code.services.utils import get_config_for_data_field
 
 
 class EicrProcessor:
@@ -18,20 +19,22 @@ class EicrProcessor:
     def _get_by_xpath(self, xpath: str) -> Element:
         return self._xml_root.xpath(xpath)
 
-    def get_text_candidates(self, base_xpath: str, data_field: str) -> list[Candidate]:
+    def get_text_candidates(
+        self, eicr_data: str, base_xpath: str, data_field: EicrDataField
+    ) -> list[Candidate]:
         """Find text candidates for a specified data field/element.
 
         :param eicr_data: The eICR data as an XML string.
         :param base_xpath: The base XPath to use to find text candidates
             within the eICR for the specified data field.
-        :param data_field: The data field/element of interest for TTC processing.
+        :param data_field: The data field of interest for TTC processing.
         :returns: A list of text candidates found within the eICR for
-            the specified data field/element for TTC processing.
+            the specified data field for TTC processing.
         """
         candidates: list[Candidate] = []
         # first get data field config settings - this acts
         # as a validation of correct data field being passed
-        config_settings = get_configuration_for_data_element(data_field)
+        config_settings = get_config_for_data_field(data_field)
 
         if not base_xpath.strip() or config_settings is None:
             return candidates
@@ -65,7 +68,7 @@ class EicrProcessor:
 
     def resolve_reference(self, reference_value: str | None) -> str | None:
         """Get the text of the first node with an ID attribute that matches the reference."""
-        reference_value = reference_value.strip()
+        reference_value = reference_value.strip() if reference_value else ""
         if not reference_value:
             return None
 
