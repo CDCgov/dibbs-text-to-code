@@ -1,9 +1,26 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    open-pull-requests-limit: 2
     schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "[deps] "
-    open-pull-requests-limit: 3
+      interval: 'weekly'
+      day: 'sunday'
+  - package-ecosystem: 'uv'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+    open-pull-requests-limit: 2
+  - package-ecosystem: 'npm'
+    directory: '/'
+    open-pull-requests-limit: 2
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+  - package-ecosystem: 'docker'
+    directory: '/'
+    open-pull-requests-limit: 2
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
