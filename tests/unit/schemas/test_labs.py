@@ -40,12 +40,3 @@ class TestLabSchemas:
         assert lab_test.min_word_count == LabTestNameOrdered.model_fields["min_word_count"].default
         assert lab_test.xpaths == list(LabXPaths)
         assert lab_test.schematron_errors == list(LabTestNameOrderedSchematronErrors)
-
-    def test_lab_test_name_resulted_custom_xpaths(self):
-        """Tests setting custom xpaths for LabTestNameResulted schema."""
-        custom_xpaths = ["/custom/xpath1", "/custom/xpath2"]
-        lab_test = LabTestNameResulted(
-            xpaths=custom_xpaths,
-            schematron_errors=LabTestNameResultedSchematronErrors,
-        )
-        assert lab_test.xpaths == custom_xpaths

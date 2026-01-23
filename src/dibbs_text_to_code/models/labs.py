@@ -29,10 +29,7 @@ class BaseLabField(BaseModel):
             raise ValueError("At least one Sub-XPath expression must be provided.")
         return v
 
-    xpaths: list[str] = Field(
-        description="Sub-XPath expressions used to extract text.",
-        default=[xPath.value for xPath in LabXPaths],
-    )
+    xpaths: list[LabXPaths] = list(LabXPaths)
 
     schematron_errors: list[SchematronErrors] = Field(
         description="Relevant Schematron error messages.",
