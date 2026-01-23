@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -12,6 +12,7 @@ members = [
     "aws-lambda",
     "data-curation",
     "dibbs-text-to-code",
+    "eicr-augmentation",
     "utils",
 ]
 
@@ -428,6 +429,16 @@ sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08b
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
 ]
+
+[[package]]
+name = "eicr-augmentation"
+version = "0.1.0"
+source = { editable = "packages/eicr-augmentation" }
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "email-validator"
