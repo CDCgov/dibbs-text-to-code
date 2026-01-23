@@ -31,7 +31,7 @@ class BaseLabField(BaseModel):
 
     xpaths: list[str] = Field(
         description="Sub-XPath expressions used to extract text.",
-        default=list(LabXPaths),
+        default=[xPath.value for xPath in LabXPaths],
     )
 
     schematron_errors: list[SchematronErrors] = Field(
