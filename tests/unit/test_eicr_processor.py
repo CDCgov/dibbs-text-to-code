@@ -3,8 +3,9 @@ from pathlib import Path
 import pytest
 from lxml.etree import XMLSyntaxError
 
-from dibbs_text_to_code.models.eicr import Candidate
-from dibbs_text_to_code.models.eicr import DataField
+from dibbs_text_to_code.models import Candidate
+from dibbs_text_to_code.models import DataField
+from dibbs_text_to_code.models import LabXPaths
 from dibbs_text_to_code.services.eicr_processor import EicrProcessor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
@@ -50,14 +51,14 @@ class TestBasicEicrProcessor:
         )
 
     def test_attribute_candidate(self, result: list[Candidate]):
-        full_xpath = f"{BASE_XPATH}/code/@displayName[0]"
-
-        assert result[0] == Candidate(value="A custom code in display name.", xpath=full_xpath)
+        assert result[0] == Candidate(
+            value="A custom code in display name.", xpath=LabXPaths.CODE_DISPLAY_NAME
+        )
 
     def test_text_candidate(self, result: list[Candidate]):
-        full_xpath = f"{BASE_XPATH}/code/originalText[0]"
-
-        assert result[1] == Candidate(value="A custom code in original text.", xpath=full_xpath)
+        assert result[1] == Candidate(
+            value="A custom code in original text.", xpath=LabXPaths.CODE_ORIGINAL_TEXT
+        )
 
     def test_candidate_count(self, result: list[Candidate]):
         expected = 2
@@ -76,16 +77,17 @@ class TestReferences:
         return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
 
     def test_simple_reference(self, results: list[Candidate]):
-        full_xpath = f"{BASE_XPATH}/code/originalText[0]"
         expected = "My reference"
-        assert results[0] == Candidate(value=expected, xpath=full_xpath)
+        assert results[0] == Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT)
 
     def test_additional_text_in_original(self, results: list[Candidate]):
-        full_xpath = f"{BASE_XPATH}/code/translation/originalText[0]"
         expected = "This original text has additional text My reference Even more stuff here"
-        assert results[1] == Candidate(value=expected, xpath=full_xpath)
+        assert results[1] == Candidate(
+            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
+        )
 
     def test_complicated_reference(self, results: list[Candidate]):
-        full_xpath = f"{BASE_XPATH}/code/translation/originalText[1]"
         expected = "A more complicated reference With extra nodes"
-        assert results[2] == Candidate(value=expected, xpath=full_xpath)
+        assert results[2] == Candidate(
+            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
+        )
