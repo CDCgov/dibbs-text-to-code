@@ -10,7 +10,7 @@ class Embedder:
     _model: SentenceTransformer | None = None
 
     def __init__(self, model_name: str = default_model):
-        """Initialize evaluator.
+        """Initialize embedder.
 
         :model_name: Model name string.
         """
