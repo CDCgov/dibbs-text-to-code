@@ -100,6 +100,10 @@ ignore = [
     "RET504", # unnecessary-assign
 ]
 
+[tool.ruff.lint.flake8-annotations]
+# Turn off return type annotations for __init__
+mypy-init-return = true
+
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
