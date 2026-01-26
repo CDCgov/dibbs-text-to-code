@@ -44,10 +44,10 @@ source = ["src", "packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dibbs_text_to_code"]
+packages = ["src/dibbs_text_to_code", "src/augmentation"]
 
 [tool.ty.src]
-include = ["src", "packages/api/src", "packages/aws-lambda/src"]
+include = ["src", "packages/api/src", "packages/aws-lambda/src", "packages/augmentation/src"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
@@ -100,6 +100,10 @@ ignore = [
     "RET504", # unnecessary-assign
 ]
 
+[tool.ruff.lint.flake8-annotations]
+# Turn off return type annotations for __init__
+mypy-init-return = true
+
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
@@ -124,4 +128,5 @@ members = [
     "packages/aws-lambda",
     "packages/data-curation",
     "packages/utils",
+    "packages/augmentation",
 ]
