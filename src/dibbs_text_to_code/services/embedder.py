@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.configs.general import _model_name as default_model_name
+from dibbs_text_to_code.models.registry import default_model
 
 
 class Embedder:
@@ -9,7 +9,7 @@ class Embedder:
 
     _model: SentenceTransformer | None = None
 
-    def __init__(self, model_name: str = default_model_name):
+    def __init__(self, model_name: str = default_model):
         """Initialize evaluator.
 
         :model_name: Model name string.

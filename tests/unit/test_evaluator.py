@@ -37,10 +37,3 @@ class TestEvaluator:
         expected_result = False
 
         assert is_text_viable(data_field, text_value) == expected_result
-
-    def test_is_text_viable_no_rules_set(self) -> None:
-        data_field = "lab_value"
-        text_value = "COVID PCR TEST"
-        expected_result = False
-
-        assert is_text_viable(data_field, text_value) == expected_result

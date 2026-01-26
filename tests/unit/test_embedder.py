@@ -14,7 +14,7 @@ class TestEmbedder:
     def test_embed(self, embedder: Embedder, input_text: str) -> None:
         embedding = embedder.embed(input_text)
 
-        expected_embedding_length = 768
+        expected_embedding_length = 1024
 
         assert len(embedding) == expected_embedding_length
         # this is only for the small model - 384
