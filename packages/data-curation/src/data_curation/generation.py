@@ -1,8 +1,8 @@
 import csv
 import random
 
-BASE_FILE_PATH = "../data/training_files/augmented_loinc"
-OUT_FILE_PATH = "../data/training_files/validation_set_positive_pairs.txt"
+BASE_FILE_PATH = "../../../../data/training_files/fine_tuning"
+OUT_FILE_PATH = "../../../../data/training_files/fine_tuning_positive_pairs.txt"
 
 
 def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):

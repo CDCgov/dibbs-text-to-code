@@ -1,23 +1,13 @@
 from lxml import etree
 from lxml.etree import Element
 
-from dibbs_text_to_code.configs.general import get_configuration_for_data_element
 from dibbs_text_to_code.models import Candidate
-
-
-def _create_xml_tree(xml: str) -> Element:
-    """Remove all namespaces from an XML tree."""
-    tree = etree.fromstring(xml.encode("utf-8"))
-    for elem in tree.iter():
-        # Remove namespace from tag
-        elem.tag = etree.QName(elem).localname
-    # Remove namespace declarations
-    etree.cleanup_namespaces(tree)
-    return tree
+from dibbs_text_to_code.models import DataField
+from dibbs_text_to_code.services.utils import get_config_for_data_field
 
 
 class EicrProcessor:
-    """Processors an eICR."""
+    """Processes an eICR."""
 
     def __init__(self, eicr_data: str):
         """Initialize an eICR Processor.
@@ -29,20 +19,19 @@ class EicrProcessor:
     def _get_by_xpath(self, xpath: str) -> Element:
         return self._xml_root.xpath(xpath)
 
-    def get_text_candidates(self, base_xpath: str, data_field: str) -> list[Candidate]:
+    def get_text_candidates(self, base_xpath: str, data_field: DataField) -> list[Candidate]:
         """Find text candidates for a specified data field/element.
 
-        :param eicr_data: The eICR data as an XML string.
         :param base_xpath: The base XPath to use to find text candidates
             within the eICR for the specified data field.
-        :param data_field: The data field/element of interest for TTC processing.
+        :param data_field: The data field of interest for TTC processing.
         :returns: A list of text candidates found within the eICR for
-            the specified data field/element for TTC processing.
+            the specified data field for TTC processing.
         """
         candidates: list[Candidate] = []
         # first get data field config settings - this acts
         # as a validation of correct data field being passed
-        config_settings = get_configuration_for_data_element(data_field)
+        config_settings = get_config_for_data_field(data_field)
 
         if not base_xpath.strip() or config_settings is None:
             return candidates
@@ -56,12 +45,13 @@ class EicrProcessor:
                 for sub_xpath in sub_xpaths:
                     full_xpath = f"{base_xpath}/{sub_xpath}"
                     sub_nodes = self._get_by_xpath(full_xpath)
-                    for i, sub_node in enumerate(sub_nodes):
-                        key = f"{base_xpath}{sub_xpath}[{i}]"
+                    for sub_node in sub_nodes:
+                        key = sub_xpath
 
                         if isinstance(sub_node, str):
-                            if sub_node.strip():
-                                candidates.append(Candidate(value=sub_node.strip(), xpath=key))
+                            text: str = sub_node.strip()
+                            if text:
+                                candidates.append(Candidate(value=text, xpath=key))
                         else:
                             text = self._extract_text_from_element(sub_node)
                             if text:
@@ -75,6 +65,7 @@ class EicrProcessor:
 
     def resolve_reference(self, reference_value: str | None) -> str | None:
         """Get the text of the first node with an ID attribute that matches the reference."""
+        reference_value = reference_value.strip() if reference_value else ""
         if not reference_value:
             return None
 
@@ -88,7 +79,7 @@ class EicrProcessor:
     def _extract_text_from_element(self, element: Element) -> str:
         """Extract all text content from an element, including referenced content.
 
-        :param xml_root: The root XML element for resolving references.
+        :param element: The XML element.
         :returns: Concatenated text content from the element.
         """
         text_parts = []
@@ -112,8 +103,19 @@ class EicrProcessor:
         return " ".join(filter(None, text_parts))
 
 
+def _create_xml_tree(xml: str) -> Element:
+    """Remove all namespaces from an XML tree."""
+    tree = etree.fromstring(xml.encode("utf-8"))
+    for elem in tree.iter():
+        # Remove namespace from tag
+        elem.tag = etree.QName(elem).localname
+    # Remove namespace declarations
+    etree.cleanup_namespaces(tree)
+    return tree
+
+
 def _get_text_recursively(element: Element) -> list[str]:
-    text_elements = []
+    text_elements: list[str] = []
     if element.text:
         text_elements.append(element.text.strip())
 

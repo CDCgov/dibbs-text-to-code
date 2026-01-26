@@ -44,10 +44,10 @@ source = ["src", "packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dibbs_text_to_code"]
+packages = ["src/dibbs_text_to_code", "src/augmentation"]
 
 [tool.ty.src]
-include = ["src", "packages/api/src", "packages/aws-lambda/src"]
+include = ["src", "packages/api/src", "packages/aws-lambda/src", "packages/augmentation/src"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
@@ -112,10 +112,11 @@ force-single-line = true
 "**/__init__.py" = ["D"]
 # Ignore the following rules in test files
 "**/test_*.py" = [
-    "D101", # undocumented-public-class
-    "D102", # undocumented-public-method
-    "D103", # undocumented-public-function
-    "S101", # assert
+    "D101",   # undocumented-public-class
+    "D102",   # undocumented-public-method
+    "D103",   # undocumented-public-function
+    "S101",   # assert
+    "ANN201", # missing-return-type-annotation
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -127,4 +128,5 @@ members = [
     "packages/aws-lambda",
     "packages/data-curation",
     "packages/utils",
+    "packages/augmentation",
 ]
