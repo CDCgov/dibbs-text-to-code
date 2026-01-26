@@ -44,10 +44,10 @@ source = ["src", "packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dibbs_text_to_code", "src/eicr_augmentation"]
+packages = ["src/dibbs_text_to_code", "src/augmentation"]
 
 [tool.ty.src]
-include = ["src", "packages/api/src", "packages/aws-lambda/src", "packages/eicr_augmentation/src"]
+include = ["src", "packages/api/src", "packages/aws-lambda/src", "packages/augmentation/src"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
@@ -124,5 +124,5 @@ members = [
     "packages/aws-lambda",
     "packages/data-curation",
     "packages/utils",
-    "packages/eicr-augmentation",
+    "packages/augmentation",
 ]
