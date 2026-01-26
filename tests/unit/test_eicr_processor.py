@@ -1,96 +1,93 @@
 from pathlib import Path
 
-from lxml import etree
+import pytest
+from lxml.etree import XMLSyntaxError
 
-from dibbs_text_to_code.models import eicr
-from dibbs_text_to_code.services.eicr_processor import _enhance_xpath_with_namespace
-from dibbs_text_to_code.services.eicr_processor import get_text_candidates
-from dibbs_text_to_code.services.eicr_processor import resolve_reference
+from dibbs_text_to_code.models import Candidate
+from dibbs_text_to_code.models import DataField
+from dibbs_text_to_code.models import LabXPaths
+from dibbs_text_to_code.services.eicr_processor import EicrProcessor
 
-CURRENT_DIR = Path(__file__).parent.parent
+EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
+
+BASE_XPATH = (
+    "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
+)
 
 
-class TestEICRProcessor:
-    TEST_EICR_FILE = None
+class TestEmptyEicrProcessor:
+    def test_init(self):
+        """Test initialization of an eICR processor.
 
-    def file_setup(self) -> None:
-        if self.TEST_EICR_FILE is None:
-            eicr_path = CURRENT_DIR / "assets" / "test_eicr_covid.xml"
-            with eicr_path.open() as f:
-                eicr_output = f.read()
-            self.TEST_EICR_FILE = eicr_output
+        This feels like a silly unit test as an eICR processor does not have any public attributes,
+        but IDK initialization may become more complicated.
+        """
+        assert EicrProcessor("<tag />")
 
-    def test_get_text_candidates_empty_xpath(self) -> None:
-        self.file_setup()
-
-        result = get_text_candidates(
-            self.TEST_EICR_FILE, "", eicr.EicrDataField.LAB_TEST_NAME_RESULTED
-        )
+    def test_get_text_candidates_empty_xpath(self):
+        result = EicrProcessor("<tag />").get_text_candidates("", DataField.LAB_TEST_NAME_RESULTED)
         assert len(result) == 0
 
-    def test_enhance_xpath_with_namespace(self) -> None:
-        base_xpath = "/component/structuredBody/component/section/entry/observation/value"
-        expected_xpath = (
-            "./cda:component/cda:structuredBody/cda:component/cda:section/cda:entry/"
-            "cda:observation/cda:value"
+
+class TestBadEicr:
+    def test_bad_eicr(self):
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "bad_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        with pytest.raises(XMLSyntaxError):
+            EicrProcessor(eicr_output)
+
+
+class TestBasicEicrProcessor:
+    @pytest.fixture(scope="class")
+    def result(self) -> list[Candidate]:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        return EicrProcessor(eicr_output).get_text_candidates(
+            BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED
         )
 
-        result = _enhance_xpath_with_namespace(base_xpath, "cda")
-        assert result == expected_xpath
-
-        base_xpath = "/component/structuredBody/component/section/entry/observation/code/@code"
-        expected_xpath = (
-            "./cda:component/cda:structuredBody/cda:component/cda:section/cda:entry/"
-            "cda:observation/cda:code/@code"
+    def test_attribute_candidate(self, result: list[Candidate]):
+        assert result[0] == Candidate(
+            value="A custom code in display name.", xpath=LabXPaths.CODE_DISPLAY_NAME
         )
 
-        result = _enhance_xpath_with_namespace(base_xpath, "cda")
-        assert result == expected_xpath
-
-        base_xpath = (
-            "/component/structuredBody/component/section/entry/observation/code/originalText/text()"
-        )
-        expected_xpath = (
-            "./cda:component/cda:structuredBody/cda:component/cda:section/cda:entry/"
-            "cda:observation/cda:code/cda:originalText/text()"
+    def test_text_candidate(self, result: list[Candidate]):
+        assert result[1] == Candidate(
+            value="A custom code in original text.", xpath=LabXPaths.CODE_ORIGINAL_TEXT
         )
 
-        result = _enhance_xpath_with_namespace(base_xpath, "cda")
-        assert result == expected_xpath
+    def test_candidate_count(self, result: list[Candidate]):
+        expected = 2
+        assert len(result) == expected
 
-    def test_get_reference_value(self) -> None:
-        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
-        with eicr_path.open() as eicr_file:
-            eicr_string = eicr_file.read()
 
-        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
+class TestReferences:
+    @pytest.fixture(scope="class")
+    def results(self) -> list[Candidate]:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "reference_test_eicr.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
 
+        eicr_processor = EicrProcessor(eicr_output)
+
+        return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+    def test_simple_reference(self, results: list[Candidate]):
         expected = "My reference"
-        actual = resolve_reference(xml_root, "#simple_reference_1")
+        assert results[0] == Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT)
 
-        assert actual == expected
-
-    def test_resolve_reference_not_found(self) -> None:
-        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
-        with eicr_path.open() as eicr_file:
-            eicr_string = eicr_file.read()
-
-        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
-
-        actual = resolve_reference(
-            xml_root,
-            "#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name",
+    def test_additional_text_in_original(self, results: list[Candidate]):
+        expected = "This original text has additional text My reference Even more stuff here"
+        assert results[1] == Candidate(
+            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
         )
 
-        assert actual is None
-
-    def test_resolve_reference_additional_nodes_in_reference(self) -> None:
-        eicr_path = CURRENT_DIR / "assets" / "reference_test_eicr.xml"
-        with eicr_path.open() as eicr_file:
-            eicr_string = eicr_file.read()
-
-        xml_root = etree.fromstring(eicr_string.encode("utf-8"))
+    def test_complicated_reference(self, results: list[Candidate]):
         expected = "A more complicated reference With extra nodes"
-        actual = resolve_reference(xml_root, "#complicated_reference_1")
-
-        assert actual == expected
+        assert results[2] == Candidate(
+            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
+        )

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from dibbs_text_to_code.models import eicr
+from dibbs_text_to_code.models.eicr import DataField
 from dibbs_text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
 current_dir = Path(__file__).parent.parent
@@ -16,7 +16,7 @@ class TestSchematronProcessor:
                 schematron_output = f.read()
             self.SCHEMATRON_ERROR_FILE = schematron_output
 
-    def test_get_schematron_error_data_fields(self) -> None:
+    def test_get_schematron_error_data_fields(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(
             self.SCHEMATRON_ERROR_FILE,
@@ -26,15 +26,11 @@ class TestSchematronProcessor:
         expected_lab_test_name_ordered = 1
 
         assert (
-            len(error_result[eicr.EicrDataField.LAB_TEST_NAME_RESULTED])
-            == expected_lab_test_name_resulted
+            len(error_result[DataField.LAB_TEST_NAME_RESULTED]) == expected_lab_test_name_resulted
         )
-        assert (
-            len(error_result[eicr.EicrDataField.LAB_TEST_NAME_ORDERED])
-            == expected_lab_test_name_ordered
-        )
+        assert len(error_result[DataField.LAB_TEST_NAME_ORDERED]) == expected_lab_test_name_ordered
 
-    def test_get_schematron_error_empty_xml(self) -> None:
+    def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""
         result = get_data_fields_from_schematron_error(schematron_errors)
 
