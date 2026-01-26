@@ -1,9 +1,11 @@
-from dibbs_text_to_code import models
+from dibbs_text_to_code.models.eicr import DataField
+from dibbs_text_to_code.models.labs import BaseLabField
+from dibbs_text_to_code.models.registry import EICR_REGISTRY
 
-ConfigType = type[models.labs.BaseLabField]
+ConfigType = type[BaseLabField]
 
 
-def get_config_for_data_field(data_field: models.eicr.EicrDataField) -> models.labs.BaseLabField:
+def get_config_for_data_field(data_field: DataField) -> BaseLabField:
     """Returns a fresh Pydantic config instance for a given data field.
 
     Uses defaults defined in the config model unless overridden.
@@ -13,7 +15,7 @@ def get_config_for_data_field(data_field: models.eicr.EicrDataField) -> models.l
     :returns: A Pydantic config instance for the specified data field.
     """
     try:
-        cls = models.registry.EICR_REGISTRY[data_field]
+        cls = EICR_REGISTRY[data_field]
     except KeyError as e:
         raise KeyError(f"No config registered for EicrDataField {data_field}") from e
 
