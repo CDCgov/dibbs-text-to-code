@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -9,6 +9,7 @@ resolution-markers = [
 [manifest]
 members = [
     "api",
+    "augmentation",
     "aws-lambda",
     "data-curation",
     "dibbs-text-to-code",
@@ -69,6 +70,16 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "fastapi", extras = ["standard"] }]
+
+[[package]]
+name = "augmentation"
+version = "0.1.0"
+source = { editable = "packages/augmentation" }
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "aws-lambda"

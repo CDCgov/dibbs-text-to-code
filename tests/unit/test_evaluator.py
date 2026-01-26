@@ -1,7 +1,7 @@
 import pytest
 
-from dibbs_text_to_code.models import eicr
 from dibbs_text_to_code.models import registry
+from dibbs_text_to_code.models.eicr import DataField
 from dibbs_text_to_code.services import evaluator
 
 
@@ -33,7 +33,7 @@ class TestEvaluator:
             evaluator.is_text_viable(data_field, text_value)
 
     def test_is_text_viable_empty_txt(self):
-        data_field = eicr.EicrDataField.LAB_TEST_NAME_ORDERED
+        data_field = DataField.LAB_TEST_NAME_ORDERED
         text_value = ""
         expected_result = False
 
@@ -45,14 +45,14 @@ class TestEvaluator:
         assert evaluator.is_text_viable(data_field, text_value) == expected_result
 
     def test_is_text_viable_lab_order_viable(self):
-        data_field = eicr.EicrDataField.LAB_TEST_NAME_ORDERED
+        data_field = DataField.LAB_TEST_NAME_ORDERED
         text_value = "COVID PCR TEST FROM NASAL SWAB"
         expected_result = True
 
         assert evaluator.is_text_viable(data_field, text_value) == expected_result
 
     def test_is_text_viable_lab_order_not_viable(self):
-        data_field = eicr.EicrDataField.LAB_TEST_NAME_ORDERED
+        data_field = DataField.LAB_TEST_NAME_ORDERED
         text_value = "COVID PCR"
         expected_result = False
 
