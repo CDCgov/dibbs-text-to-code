@@ -1,8 +1,8 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.models import eicr
 from dibbs_text_to_code.models import registry
+from dibbs_text_to_code.models.eicr import DataField
 from dibbs_text_to_code.services import utils
 
 _model: SentenceTransformer | None = None
@@ -49,7 +49,7 @@ def _meets_word_count(text: str, word_count: int) -> bool:
     return len(text.split()) > word_count
 
 
-def is_text_viable(data_field: eicr.EicrDataField, text: str) -> bool:
+def is_text_viable(data_field: DataField, text: str) -> bool:
     """Verify a text string is viable for evaluation for a specified data field, i.e. 'Lab Result'.
 
     :param data_field: The data field, from an eICR, that

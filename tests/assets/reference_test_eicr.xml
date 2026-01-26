@@ -43,7 +43,6 @@
                   <originalText>
                     <reference value="#simple_reference_1" />
                   </originalText>
-                  <text>SARS-like Coronavirus</text>
                   <translation>
                     <originalText> This original text has additional text <reference
                         value="#simple_reference_1" /> Even more stuff here </originalText>
