@@ -34,7 +34,7 @@ def get_data_fields_from_schematron_error(
         return {}
 
     xml_root = etree.fromstring(schematron_output.encode("utf-8"))
-    data_fields_with_context = defaultdict(list)
+    data_fields_with_context: dict[DataField, list[str]] = defaultdict(list)
 
     # Loop through schematron validation results
     for result in xml_root:
