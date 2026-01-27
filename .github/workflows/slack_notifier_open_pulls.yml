@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: List open pull requests
       env:
