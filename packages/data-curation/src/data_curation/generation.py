@@ -1,11 +1,18 @@
 import csv
 import random
+import json
+import os
 
-BASE_FILE_PATH = "../../../../data/training_files/fine_tuning"
-OUT_FILE_PATH = "../../../../data/training_files/fine_tuning_positive_pairs.txt"
+# sample run: python3 packages/data-curation/src/data_curation/generation.py
+BASE_FILE_PATH = "../../../data/training_files/fine_tuning"
+OUT_FILE_PATH = "../../../data/training_files/fine_tuning_positive_pairs.txt"
+OUT_FILE_PATH_60K = "data/training_files/validation_set_60k_pairs.txt"
+OUT_FILE_PATH_ERSD = "data/training_files/validation_set_ersd_pairs.txt"
+
+loinc_file = "data/accuracy_evaluation/loinc_to_oids.txt"
 
 
-def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
+def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str, rckms: bool = False):
     """
     Given the location of one or more files of LOINC codes and some corresponding
     augmented examples for those codes, this function compiles a list of
@@ -18,6 +25,7 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
       positive pair will be created for every element in the pool spanned by
       the files accessible via the handle parameter.
     :param out_file: The destination at which to write the positive pair file.
+    :param rckms: Whether the output LOINCs should be trigger codes for RCKMS.
     :returns: None
     """
 
@@ -39,6 +47,17 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
             rows = csv.reader(csvfp, delimiter=":")
             _append_to_data_pool(rows, data_pool)
 
+    if rckms:
+        # Load in the set of LOINC codes that are RCKMS trigger codes
+        rckms_loincs = []
+        with open(loinc_file, "r") as f:
+            loinc = json.load(f)
+            for code in loinc.keys():
+                rckms_loincs.append(code)
+
+        # Filter the data pool to only include those codes
+        data_pool = [element for element in data_pool if element[0].strip() in rckms_loincs]
+
     # Pre-specified number of examples to generate
     # If num_examples is -1, that's "generate all" mode, where we
     # produce one positive pair per code in the data pool, but we
@@ -48,17 +67,17 @@ def generate_positive_pairs(file_handle: str, num_examples: int, out_file: str):
         data_pool = data_pool[:num_examples]
 
     for element in data_pool:
-        base_code = element[1].strip()
+        loinc_code = element[0].strip()
+        canonical_name = element[1].strip()
         augmented_examples = element[2].strip().split("|")
 
-        # Randomly choose one of the augmented examples to pair
         chosen_ex = random.choice(augmented_examples)
-        pairs.append((base_code, chosen_ex.strip()))
+        pairs.append((loinc_code, canonical_name, chosen_ex.strip()))
 
     # Now we just write the created examples to the output file
     with open(out_file, "w") as fp:
         for pair in pairs:
-            fp.write(pair[0] + "|" + pair[1] + "\n")
+            fp.write(pair[0] + "|" + pair[1] + "|" + pair[2] + "\n")
 
 
 def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
@@ -74,3 +93,5 @@ def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
 
 if __name__ == "__main__":
     generate_positive_pairs(BASE_FILE_PATH, -1, OUT_FILE_PATH)
+    generate_positive_pairs(BASE_FILE_PATH, 60000, OUT_FILE_PATH_60K)
+    generate_positive_pairs(BASE_FILE_PATH, 20000, OUT_FILE_PATH_ERSD, rckms=True)
