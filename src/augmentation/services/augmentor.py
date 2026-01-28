@@ -14,7 +14,7 @@ class Augmentor(BaseModel):
     """Augment a document (e.g., eICR) with additional information."""
 
     _application_code: ApplicationCode = Field(
-        default=None, description="The application requesting augmenation of a document."
+        description="The application requesting augmenation of a document."
     )
 
     @field_validator("_document_data", mode="before")
@@ -40,8 +40,16 @@ class Augmentor(BaseModel):
         default=None, description="The data fields relevant to the document being augmented."
     )
 
-    def _get_by_xpath(self, xpath: str) -> Element:
-        return self._xml_root.xpath(xpath)
+    @field_validator("_data_config", mode="before")
+    @classmethod
+    def data_config_not_none(cls, v: str) -> str:  # noqa: D102
+        if v is None or v == {}:
+            raise ValueError("Data configuration must be supplied for augmentation!")
+        return v
+
+    _data_config: dict | None = Field(
+        description="The configuration that provides the rules for augmentation by application and data element.",
+    )
 
     def _getapplication(self) -> ApplicationCode:
         return self._application_code
@@ -67,3 +75,6 @@ class TTCAugmentor(Augmentor):
         return tree
 
     _eicr_base = clean_xml_tree()
+
+    def _get_by_xpath(self, xpath: str) -> Element:
+        return self._xml_root.xpath(xpath)
