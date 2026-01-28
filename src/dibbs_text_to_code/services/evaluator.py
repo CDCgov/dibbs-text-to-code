@@ -1,40 +1,5 @@
-from sentence_transformers import SentenceTransformer
-from torch import Tensor
-
-from dibbs_text_to_code.models import registry
-from dibbs_text_to_code.models.eicr import DataField
+from dibbs_text_to_code.models import DataField
 from dibbs_text_to_code.services import utils
-
-_model: SentenceTransformer | None = None
-
-
-# TODO: later when determine how this module fits
-# into the lambda we may need to refactor how we are
-# lazy loading the model
-def _set_sentence_transformer(model: str = registry.default_model) -> None:
-    """Set the SentenceTransformer model to be used for embedding text."""
-    # TODO: this can be removed once we make this file a class
-    # and create a constructor to initialize the model
-    global _model  # noqa: PLW0603
-    if _model is None:
-        _model = SentenceTransformer(model)
-
-
-def embed(input_text: str) -> Tensor:
-    """Take a text string and embeds it as a vector using a model as defined in config.py.
-
-    :param input_text: Text string to embed.
-    :returns: Tensor representation of input text.
-    """
-    # TODO: later when determine how this module fits
-    # into the lambda we may need to refactor how we are
-    # lazy loading the model
-    _set_sentence_transformer(registry.default_model)
-
-    if _model is None:
-        msg = "Failed to initialize SentenceTransformer model"
-        raise RuntimeError(msg)
-    return _model.encode(input_text)
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:

@@ -1,0 +1,72 @@
+[
+  {
+    "example_idx": 1,
+    "k-run": 1,
+    "raw_text": "Leishmania serum immuno",
+    "expected_text": "Leishmania brasilensis IgM Ab [Titer] in Serum by Immunofluorescence",
+    "expected_loinc": "44820-9",
+    "results": [
+      {
+        "rank": 1,
+        "returned_text": "Leishmania brasilensis IgM Ab [Titer] in Serum by Immunofluorescence",
+        "returned_loinc": "44820-9"
+      }
+    ]
+  },
+  {
+    "example_idx": 2,
+    "k-run": 1,
+    "raw_text": "Hepatitis D virus RNA plasma NAA probe dect",
+    "expected_text": "Hepatitis D virus RNA [#/volume] (viral load) in Serum or Plasma by NAA with probe detection",
+    "expected_loinc": "85512-2",
+    "results": [
+      {
+        "rank": 1,
+        "returned_text": "Hepatitis D virus RNA [#/volume] (viral load) in Serum or Plasma by NAA with probe detection",
+        "returned_loinc": "80426-0"
+      }
+    ]
+  },
+  {
+    "example_idx": 3,
+    "k-run": 1,
+    "raw_text": "Chlamydia trachomatis rRNA urine probe",
+    "expected_text": "Chlamydia trachomatis Ag [Presence] in Blood by Immunoassay",
+    "expected_loinc": "14468-3",
+    "results": [
+      {
+        "rank": 1,
+        "returned_text": "Chlamydia trachomatis Ag [Presence] in Blood by Immunoassay",
+        "returned_loinc": "16601-7"
+      }
+    ]
+  },
+  {
+    "example_idx": 4,
+    "k-run": 1,
+    "raw_text": "virus RNA probe detection",
+    "expected_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+    "expected_loinc": "49527-5",
+    "results": [
+      {
+        "rank": 1,
+        "returned_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+        "returned_loinc": "60262-3"
+      }
+    ]
+  },
+  {
+    "example_idx": 5,
+    "k-run": 1,
+    "raw_text": "Influenza virus A H9 RNA [Presence] in Isolate by NAA with probe detection",
+    "expected_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+    "expected_loinc": "49527-5",
+    "results": [
+      {
+        "rank": 1,
+        "returned_text": "Influenza virus A H7 RNA [Presence] in Isolate by NAA with probe detection",
+        "returned_loinc": "60530-3"
+      }
+    ]
+  }
+]
