@@ -63,9 +63,19 @@ class TestAugmentor:
             data_config=DATA_CONFIG,
         )
         expected_data_fields = 2
-        assert augmentor.application_code == augmentor._getapplication()
+        assert augmentor.application_code == augmentor._get_application()
         assert augmentor.application_code == ApplicationCode.TEXT_TO_CODE
         assert len(augmentor.data_fields) == expected_data_fields
         assert augmentor.eicr_base is not None
         xpath_result = augmentor.eicr_base.xpath(BASE_XPATH)
         assert xpath_result[0].strip() == "A custom code in original text."
+
+    def test_augmentor_get_application(self):
+        """Tests initialization of the TTC augmentor."""
+        augmentor = TTCAugmentor(
+            document_data=EICR_OUTPUT,
+            data_config=DATA_CONFIG,
+        )
+
+        assert augmentor.application_code == ApplicationCode.TEXT_TO_CODE
+        assert augmentor._get_application_code_value() == ApplicationCode.TEXT_TO_CODE.value

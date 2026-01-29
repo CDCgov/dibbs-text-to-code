@@ -55,8 +55,11 @@ class Augmentor(BaseModel):
         description="The configuration that provides the rules for augmentation by application and data element.",
     )
 
-    def _getapplication(self) -> ApplicationCode:
+    def _get_application(self) -> ApplicationCode:
         return self.application_code
+
+    def _get_application_code_value(self) -> ApplicationCode:
+        return self.application_code.value
 
 
 class TTCAugmentor(Augmentor):
