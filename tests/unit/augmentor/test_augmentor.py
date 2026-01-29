@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from augmentation.models.application import ApplicationCode
-from augmentation.services.augmentor import Augmentor
-from augmentation.services.augmentor import TTCAugmentor
+from src.augmentation.models.application import ApplicationCode
+from src.augmentation.services.augmentor import Augmentor
+from src.augmentation.services.augmentor import TTCAugmentor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
 DATA_CONFIG = {"some_config": "value"}

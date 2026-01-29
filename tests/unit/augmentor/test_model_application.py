@@ -1,4 +1,4 @@
-from augmentation.models import ApplicationCode
+from src.augmentation.models.application import ApplicationCode
 
 
 class TestApplicationModel:

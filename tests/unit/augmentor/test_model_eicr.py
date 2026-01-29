@@ -1,4 +1,4 @@
-from augmentation.models import ECRDataField
+from src.augmentation.models.eicr import ECRDataField
 
 
 class TestEICRModel:

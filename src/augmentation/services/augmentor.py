@@ -8,9 +8,9 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
-from augmentation.models.application import ApplicationCode
-from augmentation.models.eicr import ECRDataField
-from augmentation.services.eicr_utils import clean_xml_tree
+from ..models.application import ApplicationCode
+from ..models.eicr import ECRDataField
+from .eicr_utils import clean_xml_tree
 
 
 class Augmentor(BaseModel):
