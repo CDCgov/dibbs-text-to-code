@@ -2,7 +2,7 @@ from lxml import etree
 from lxml.etree import Element
 
 
-def clean_xml_tree(doc_data: str) -> Element:
+def clean_xml_tree(doc_data: str) -> Element | None:
     """Remove all namespaces from an XML tree."""
     if not doc_data:
         return None

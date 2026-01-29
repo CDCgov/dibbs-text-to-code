@@ -83,7 +83,7 @@ class TTCAugmentor(Augmentor):
         self.eicr_base: etree._Element = clean_xml_tree(self.document_data)
         return self
 
-    eicr_base: etree._Element = Field(
+    eicr_base: etree._Element | None = Field(
         default=None, description="The base XML element of the eICR document after cleaning."
     )
 
