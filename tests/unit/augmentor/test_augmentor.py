@@ -71,7 +71,7 @@ class TestAugmentor:
         assert xpath_result[0].strip() == "A custom code in original text."
 
     def test_augmentor_get_application(self):
-        """Tests initialization of the TTC augmentor."""
+        """Tests initialization of the TTC augmentor and use the get_application_code_value method."""
         augmentor = TTCAugmentor(
             document_data=EICR_OUTPUT,
             data_config=DATA_CONFIG,
@@ -79,3 +79,12 @@ class TestAugmentor:
 
         assert augmentor.application_code == ApplicationCode.TEXT_TO_CODE
         assert augmentor._get_application_code_value() == ApplicationCode.TEXT_TO_CODE.value
+
+    def test_augmentor_get_by_xpath(self):
+        """Tests initialization of the TTC augmentor and use the get_by_xpath method."""
+        augmentor = TTCAugmentor(
+            document_data=EICR_OUTPUT,
+            data_config=DATA_CONFIG,
+        )
+
+        assert augmentor._get_by_xpath(BASE_XPATH)[0].strip() == "A custom code in original text."
