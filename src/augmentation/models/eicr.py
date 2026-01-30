@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 
-class ECRDataField(StrEnum):
+class DataField(StrEnum):
     """Enum for eICR data fields augmentation can modify."""
 
     LAB_TEST_NAME_RESULTED = "Lab Test Name Resulted"
