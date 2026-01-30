@@ -1,7 +1,7 @@
 from .application import ApplicationCode
-from .eicr import ECRDataField
+from .eicr import DataField
 
 __all__ = [
     "ApplicationCode",
-    "ECRDataField",
+    "DataField",
 ]

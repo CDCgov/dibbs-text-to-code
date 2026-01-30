@@ -9,7 +9,7 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from ..models.application import ApplicationCode
-from ..models.eicr import ECRDataField
+from ..models.eicr import DataField
 from .eicr_utils import clean_xml_tree
 
 
@@ -40,7 +40,7 @@ class Augmentor(BaseModel):
         default=datetime.now(), description="The date and time when the document was augmented."
     )
 
-    data_fields: list[ECRDataField] | None = Field(
+    data_fields: list[DataField] | None = Field(
         default=None, description="The data fields relevant to the document being augmented."
     )
 
@@ -69,9 +69,9 @@ class TTCAugmentor(Augmentor):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
-    data_fields: list[ECRDataField] = [
-        ECRDataField.LAB_TEST_NAME_RESULTED,
-        ECRDataField.LAB_TEST_NAME_ORDERED,
+    data_fields: list[DataField] = [
+        DataField.LAB_TEST_NAME_RESULTED,
+        DataField.LAB_TEST_NAME_ORDERED,
     ]
 
     # if document_data is provided and it's a
