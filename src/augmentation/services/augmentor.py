@@ -58,7 +58,7 @@ class Augmentor(BaseModel):
     def _get_application(self) -> ApplicationCode:
         return self.application_code
 
-    def _get_application_code_value(self) -> ApplicationCode:
+    def _get_application_code_value(self) -> str:
         return self.application_code.value
 
 
