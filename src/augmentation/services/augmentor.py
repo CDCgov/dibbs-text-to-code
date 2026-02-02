@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from lxml import etree
+from lxml.etree import Element
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -98,17 +98,17 @@ class TTCAugmentor(Augmentor):
 
     # TODO: for now just use hard coded TTC Config
     #  we will need to remove/change this once we have S3 config integrated
-    config: AugmentorConfig = TTCAugmentorConfig
+    config: AugmentorConfig = TTCAugmentorConfig()
 
     @model_validator(mode="after")
     def set_eicr_base(self) -> "TTCAugmentor":
         """Cleans and sets up the base XML element for eICR processing."""
-        self.eicr_base: etree._Element = clean_xml_tree(self.document_payload)
+        self.eicr_base: Element = clean_xml_tree(self.document_payload)
         return self
 
-    eicr_base: etree._Element | None = Field(
+    eicr_base: Element | None = Field(
         default=None, description="The base XML element of the eICR document after cleaning."
     )
 
-    def _get_by_xpath(self, xpath: str) -> etree._Element | None:
+    def _get_by_xpath(self, xpath: str) -> Element | None:
         return self.eicr_base.xpath(xpath)
