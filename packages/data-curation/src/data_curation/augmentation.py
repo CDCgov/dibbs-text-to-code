@@ -614,8 +614,8 @@ def build_augmented_loinc_files(
         if len(r) < 6:
             continue
 
-        loinc_code, short_name, long_name, display_name = r[0], r[1], r[2], r[3]
-        related_names = r[5].split(";") if r[5] else []
+        loinc_code, short_name, long_name, display_name = r[0], r[2], r[3], r[4]
+        related_names = r[6].split(";") if r[6] else []
         values = {
             "short_name": re.sub(regex_patterns.MULTIPLE_SPACE, " ", short_name),
             "long_common_name": re.sub(regex_patterns.MULTIPLE_SPACE, " ", long_name),
@@ -637,10 +637,10 @@ def build_augmented_loinc_files(
 
 if __name__ == "__main__":
     build_augmented_loinc_files(
-        "../../../../data/snoinc_extracts/loinc_lab_names_20251008.csv",
-        configs.LOINC_FILE_GENERATION_AUGMENTATION,
-        num_lcn=1,
-        num_sn=1,
-        num_dn=1,
-        output_path_base="../../../../data/training_files/fine_tuning",
+        "../../../../data/snoinc_extracts/loinc_lab_names_20251107.csv",
+        configs.LAMBDA_LOSS_SOFT_POSITIVE_AUGMENTATION,
+        num_lcn=5,
+        num_sn=3,
+        num_dn=3,
+        output_path_base="../../../../data/training_files/soft_lambda_loss_positives",
     )
