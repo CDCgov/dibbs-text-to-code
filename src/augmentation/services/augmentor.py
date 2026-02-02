@@ -52,7 +52,6 @@ class Augmentor(BaseModel):
 
     # TODO: eventually the default should be a base config
     config: AugmentorConfig = Field(
-        default=TTCAugmentorConfig,
         description="The validated configuration that provides the rules for augmentation by application and document type.",
     )
 
@@ -112,5 +111,5 @@ class TTCAugmentor(Augmentor):
         default=None, description="The base XML element of the eICR document after cleaning."
     )
 
-    def _get_by_xpath(self, xpath: str) -> Element:
+    def _get_by_xpath(self, xpath: str) -> Element | None:
         return self.eicr_base.xpath(xpath)
