@@ -20,42 +20,34 @@ with eicr_path.open() as f:
 class TestAugmentor:
     def test_base_augmentor_with_no_document_data(self):
         """Tests raising error when no document data is provided."""
-        with pytest.raises(ValueError, match=r"Document data must be a non-empty string!"):
+        with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
             Augmentor(config=DATA_CONFIG, document_payload=None)
 
-        with pytest.raises(ValueError, match=r"Document data must be a non-empty string!"):
+        with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
             Augmentor(config=DATA_CONFIG, document_payload="  ")
 
     def test_base_augmentor_with_no_data_config(self):
         """Tests raising error when no data config is provided."""
-        with pytest.raises(
-            ValueError, match=r"Data configuration must be supplied for augmentation!"
-        ):
+        with pytest.raises(ValueError, match=r"Augmentation configuration must be supplied!"):
             Augmentor(config=None, document_payload=EICR_OUTPUT)
 
-        with pytest.raises(
-            ValueError, match=r"Data configuration must be supplied for augmentation!"
-        ):
+        with pytest.raises(ValueError, match=r"Augmentation configuration must be supplied!"):
             Augmentor(config={}, document_payload=EICR_OUTPUT)
 
     def test_ttc_augmentor_with_no_document_data(self):
         """Tests raising error when no document data is provided."""
-        with pytest.raises(ValueError, match=r"Document data must be be a non-empty string!"):
+        with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
             TTCAugmentor(config=DATA_CONFIG, document_payload=None)
 
-        with pytest.raises(ValueError, match=r"Document data must be be a non-empty string!"):
+        with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
             TTCAugmentor(config=DATA_CONFIG, document_payload="  ")
 
     def test_ttc_augmentor_with_no_data_config(self):
         """Tests raising error when no data config is provided."""
-        with pytest.raises(
-            ValueError, match=r"Data configuration must be supplied for augmentation!"
-        ):
+        with pytest.raises(ValueError, match=r"Augmentation configuration must be supplied!"):
             TTCAugmentor(config=None, document_payload=EICR_OUTPUT)
 
-        with pytest.raises(
-            ValueError, match=r"Data configuration must be supplied for augmentation!"
-        ):
+        with pytest.raises(ValueError, match=r"Augmentation configuration must be supplied!"):
             TTCAugmentor(config={}, document_payload=EICR_OUTPUT)
 
     def test_ttc_augmentor_initialization(self):
@@ -64,10 +56,9 @@ class TestAugmentor:
             document_payload=EICR_OUTPUT,
             config=DATA_CONFIG,
         )
-        expected_data_fields = 2
         assert augmentor.application_code == augmentor._get_application()
         assert augmentor.application_code == ApplicationCode.TEXT_TO_CODE
-        assert len(augmentor.data_fields) == expected_data_fields
+        assert augmentor.config == DATA_CONFIG
         assert augmentor.eicr_base is not None
         xpath_result = augmentor.eicr_base.xpath(BASE_XPATH)
         assert xpath_result[0].strip() == "A custom code in original text."
@@ -80,7 +71,33 @@ class TestAugmentor:
         )
 
         assert augmentor.application_code == ApplicationCode.TEXT_TO_CODE
+        assert augmentor._get_application() == ApplicationCode.TEXT_TO_CODE
         assert augmentor._get_application_code_value() == ApplicationCode.TEXT_TO_CODE.value
+
+    def test_augmentor_validate_config_pass(self):
+        """Tests initialization of the TTC augmentor and use the get_application_code_value method."""
+        augmentor = TTCAugmentor(
+            document_payload=EICR_OUTPUT,
+            config=DATA_CONFIG,
+        )
+
+        assert augmentor._validate_config() is None
+
+    def test_augmentor_augment(self):
+        """Tests initialization of the TTC augmentor and use the get_application_code_value method."""
+        augmentor = TTCAugmentor(
+            document_payload=EICR_OUTPUT,
+            config=DATA_CONFIG,
+        )
+        assert augmentor._augment() == EICR_OUTPUT
+
+    def test_augmentor_run(self):
+        """Tests initialization of the TTC augmentor and use the get_application_code_value method."""
+        augmentor = TTCAugmentor(
+            document_payload=EICR_OUTPUT,
+            config=DATA_CONFIG,
+        )
+        assert augmentor.run() == EICR_OUTPUT
 
     def test_augmentor_get_by_xpath(self):
         """Tests initialization of the TTC augmentor and use the get_by_xpath method."""

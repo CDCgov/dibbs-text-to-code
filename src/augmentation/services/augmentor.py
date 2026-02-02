@@ -8,10 +8,9 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
-from augmentation.models.config import AugmentorConfig
-from augmentation.models.config import TTCAugmentorConfig
-
 from ..models.application import ApplicationCode
+from ..models.config import AugmentorConfig
+from ..models.config import TTCAugmentorConfig
 from .eicr_utils import clean_xml_tree
 
 
@@ -39,11 +38,21 @@ class Augmentor(BaseModel):
     )
 
     augmented_date: datetime = Field(
-        default_factory=datetime.now(),
+        default=datetime.now(),
         description="The date and time when the document was augmented, defaults to now local time.",
     )
 
+    @field_validator("config", mode="before")
+    @classmethod
+    def config_not_none(cls, v: str) -> str:
+        """Validates that the config is always supplied."""
+        if v is None or v == {}:
+            raise ValueError("Augmentation configuration must be supplied!")
+        return v
+
+    # TODO: eventually the default should be a base config
     config: AugmentorConfig = Field(
+        default=TTCAugmentorConfig,
         description="The validated configuration that provides the rules for augmentation by application and document type.",
     )
 
@@ -72,6 +81,8 @@ class Augmentor(BaseModel):
             raise ValueError(
                 f"Config application code {self.config.application_code} does not match augmentor application code {self.application_code}."
             )
+        if self.config.rules is None or len(self.config.rules) == 0:
+            raise ValueError("Config must contain at least one augmentation rule!")
 
 
 class TTCAugmentor(Augmentor):
@@ -87,7 +98,9 @@ class TTCAugmentor(Augmentor):
 
     application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
 
-    config: TTCAugmentorConfig = TTCAugmentorConfig
+    # TODO: for now just use hard coded TTC Config
+    #  we will need to remove/change this once we have S3 config integrated
+    config: AugmentorConfig = TTCAugmentorConfig
 
     @model_validator(mode="after")
     def set_eicr_base(self) -> "TTCAugmentor":

@@ -26,15 +26,10 @@ class AugmentorConfig(BaseModel):
 class TTCAugmentorConfig(AugmentorConfig):
     """Configuration for TTC augmentation behavior."""
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    application_code: ApplicationCode.TEXT_TO_CODE
+    application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
     # for now we will hardcode this to eICR since TTC only
     #  deals with eICR documents at this point
-    document_type: DocumentType.EICR
+    document_type: DocumentType = DocumentType.EICR
     # TODO:
     # this is just an example of what the rules for eICR augmentation might look like
     # typically we should expect these to come from the configuration in S3
@@ -51,5 +46,5 @@ class TTCAugmentorConfig(AugmentorConfig):
     def validate_rules(self) -> "TTCAugmentorConfig":
         """Ensures that there are rules defined for augmentation."""
         if not self.rules or len(self.rules) == 0:
-            raise ValueError("rules must contain at least one augmentation rule!")
+            raise ValueError("Configuation rules must contain at least one augmentation rule!")
         return self
