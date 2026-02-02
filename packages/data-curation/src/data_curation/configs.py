@@ -109,3 +109,16 @@ LOINC_FILE_GENERATION_AUGMENTATION: schemas.LoincFileGenerationConfig = {
     "short_name": ONE_SHOT_VALIDATION_AUGMENTATION,
     "display_name": ONE_SHOT_VALIDATION_AUGMENTATION,
 }
+
+"""
+A configuration intended for the generation of multiple "soft positive" examples
+per LOINC code, which are slightly less corrupted/obfuscated than One-Shot examples.
+These nonstandard inputs are useful for training the LambdaLoss optimizer, which
+can teach a reranker to model ranking scores directly, rather than simply optimize
+list ordering.
+"""
+LAMBDA_LOSS_SOFT_POSITIVE_AUGMENTATION: schemas.LoincFileGenerationConfig = {
+    "long_common_name": DEFAULT_AUGMENTATION,
+    "short_name": DEFAULT_AUGMENTATION,
+    "display_name": DEFAULT_AUGMENTATION,
+}
