@@ -111,4 +111,6 @@ class TTCAugmentor(Augmentor):
     )
 
     def _get_by_xpath(self, xpath: str) -> Element | None:
+        if self.eicr_base is None:
+            return None
         return self.eicr_base.xpath(xpath)
