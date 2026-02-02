@@ -38,7 +38,7 @@ class Augmentor(BaseModel):
 
     augmented_date: datetime = Field(
         default=datetime.now(),
-        description="The date and time when the document was augmented, defaults to now local time.",
+        description="The date and time when the document was augmented, defaults to current local time.",
     )
 
     @field_validator("config", mode="before")
