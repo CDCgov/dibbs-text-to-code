@@ -2,11 +2,10 @@ from pathlib import Path
 
 import pytest
 from lxml.etree import XMLSyntaxError
-
-from dibbs_text_to_code.models import Candidate
-from dibbs_text_to_code.models import DataField
-from dibbs_text_to_code.models import LabXPaths
-from dibbs_text_to_code.services.eicr_processor import EicrProcessor
+from text_to_code.models import Candidate
+from text_to_code.models import DataField
+from text_to_code.models import LabXPaths
+from text_to_code.services.eicr_processor import EicrProcessor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 

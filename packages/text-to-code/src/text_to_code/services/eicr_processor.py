@@ -1,9 +1,9 @@
 from lxml import etree
 from lxml.etree import Element
 
-from dibbs_text_to_code.models import Candidate
-from dibbs_text_to_code.models import DataField
-from dibbs_text_to_code.services.utils import get_config_for_data_field
+from ..models import Candidate
+from ..models import DataField
+from ..services.utils import get_config_for_data_field
 
 
 class EicrProcessor:

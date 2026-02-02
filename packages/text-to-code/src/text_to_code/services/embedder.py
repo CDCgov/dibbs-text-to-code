@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
-from dibbs_text_to_code.models.registry import default_model
+from ..models.registry import default_model
 
 _MODEL = SentenceTransformer(default_model)
 

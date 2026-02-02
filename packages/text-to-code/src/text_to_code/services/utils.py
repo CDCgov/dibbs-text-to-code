@@ -1,6 +1,6 @@
-from dibbs_text_to_code.models.eicr import DataField
-from dibbs_text_to_code.models.labs import BaseLabField
-from dibbs_text_to_code.models.registry import EICR_REGISTRY
+from ..models.eicr import DataField
+from ..models.labs import BaseLabField
+from ..models.registry import EICR_REGISTRY
 
 ConfigType = type[BaseLabField]
 

@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from aws_lambda import main
+from text_to_code_lambda import main
 
 
 class TestHandler:

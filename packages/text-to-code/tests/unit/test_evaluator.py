@@ -1,7 +1,6 @@
 import pytest
-
-from dibbs_text_to_code.models.eicr import DataField
-from dibbs_text_to_code.services.evaluator import is_text_viable
+from text_to_code.models.eicr import DataField
+from text_to_code.services.evaluator import is_text_viable
 
 
 class TestEvaluator:

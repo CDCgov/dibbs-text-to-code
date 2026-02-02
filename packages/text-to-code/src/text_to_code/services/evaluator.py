@@ -1,5 +1,5 @@
-from dibbs_text_to_code.models import DataField
-from dibbs_text_to_code.services import utils
+from ..models import DataField
+from ..services import utils
 
 
 def _meets_word_count(text: str, word_count: int) -> bool:

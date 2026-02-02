@@ -1,6 +1,5 @@
 import pytest
-
-from dibbs_text_to_code.services.embedder import Embedder
+from text_to_code.services.embedder import Embedder
 
 
 class TestEmbedder:

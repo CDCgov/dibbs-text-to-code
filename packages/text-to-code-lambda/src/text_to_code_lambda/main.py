@@ -7,9 +7,7 @@ from .s3_handler import get_file_content_from_s3_event
 
 
 def handler(event: lambda_events.SQSEvent, context: lambda_context.Context):
-    """
-    Text to Code lambda entry point
-    """
+    """Text to Code lambda entry point"""
     file_contents = []
     for record in event.get("Records", []):
         body = record.get("body")
