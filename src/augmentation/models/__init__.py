@@ -1,7 +1,11 @@
 from .application import ApplicationCode
-from .eicr import DataField
+from .config import AugmentorConfig
+from .config import TTCAugmentorConfig
+from .document import DocumentType
 
 __all__ = [
     "ApplicationCode",
-    "DataField",
+    "AugmentorConfig",
+    "DocumentType",
+    "TTCAugmentorConfig",
 ]
