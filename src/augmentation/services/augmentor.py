@@ -1,5 +1,4 @@
 from datetime import datetime
-from xml.etree.ElementTree import Element
 
 from lxml import etree
 from pydantic import BaseModel
@@ -111,5 +110,5 @@ class TTCAugmentor(Augmentor):
         default=None, description="The base XML element of the eICR document after cleaning."
     )
 
-    def _get_by_xpath(self, xpath: str) -> Element | None:
+    def _get_by_xpath(self, xpath: str) -> etree._Element | None:
         return self.eicr_base.xpath(xpath)
