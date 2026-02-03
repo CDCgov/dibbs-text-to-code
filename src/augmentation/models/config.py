@@ -4,13 +4,14 @@ from pydantic import model_validator
 
 from .application import ApplicationCode
 from .document import DocumentType
+from .eicr import DataField
 
 
-class AugmentorConfig(BaseModel):
+class AugmenterConfig(BaseModel):
     """Basic configuration controlling augmentation behavior."""
 
     # TODO: this is very much a shell and can be modified
-    #  in the ticket related to creating an augmentor config model
+    #  in the ticket related to creating an Augmenter config model
     #  and retrieving said config from S3 Bucket
 
     model_config = ConfigDict(
@@ -23,7 +24,7 @@ class AugmentorConfig(BaseModel):
     rules: dict
 
 
-class TTCAugmentorConfig(AugmentorConfig):
+class TTCAugmenterConfig(AugmenterConfig):
     """Configuration for TTC augmentation behavior."""
 
     application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
@@ -34,16 +35,22 @@ class TTCAugmentorConfig(AugmentorConfig):
     # this is just an example of what the rules for eICR augmentation might look like
     # typically we should expect these to come from the configuration in S3
     rules: dict = {
-        "lab_test_name_resulted": [
+        DataField.LAB_TEST_NAME_ORDERED: [
             "document_id_header",
             "author_header",
             "author_entry",
             "translation",
-        ]
+        ],
+        DataField.LAB_TEST_NAME_RESULTED: [
+            "document_id_header",
+            "author_header",
+            "author_entry",
+            "translation",
+        ],
     }
 
     @model_validator(mode="after")
-    def validate_rules(self) -> "TTCAugmentorConfig":
+    def validate_rules(self) -> "TTCAugmenterConfig":
         """Ensures that there are rules defined for augmentation."""
         if not self.rules or len(self.rules) == 0:
             raise ValueError("Configuation rules must contain at least one augmentation rule!")

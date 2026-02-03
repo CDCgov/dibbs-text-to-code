@@ -8,12 +8,12 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from ..models.application import ApplicationCode
-from ..models.config import AugmentorConfig
-from ..models.config import TTCAugmentorConfig
+from ..models.config import AugmenterConfig
+from ..models.config import TTCAugmenterConfig
 from .eicr_utils import clean_xml_tree
 
 
-class Augmentor(BaseModel):
+class Augmenter(BaseModel):
     """Augments a document (e.g., eICR) with additional information using a validated config."""
 
     application_code: ApplicationCode = Field(
@@ -49,13 +49,9 @@ class Augmentor(BaseModel):
             raise ValueError("Augmentation configuration must be supplied!")
         return v
 
-    # TODO: eventually the default should be a base config
-    config: AugmentorConfig = Field(
+    config: AugmenterConfig = Field(
         description="The validated configuration that provides the rules for augmentation by application and document type.",
     )
-
-    def _get_application(self) -> ApplicationCode:
-        return self.application_code
 
     def _get_application_code_value(self) -> str:
         return self.application_code.value
@@ -77,16 +73,16 @@ class Augmentor(BaseModel):
         """Validates that the config matches the application and document type."""
         if self.config.application_code != self.application_code:
             raise ValueError(
-                f"Config application code {self.config.application_code} does not match augmentor application code {self.application_code}."
+                f"Config application code {self.config.application_code} does not match Augmenter application code {self.application_code}."
             )
         if self.config.rules is None or len(self.config.rules) == 0:
             raise ValueError("Config must contain at least one augmentation rule!")
 
 
-class TTCAugmentor(Augmentor):
-    """Augmentor specific to TTC eICR documents.
+class TTCAugmenter(Augmenter):
+    """Augmenter specific to TTC eICR documents.
 
-    If document_data is provided and it's a TTC augmentor,
+    If document_data is provided and it's a TTC Augmenter,
     then we expect that it should be an eICR document and
     set that in the class attribute accordingly
     """
@@ -98,10 +94,10 @@ class TTCAugmentor(Augmentor):
 
     # TODO: for now just use hard coded TTC Config
     #  we will need to remove/change this once we have S3 config integrated
-    config: AugmentorConfig = TTCAugmentorConfig()
+    config: AugmenterConfig = TTCAugmenterConfig()
 
     @model_validator(mode="after")
-    def set_eicr_base(self) -> "TTCAugmentor":
+    def set_eicr_base(self) -> "TTCAugmenter":
         """Cleans and sets up the base XML element for eICR processing."""
         self.eicr_base: Element = clean_xml_tree(self.document_payload)
         return self
