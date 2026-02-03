@@ -1,11 +1,10 @@
 from datetime import datetime
+from functools import cached_property
 
 from lxml.etree import Element
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import model_validator
 
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
@@ -37,7 +36,7 @@ class Augmenter(BaseModel):
     )
 
     augmented_date: datetime = Field(
-        default=datetime.now(),
+        default_factory=datetime.now,
         description="The date and time when the document was augmented, defaults to current local time.",
     )
 
@@ -87,24 +86,16 @@ class TTCAugmenter(Augmenter):
     set that in the class attribute accordingly
     """
 
-    # required to allow etree._Element type for eicr_base below
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
 
     # TODO: for now just use hard coded TTC Config
     #  we will need to remove/change this once we have S3 config integrated
     config: AugmenterConfig = TTCAugmenterConfig()
 
-    @model_validator(mode="after")
-    def set_eicr_base(self) -> "TTCAugmenter":
-        """Cleans and sets up the base XML element for eICR processing."""
-        self.eicr_base: Element = clean_xml_tree(self.document_payload)
-        return self
-
-    eicr_base: Element | None = Field(
-        default=None, description="The base XML element of the eICR document after cleaning."
-    )
+    @cached_property
+    def eicr_base(self) -> Element:
+        """CLeaned and parsed document_payload into an XML Element."""
+        return clean_xml_tree(self.document_payload)
 
     def _get_by_xpath(self, xpath: str) -> Element | None:
         if self.eicr_base is None:
