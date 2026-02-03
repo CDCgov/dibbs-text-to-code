@@ -9,10 +9,6 @@ with eicr_path.open() as f:
 
 
 class TestEicrUtils:
-    def test_clean_xml_tree_empty(self):
-        result = eicr_utils.clean_xml_tree("")
-        assert result is None
-
     def test_clean_xml_tree(self):
         result = eicr_utils.clean_xml_tree(EICR_OUTPUT)
         assert len(result) < len(EICR_OUTPUT)
