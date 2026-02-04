@@ -3,23 +3,19 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
     <realmCode code="US" />
-    <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"
-    >
+    <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3">
         <!--[C-CDA
         R1.1] US Realm Header-->
     </typeId>
-    <templateId root="2.16.840.1.113883.10.20.22.1.1"
-    >
+    <templateId root="2.16.840.1.113883.10.20.22.1.1">
         <!-- [C-CDA R2.1] US Realm Header (V3) -->
     </templateId>
-    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.1"
-    >
+    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.1">
         <!--[eICR
         R2 STU1.1] Initial Public Health Case Report Document (eICR) (V2) -->
     </templateId>
     <templateId extension="2016-12-01" root="2.16.840.1.113883.10.20.15.2" />
-    <id root="10c13861-86a8-4a9a-aec6-b615921178df"
-    >
+    <id root="10c13861-86a8-4a9a-aec6-b615921178df">
         <!--Globally
         unique document ID (extension) is scoped by vendor/software-->
     </id>
@@ -188,7 +184,8 @@
                             <!--Represented
                             Organization-->
                         </id>
-                        <name>Houston Urgent Care Clinic <!--Provider
+                        <name>Houston Urgent Care Clinic
+                            <!--Provider
                             Facility/Office Name-->
                         </name>
                         <addr use="WP">
@@ -231,7 +228,8 @@
                         </addr>
                     </location>
                     <serviceProviderOrganization>
-                        <name>Houston Urgent Care Clinic <!--Provider
+                        <name>Houston Urgent Care Clinic
+                            <!--Provider
                             Facility/Office Name-->
                         </name>
                         <telecom use="WP" value="tel:555-777-0123" />
@@ -570,7 +568,8 @@
                                         displayName="SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"
                                         sdtc:valueSet="2.16.840.1.114222.4.11.7508"
                                         sdtc:valueSetVersion="20200429" xsi:type="CD">
-                                        <originalText>COVID-19 Spike IgG Interpretation <reference
+                                        <originalText>COVID-19 Spike IgG Interpretation
+                                            <reference
                                                 value="#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name" />
                                         </originalText>
                                         <translation code="17822"
@@ -580,7 +579,8 @@
                                         <translation code="12345"
                                             codeSystem="1.2.840.114350.1.13.478.3.7.2.768282"
                                             codeSystemName="Epic.LRR.ID" displayName="UNKNOWN">
-                                            <originalText>COVID-19 Spike IgG <reference
+                                            <originalText>COVID-19 Spike IgG
+                                                <reference
                                                     value="#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp4Name" />
                                             </originalText>
                                         </translation>
