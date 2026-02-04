@@ -120,7 +120,7 @@ class EICRAugmenter(Augmenter):
         #  do we need to remove them or leave them?
         return parent_doc_id
 
-    def _get_parent_set_id(self) -> Element:
+    def _get_parent_set_id(self) -> Element | None:
         """Extract the parent document setId from original eICR document."""
         set_id_elements = self._get_by_xpath("/ClinicalDocument/setId")
         if not set_id_elements or len(set_id_elements) == 0:
@@ -130,7 +130,7 @@ class EICRAugmenter(Augmenter):
         #  do we need to remove them or leave them?
         return parent_set_id
 
-    def _get_parent_version_number(self) -> Element:
+    def _get_parent_version_number(self) -> Element | None:
         """Extract the parent versionNumber from original eICR document."""
         version_elements = self._get_by_xpath("/ClinicalDocument/versionNumber")
         if not version_elements or len(version_elements) == 0:
