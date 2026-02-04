@@ -40,7 +40,7 @@ include = [
     "packages/augmentation-lambda/src",
     "packages/augmentation/src",
     "packages/text-to-code/src",
-    "packages/text-to-code-lambda",
+    "package/utils/src"
 ]
 
 [tool.ruff]
