@@ -5,7 +5,7 @@ readme = "README.md"
 dependencies = []
 
 [dependency-groups]
-dev = []
+dev = ["lxml>=4.9.2", "pydantic>=2.12.3"]
 
 [build-system]
 requires = ["hatchling"]

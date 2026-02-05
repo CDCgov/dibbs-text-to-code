@@ -128,20 +128,19 @@ class EICRAugmenter(Augmenter):
 
     def _handle_document_id_header(self) -> None:
         # first replace the id tag
-        print(f"AUG EICR: {etree.tostring(self.augmented_eicr)}")
-        print(f"ORG EICR: {etree.tostring(self.original_eicr)}")
-        old_id_element = self._get_augmented_by_xpath("/ClinicalDocument/id")[0]
+        old_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
         old_id_element.getparent().replace(old_id_element, self._get_new_document_id())
+
         # replace the effectiveTime tag
-        old_eff_time_element = self._get_augmented_by_xpath("/ClinicalDocument/effectiveTime")[0]
+        old_eff_time_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
         old_eff_time_element.getparent().replace(
             old_eff_time_element, self._get_new_effective_time()
         )
         # next replace the setId tag if
-        old_set_id_element = self._get_augmented_by_xpath("/ClinicalDocument/setId")[0]
+        old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
         old_set_id_element.getparent().replace(old_set_id_element, self._get_new_set_id())
         # finally replace the versionNumber tag
-        old_version_element = self._get_augmented_by_xpath("/ClinicalDocument/versionNumber")[0]
+        old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
         old_version_element.getparent().replace(old_version_element, self._get_new_version_number())
 
     def _get_original_by_xpath(self, xpath: str) -> Element | None:
@@ -149,10 +148,13 @@ class EICRAugmenter(Augmenter):
             return None
         return self.original_eicr.xpath(xpath)
 
-    def _get_augmented_by_xpath(self, xpath: str) -> Element | None:
+    def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
         if self.augmented_eicr is None:
-            return None
-        return self.augmented_eicr.xpath(xpath)
+            raise ValueError("Augmented eICR document is empty.")
+        augmented_tags = self.augmented_eicr.xpath(xpath)
+        if not augmented_tags or len(augmented_tags) == 0:
+            raise ValueError(f"Unable to find tag in augmented eICR document for XPath: {xpath}")
+        return augmented_tags[0]
 
     def _get_parent_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
@@ -165,21 +167,21 @@ class EICRAugmenter(Augmenter):
         #  do we need to remove them or leave them?
         return parent_doc_id
 
-    def _get_parent_set_id(self) -> Element | None:
+    def _get_parent_set_id(self) -> Element:
         """Extract the parent document setId from original eICR document."""
         set_id_elements = self._get_original_by_xpath("/ClinicalDocument/setId")
         if not set_id_elements or len(set_id_elements) == 0:
-            return None
+            raise ValueError("No document setId found in eICR document.")
         parent_set_id = set_id_elements[0]
         # TODO:  Note that the namespaces will be present in the setId tag
         #  do we need to remove them or leave them?
         return parent_set_id
 
-    def _get_parent_version_number(self) -> Element | None:
+    def _get_parent_version_number(self) -> Element:
         """Extract the parent versionNumber from original eICR document."""
         version_elements = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         if not version_elements or len(version_elements) == 0:
-            return None
+            raise ValueError("No document versionNumber found in eICR document.")
         version = version_elements[0]
         # TODO:  Note that the namespaces will be present in the versionNumber tag
         #  do we need to remove them or leave them?
