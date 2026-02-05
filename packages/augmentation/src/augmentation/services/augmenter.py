@@ -109,11 +109,13 @@ class EICRAugmenter(Augmenter):
         return clean_xml_tree(self.document_payload)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+    # make copy of original eICR to modify as we augment
     augmented_eicr: Element | None = None
 
     def _augment(self) -> str:
-        # make copy of original eICR to modify as we augment
         self.augmented_eicr = copy.deepcopy(self.original_eicr)
+        if self.augmented_eicr is None:
+            raise ValueError("Augmented eICR document is empty.")
 
         # TODO: hard coding this to use the Lab Test Name Ordered rules for now
         # from the config, but we will need to use the input from TTC and
@@ -124,28 +126,26 @@ class EICRAugmenter(Augmenter):
         for rule in self.config.rules[ecr_data_field]:
             if rule == "document_id_header":
                 self._handle_document_id_header()
-        return self.augmented_eicr
+        return etree.tostring(self.augmented_eicr).decode("utf-8")
 
     def _handle_document_id_header(self) -> None:
         # first replace the id tag
         old_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
-        old_id_element.getparent().replace(old_id_element, self._get_new_document_id())
+        self.augmented_eicr.replace(old_id_element, self._get_new_document_id())
 
         # replace the effectiveTime tag
         old_eff_time_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
-        old_eff_time_element.getparent().replace(
-            old_eff_time_element, self._get_new_effective_time()
-        )
+        self.augmented_eicr.replace(old_eff_time_element, self._get_new_effective_time())
         # next replace the setId tag if
         old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
-        old_set_id_element.getparent().replace(old_set_id_element, self._get_new_set_id())
+        self.augmented_eicr.replace(old_set_id_element, self._get_new_set_id())
         # finally replace the versionNumber tag
         old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
-        old_version_element.getparent().replace(old_version_element, self._get_new_version_number())
+        self.augmented_eicr.replace(old_version_element, self._get_new_version_number())
 
-    def _get_original_by_xpath(self, xpath: str) -> Element | None:
+    def _get_original_by_xpath(self, xpath: str) -> Element:
         if self.original_eicr is None:
-            return None
+            raise ValueError("Original eICR document is empty.")
         return self.original_eicr.xpath(xpath)
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:

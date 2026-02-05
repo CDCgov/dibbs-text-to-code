@@ -130,12 +130,8 @@ class TestAugmenter:
 
     def test_augmenter_get_setid_no_setid(self):
         """Tests TTC augmenter get_parent_set_id method with missing setId."""
-        augmenter = EICRAugmenter(
-            document_payload=BASIC_ECR,
-            config=DATA_CONFIG,
-        )
-        result = augmenter._get_parent_set_id()
-        assert result is None
+        with pytest.raises(ValueError, match=r"No document setId found in eICR document."):
+            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_parent_set_id()
 
     def test_augmenter_get_parent_version(self):
         """Tests TTC augmenter get_parent_version_number method."""
@@ -148,12 +144,10 @@ class TestAugmenter:
 
     def test_augmenter_get_parent_version_no_version(self):
         """Tests TTC augmenter get_parent_version_number method with missing versionNumber."""
-        augmenter = EICRAugmenter(
-            document_payload=BASIC_ECR,
-            config=DATA_CONFIG,
-        )
-        result = augmenter._get_parent_version_number()
-        assert result is None
+        with pytest.raises(ValueError, match=r"No document versionNumber found in eICR document."):
+            EICRAugmenter(
+                config=DATA_CONFIG, document_payload=BASIC_ECR
+            )._get_parent_version_number()
 
     def test_augmenter_get_new_document_id(self):
         """Tests TTC augmenter _get_new_document_id method."""
