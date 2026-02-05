@@ -1,5 +1,5 @@
 [project]
-name = "dibbs-text-to-code"
+name = "dibbs-text-to-code-root"
 version = "0.1.0"
 description = ""
 authors = [
@@ -12,18 +12,7 @@ authors = [
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
-dependencies = [
-    "lxml>=4.9.2",
-    "pydantic>=2.12.3",
-    "sentence-transformers==5.2.0",
-    # Starting with version 2.2.2, PyTorch stopped publishing wheel binaries for Intel Macs.
-    # To maintain support for Intel Mac development, we pin PyTorch to version 2.2.2.
-    # Some 2.2.2 builds were created with numpy 1.x, so we explicitly pin numpy to 1.x
-    # to ensure compatibility across all hardware.
-    # Once Intel Mac support is no longer needed, we can remove these pinned torch and numpy
-    # versions and rely on spacy and sentence-transformers to manage their own dependencies.
-    "torch==2.9.1",
-]
+dependencies = []
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
@@ -35,19 +24,24 @@ dev = [
     "types-lxml>=2026.1.1",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.coverage.run]
-source = ["src", "packages"]
+source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/dibbs_text_to_code", "src/augmentation"]
+[tool.pytest.ini_options]
+testpaths = ["packages"]
+pythonpath = ["."]
+
 
 [tool.ty.src]
-include = ["src", "packages/api/src", "packages/aws-lambda/src", "packages/augmentation/src"]
+include = [
+    "packages/api/src",
+    "packages/augmentation-lambda/src",
+    "packages/augmentation/src",
+    "packages/text-to-code/src",
+    "package/utils/src"
+]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
@@ -63,7 +57,7 @@ exclude = [
     "docs",
     "model-tuning",
     "packages/api",
-    "packages/aws-lambda",
+    "packages/text-to-code-lambda",
     "packages/utils",
 ]
 line-length = 100
@@ -125,8 +119,10 @@ convention = "google"
 [tool.uv.workspace]
 members = [
     "packages/api",
-    "packages/aws-lambda",
-    "packages/data-curation",
-    "packages/utils",
     "packages/augmentation",
+    "packages/augmentation-lambda",
+    "packages/data-curation",
+    "packages/text-to-code",
+    "packages/text-to-code-lambda",
+    "packages/utils",
 ]
