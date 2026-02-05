@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Sequence
 from enum import StrEnum
 
@@ -13,18 +11,35 @@ from .eicr import DataField
 from .eicr import LabXPaths
 
 
-class TranslationSystem(StrEnum):
+class CodeTranslation(StrEnum):
     """Logical classification of known code systems used to prioritize translation candidates.
 
     This enum is not derived from raw XML directly. Instead, it is inferred by comparing a
     Candidate.system value against configured system URI lists.
 
-    :returns: A TranslationSystem enum value when the candidate system matches a configured
+    :returns: A CodeTranslation enum value when the candidate system matches a configured
         code system list, otherwise None.
     """
 
     LOINC = "LOINC"
     SNOMED = "SNOMED"
+
+
+class CodeSystemValues(list[str]):
+    """A list of code system identifier strings used to classify translation candidates."""
+
+    LOINC_VALUES = (
+        [
+            "http://loinc.org",
+            "urn:oid:2.16.840.1.113883.6.1",
+        ],
+    )
+    SNOMED_VALUES = (
+        [
+            "http://snomed.info/sct",
+            "urn:oid:2.16.840.1.113883.6.96",
+        ],
+    )
 
 
 class TranslationSelectionStrategy(StrEnum):
@@ -130,12 +145,12 @@ class BaseEvaluationCriteria(BaseModel):
 def _classify_translation_system(
     candidate: Candidate,
     preference: TranslationPreference,
-) -> TranslationSystem | None:
+) -> CodeTranslation | None:
     """Classify a translation candidate as LOINC or SNOMED based on its Candidate.system value.
 
     :param candidate: A Candidate extracted from a translation XPath.
     :param preference: Translation system preference configuration.
-    :returns: The classified TranslationSystem value if Candidate.system matches a configured
+    :returns: The classified CodeTranslation value if Candidate.system matches a configured
         system identifier, otherwise None.
     """
     system = candidate.system
@@ -143,10 +158,10 @@ def _classify_translation_system(
         return None
 
     if system in preference.loinc_system_values:
-        return TranslationSystem.LOINC
+        return CodeTranslation.LOINC
 
     if system in preference.snomed_system_values:
-        return TranslationSystem.SNOMED
+        return CodeTranslation.SNOMED
 
     return None
 
@@ -172,11 +187,11 @@ def _select_translation_candidate(
         return translation_candidates[0]
 
     for c in translation_candidates:
-        if _classify_translation_system(c, preference) == TranslationSystem.LOINC:
+        if _classify_translation_system(c, preference) == CodeTranslation.LOINC:
             return c
 
     for c in translation_candidates:
-        if _classify_translation_system(c, preference) == TranslationSystem.SNOMED:
+        if _classify_translation_system(c, preference) == CodeTranslation.SNOMED:
             return c
 
     return translation_candidates[0]
@@ -226,10 +241,10 @@ def select_relevant_text(
     :param criteria: The evaluation criteria defining priority order and translation behavior.
     :returns: The selected text string to submit to OpenSearch, or None if no candidate is viable.
     """
-    for prio in criteria.ordered_priorities():
+    for priority in criteria.ordered_priorities():
         best = _resolve_best_for_xpath(
             candidates=candidates,
-            xpath=prio.xpath,
+            xpath=priority.xpath,
             preference=criteria.translation_preference,
         )
         if best is None:
@@ -271,14 +286,8 @@ class LabTestNameOrderedEvaluationCriteria(BaseEvaluationCriteria):
     translation_preference: TranslationPreference = Field(
         default_factory=lambda: TranslationPreference(
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=[
-                "http://loinc.org",
-                "urn:oid:2.16.840.1.113883.6.1",
-            ],
-            snomed_system_values=[
-                "http://snomed.info/sct",
-                "urn:oid:2.16.840.1.113883.6.96",
-            ],
+            loinc_system_values=CodeSystemValues.LOINC_VALUES,
+            snomed_system_values=CodeSystemValues.SNOMED_VALUES,
         )
     )
 
