@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from enum import StrEnum
+from typing import ClassVar
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -28,18 +29,15 @@ class CodeTranslation(StrEnum):
 class CodeSystemValues(list[str]):
     """A list of code system identifier strings used to classify translation candidates."""
 
-    LOINC_VALUES = (
-        [
-            "http://loinc.org",
-            "urn:oid:2.16.840.1.113883.6.1",
-        ],
-    )
-    SNOMED_VALUES = (
-        [
-            "http://snomed.info/sct",
-            "urn:oid:2.16.840.1.113883.6.96",
-        ],
-    )
+    LOINC_VALUES: ClassVar[list[str]] = [
+        "http://loinc.org",
+        "urn:oid:2.16.840.1.113883.6.1",
+    ]
+
+    SNOMED_VALUES: ClassVar[list[str]] = [
+        "http://snomed.info/sct",
+        "urn:oid:2.16.840.1.113883.6.96",
+    ]
 
 
 class TranslationSelectionStrategy(StrEnum):
