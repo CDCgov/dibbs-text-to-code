@@ -46,8 +46,8 @@ class TestAugmenter:
         )
         assert augmenter.application_code.value == ApplicationCode.TEXT_TO_CODE.value
         assert augmenter.config == DATA_CONFIG
-        assert augmenter.eicr_base is not None
-        xpath_result = augmenter.eicr_base.xpath(BASE_XPATH)
+        assert augmenter.original_eicr is not None
+        xpath_result = augmenter.original_eicr.xpath(BASE_XPATH)
         assert xpath_result[0].strip() == "A custom code in original text."
 
     def test_augmenter_get_application(self):
@@ -60,7 +60,7 @@ class TestAugmenter:
         assert augmenter._get_application_code_value() == ApplicationCode.TEXT_TO_CODE.value
 
     def test_augmenter_validate_config_pass(self):
-        """Tests validate config method."""
+        """Tests EICRAugmenter validate config method."""
         augmenter = EICRAugmenter(
             document_payload=BASIC_ECR,
             config=DATA_CONFIG,
@@ -69,16 +69,16 @@ class TestAugmenter:
         assert augmenter._validate_config() is None
 
     def test_augmenter_augment(self):
-        """Tests TTC augmentor _augment method."""
-        augmenter = EICRAugmenter(
+        """Tests augmentor _augment method."""
+        augmenter = Augmenter(
             document_payload=BASIC_ECR,
             config=DATA_CONFIG,
         )
         assert augmenter._augment() == BASIC_ECR
 
     def test_augmenter_run(self):
-        """Tests TTC augmentor _run method."""
-        augmenter = EICRAugmenter(
+        """Tests augmentor _run method."""
+        augmenter = Augmenter(
             document_payload=BASIC_ECR,
             config=DATA_CONFIG,
         )
@@ -91,7 +91,10 @@ class TestAugmenter:
             config=DATA_CONFIG,
         )
 
-        assert augmenter._get_by_xpath(BASE_XPATH)[0].strip() == "A custom code in original text."
+        assert (
+            augmenter._get_original_by_xpath(BASE_XPATH)[0].strip()
+            == "A custom code in original text."
+        )
 
     def test_augmenter_get_document_id(self):
         """Tests TTC augmenter get_parent_document_id method."""
@@ -193,3 +196,14 @@ class TestAugmenter:
         result = augmenter._get_new_effective_time()
 
         assert result.get("value") == augmenter.augmented_date.strftime("%Y%m%d%H%M%S")
+
+    def test_eicraugmenter_augment(self):
+        """Tests EICRAugmenter _augment method."""
+        augmenter = EICRAugmenter(
+            document_payload=COVID_ECR,
+            config=DATA_CONFIG,
+        )
+        result = augmenter._augment()
+        print(f"Augmented EICR: {result}")
+        assert result is not None
+        assert result != augmenter.original_eicr

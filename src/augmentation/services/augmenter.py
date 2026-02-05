@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from functools import cached_property
 from uuid import uuid4
@@ -5,12 +6,14 @@ from uuid import uuid4
 from lxml import etree
 from lxml.etree import Element
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
 from ..models.config import TTCAugmenterConfig
+from ..models.eicr import DataField
 from .eicr_utils import clean_xml_tree
 
 
@@ -18,6 +21,7 @@ class Augmenter(BaseModel):
     """Augments a document (e.g., eICR) with additional information using a validated config."""
 
     application_code: ApplicationCode = Field(
+        default=ApplicationCode.TEXT_TO_CODE,
         description="The application requesting augmenation of a document.",
     )
 
@@ -100,18 +104,59 @@ class EICRAugmenter(Augmenter):
     new_set_id: str = str(uuid4())
 
     @cached_property
-    def eicr_base(self) -> Element:
+    def original_eicr(self) -> Element:
         """CLeaned and parsed document_payload into an XML Element."""
         return clean_xml_tree(self.document_payload)
 
-    def _get_by_xpath(self, xpath: str) -> Element | None:
-        if self.eicr_base is None:
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    augmented_eicr: Element | None = None
+
+    def _augment(self) -> str:
+        # make copy of original eICR to modify as we augment
+        self.augmented_eicr = copy.deepcopy(self.original_eicr)
+
+        # TODO: hard coding this to use the Lab Test Name Ordered rules for now
+        # from the config, but we will need to use the input from TTC and
+        # the config to determine what to actually augment - the
+        # Output from TTC should contain (along with an eicr ID or full eicr)
+        # a dataField: Full XPath to where the problem data element is located in the eicr
+        ecr_data_field = DataField.LAB_TEST_NAME_ORDERED
+        for rule in self.config.rules[ecr_data_field]:
+            if rule == "document_id_header":
+                self._handle_document_id_header()
+        return self.augmented_eicr
+
+    def _handle_document_id_header(self) -> None:
+        # first replace the id tag
+        print(f"AUG EICR: {etree.tostring(self.augmented_eicr)}")
+        print(f"ORG EICR: {etree.tostring(self.original_eicr)}")
+        old_id_element = self._get_augmented_by_xpath("/ClinicalDocument/id")[0]
+        old_id_element.getparent().replace(old_id_element, self._get_new_document_id())
+        # replace the effectiveTime tag
+        old_eff_time_element = self._get_augmented_by_xpath("/ClinicalDocument/effectiveTime")[0]
+        old_eff_time_element.getparent().replace(
+            old_eff_time_element, self._get_new_effective_time()
+        )
+        # next replace the setId tag if
+        old_set_id_element = self._get_augmented_by_xpath("/ClinicalDocument/setId")[0]
+        old_set_id_element.getparent().replace(old_set_id_element, self._get_new_set_id())
+        # finally replace the versionNumber tag
+        old_version_element = self._get_augmented_by_xpath("/ClinicalDocument/versionNumber")[0]
+        old_version_element.getparent().replace(old_version_element, self._get_new_version_number())
+
+    def _get_original_by_xpath(self, xpath: str) -> Element | None:
+        if self.original_eicr is None:
             return None
-        return self.eicr_base.xpath(xpath)
+        return self.original_eicr.xpath(xpath)
+
+    def _get_augmented_by_xpath(self, xpath: str) -> Element | None:
+        if self.augmented_eicr is None:
+            return None
+        return self.augmented_eicr.xpath(xpath)
 
     def _get_parent_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
-        doc_id_elements = self._get_by_xpath("/ClinicalDocument/id")
+        doc_id_elements = self._get_original_by_xpath("/ClinicalDocument/id")
         if not doc_id_elements or len(doc_id_elements) == 0:
             raise ValueError("No document ID found in eICR document.")
         parent_doc_id = doc_id_elements[0]
@@ -122,7 +167,7 @@ class EICRAugmenter(Augmenter):
 
     def _get_parent_set_id(self) -> Element | None:
         """Extract the parent document setId from original eICR document."""
-        set_id_elements = self._get_by_xpath("/ClinicalDocument/setId")
+        set_id_elements = self._get_original_by_xpath("/ClinicalDocument/setId")
         if not set_id_elements or len(set_id_elements) == 0:
             return None
         parent_set_id = set_id_elements[0]
@@ -132,7 +177,7 @@ class EICRAugmenter(Augmenter):
 
     def _get_parent_version_number(self) -> Element | None:
         """Extract the parent versionNumber from original eICR document."""
-        version_elements = self._get_by_xpath("/ClinicalDocument/versionNumber")
+        version_elements = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         if not version_elements or len(version_elements) == 0:
             return None
         version = version_elements[0]
