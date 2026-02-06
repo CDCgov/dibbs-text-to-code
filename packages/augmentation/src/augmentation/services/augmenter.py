@@ -109,14 +109,20 @@ class EICRAugmenter(Augmenter):
         return clean_xml_tree(self.document_payload)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
     # make copy of original eICR to modify as we augment
-    augmented_eicr: Element | None = None
+    # TODO: I don't like having multiple copies of the payload
+    # but we do need two so that we can pull data from the original, while
+    # also being able to modify the augmented version.
+    # I ran into issues either in tests or in typing that made me
+    # land on this approach, but I'm open to refactoring this in
+    # the future if we can find a better way to handle it.
+    @cached_property
+    def augmented_eicr(self) -> Element:
+        """Deep copy of cleaned document_payload specific for augmentation."""
+        return copy.deepcopy(self.original_eicr)
 
     def _augment(self) -> str:
-        self.augmented_eicr = copy.deepcopy(self.original_eicr)
-        if self.augmented_eicr is None:
-            raise ValueError("Augmented eICR document is empty.")
-
         # TODO: hard coding this to use the Lab Test Name Ordered rules for now
         # from the config, but we will need to use the input from TTC and
         # the config to determine what to actually augment - the
