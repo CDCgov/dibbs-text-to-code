@@ -101,7 +101,7 @@ class TestAugmenter:
             document_payload=COVID_ECR,
             config=DATA_CONFIG,
         )
-        result = augmenter._get_parent_document_id()
+        result = augmenter._get_old_document_id()
 
         # print(f"Document ID: {etree.tostring(result)}")
 
@@ -112,7 +112,7 @@ class TestAugmenter:
     def test_augmenter_get_document_id_no_id(self):
         """Tests TTC augmenter get_parent_document_id method with missing document id."""
         with pytest.raises(ValueError, match=r"No document ID found in eICR document."):
-            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_parent_document_id()
+            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_old_document_id()
 
     def test_augmenter_get_setid(self):
         """Tests TTC augmenter get_parent_set_id method."""
@@ -120,7 +120,7 @@ class TestAugmenter:
             document_payload=COVID_ECR,
             config=DATA_CONFIG,
         )
-        result = augmenter._get_parent_set_id()
+        result = augmenter._get_old_set_id()
 
         # print(f"Set ID: {etree.tostring(result)}")
 
@@ -131,7 +131,7 @@ class TestAugmenter:
     def test_augmenter_get_setid_no_setid(self):
         """Tests TTC augmenter get_parent_set_id method with missing setId."""
         with pytest.raises(ValueError, match=r"No document setId found in eICR document."):
-            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_parent_set_id()
+            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_old_set_id()
 
     def test_augmenter_get_parent_version(self):
         """Tests TTC augmenter get_parent_version_number method."""
@@ -139,15 +139,13 @@ class TestAugmenter:
             document_payload=COVID_ECR,
             config=DATA_CONFIG,
         )
-        result = augmenter._get_parent_version_number()
+        result = augmenter._get_old_version_number()
         assert result.get("value") == "1"
 
     def test_augmenter_get_parent_version_no_version(self):
         """Tests TTC augmenter get_parent_version_number method with missing versionNumber."""
         with pytest.raises(ValueError, match=r"No document versionNumber found in eICR document."):
-            EICRAugmenter(
-                config=DATA_CONFIG, document_payload=BASIC_ECR
-            )._get_parent_version_number()
+            EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_old_version_number()
 
     def test_augmenter_get_new_document_id(self):
         """Tests TTC augmenter _get_new_document_id method."""
@@ -198,5 +196,5 @@ class TestAugmenter:
         )
         result = augmenter._augment()
         print(f"Augmented EICR: {result}")
-        assert result is not None
+        assert result is None
         assert result != augmenter.original_eicr

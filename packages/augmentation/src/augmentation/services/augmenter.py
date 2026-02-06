@@ -122,32 +122,72 @@ class EICRAugmenter(Augmenter):
         """Deep copy of cleaned document_payload specific for augmentation."""
         return copy.deepcopy(self.original_eicr)
 
+    def run(self) -> str:
+        """Execute augmentation process on the eICR document."""
+        self._validate_config()
+        self.augmented_document = self._augment()
+        return self.augmented_document
+
     def _augment(self) -> str:
+        # Note that there should only be one new header document id per eicr message
+        # even if there are multiple augmentations for various data fields
+        header_rule_applied = False
+
         # TODO: hard coding this to use the Lab Test Name Ordered rules for now
         # from the config, but we will need to use the input from TTC and
         # the config to determine what to actually augment - the
         # Output from TTC should contain (along with an eicr ID or full eicr)
         # a dataField: Full XPath to where the problem data element is located in the eicr
-        ecr_data_field = DataField.LAB_TEST_NAME_ORDERED
-        for rule in self.config.rules[ecr_data_field]:
-            if rule == "document_id_header":
-                self._handle_document_id_header()
-        return etree.tostring(self.augmented_eicr).decode("utf-8")
+        for ecr_data_field in DataField:
+            for rule in self.config.rules[ecr_data_field]:
+                if rule == "document_id_header" and not header_rule_applied:
+                    self._handle_document_id_header()
+                    self._handle_related_document_header()
+                    header_rule_applied = True
+        etree.indent(self.augmented_eicr, space="\t")
+        return etree.tostring(
+            self.augmented_eicr, pretty_print=True, encoding="utf-8", xml_declaration=True
+        ).decode()
 
     def _handle_document_id_header(self) -> None:
-        # first replace the id tag
+        # 1 first replace the id tag
         old_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
-        self.augmented_eicr.replace(old_id_element, self._get_new_document_id())
+        # we need to retain the old tags 'tail' to preserve the spacing format
+        new_id_element = self._get_new_document_id()
+        new_id_element.tail = old_id_element.tail
+        self.augmented_eicr.replace(old_id_element, new_id_element)
 
-        # replace the effectiveTime tag
+        # 2 replace the effectiveTime tag
         old_eff_time_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
-        self.augmented_eicr.replace(old_eff_time_element, self._get_new_effective_time())
-        # next replace the setId tag if
+        # we need to retain the old tags 'tail' to preserve the spacing format
+        new_eff_time_element = self._get_new_effective_time()
+        new_eff_time_element.tail = old_eff_time_element.tail
+        self.augmented_eicr.replace(old_eff_time_element, new_eff_time_element)
+        # 3 next replace the setId tag if
         old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
-        self.augmented_eicr.replace(old_set_id_element, self._get_new_set_id())
-        # finally replace the versionNumber tag
+        # we need to retain the old tags 'tail' to preserve the spacing format
+        new_set_id_element = self._get_new_set_id()
+        new_set_id_element.tail = old_set_id_element.tail
+        self.augmented_eicr.replace(old_set_id_element, new_set_id_element)
+        # 4 finally replace the versionNumber tag
         old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
-        self.augmented_eicr.replace(old_version_element, self._get_new_version_number())
+        # we need to retain the old tags 'tail' to preserve the spacing format
+        new_version_element = self._get_new_version_number()
+        new_version_element.tail = old_version_element.tail
+        self.augmented_eicr.replace(old_version_element, new_version_element)
+
+    def _handle_related_document_header(self) -> None:
+        # 1 first determine if a relatedDocument with type "XFRM" exists
+        if self._get_old_xrfm_related_document() is None:
+            # if it doesn't exist then create one and add it to the eICR
+            new_related_doc = etree.SubElement(
+                self.augmented_eicr.xpath("/ClinicalDocument")[0],
+                "relatedDocument",
+                typeCode="XFRM",
+            )
+            new_related_doc.tail = "\n\t"  # add text to preserve formatting
+            new_parent_doc = etree.SubElement(new_related_doc, "parentDocument")
+            new_parent_doc.tail = "\n\t\t"  # add text to preserve formatting
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         if self.original_eicr is None:
@@ -162,7 +202,7 @@ class EICRAugmenter(Augmenter):
             raise ValueError(f"Unable to find tag in augmented eICR document for XPath: {xpath}")
         return augmented_tags[0]
 
-    def _get_parent_document_id(self) -> Element:
+    def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
         doc_id_elements = self._get_original_by_xpath("/ClinicalDocument/id")
         if not doc_id_elements or len(doc_id_elements) == 0:
@@ -173,7 +213,7 @@ class EICRAugmenter(Augmenter):
         #  do we need to remove them or leave them?
         return parent_doc_id
 
-    def _get_parent_set_id(self) -> Element:
+    def _get_old_set_id(self) -> Element:
         """Extract the parent document setId from original eICR document."""
         set_id_elements = self._get_original_by_xpath("/ClinicalDocument/setId")
         if not set_id_elements or len(set_id_elements) == 0:
@@ -183,7 +223,7 @@ class EICRAugmenter(Augmenter):
         #  do we need to remove them or leave them?
         return parent_set_id
 
-    def _get_parent_version_number(self) -> Element:
+    def _get_old_version_number(self) -> Element:
         """Extract the parent versionNumber from original eICR document."""
         version_elements = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         if not version_elements or len(version_elements) == 0:
@@ -219,3 +259,13 @@ class EICRAugmenter(Augmenter):
         # TODO: we may need to have some way to increment this later
         version_number_tag.set("value", "1")
         return version_number_tag
+
+    def _get_old_xrfm_related_document(self) -> Element | None:
+        """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""
+        related_doc_elements = self._get_original_by_xpath(
+            "/ClinicalDocument/relatedDocument[@typeCode='XFRM']"
+        )
+        if not related_doc_elements or len(related_doc_elements) == 0:
+            return None
+        related_doc_element = related_doc_elements[0]
+        return related_doc_element
