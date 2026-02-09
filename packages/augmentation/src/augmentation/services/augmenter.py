@@ -122,12 +122,6 @@ class EICRAugmenter(Augmenter):
         """Deep copy of cleaned document_payload specific for augmentation."""
         return copy.deepcopy(self.original_eicr)
 
-    def run(self) -> str:
-        """Execute augmentation process on the eICR document."""
-        self._validate_config()
-        self.augmented_document = self._augment()
-        return self.augmented_document
-
     def _augment(self) -> str:
         # Note that there should only be one new header document id per eicr message
         # even if there are multiple augmentations for various data fields
@@ -144,7 +138,7 @@ class EICRAugmenter(Augmenter):
                     self._handle_document_id_header()
                     self._handle_related_document_header()
                     header_rule_applied = True
-        etree.indent(self.augmented_eicr, space="\t")
+        etree.indent(self.augmented_eicr, space="    ")
         return etree.tostring(
             self.augmented_eicr, pretty_print=True, encoding="utf-8", xml_declaration=True
         ).decode()
@@ -178,7 +172,8 @@ class EICRAugmenter(Augmenter):
 
     def _handle_related_document_header(self) -> None:
         # 1 first determine if a relatedDocument with type "XFRM" exists
-        if self._get_old_xrfm_related_document() is None:
+        related_doc_tag = self._get_old_xrfm_related_document()
+        if related_doc_tag is None:
             # if it doesn't exist then create one and add it to the eICR
             new_related_doc = etree.SubElement(
                 self.augmented_eicr.xpath("/ClinicalDocument")[0],
@@ -187,7 +182,14 @@ class EICRAugmenter(Augmenter):
             )
             new_related_doc.tail = "\n\t"  # add text to preserve formatting
             new_parent_doc = etree.SubElement(new_related_doc, "parentDocument")
+            new_parent_doc.append(self._get_old_document_id())
+            new_parent_doc.append(self._get_old_set_id())
+            new_parent_doc.append(self._get_old_version_number())
             new_parent_doc.tail = "\n\t\t"  # add text to preserve formatting
+        elif not related_doc_tag.__contains__(self._get_old_document_id()):
+            related_doc_tag.append(self._get_old_document_id())
+            related_doc_tag.append(self._get_old_set_id())
+            related_doc_tag.append(self._get_old_version_number())
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         if self.original_eicr is None:
