@@ -210,7 +210,8 @@ class EICRAugmenter(Augmenter):
         if not doc_id_elements or len(doc_id_elements) == 0:
             raise ValueError("No document ID found in eICR document.")
         parent_doc_id = doc_id_elements[0]
-        parent_doc_id.set("assigningAuthorityName", "original-document")
+        if parent_doc_id.get("assigningAuthorityName") is None:
+            parent_doc_id.set("assigningAuthorityName", "original-document")
         # TODO:  Note that the namespaces will be present in the id tag
         #  do we need to remove them or leave them?
         return parent_doc_id

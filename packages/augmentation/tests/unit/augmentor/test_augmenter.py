@@ -195,6 +195,8 @@ class TestAugmenter:
             config=DATA_CONFIG,
         )
         result = augmenter._augment()
-        print(f"Augmented EICR: {result}")
-        assert result is None
         assert result != augmenter.original_eicr
+        assert (
+            '<id root="10c13861-86a8-4a9a-aec6-b615921178df" assigningAuthorityName="original-document">'
+            in result
+        )
