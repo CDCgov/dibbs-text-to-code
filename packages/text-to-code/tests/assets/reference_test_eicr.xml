@@ -1,0 +1,63 @@
+<!-- Simplified eICR to test resolving references -->
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:cda="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc"
+  xmlns:voc="http://www.lantanagroup.com/voc"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <entry>
+            <component>
+              <text>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        Simple Reference
+                      </th>
+                      <th>
+                        Additional Nodes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td ID="simple_reference_1">
+                        My reference
+                      </td>
+                      <td ID="complicated_reference_1">
+                        <content>
+                          A more complicated reference
+                        </content>
+                        <content>
+                          With extra nodes
+                        </content>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </text>
+              <observation>
+                <code>
+                  <originalText>
+                    <reference value="#simple_reference_1" />
+                  </originalText>
+                  <translation>
+                    <originalText> This original text has additional text <reference
+                        value="#simple_reference_1" /> Even more stuff here </originalText>
+                  </translation>
+                  <translation>
+                    <originalText>
+                      <reference value="#complicated_reference_1" />
+                    </originalText>
+                  </translation>
+                </code>
+              </observation>
+            </component>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>
