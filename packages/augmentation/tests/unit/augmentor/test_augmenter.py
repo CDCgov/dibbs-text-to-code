@@ -103,8 +103,6 @@ class TestAugmenter:
         )
         result = augmenter._get_old_document_id()
 
-        # print(f"Document ID: {etree.tostring(result)}")
-
         assert result.get("root") == "10c13861-86a8-4a9a-aec6-b615921178df"
         assert result.get("extension") is None
         assert result.get("assigningAuthorityName") == "original-document"
@@ -121,8 +119,6 @@ class TestAugmenter:
             config=DATA_CONFIG,
         )
         result = augmenter._get_old_set_id()
-
-        # print(f"Set ID: {etree.tostring(result)}")
 
         assert result.get("root") == "1.2.840.114350.1.13.380.3.7.1.1"
         assert result.get("extension") == "8d86218e-0fea-11eb-8216-a80388425cfb"
