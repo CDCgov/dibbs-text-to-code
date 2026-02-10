@@ -19,6 +19,10 @@ covid_ecr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
 with covid_ecr_path.open() as f:
     COVID_ECR = f.read()
 
+aug_covid_ecr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid_augmented.xml"
+with aug_covid_ecr_path.open() as f:
+    AUG_COVID_ECR = f.read()
+
 
 class TestAugmenter:
     def test_base_augmenter_with_no_document_data(self):
@@ -184,15 +188,45 @@ class TestAugmenter:
 
         assert result.get("value") == augmenter.augmented_date.strftime("%Y%m%d%H%M%S")
 
-    def test_eicraugmenter_augment(self):
-        """Tests EICRAugmenter _augment method."""
+    def test_eicraugmenter_augment_original_input(self):
+        """Tests EICRAugmenter _augment method with original eicr input."""
         augmenter = EICRAugmenter(
             document_payload=COVID_ECR,
             config=DATA_CONFIG,
         )
         result = augmenter._augment()
+        new_id = augmenter.augmented_eicr.xpath("/ClinicalDocument/id")[0]
+        parent_related_doc_id = augmenter.augmented_eicr.xpath(
+            "/ClinicalDocument/relatedDocument[@typeCode='XFRM']/parentDocument/id"
+        )[0]
         assert result != augmenter.original_eicr
-        assert (
-            '<id root="10c13861-86a8-4a9a-aec6-b615921178df" assigningAuthorityName="original-document">'
-            in result
+        assert new_id.get("root") != parent_related_doc_id.get("root")
+        assert new_id.get("assigningAuthorityName") == ApplicationCode.TEXT_TO_CODE.value
+        assert parent_related_doc_id.get("assigningAuthorityName") == "original-document"
+        assert parent_related_doc_id.get("root") == "10c13861-86a8-4a9a-aec6-b615921178df"
+
+    def test_eicraugmenter_augment_augmented_input(self):
+        """Tests EICRAugmenter _augment method with an already augmented document as input."""
+        augmenter = EICRAugmenter(
+            document_payload=AUG_COVID_ECR,
+            config=DATA_CONFIG,
         )
+        result = augmenter._augment()
+        assert result != augmenter.original_eicr
+        new_id = augmenter.augmented_eicr.xpath("/ClinicalDocument/id")[0]
+        parent_related_doc_id = augmenter.augmented_eicr.xpath(
+            "/ClinicalDocument/relatedDocument[@typeCode='XFRM']/parentDocument/id"
+        )[0]
+        parent_related_doc_id2 = augmenter.augmented_eicr.xpath(
+            "/ClinicalDocument/relatedDocument[@typeCode='XFRM']/parentDocument/id"
+        )[1]
+
+        # assert new_id.get("root") == parent_related_doc_id.get("root")
+        assert new_id.get("assigningAuthorityName") == ApplicationCode.TEXT_TO_CODE.value
+        assert parent_related_doc_id.get("assigningAuthorityName") == "original-document"
+        assert parent_related_doc_id.get("root") == "10c13861-86a8-4a9a-aec6-b615921178df"
+        assert (
+            parent_related_doc_id2.get("assigningAuthorityName")
+            == ApplicationCode.TEXT_TO_CODE.value
+        )
+        assert parent_related_doc_id2.get("root") == "6341edf9-d8d1-4d18-b725-9228ac13ca62"

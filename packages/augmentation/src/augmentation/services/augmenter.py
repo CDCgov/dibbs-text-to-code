@@ -188,9 +188,22 @@ class EICRAugmenter(Augmenter):
             new_parent_doc.tail = "\n\t\t"  # add text to preserve formatting
         # if relatedDocument/parentDocument already exists ensure that the original_document id
         # doesn't already exist in this section
-        elif not related_doc_tag.__contains__(self._get_old_document_id()):
+        else:
+            for doc_id in related_doc_tag.xpath("./id"):
+                if doc_id.get("root") == self._get_old_document_id().get("root"):
+                    return
+            id_comment = etree.Comment("DATA AUGMENTATION: input-document-id of augmented eICR")
+            related_doc_tag.append(id_comment)
             related_doc_tag.append(self._get_old_document_id())
+            setid_comment = etree.Comment(
+                "DATA AUGMENTATION: input-document-setId of augmented eICR"
+            )
+            related_doc_tag.append(setid_comment)
             related_doc_tag.append(self._get_old_set_id())
+            version_comment = etree.Comment(
+                "DATA AUGMENTATION: input-document-version-number of augmented eICR"
+            )
+            related_doc_tag.append(version_comment)
             related_doc_tag.append(self._get_old_version_number())
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
@@ -214,8 +227,6 @@ class EICRAugmenter(Augmenter):
         parent_doc_id = doc_id_elements[0]
         if parent_doc_id.get("assigningAuthorityName") is None:
             parent_doc_id.set("assigningAuthorityName", "original-document")
-        # TODO:  Note that the namespaces will be present in the id tag
-        #  do we need to remove them or leave them?
         return parent_doc_id
 
     def _get_old_set_id(self) -> Element:
@@ -224,8 +235,6 @@ class EICRAugmenter(Augmenter):
         if not set_id_elements or len(set_id_elements) == 0:
             raise ValueError("No document setId found in eICR document.")
         parent_set_id = set_id_elements[0]
-        # TODO:  Note that the namespaces will be present in the setId tag
-        #  do we need to remove them or leave them?
         return parent_set_id
 
     def _get_old_version_number(self) -> Element:
@@ -234,8 +243,6 @@ class EICRAugmenter(Augmenter):
         if not version_elements or len(version_elements) == 0:
             raise ValueError("No document versionNumber found in eICR document.")
         version = version_elements[0]
-        # TODO:  Note that the namespaces will be present in the versionNumber tag
-        #  do we need to remove them or leave them?
         return version
 
     def _get_new_document_id(self) -> Element:
@@ -267,10 +274,12 @@ class EICRAugmenter(Augmenter):
 
     def _get_old_xrfm_related_document(self) -> Element | None:
         """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""
-        related_doc_elements = self._get_original_by_xpath(
-            "/ClinicalDocument/relatedDocument[@typeCode='XFRM']"
-        )
-        if not related_doc_elements or len(related_doc_elements) == 0:
+        try:
+            related_doc_elements = self._get_augmented_tag_by_xpath(
+                "/ClinicalDocument/relatedDocument[@typeCode='XFRM']"
+            )
+            related_doc_element = related_doc_elements[0]
+            return related_doc_element
+        except ValueError:
+            # if the relatedDocument with typeCode "XFRM" doesn't exist then return None
             return None
-        related_doc_element = related_doc_elements[0]
-        return related_doc_element
