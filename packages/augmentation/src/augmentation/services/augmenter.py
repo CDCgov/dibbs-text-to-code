@@ -186,6 +186,8 @@ class EICRAugmenter(Augmenter):
             new_parent_doc.append(self._get_old_set_id())
             new_parent_doc.append(self._get_old_version_number())
             new_parent_doc.tail = "\n\t\t"  # add text to preserve formatting
+        # if relatedDocument/parentDocument already exists ensure that the original_document id
+        # doesn't already exist in this section
         elif not related_doc_tag.__contains__(self._get_old_document_id()):
             related_doc_tag.append(self._get_old_document_id())
             related_doc_tag.append(self._get_old_set_id())
