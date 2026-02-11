@@ -2,7 +2,11 @@
 name = "augmentation"
 version = "0.1.0"
 readme = "README.md"
-dependencies = []
+dependencies = [
+    "lxml>=4.9.2",
+    "pydantic>=2.12.3"
+]
+
 
 [dependency-groups]
 dev = ["lxml>=4.9.2", "pydantic>=2.12.3"]
