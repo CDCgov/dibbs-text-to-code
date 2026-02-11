@@ -6,9 +6,11 @@ from text_to_code.models.query import VectorSearchParams
 class KNNQuery(pydantic.BaseModel):
     """Builds a KNN query."""
 
-    field: str
-    vector: list[float]
-    k: int = 10
+    field: str = pydantic.Field(
+        default="descriptionVector", description="The field to perform the vector search on."
+    )
+    vector: list[float] = pydantic.Field(description="The vector to search for.")
+    k: int = pydantic.Field(default=10, description="The number of nearest neighbors to retrieve.")
 
     def to_opensearch(self) -> dict:
         """Builds an OpenSearch-specific KNN query."""
@@ -42,27 +44,24 @@ class QueryBuilder:
         self._must: list[dict] = []
         self._filters: list[dict] = []
 
-    def with_knn(self, field: str, vector: list[float], k: int) -> "QueryBuilder":
+    def with_knn(self, params: VectorSearchParams) -> "QueryBuilder":
         """Builds query with KNN.
 
-        :param field: The field to perform KNN on, e.g., "descriptionVector".
-        :param vector: The vector to search with.
-        :param k: The number of nearest neighbors to retrieve.
+        :param params: The parameters for the vector search.
         :return: The updated QueryBuilder instance.
 
         """
-        query = KNNQuery(field=field, vector=vector, k=k)
+        query = KNNQuery(field=params.vector_field, vector=params.vector, k=params.k)
         self._must.append(query.to_opensearch())
         return self
 
-    def with_terms_filter(self, field: str, value: list[str]) -> "QueryBuilder":
+    def with_terms_filter(self, params: VectorSearchParams) -> "QueryBuilder":
         """Adds a filter to the query.
 
-        :param field: The field to filter on.
-        :param value: The value to filter by.
+        :param params: The parameters for the vector search.
         :return: The updated QueryBuilder instance.
         """
-        filter = TermsFilter(field=field, value=value)
+        filter = TermsFilter(field=params.filter_field, value=params.filter_value)
         self._filters.append(filter.to_opensearch())
         return self
 
@@ -73,8 +72,8 @@ class QueryBuilder:
         :return: The updated QueryBuilder instance.
         """
         self._size = params.size
-        self.with_terms_filter(field=params.filter_field, value=params.filter_value)
-        self.with_knn(field=params.vector_field, vector=params.vector, k=params.k)
+        self.with_terms_filter(params)
+        self.with_knn(params)
         return self
 
     def build(self) -> dict:
