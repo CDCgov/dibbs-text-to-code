@@ -25,3 +25,4 @@ class Candidate(BaseModel):
 
     value: str
     xpath: LabXPaths
+    system: str | None = None
