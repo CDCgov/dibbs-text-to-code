@@ -9,7 +9,7 @@ dependencies = [
 
 
 [dependency-groups]
-dev = ["lxml>=4.9.2", "pydantic>=2.12.3"]
+dev = []
 
 [build-system]
 requires = ["hatchling"]
