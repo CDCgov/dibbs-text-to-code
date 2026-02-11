@@ -17,6 +17,11 @@ class TestDataFieldTypeMapping:
             "Both",
         ]
 
+    def test_to_filter_values_invalid_data_field(self):
+        """Tests that a ValueError is raised for an invalid DataField enum value."""
+        with pytest.raises(ValueError, match="No type mapping defined for invalid_value"):
+            DataFieldTypeMapping.to_filter_values("invalid_value")
+
 
 class TestVectorSearchParams:
     def test_vector_search_params_with_defaults(self):
