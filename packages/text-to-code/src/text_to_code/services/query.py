@@ -38,8 +38,7 @@ class TermsFilter(pydantic.BaseModel):
 class QueryBuilder:
     """Builds a query with filters and KNN queries."""
 
-    def __init__(self, size: int = 10):  # noqa: D107
-        self.size = size
+    def __init__(self):  # noqa: ANN204, D107
         self._must: list[dict] = []
         self._filters: list[dict] = []
 
