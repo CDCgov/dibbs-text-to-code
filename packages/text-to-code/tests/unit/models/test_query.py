@@ -9,12 +9,12 @@ class TestDataFieldTypeMapping:
     def test_to_filter_values_valid_data_field(self):
         """Tests that the correct filter values are returned for valid DataField enum values."""
         assert DataFieldTypeMapping.to_filter_values(DataField.LAB_TEST_NAME_ORDERED) == [
-            "order",
-            "both",
+            "Order",
+            "Both",
         ]
         assert DataFieldTypeMapping.to_filter_values(DataField.LAB_TEST_NAME_RESULTED) == [
-            "observation",
-            "both",
+            "Observation",
+            "Both",
         ]
 
 
@@ -29,7 +29,7 @@ class TestVectorSearchParams:
         )
         assert isinstance(params, VectorSearchParams)
         assert params.vector == [0.1, 0.2, 0.3]
-        assert params.filter_value == ["observation", "both"]
+        assert params.filter_value == ["Observation", "Both"]
         assert params.vector_field == VectorSearchParams.model_fields["vector_field"].default
         assert params.filter_field == VectorSearchParams.model_fields["filter_field"].default
         assert params.size == VectorSearchParams.model_fields["size"].default

@@ -9,8 +9,8 @@ class DataFieldTypeMapping:
     """Mapping of DataField enum values to their corresponding filter values for vector search."""
 
     _mapping: typing.ClassVar[dict[DataField, list[str]]] = {
-        DataField.LAB_TEST_NAME_ORDERED: ["order", "both"],
-        DataField.LAB_TEST_NAME_RESULTED: ["observation", "both"],
+        DataField.LAB_TEST_NAME_ORDERED: ["Order", "Both"],
+        DataField.LAB_TEST_NAME_RESULTED: ["Observation", "Both"],
     }
 
     @classmethod
