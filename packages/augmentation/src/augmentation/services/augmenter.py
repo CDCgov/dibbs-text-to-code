@@ -134,6 +134,8 @@ class EICRAugmenter(Augmenter):
         # a dataField: Full XPath to where the problem data element is located in the eicr
         for ecr_data_field in DataField:
             for rule in self.config.rules[ecr_data_field]:
+                # the header will only be modified once per eICR message even if there
+                # are multiple data fields being augmented with translation tags in the same message
                 if rule == "document_id_header" and not header_rule_applied:
                     self._handle_document_id_header()
                     self._handle_related_document_header()
