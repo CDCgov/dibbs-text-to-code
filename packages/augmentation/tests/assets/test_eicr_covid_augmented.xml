@@ -15,10 +15,7 @@
         R2 STU1.1] Initial Public Health Case Report Document (eICR) (V2) -->
     </templateId>
     <templateId extension="2016-12-01" root="2.16.840.1.113883.10.20.15.2" />
-    <id root="10c13861-86a8-4a9a-aec6-b615921178df">
-        <!--Globally
-        unique document ID (extension) is scoped by vendor/software-->
-    </id>
+    <id root="6341edf9-d8d1-4d18-b725-9228ac13ca62" assigningAuthorityName="text-to-code"/>
     <code code="55751-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
         displayName="Public Health Case Report">
         <!--Document
@@ -28,9 +25,18 @@
     <effectiveTime value="20200505150045-0400" />
     <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" displayName="Normal" />
     <languageCode code="en-US" />
-    <setId extension="8d86218e-0fea-11eb-8216-a80388425cfb"
-        root="1.2.840.114350.1.13.380.3.7.1.1" />
+    <setId extension="277fa36f-760f-4980-88c6-8c57b8e185f8"/>
     <versionNumber value="1" />
+    <relatedDocument typeCode="XFRM">
+        <parentDocument xmlns:sdtc="urn:hl7-org:sdtc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <id root="10c13861-86a8-4a9a-aec6-b615921178df" assigningAuthorityName="original-document">
+                <!--Globally
+        unique document ID (extension) is scoped by vendor/software-->
+            </id>
+            <setId extension="8d86218e-0fea-11eb-8216-a80388425cfb" root="1.2.840.114350.1.13.380.3.7.1.1"/>
+            <versionNumber value="1"/>
+        </parentDocument>
+    </relatedDocument>
     <recordTarget>
         <!--********************************************************
         recordTarget: The patient ********************************************************-->

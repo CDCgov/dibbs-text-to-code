@@ -6,8 +6,9 @@ def clean_xml_tree(doc_data: str) -> Element:
     """Remove all namespaces from an XML tree."""
     tree = etree.fromstring(doc_data.encode("utf-8"))
     for elem in tree.iter():
-        # Remove namespace from tag
-        elem.tag = etree.QName(elem).localname
+        # Remove namespace from tag as long as it's not a comment
+        if not isinstance(elem, etree._Comment):
+            elem.tag = etree.QName(elem).localname
     # Remove namespace declarations
     etree.cleanup_namespaces(tree)
     return tree
