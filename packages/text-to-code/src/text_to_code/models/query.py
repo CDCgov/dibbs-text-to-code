@@ -39,11 +39,14 @@ class VectorSearchParams(pydantic.BaseModel):
     k: int = pydantic.Field(
         default=10, description="The number of nearest neighbors to examine during the query."
     )
-
-    filter_value: list[str] | None = None
+    filter_value: list[str] = pydantic.Field(
+        default_factory=list,
+        init=False,
+        description="The list of filter values corresponding to the data_field, computed after initialization.",
+    )
 
     @pydantic.model_validator(mode="after")
-    def compute_filter_value(self) -> list[str]:
+    def compute_filter_value(self) -> "VectorSearchParams":
         """Uses the DataFieldTypeMapping to get the filter values corresponding to the data_field."""
         if self.filter_field == type(self).model_fields["filter_field"].default:
             self.filter_value = DataFieldTypeMapping.to_filter_values(self.data_field)
