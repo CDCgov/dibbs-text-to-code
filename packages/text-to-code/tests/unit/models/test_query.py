@@ -47,7 +47,7 @@ class TestVectorSearchParams:
         size = 5
         k = 3
         custom_vector_field = "customVectorField"
-        custom_filter_field = "customFilterField"
+        custom_filter_field = "type"
         params = VectorSearchParams(
             vector=vector,
             data_field=data_field,
@@ -63,6 +63,19 @@ class TestVectorSearchParams:
         assert params.filter_value == DataFieldTypeMapping.to_filter_values(data_field)
         assert params.size == size
         assert params.k == k
+
+    def test_vector_search_params_with_invalid_filter_field(self):
+        """Tests that an invalid filter field raises a ValueError in the VectorSearchParams model."""
+        vector = [0.1, 0.2, 0.3]
+        data_field = DataField.LAB_TEST_NAME_ORDERED
+        invalid_filter_field = "invalidFilterField"
+
+        with pytest.raises(ValueError, match=f"Unsupported filter field: {invalid_filter_field}"):
+            VectorSearchParams(
+                vector=vector,
+                data_field=data_field,
+                filter_field=invalid_filter_field,
+            )
 
     def test_vector_search_params_with_invalid_filter_value(self):
         """Tests that an invalid filter value raises a validation error in the VectorSearchParams model."""
