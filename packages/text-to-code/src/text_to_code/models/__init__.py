@@ -4,6 +4,8 @@ from .eicr import LabXPaths
 from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted
+from .query import DataFieldTypeMapping
+from .query import VectorSearchParams
 from .registry import EICR_REGISTRY
 from .registry import default_model
 from .schematron import _SCHEMATRON_ENUM_TO_FIELD
@@ -18,6 +20,7 @@ __all__ = [
     "BaseLabField",
     "Candidate",
     "DataField",
+    "DataFieldTypeMapping",
     "LabTestNameOrdered",
     "LabTestNameOrderedSchematronErrors",
     "LabTestNameResulted",
@@ -25,5 +28,6 @@ __all__ = [
     "LabXPaths",
     "SchematronConfig",
     "SchematronErrors",
+    "VectorSearchParams",
     "default_model",
 ]
