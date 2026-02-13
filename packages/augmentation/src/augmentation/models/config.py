@@ -48,6 +48,9 @@ class TTCAugmenterConfig(AugmenterConfig):
             "translation",
         ],
     }
+    author_function_code = "code-text-to-code"
+    author_function_code_system = "2.16.840.1.113663.10.20.15.2.7.1"
+    author_function_code_system_name = "eCR Data Augmentation"
 
     @model_validator(mode="after")
     def validate_rules(self) -> "TTCAugmenterConfig":

@@ -98,7 +98,7 @@ class EICRAugmenter(Augmenter):
 
     # TODO: for now just use hard coded TTC Config
     #  we will need to remove/change this once we have S3 config integrated
-    config: AugmenterConfig = TTCAugmenterConfig()
+    config: TTCAugmenterConfig = TTCAugmenterConfig()
 
     new_doc_id: str = str(uuid4())
     new_set_id: str = str(uuid4())
@@ -292,11 +292,10 @@ class EICRAugmenter(Augmenter):
         """Generate and add to the augment eICR document an author element."""
         author = etree.Element("author")
         function_code = etree.SubElement(author, "functionCode")
-        function_code.set("code", value="code-text-to-code")
-        function_code.set("codeSystem", value="2.16.840.1.113663.10.20.15.2.7.1")
-        function_code.set("codeSystemName", value="eCR Data Augmentation")
-        time = etree.SubElement(author, "time")
-        time.set("value", self.augmented_date.strftime("%Y%m%d%H%M%S"))
+        function_code.set("code", value=self.config.author_function_code)
+        function_code.set("codeSystem", value=self.config.author_function_code_system)
+        function_code.set("codeSystemName", value=self.config.author_function_code_system_name)
+        author.append(self._get_new_effective_time())
         assigned_author = etree.SubElement(author, "assignedAuthor")
         id = etree.SubElement(assigned_author, "id")
         id.set("nullFlavor", "NA")
