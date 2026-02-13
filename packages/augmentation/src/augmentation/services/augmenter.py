@@ -13,7 +13,6 @@ from pydantic import field_validator
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
 from ..models.config import TTCAugmenterConfig
-from ..models.eicr import DataField
 from .eicr_utils import clean_xml_tree
 
 
@@ -123,25 +122,13 @@ class EICRAugmenter(Augmenter):
         return copy.deepcopy(self.original_eicr)
 
     def _augment(self) -> str:
-        # Note that there should only be one new header document id per eicr message
-        # even if there are multiple augmentations for various data fields
-        header_rule_applied = False
+        # Document level rules
+        if "document_id_header" in self.config.rules["document"]:
+            self._handle_document_id_header()
+            self._handle_related_document_header()
+        if "author_header" in self.config.rules["document"]:
+            self._handle_author_header()
 
-        # TODO: hard coding this to use the Lab Test Name Ordered rules for now
-        # from the config, but we will need to use the input from TTC and
-        # the config to determine what to actually augment - the
-        # Output from TTC should contain (along with an eicr ID or full eicr)
-        # a dataField: Full XPath to where the problem data element is located in the eicr
-        for ecr_data_field in DataField:
-            for rule in self.config.rules[ecr_data_field]:
-                # the header will only be modified once per eICR message even if there
-                # are multiple data fields being augmented with translation tags in the same message
-                if rule == "document_id_header" and not header_rule_applied:
-                    self._handle_document_id_header()
-                    self._handle_related_document_header()
-                    header_rule_applied = True
-                if rule == "author_header":
-                    self._handle_author_header()
         etree.indent(self.augmented_eicr, space="    ")
         return etree.tostring(
             self.augmented_eicr, pretty_print=True, encoding="utf-8", xml_declaration=True

@@ -22,6 +22,7 @@ class AugmenterConfig(BaseModel):
     application_code: ApplicationCode
     document_type: DocumentType
     rules: dict
+    pretty_print: bool = True
 
 
 class TTCAugmenterConfig(AugmenterConfig):
@@ -35,22 +36,22 @@ class TTCAugmenterConfig(AugmenterConfig):
     # this is just an example of what the rules for eICR augmentation might look like
     # typically we should expect these to come from the configuration in S3
     rules: dict = {
-        DataField.LAB_TEST_NAME_ORDERED: [
+        "document": [
             "document_id_header",
             "author_header",
+        ],
+        DataField.LAB_TEST_NAME_ORDERED: [
             "author_entry",
             "translation",
         ],
         DataField.LAB_TEST_NAME_RESULTED: [
             "document_id_header",
-            "author_header",
-            "author_entry",
             "translation",
         ],
     }
-    author_function_code = "code-text-to-code"
-    author_function_code_system = "2.16.840.1.113663.10.20.15.2.7.1"
-    author_function_code_system_name = "eCR Data Augmentation"
+    author_function_code: str = "code-text-to-code"
+    author_function_code_system: str = "2.16.840.1.113663.10.20.15.2.7.1"
+    author_function_code_system_name: str = "eCR Data Augmentation"
 
     @model_validator(mode="after")
     def validate_rules(self) -> "TTCAugmenterConfig":

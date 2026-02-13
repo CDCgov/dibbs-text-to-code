@@ -116,7 +116,7 @@ class TestAugmenter:
         with pytest.raises(ValueError, match=r"No document ID found in eICR document."):
             EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_old_document_id()
 
-    def test_augmenter_get_setid(self):
+    def test_augmenter_get_set_id(self):
         """Tests TTC augmenter get_parent_set_id method."""
         augmenter = EICRAugmenter(
             document_payload=COVID_ECR,
@@ -128,7 +128,7 @@ class TestAugmenter:
         assert result.get("extension") == "8d86218e-0fea-11eb-8216-a80388425cfb"
         assert result.get("assigningAuthorityName") is None
 
-    def test_augmenter_get_setid_no_setid(self):
+    def test_augmenter_get_set_id_no_set_id(self):
         """Tests TTC augmenter get_parent_set_id method with missing setId."""
         with pytest.raises(ValueError, match=r"No document setId found in eICR document."):
             EICRAugmenter(config=DATA_CONFIG, document_payload=BASIC_ECR)._get_old_set_id()
@@ -188,7 +188,7 @@ class TestAugmenter:
 
         assert result.get("value") == augmenter.augmented_date.strftime("%Y%m%d%H%M%S")
 
-    def test_eicraugmenter_augment_original_input(self):
+    def test_eicr_augmenter_augment_original_input(self):
         """Tests EICRAugmenter _augment method with original eicr input."""
         augmenter = EICRAugmenter(
             document_payload=COVID_ECR,
@@ -205,7 +205,7 @@ class TestAugmenter:
         assert parent_related_doc_id.get("assigningAuthorityName") == "original-document"
         assert parent_related_doc_id.get("root") == "10c13861-86a8-4a9a-aec6-b615921178df"
 
-    def test_eicraugmenter_augment_augmented_input(self):
+    def test_eicr_augmenter_augment_augmented_input(self):
         """Tests EICRAugmenter _augment method with an already augmented document as input."""
         augmenter = EICRAugmenter(
             document_payload=AUG_COVID_ECR,
@@ -230,3 +230,15 @@ class TestAugmenter:
             == ApplicationCode.TEXT_TO_CODE.value
         )
         assert parent_related_doc_id2.get("root") == "6341edf9-d8d1-4d18-b725-9228ac13ca62"
+
+
+class TestEicrAugmenter:
+    def test_run(self):
+        """Tests augmentor _run method."""
+        augmenter = EICRAugmenter(
+            document_payload=COVID_ECR,
+            config=DATA_CONFIG,
+        )
+
+        result = augmenter.run()
+        assert result == AUG_COVID_ECR
