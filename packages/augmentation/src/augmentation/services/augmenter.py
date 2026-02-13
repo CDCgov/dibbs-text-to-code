@@ -140,6 +140,8 @@ class EICRAugmenter(Augmenter):
                     self._handle_document_id_header()
                     self._handle_related_document_header()
                     header_rule_applied = True
+                if rule == "author_header":
+                    self._handle_author_header()
         etree.indent(self.augmented_eicr, space="    ")
         return etree.tostring(
             self.augmented_eicr, pretty_print=True, encoding="utf-8", xml_declaration=True
@@ -285,3 +287,25 @@ class EICRAugmenter(Augmenter):
         except ValueError:
             # if the relatedDocument with typeCode "XFRM" doesn't exist then return None
             return None
+
+    def _handle_author_header(self) -> None:
+        """Generate and add to the augment eICR document an author element."""
+        author = etree.Element("author")
+        function_code = etree.SubElement(author, "functionCode")
+        function_code.set("code", value="code-text-to-code")
+        function_code.set("codeSystem", value="2.16.840.1.113663.10.20.15.2.7.1")
+        function_code.set("codeSystemName", value="eCR Data Augmentation")
+        time = etree.SubElement(author, "time")
+        time.set("value", self.augmented_date.strftime("%Y%m%d%H%M%S"))
+        assigned_author = etree.SubElement(author, "assignedAuthor")
+        id = etree.SubElement(assigned_author, "id")
+        id.set("nullFlavor", "NA")
+        addr = etree.SubElement(assigned_author, "addr")
+        addr.set("nullFlavor", "NA")
+        telecom = etree.SubElement(assigned_author, "telecom")
+        telecom.set("nullFlavor", "NA")
+        assigned_authoring_device = etree.SubElement(assigned_author, "assignedAuthoringDevice")
+        software_name = etree.SubElement(assigned_authoring_device, "softwareName")
+        software_name.set("displayName", "Data Augmentation Tool")
+
+        self.augmented_eicr.append(author)
