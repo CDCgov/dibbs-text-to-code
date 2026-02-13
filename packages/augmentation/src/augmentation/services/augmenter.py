@@ -22,7 +22,7 @@ class Augmenter(BaseModel):
 
     application_code: ApplicationCode = Field(
         default=ApplicationCode.TEXT_TO_CODE,
-        description="The application requesting augmenation of a document.",
+        description="The application requesting augmentation of a document.",
     )
 
     @field_validator("document_payload", mode="before")
