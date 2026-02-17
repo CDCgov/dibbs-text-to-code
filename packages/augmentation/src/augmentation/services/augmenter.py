@@ -1,14 +1,13 @@
 import copy
+from abc import ABC
+from abc import abstractmethod
 from datetime import datetime
 from functools import cached_property
 from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
-from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
-from pydantic import field_validator
 
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
@@ -16,15 +15,22 @@ from ..models.config import TTCAugmenterConfig
 from .eicr_utils import clean_xml_tree
 
 
-class Augmenter(BaseModel):
+class Augmenter(ABC):
     """Augments a document (e.g., eICR) with additional information using a validated config."""
 
-    application_code: ApplicationCode = Field(
-        default=ApplicationCode.TEXT_TO_CODE,
-        description="The application requesting augmentation of a document.",
-    )
+    def __init__(
+        self,
+        document: str,
+        config: AugmenterConfig,
+        application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE,
+        augmentation_date: datetime | None = None,
+    ):
+        """Initialize Augmenter."""
+        self.document: str = self.document_payload_not_none(document)
+        self.application_code = application_code
+        self.config = self._validate_config(config)
+        self.augmentation_date = datetime.now() if augmentation_date is None else augmentation_date
 
-    @field_validator("document_payload", mode="before")
     @classmethod
     def document_payload_not_none(cls, v: str) -> str:
         """Validates that the document payload is always supplied as a non-empty string."""
@@ -32,55 +38,27 @@ class Augmenter(BaseModel):
             raise ValueError("Document payload must be a non-empty string!")
         return v
 
-    document_payload: str = Field(
-        description="The data of the document to be augmented (ie. eICR, etc...)."
-    )
-
-    augmented_document: str | None = Field(
-        default=None, description="The augmented document data after processing."
-    )
-
-    augmented_date: datetime = Field(
-        default_factory=datetime.now,
-        description="The date and time when the document was augmented, defaults to current local time.",
-    )
-
-    @field_validator("config", mode="before")
-    @classmethod
-    def config_not_none(cls, v: str) -> str:
-        """Validates that the config is always supplied."""
-        if v is None or v == {}:
-            raise ValueError("Augmentation configuration must be supplied!")
-        return v
-
-    config: AugmenterConfig = Field(
-        description="The validated configuration that provides the rules for augmentation by application and document type.",
-    )
-
     def _get_application_code_value(self) -> str:
         return self.application_code.value
 
     def run(self) -> str:
         """Execute augmentation process on the document payload."""
         # This is a placeholder for the actual augmentation logic.
-        self._validate_config()
         self.augmented_document = self._augment()  # No actual augmentation done here YET.
         return self.augmented_document
 
+    @abstractmethod
     def _augment(self) -> str:
         """Internal method to perform augmentation logic."""
-        # this function is basically an interface
-        # where the implementation will be fleshed out in the subclasses
-        return self.document_payload
+        pass
 
-    def _validate_config(self) -> None:
+    def _validate_config(self, _config: AugmenterConfig) -> AugmenterConfig:
         """Validates that the config matches the application and document type."""
-        if self.config.application_code != self.application_code:
+        if _config.application_code != self.application_code:
             raise ValueError(
-                f"Config application code {self.config.application_code} does not match Augmenter application code {self.application_code}."
+                f"Config application code {_config.application_code} does not match Augmenter application code {self.application_code}."
             )
-        if self.config.rules is None or len(self.config.rules) == 0:
-            raise ValueError("Config must contain at least one augmentation rule!")
+        return _config
 
 
 class EICRAugmenter(Augmenter):
@@ -91,23 +69,30 @@ class EICRAugmenter(Augmenter):
     automatically set various attributes specific to eICRs.
     """
 
-    # for now only TTC is supported in Augmentation
-    # and the only document type for TTC is eICR
-    application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE
+    config: TTCAugmenterConfig
 
-    # TODO: for now just use hard coded TTC Config
-    #  we will need to remove/change this once we have S3 config integrated
-    config: TTCAugmenterConfig = TTCAugmenterConfig()
+    def __init__(
+        self,
+        document: str,
+        augmentation_date: datetime | None = None,
+    ):
+        """Initialize EICRAugmenter.
 
-    new_doc_id: str = str(uuid4())
-    new_set_id: str = str(uuid4())
+        For now only TTC is supported in Augmentation and the only document type for TTC is eICR.
+        # TODO: for now just use hard coded TTC Config we will need to remove/change this once we have S3 config integrated
+        """
+        super().__init__(
+            document, TTCAugmenterConfig(), ApplicationCode.TEXT_TO_CODE, augmentation_date
+        )
+
+        self.new_doc_id: str = str(uuid4())
+        self.new_set_id: str = str(uuid4())
+        self.model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @cached_property
     def original_eicr(self) -> Element:
-        """CLeaned and parsed document_payload into an XML Element."""
-        return clean_xml_tree(self.document_payload)
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+        """CLeaned and parsed document into an XML Element."""
+        return clean_xml_tree(self.document)
 
     # make copy of original eICR to modify as we augment
     # TODO: I don't like having multiple copies of the payload
@@ -252,7 +237,7 @@ class EICRAugmenter(Augmenter):
     def _get_new_effective_time(self) -> Element:
         """Generate an effectiveTime element for the augmented eICR document."""
         effective_time_tag = etree.Element("effectiveTime")
-        effective_time_tag.set("value", self.augmented_date.strftime("%Y%m%d%H%M%S"))
+        effective_time_tag.set("value", self.augmentation_date.strftime("%Y%m%d%H%M%S"))
         return effective_time_tag
 
     def _get_new_version_number(self) -> Element:

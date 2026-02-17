@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from augmentation.models.application import ApplicationCode
@@ -6,6 +7,7 @@ from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
 from augmentation.services.augmenter import Augmenter
 from augmentation.services.augmenter import EICRAugmenter
+from pytest_mock import MockerFixture
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
@@ -233,11 +235,16 @@ class TestAugmenter:
 
 
 class TestEicrAugmenter:
-    def test_run(self):
-        """Tests augmentor _run method."""
+    @pytest.mark.freeze_time("2026-02-13T15:27:57")
+    def test_run(self, mocker: MockerFixture):
+        """Tests augmentor run method."""
+        doc_id = UUID("12345678-1234-5678-1234-567812345678")
+        set_id = UUID("87654321-4321-8765-4321-876543218765")
+
+        mocker.patch("augmentation.services.augmenter.uuid4", side_effect=[doc_id, set_id])
+
         augmenter = EICRAugmenter(
-            document_payload=COVID_ECR,
-            config=DATA_CONFIG,
+            document=COVID_ECR,
         )
 
         result = augmenter.run()
