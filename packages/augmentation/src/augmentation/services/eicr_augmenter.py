@@ -188,8 +188,7 @@ class EICRAugmenter(Augmenter):
             # if the relatedDocument with typeCode "XFRM" doesn't exist then return None
             return None
 
-    def _handle_author_header(self) -> None:
-        """Generate and add to the augment eICR document an author element."""
+    def _generate_author(self) -> Element:
         author = etree.Element("author")
         function_code = etree.SubElement(author, "functionCode")
         function_code.set("code", value=self.config.author_function_code)
@@ -207,4 +206,9 @@ class EICRAugmenter(Augmenter):
         software_name = etree.SubElement(assigned_authoring_device, "softwareName")
         software_name.set("displayName", "Data Augmentation Tool")
 
+        return author
+
+    def _handle_author_header(self) -> None:
+        """Generate and add to the augment eICR document an author element."""
+        author = self._generate_author()
         self._augmented_element.append(author)
