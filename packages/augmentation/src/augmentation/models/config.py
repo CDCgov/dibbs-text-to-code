@@ -22,7 +22,6 @@ class AugmenterConfig(BaseModel):
     application_code: ApplicationCode
     document_type: DocumentType
     rules: dict
-    pretty_print: bool = True
 
 
 class TTCAugmenterConfig(AugmenterConfig):
