@@ -7,9 +7,9 @@ from pydantic import Field
 
 from text_to_code.services.evaluator import is_text_viable
 
-from .eicr import Candidate
-from .eicr import DataField
-from .eicr import LabXPaths
+from ..models.eicr import Candidate
+from ..models.eicr import DataField
+from ..models.eicr import LabXPaths
 
 
 class CodeTranslation(StrEnum):

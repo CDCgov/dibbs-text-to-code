@@ -4,8 +4,8 @@ import pytest
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import DataField
 from text_to_code.models.eicr import LabXPaths
-from text_to_code.models.evaluation import get_evaluation_criteria_for_data_field
-from text_to_code.models.evaluation import select_relevant_text
+from text_to_code.services.evaluation import get_evaluation_criteria_for_data_field
+from text_to_code.services.evaluation import select_relevant_text
 
 
 def _patch_is_text_viable(monkeypatch: pytest.MonkeyPatch, fn: callable) -> None:
