@@ -53,5 +53,5 @@ class TTCAugmenterConfig(AugmenterConfig):
     def validate_rules(self) -> "TTCAugmenterConfig":
         """Ensures that there are rules defined for augmentation."""
         if not self.rules or len(self.rules) == 0:
-            raise ValueError("Configuation rules must contain at least one augmentation rule!")
+            raise ValueError("Configuration rules must contain at least one augmentation rule!")
         return self
