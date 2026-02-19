@@ -1,13 +1,10 @@
 from collections.abc import Sequence
 
-from pydantic import Field
-
+from text_to_code.models.evaluator import EVALUATION_REGISTRY
 from text_to_code.models.evaluator import BaseEvaluationCriteria
-from text_to_code.models.evaluator import CodeSystemValues
 from text_to_code.models.evaluator import CodeTranslation
 from text_to_code.models.evaluator import TranslationPreference
 from text_to_code.models.evaluator import TranslationSelectionStrategy
-from text_to_code.models.evaluator import XPathPriority
 
 from ..models.eicr import Candidate
 from ..models.eicr import DataField
@@ -128,81 +125,6 @@ def select_relevant_text(
         return chosen
 
     return None
-
-
-class LabTestNameOrderedEvaluationCriteria(BaseEvaluationCriteria):
-    """Evaluation criteria for selecting text relevant to Lab Test Name Ordered.
-
-    This config encodes the memo priority order:
-    1) code/displayName
-    2) translation/displayName
-    3) code/originalText
-    4) translation/originalText
-    """
-
-    data_field: DataField = DataField.LAB_TEST_NAME_ORDERED
-
-    priorities: list[XPathPriority] = Field(
-        default_factory=lambda: [
-            XPathPriority(xpath=LabXPaths.CODE_DISPLAY_NAME, priority=1),
-            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
-            XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
-            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
-        ]
-    )
-
-    translation_preference: TranslationPreference = Field(
-        default_factory=lambda: TranslationPreference(
-            strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=CodeSystemValues.LOINC_VALUES,
-            snomed_system_values=CodeSystemValues.SNOMED_VALUES,
-        )
-    )
-
-
-class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
-    """Evaluation criteria for selecting text relevant to Lab Test Name Resulted.
-
-    This config encodes the memo priority order:
-    1) code/displayName
-    2) translation/displayName
-    3) code/originalText
-    4) translation/originalText
-    """
-
-    data_field: DataField = DataField.LAB_TEST_NAME_RESULTED
-
-    priorities: list[XPathPriority] = Field(
-        default_factory=lambda: [
-            XPathPriority(xpath=LabXPaths.CODE_DISPLAY_NAME, priority=1),
-            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
-            XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
-            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
-        ]
-    )
-
-    translation_preference: TranslationPreference = Field(
-        default_factory=lambda: TranslationPreference(
-            strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=[
-                "http://loinc.org",
-                "urn:oid:2.16.840.1.113883.6.1",
-            ],
-            snomed_system_values=[
-                "http://snomed.info/sct",
-                "urn:oid:2.16.840.1.113883.6.96",
-            ],
-        )
-    )
-
-
-EvaluationConfigType = type[BaseEvaluationCriteria]
-
-
-EVALUATION_REGISTRY: dict[DataField, EvaluationConfigType] = {
-    DataField.LAB_TEST_NAME_ORDERED: LabTestNameOrderedEvaluationCriteria,
-    DataField.LAB_TEST_NAME_RESULTED: LabTestNameResultedEvaluationCriteria,
-}
 
 
 def get_evaluation_criteria_for_data_field(data_field: DataField) -> BaseEvaluationCriteria:

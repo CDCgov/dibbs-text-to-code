@@ -112,3 +112,76 @@ class BaseEvaluationCriteria(BaseModel):
         :returns: A list of XPathPriority entries sorted by ascending priority value.
         """
         return sorted(self.priorities, key=lambda p: p.priority)
+
+
+class LabTestNameOrderedEvaluationCriteria(BaseEvaluationCriteria):
+    """Evaluation criteria for selecting text relevant to Lab Test Name Ordered.
+
+    This config encodes the memo priority order:
+    1) code/displayName
+    2) translation/displayName
+    3) code/originalText
+    4) translation/originalText
+    """
+
+    data_field: DataField = DataField.LAB_TEST_NAME_ORDERED
+
+    priorities: list[XPathPriority] = Field(
+        default_factory=lambda: [
+            XPathPriority(xpath=LabXPaths.CODE_DISPLAY_NAME, priority=1),
+            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
+            XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
+            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
+        ]
+    )
+
+    translation_preference: TranslationPreference = Field(
+        default_factory=lambda: TranslationPreference(
+            strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
+            loinc_system_values=CodeSystemValues.LOINC_VALUES,
+            snomed_system_values=CodeSystemValues.SNOMED_VALUES,
+        )
+    )
+
+
+class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
+    """Evaluation criteria for selecting text relevant to Lab Test Name Resulted.
+
+    This config encodes the memo priority order:
+    1) code/displayName
+    2) translation/displayName
+    3) code/originalText
+    4) translation/originalText
+    """
+
+    data_field: DataField = DataField.LAB_TEST_NAME_RESULTED
+
+    priorities: list[XPathPriority] = Field(
+        default_factory=lambda: [
+            XPathPriority(xpath=LabXPaths.CODE_DISPLAY_NAME, priority=1),
+            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
+            XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
+            XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
+        ]
+    )
+
+    translation_preference: TranslationPreference = Field(
+        default_factory=lambda: TranslationPreference(
+            strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
+            loinc_system_values=[
+                "http://loinc.org",
+                "urn:oid:2.16.840.1.113883.6.1",
+            ],
+            snomed_system_values=[
+                "http://snomed.info/sct",
+                "urn:oid:2.16.840.1.113883.6.96",
+            ],
+        )
+    )
+
+
+EvaluationConfigType = type[BaseEvaluationCriteria]
+EVALUATION_REGISTRY: dict[DataField, EvaluationConfigType] = {
+    DataField.LAB_TEST_NAME_ORDERED: LabTestNameOrderedEvaluationCriteria,
+    DataField.LAB_TEST_NAME_RESULTED: LabTestNameResultedEvaluationCriteria,
+}
