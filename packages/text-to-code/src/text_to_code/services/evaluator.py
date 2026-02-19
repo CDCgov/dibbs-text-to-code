@@ -125,9 +125,6 @@ def select_relevant_text(
         if not chosen:
             continue
 
-        if criteria.data_field is not None:
-            continue
-
         return chosen
 
     return None
