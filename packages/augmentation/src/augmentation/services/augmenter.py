@@ -9,11 +9,11 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from shared_models import DataField
 
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
 from ..models.config import TTCAugmenterConfig
-from ..models.eicr import DataField
 from .eicr_utils import clean_xml_tree
 
 
@@ -22,7 +22,7 @@ class Augmenter(BaseModel):
 
     application_code: ApplicationCode = Field(
         default=ApplicationCode.TEXT_TO_CODE,
-        description="The application requesting augmenation of a document.",
+        description="The application requesting augmentation of a document.",
     )
 
     @field_validator("document_payload", mode="before")

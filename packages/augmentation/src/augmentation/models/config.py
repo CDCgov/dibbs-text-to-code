@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
+from shared_models import DataField
 
 from .application import ApplicationCode
 from .document import DocumentType
-from .eicr import DataField
 
 
 class AugmenterConfig(BaseModel):
