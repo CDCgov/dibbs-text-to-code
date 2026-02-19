@@ -3,9 +3,9 @@ from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
-from pydantic import ConfigDict
 
 from augmentation.models import ApplicationCode
+from augmentation.models import TTCAugmentation
 from augmentation.models import TTCAugmenterConfig
 from augmentation.services.augmenter import Augmenter
 
@@ -23,6 +23,8 @@ class EICRAugmenter(Augmenter):
     def __init__(
         self,
         document: str,
+        augmentations: list[TTCAugmentation],
+        config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
     ):
         """Initialize EICRAugmenter.
@@ -30,13 +32,14 @@ class EICRAugmenter(Augmenter):
         For now only TTC is supported in Augmentation and the only document type for TTC is eICR.
         # TODO: for now just use hard coded TTC Config we will need to remove/change this once we have S3 config integrated
         """
-        super().__init__(
-            document, TTCAugmenterConfig(), ApplicationCode.TEXT_TO_CODE, augmentation_date
-        )
+        if config is None:
+            config = TTCAugmenterConfig()
+
+        super().__init__(document, config, ApplicationCode.TEXT_TO_CODE, augmentation_date)
 
         self.new_doc_id: str = str(uuid4())
         self.new_set_id: str = str(uuid4())
-        self.model_config = ConfigDict(arbitrary_types_allowed=True)
+        self.augmentations = augmentations
 
     def augment(self) -> None:
         """Apply augmentation to the eICR."""
@@ -46,6 +49,10 @@ class EICRAugmenter(Augmenter):
             self._handle_related_document_header()
         if "author_header" in self.config.rules["document"]:
             self._handle_author_header()
+
+        for augmentation in self.augmentations:
+            if "author_entry" in self.config.rules[augmentation.data_type]:
+                self._handle_author_entry(augmentation)
 
     def _handle_document_id_header(self) -> None:
         # 1 first replace the id tag
@@ -212,3 +219,8 @@ class EICRAugmenter(Augmenter):
         """Generate and add to the augment eICR document an author element."""
         author = self._generate_author()
         self._augmented_element.append(author)
+
+    def _handle_author_entry(self, augmentation: TTCAugmentation) -> None:
+        entry = self._get_augmented_tag_by_xpath(augmentation.location)
+        author = self._generate_author()
+        entry.append(author)

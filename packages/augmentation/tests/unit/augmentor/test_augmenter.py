@@ -2,6 +2,8 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from augmentation.models import DataField
+from augmentation.models.augmentation import TTCAugmentation
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
@@ -10,7 +12,6 @@ from pytest_mock import MockerFixture
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
-BASE_XPATH = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText/text()"
 
 eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
 with eicr_path.open() as f:
@@ -29,11 +30,11 @@ class TestEicrAugmenter:
     def test_base_augmenter_with_no_document_data(self):
         """Tests raising error when no document data is provided."""
         with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
-            EICRAugmenter(document=None)
+            EICRAugmenter(None, augmentations=[])
 
     def test_ttc_augmenter_initialization(self):
         """Tests initialization of the TTC augmenter."""
-        augmenter = EICRAugmenter(document=BASIC_ECR)
+        augmenter = EICRAugmenter(BASIC_ECR, [])
         assert augmenter.application_code.value == ApplicationCode.TEXT_TO_CODE.value
         assert augmenter.config == DATA_CONFIG
         assert augmenter.original_xml == BASIC_ECR
@@ -47,7 +48,16 @@ class TestEicrAugmenter:
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         augmenter = EICRAugmenter(
-            document=COVID_ECR,
+            COVID_ECR,
+            [
+                TTCAugmentation(
+                    location="/ClinicalDocument/component/structuredBody/component/section/entry/organizer/component/observation",
+                    data_type=DataField.LAB_TEST_NAME_RESULTED,
+                    code="10101010",
+                    display_text="Chad new LOINC code",
+                    original_text="Loser old LOINC",
+                )
+            ],
         )
         augmenter.augment()
 

@@ -508,6 +508,18 @@
                                     <statusCode code="completed"/>
                                     <effectiveTime value="20200513"/>
                                     <value code="260373001" codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED-CT" displayName="Detected (qualifier value)" xsi:type="CD"/>
+                                    <author>
+                                        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCR Data Augmentation"/>
+                                        <effectiveTime value="20260213152757"/>
+                                        <assignedAuthor>
+                                            <id nullFlavor="NA"/>
+                                            <addr nullFlavor="NA"/>
+                                            <telecom nullFlavor="NA"/>
+                                            <assignedAuthoringDevice>
+                                                <softwareName displayName="Data Augmentation Tool"/>
+                                            </assignedAuthoringDevice>
+                                        </assignedAuthor>
+                                    </author>
                                 </observation>
                             </component>
                         </organizer>

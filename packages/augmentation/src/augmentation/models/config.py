@@ -3,8 +3,8 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 
 from .application import ApplicationCode
+from .augmentation import DataField
 from .document import DocumentType
-from .eicr import DataField
 
 
 class AugmenterConfig(BaseModel):
@@ -44,6 +44,7 @@ class TTCAugmenterConfig(AugmenterConfig):
             "translation",
         ],
         DataField.LAB_TEST_NAME_RESULTED: [
+            "author_entry",
             "document_id_header",
             "translation",
         ],
