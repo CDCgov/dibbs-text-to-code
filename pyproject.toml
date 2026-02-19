@@ -125,4 +125,5 @@ members = [
     "packages/text-to-code",
     "packages/text-to-code-lambda",
     "packages/utils",
+    "packages/shared-models",
 ]
