@@ -53,23 +53,6 @@ class TranslationSelectionStrategy(StrEnum):
     PREFER_SYSTEM_ORDER = "prefer_system_order"
 
 
-class FieldRules(BaseModel):
-    """Validation rule container for evaluation criteria.
-
-    This model exists to support data-field specific rules at the evaluation-criteria layer.
-    Current viability checks should use dibbs_text_to_code.services.evaluator.is_text_viable
-    to ensure TTC rule logic stays centralized.
-
-    :param min_word_count: Optional minimum word count rule for candidate viability.
-    """
-
-    min_word_count: int | None = Field(
-        default=None,
-        ge=0,
-        description="Optional minimum number of words required for candidate text to be valid.",
-    )
-
-
 class TranslationPreference(BaseModel):
     """Preferences for choosing among multiple translations when a system attribute is available.
 
@@ -99,7 +82,6 @@ class XPathPriority(BaseModel):
 
     xpath: LabXPaths
     priority: int = Field(..., ge=1)
-    rules: FieldRules | None = None
 
 
 class BaseEvaluationCriteria(BaseModel):
@@ -118,10 +100,6 @@ class BaseEvaluationCriteria(BaseModel):
     priorities: list[XPathPriority] = Field(
         default_factory=list,
         description="Prioritized XPath sources considered during evaluation.",
-    )
-    rules: FieldRules | None = Field(
-        default=None,
-        description="Optional rules applied to candidates during evaluation.",
     )
     translation_preference: TranslationPreference = Field(
         default_factory=TranslationPreference,
