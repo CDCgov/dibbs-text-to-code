@@ -54,8 +54,8 @@ class TestEicrAugmenter:
                     location="/ClinicalDocument/component/structuredBody/component/section/entry/organizer/component/observation",
                     data_type=DataField.LAB_TEST_NAME_RESULTED,
                     code="10101010",
-                    display_text="Chad new LOINC code",
-                    original_text="Loser old LOINC",
+                    display_name="Chad new LOINC code",
+                    original_text="Loser old code",
                 )
             ],
         )

@@ -51,8 +51,11 @@ class EICRAugmenter(Augmenter):
             self._handle_author_header()
 
         for augmentation in self.augmentations:
-            if "author_entry" in self.config.rules[augmentation.data_type]:
+            data_type_rules = self.config.rules[augmentation.data_type]
+            if "author_entry" in data_type_rules:
                 self._handle_author_entry(augmentation)
+            if "translation" in data_type_rules:
+                self._handle_translation(augmentation)
 
     def _handle_document_id_header(self) -> None:
         # 1 first replace the id tag
@@ -224,3 +227,13 @@ class EICRAugmenter(Augmenter):
         entry = self._get_augmented_tag_by_xpath(augmentation.location)
         author = self._generate_author()
         entry.append(author)
+
+    def _handle_translation(self, augmentation: TTCAugmentation) -> None:
+        entry_code = self._get_augmented_tag_by_xpath(augmentation.location + "/code")
+
+        new_translation = etree.SubElement(entry_code, "translation")
+        new_translation.set("code", augmentation.code)
+        new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
+        new_translation.set("codeSystemName", "LOINC")
+        new_translation.set("DisplayName", augmentation.display_name)
+        new_translation.set("original_text", augmentation.original_text)

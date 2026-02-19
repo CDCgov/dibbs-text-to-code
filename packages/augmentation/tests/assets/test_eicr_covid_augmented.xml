@@ -504,6 +504,7 @@
                                                 <reference value="#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp4Name"/>
                                             </originalText>
                                         </translation>
+                                        <translation code="10101010" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Chad new LOINC code" original_text="Loser old code"/>
                                     </code>
                                     <statusCode code="completed"/>
                                     <effectiveTime value="20200513"/>
