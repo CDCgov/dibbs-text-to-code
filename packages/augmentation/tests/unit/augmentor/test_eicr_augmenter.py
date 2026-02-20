@@ -26,12 +26,12 @@ with aug_covid_ecr_path.open() as f:
 
 
 class TestEicrAugmenter:
-    def test_base_augmenter_with_no_document_data(self):
+    def test_no_document_data(self):
         """Tests raising error when no document data is provided."""
         with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
             EICRAugmenter(document=None)
 
-    def test_ttc_augmenter_initialization(self):
+    def test_initialization(self):
         """Tests initialization of the TTC augmenter."""
         augmenter = EICRAugmenter(document=BASIC_ECR)
         assert augmenter.application_code.value == ApplicationCode.TEXT_TO_CODE.value
@@ -39,7 +39,7 @@ class TestEicrAugmenter:
         assert augmenter.original_xml == BASIC_ECR
 
     @pytest.mark.freeze_time("2026-02-13T15:27:57")
-    def test_run(self, mocker: MockerFixture):
+    def test_augment(self, mocker: MockerFixture):
         """Tests augmentor run method."""
         doc_id = UUID("12345678-1234-5678-1234-567812345678")
         set_id = UUID("87654321-4321-8765-4321-876543218765")
