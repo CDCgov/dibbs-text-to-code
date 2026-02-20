@@ -81,7 +81,5 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(
             document=EMPTY_ECR,
         )
-        with pytest.raises(
-            ValueError, match=r"Unable to find tag in augmented eICR document for XPath"
-        ):
+        with pytest.raises(ValueError, match=r"Unable to find tag in eICR document for XPath"):
             augmenter.augment()

@@ -88,17 +88,18 @@ class EICRAugmenter(Augmenter):
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
-        elements = self._original_element.xpath(xpath)
-        if not elements or len(elements) == 0:
-            raise ValueError(f"Unable to find tag in original eICR document for XPath: {xpath}")
-        return elements[0]
+        return self._get_element_by_xpath(self._original_element, xpath)
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
         """Get element from the augmented eICR by XPath."""
-        augmented_tags = self._augmented_element.xpath(xpath)
-        if not augmented_tags or len(augmented_tags) == 0:
-            raise ValueError(f"Unable to find tag in augmented eICR document for XPath: {xpath}")
-        return augmented_tags[0]
+        return self._get_element_by_xpath(self._augmented_element, xpath)
+
+    def _get_element_by_xpath(self, element: Element, xpath: str) -> Element:
+        """Get the first matching child element by XPath, or raise if not found."""
+        results = element.xpath(xpath)
+        if not results:
+            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
+        return results[0]
 
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
