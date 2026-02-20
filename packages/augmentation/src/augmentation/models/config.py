@@ -45,7 +45,6 @@ class TTCAugmenterConfig(AugmenterConfig):
         ],
         DataField.LAB_TEST_NAME_RESULTED: [
             "author_entry",
-            "document_id_header",
             "translation",
         ],
     }
