@@ -48,6 +48,7 @@ class EICRAugmenter(Augmenter):
             self._handle_author_header()
 
     def _handle_document_id_header(self) -> None:
+        """Change the document header of the augmented eICR."""
         # 1 first replace the id tag
         old_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
         # we need to retain the old tags 'tail' to preserve the spacing format
@@ -61,12 +62,14 @@ class EICRAugmenter(Augmenter):
         new_eff_time_element = self._get_new_effective_time()
         new_eff_time_element.tail = old_eff_time_element.tail
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
+
         # 3 next replace the setId tag if
         old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_set_id_element = self._get_new_set_id()
         new_set_id_element.tail = old_set_id_element.tail
         self._augmented_element.replace(old_set_id_element, new_set_id_element)
+
         # 4 finally replace the versionNumber tag
         old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
         # we need to retain the old tags 'tail' to preserve the spacing format
@@ -75,6 +78,7 @@ class EICRAugmenter(Augmenter):
         self._augmented_element.replace(old_version_element, new_version_element)
 
     def _handle_related_document_header(self) -> None:
+        """Add related document referencing the old eICR."""
         # 1 first determine if a relatedDocument with type "XFRM" exists
         related_doc_tag = self._get_old_xrfm_related_document()
         if related_doc_tag is None:
@@ -111,11 +115,13 @@ class EICRAugmenter(Augmenter):
             related_doc_tag.append(self._get_old_version_number())
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
+        """Get element from the original eICR by XPath."""
         if self._original_element is None:
             raise ValueError("Original eICR document is empty.")
         return self._original_element.xpath(xpath)
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
+        """Get element from the augmented eICR by XPath."""
         if self._augmented_element is None:
             raise ValueError("Augmented eICR document is empty.")
         augmented_tags = self._augmented_element.xpath(xpath)
