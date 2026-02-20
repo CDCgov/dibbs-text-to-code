@@ -116,14 +116,10 @@ class EICRAugmenter(Augmenter):
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
-        if self._original_element is None:
-            raise ValueError("Original eICR document is empty.")
         return self._original_element.xpath(xpath)
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
         """Get element from the augmented eICR by XPath."""
-        if self._augmented_element is None:
-            raise ValueError("Augmented eICR document is empty.")
         augmented_tags = self._augmented_element.xpath(xpath)
         if not augmented_tags or len(augmented_tags) == 0:
             raise ValueError(f"Unable to find tag in augmented eICR document for XPath: {xpath}")
