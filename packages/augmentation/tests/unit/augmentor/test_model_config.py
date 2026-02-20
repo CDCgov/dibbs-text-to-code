@@ -26,6 +26,6 @@ class TestConfigModel:
     def test_ttc_config_with_no_rules(self):
         """Tests raising error when no rules are provided in TTC config."""
         with pytest.raises(
-            ValueError, match=r"Configuation rules must contain at least one augmentation rule!"
+            ValueError, match=r"Configuration rules must contain at least one augmentation rule!"
         ):
             TTCAugmenterConfig(rules={})

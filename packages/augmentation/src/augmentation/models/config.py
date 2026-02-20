@@ -35,23 +35,26 @@ class TTCAugmenterConfig(AugmenterConfig):
     # this is just an example of what the rules for eICR augmentation might look like
     # typically we should expect these to come from the configuration in S3
     rules: dict = {
-        DataField.LAB_TEST_NAME_ORDERED: [
+        "document": [
             "document_id_header",
             "author_header",
+        ],
+        DataField.LAB_TEST_NAME_ORDERED: [
             "author_entry",
             "translation",
         ],
         DataField.LAB_TEST_NAME_RESULTED: [
             "document_id_header",
-            "author_header",
-            "author_entry",
             "translation",
         ],
     }
+    author_function_code: str = "code-text-to-code"
+    author_function_code_system: str = "2.16.840.1.113663.10.20.15.2.7.1"
+    author_function_code_system_name: str = "eCR Data Augmentation"
 
     @model_validator(mode="after")
     def validate_rules(self) -> "TTCAugmenterConfig":
         """Ensures that there are rules defined for augmentation."""
         if not self.rules or len(self.rules) == 0:
-            raise ValueError("Configuation rules must contain at least one augmentation rule!")
+            raise ValueError("Configuration rules must contain at least one augmentation rule!")
         return self
