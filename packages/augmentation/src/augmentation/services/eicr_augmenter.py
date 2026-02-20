@@ -79,44 +79,19 @@ class EICRAugmenter(Augmenter):
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
-        # 1 first determine if a relatedDocument with type "XFRM" exists
-        related_doc_tag = self._get_old_xrfm_related_document()
-        if related_doc_tag is None:
-            # if it doesn't exist then create one and add it to the eICR
-            new_related_doc = etree.SubElement(
-                self._augmented_element.xpath("/ClinicalDocument")[0],
-                "relatedDocument",
-                typeCode="XFRM",
-            )
-            new_related_doc.tail = "\n\t"  # add text to preserve formatting
-            new_parent_doc = etree.SubElement(new_related_doc, "parentDocument")
-            new_parent_doc.append(self._get_old_document_id())
-            new_parent_doc.append(self._get_old_set_id())
-            new_parent_doc.append(self._get_old_version_number())
-            new_parent_doc.tail = "\n\t\t"  # add text to preserve formatting
-        # if relatedDocument/parentDocument already exists ensure that the original_document id
-        # doesn't already exist in this section
-        else:
-            for doc_id in related_doc_tag.xpath("./id"):
-                if doc_id.get("root") == self._get_old_document_id().get("root"):
-                    return
-            id_comment = etree.Comment("DATA AUGMENTATION: input-document-id of augmented eICR")
-            related_doc_tag.append(id_comment)
-            related_doc_tag.append(self._get_old_document_id())
-            setid_comment = etree.Comment(
-                "DATA AUGMENTATION: input-document-setId of augmented eICR"
-            )
-            related_doc_tag.append(setid_comment)
-            related_doc_tag.append(self._get_old_set_id())
-            version_comment = etree.Comment(
-                "DATA AUGMENTATION: input-document-version-number of augmented eICR"
-            )
-            related_doc_tag.append(version_comment)
-            related_doc_tag.append(self._get_old_version_number())
+        related_doc = etree.SubElement(self._augmented_element, "relatedDocument")
+        related_doc.set("typeCode", "XFRM")
+        parent_doc = etree.SubElement(related_doc, "parentDocument")
+        parent_doc.append(self._get_old_document_id())
+        parent_doc.append(self._get_old_set_id())
+        parent_doc.append(self._get_old_version_number())
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
-        return self._original_element.xpath(xpath)
+        elements = self._original_element.xpath(xpath)
+        if not elements or len(elements) == 0:
+            raise ValueError(f"Unable to find tag in original eICR document for XPath: {xpath}")
+        return elements[0]
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
         """Get element from the augmented eICR by XPath."""
@@ -127,28 +102,19 @@ class EICRAugmenter(Augmenter):
 
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
-        doc_id_elements = self._get_original_by_xpath("/ClinicalDocument/id")
-        if not doc_id_elements or len(doc_id_elements) == 0:
-            raise ValueError("No document ID found in eICR document.")
-        parent_doc_id = doc_id_elements[0]
+        parent_doc_id = self._get_original_by_xpath("/ClinicalDocument/id")
         if parent_doc_id.get("assigningAuthorityName") is None:
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
 
     def _get_old_set_id(self) -> Element:
         """Extract the parent document setId from original eICR document."""
-        set_id_elements = self._get_original_by_xpath("/ClinicalDocument/setId")
-        if not set_id_elements or len(set_id_elements) == 0:
-            raise ValueError("No document setId found in eICR document.")
-        parent_set_id = set_id_elements[0]
+        parent_set_id = self._get_original_by_xpath("/ClinicalDocument/setId")
         return parent_set_id
 
     def _get_old_version_number(self) -> Element:
         """Extract the parent versionNumber from original eICR document."""
-        version_elements = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
-        if not version_elements or len(version_elements) == 0:
-            raise ValueError("No document versionNumber found in eICR document.")
-        version = version_elements[0]
+        version = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         return version
 
     def _get_new_document_id(self) -> Element:
@@ -181,11 +147,9 @@ class EICRAugmenter(Augmenter):
     def _get_old_xrfm_related_document(self) -> Element | None:
         """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""
         try:
-            related_doc_elements = self._get_augmented_tag_by_xpath(
+            return self._get_augmented_tag_by_xpath(
                 "/ClinicalDocument/relatedDocument[@typeCode='XFRM']"
             )
-            related_doc_element = related_doc_elements[0]
-            return related_doc_element
         except ValueError:
             # if the relatedDocument with typeCode "XFRM" doesn't exist then return None
             return None

@@ -21,6 +21,10 @@ eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr_related_doc.xml"
 with eicr_path.open() as f:
     BASIC_ECR_RELATED_DOC = f.read()
 
+eicr_path = EXAMPLE_EICRS_DIRECTORY / "empty_eicr.xml"
+with eicr_path.open() as f:
+    EMPTY_ECR = f.read()
+
 
 @pytest.mark.freeze_time("2026-02-13T15:27:57")
 class TestEicrAugmenter:
@@ -65,4 +69,19 @@ class TestEicrAugmenter:
         augmenter.augment()
 
         result = augmenter.augmented_xml
-        snapshot.assert_match(result, "basic_eicr__related_doc_augmented.xml")
+        snapshot.assert_match(result, "basic_eicr_related_doc_augmented.xml")
+
+    def test_empty_eicr(self, mocker: MockerFixture):
+        """Tests augmentor run method."""
+        doc_id = UUID("12345678-1234-5678-1234-567812345678")
+        set_id = UUID("87654321-4321-8765-4321-876543218765")
+
+        mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
+
+        augmenter = EICRAugmenter(
+            document=EMPTY_ECR,
+        )
+        with pytest.raises(
+            ValueError, match=r"Unable to find tag in augmented eICR document for XPath"
+        ):
+            augmenter.augment()
