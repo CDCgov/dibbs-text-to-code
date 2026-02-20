@@ -1,5 +1,3 @@
-from collections.abc import Sequence
-
 from text_to_code.models.evaluator import EVALUATION_REGISTRY
 from text_to_code.models.evaluator import BaseEvaluationCriteria
 from text_to_code.models.evaluator import CodeTranslation
@@ -36,7 +34,7 @@ def _classify_translation_system(
 
 
 def _select_translation_candidate(
-    translation_candidates: Sequence[Candidate],
+    translation_candidates: list[Candidate],
     preference: TranslationPreference,
 ) -> Candidate | None:
     """Select the best translation candidate according to configured preferences.
@@ -67,7 +65,7 @@ def _select_translation_candidate(
 
 
 def _resolve_best_for_xpath(
-    candidates: Sequence[Candidate],
+    candidates: list[Candidate],
     xpath: LabXPaths,
     preference: TranslationPreference,
 ) -> Candidate | None:
@@ -96,7 +94,7 @@ def _resolve_best_for_xpath(
 
 def select_relevant_text(
     *,
-    candidates: Sequence[Candidate],
+    candidates: list[Candidate],
     criteria: BaseEvaluationCriteria,
 ) -> str | None:
     """Select the single most relevant viable text string from a list of candidates.
