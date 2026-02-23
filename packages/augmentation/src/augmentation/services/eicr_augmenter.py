@@ -201,4 +201,4 @@ class EICRAugmenter(Augmenter):
         new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
         new_translation.set("codeSystemName", "LOINC")
         new_translation.set("DisplayName", augmentation.display_name)
-        new_translation.set("original_text", augmentation.original_text)
+        new_translation.set("originalText", augmentation.original_text)
