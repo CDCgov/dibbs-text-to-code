@@ -13,6 +13,7 @@ members = [
     "augmentation-lambda",
     "data-curation",
     "dibbs-text-to-code-root",
+    "shared-models",
     "text-to-code",
     "text-to-code-lambda",
     "utils",
@@ -1593,6 +1594,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/76/95/faf61eb8363f26aa7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/b8/f1f62a5e3c0ad2ff1d189590bfa4c46b4f3b6e49cef6f26c6ee4e575394d/setuptools-80.10.2-py3-none-any.whl", hash = "sha256:95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173", size = 1064234, upload-time = "2026-01-25T22:38:15.216Z" },
 ]
+
+[[package]]
+name = "shared-models"
+version = "0.1.0"
+source = { editable = "packages/shared-models" }
 
 [[package]]
 name = "shellingham"

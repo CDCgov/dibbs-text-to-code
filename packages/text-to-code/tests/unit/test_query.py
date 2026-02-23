@@ -1,4 +1,4 @@
-from augmentation.models.augmentation import DataField
+from shared_models import DataField
 from text_to_code.models.query import VectorSearchParams
 from text_to_code.services.query import KNNQuery
 from text_to_code.services.query import QueryBuilder

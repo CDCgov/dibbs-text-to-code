@@ -1,9 +1,9 @@
 import pytest
 from augmentation.models.application import ApplicationCode
-from augmentation.models.augmentation import DataField
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
 from augmentation.models.document import DocumentType
+from shared_models import DataField
 
 
 class TestConfigModel:
