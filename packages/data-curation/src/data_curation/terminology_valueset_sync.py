@@ -66,6 +66,7 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 # File settings
 SNOINC_DIRECTORY = "./data/snoinc_extracts"
 TMP_DIRECTORY = "./tmp"
+LOINC_CS_NAMES = "./packages/data-curation/loinc/ConsumerName.csv"
 
 # Data Filter Criteria
 LOINC_TEXT_TO_FILTER = [
@@ -151,9 +152,32 @@ def get_loinc_lab_names():  # noqa: D103
     api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
     loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_vs_type = "Lab Names"
-    loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
+    all_loinc_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
-    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
+    # Now let's add the ConsumerName for each of the loinc codes
+    all_loinc_rows = get_loinc_consumer_names(all_loinc_rows)
+
+    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+
+
+def get_loinc_consumer_names(loinc_rows):
+    cs_names = {}
+    # loop through all the loinc rows and get the code
+    # use that to look up the consumer name for each and add it to the row
+    with open(LOINC_CS_NAMES, "r", encoding="utf-8") as file:
+        reader = csv.DictReader(file, delimiter="|")
+        for cs_row in reader:
+            cs_code = cs_row.get("LoincNumber")
+            cs_name = cs_row.get("ConsumerName")
+            if cs_code and cs_name:
+                cs_names[cs_code] = cs_name
+
+    for row in loinc_rows:
+        loinc_code = row.get("code")
+        cs_name = cs_names.get(loinc_code)
+        if cs_name:
+            row["consumer_name"] = cs_name
+    return loinc_rows
 
 
 def get_loinc_lab_orders():  # noqa: D103
@@ -448,6 +472,41 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     defintion_desc = loinc_result.get("DefinitionDescription")
     lab_type = loinc_result.get("ORDER_OBS")
     result_row["lab_type"] = lab_type
+    full_name = loinc_result.get("FormalName")
+    # let's get the 6 components of loinc lab tests
+    property = loinc_result.get("PROPERTY")
+    time_aspect = loinc_result.get("TIME_ASPCT")
+    system = loinc_result.get("SYSTEM")
+    scale_type = loinc_result.get("SCALE_TYP")
+    method_type = loinc_result.get("METHOD_TYP")
+    class_type = loinc_result.get("CLASS")
+
+    if property:
+        result_row["property"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", property).strip()
+    else:
+        result_row["property"] = ""
+    
+    if time_aspect:
+        result_row["time_aspect"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", time_aspect).strip()
+    else:
+        result_row["time_aspect"] = ""
+    
+    if system:
+        result_row["system"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", system).strip()
+    else:
+        result_row["system"] = ""
+    if scale_type:
+        result_row["scale_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", scale_type).strip()
+    else:
+        result_row["scale_type"] = ""
+    if method_type:
+        result_row["method_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", method_type).strip()
+    else:
+        result_row["method_type"] = ""
+    if class_type:
+        result_row["class_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", class_type).strip()
+    else:
+        result_row["class_type"] = ""
 
     if short_name is not None:
         result_row["short_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", short_name).strip()
@@ -477,6 +536,10 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
         result_row["related_names"] = re.sub(
             regex_patterns.MULTIPLE_SPACE, " ", related_names
         ).strip()
+
+    # provides the fully specified name aka "Formal Name" in loinc
+    if full_name is not None:
+        result_row["full_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", full_name).strip()
 
     loinc_order_rows.append(result_row)
 
