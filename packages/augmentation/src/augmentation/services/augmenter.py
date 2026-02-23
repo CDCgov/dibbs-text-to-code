@@ -6,8 +6,6 @@ from datetime import datetime
 from lxml import etree
 from lxml.etree import Element
 
-from shared_models import DataField
-
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
 from .eicr_utils import clean_xml_tree

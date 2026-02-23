@@ -4,7 +4,6 @@ from pydantic import model_validator
 from shared_models import DataField
 
 from .application import ApplicationCode
-from .augmentation import DataField
 from .document import DocumentType
 
 

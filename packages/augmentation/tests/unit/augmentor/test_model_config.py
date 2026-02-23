@@ -6,7 +6,6 @@ from augmentation.models.document import DocumentType
 from shared_models import DataField
 
 
-
 class TestConfigModel:
     def test_base_config(self):
         """Basic unit test for base (AugmenterConfig) config model."""
