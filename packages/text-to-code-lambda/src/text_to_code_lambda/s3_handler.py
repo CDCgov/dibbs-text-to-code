@@ -21,7 +21,8 @@ def require_env(name: str) -> str:
 
 
 def strip_protocol(url: str) -> str:
-    """Remove http/https from a URL.
+    """Remove http/https from a URL. This is sometimes needed for AWS service
+    endpoints (like OpenSearch) that require the URL without the protocol.
     :param url: The URL to strip.
     :return: The URL without the protocol."""
     return url.removeprefix("https://").removeprefix("http://")
@@ -40,7 +41,6 @@ def create_aws_auth() -> AWS4Auth:
     :return: AWS4Auth object
     """
     credentials = get_s3_credentials()
-    
     return AWS4Auth(
         credentials.access_key,
         credentials.secret_key,
@@ -81,6 +81,9 @@ def create_opensearch_client(awsauth: AWS4Auth) -> OpenSearch:
 def get_file_content_from_s3_event(event: lambda_events.EventBridgeEvent) -> bytes:
     """
     Extracts the file content from an S3 event triggered by a Lambda function.
+
+    :param event: The S3 event containing the bucket and object key information.
+    :return: The content of the file as bytes.
     """
 
     bucket_name = event["detail"]["bucket"]["name"]
@@ -95,6 +98,10 @@ def get_file_content_from_s3_event(event: lambda_events.EventBridgeEvent) -> byt
 def put_file(file_obj: typing.BinaryIO, bucket_name: str, object_key: str):
     """
     Uploads a file object to a S3 bucket.
+
+    :param file_obj: The file object to upload.
+    :param bucket_name: The name of the S3 bucket to upload to.
+    :param object_key: The key to assign to the uploaded object in S3.
     """
     client = create_s3_client()
     client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
