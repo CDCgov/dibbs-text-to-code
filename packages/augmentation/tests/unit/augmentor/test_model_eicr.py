@@ -1,4 +1,4 @@
-from augmentation.models.eicr import DataField
+from shared_models import DataField
 
 
 class TestEICRModel:

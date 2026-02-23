@@ -1,13 +1,15 @@
 from .application import ApplicationCode
+from .augmentation import TTCAugmentation
+from .augmentation import TTCAugmenterInput
 from .config import AugmenterConfig
 from .config import TTCAugmenterConfig
 from .document import DocumentType
-from .eicr import DataField
 
 __all__ = [
     "ApplicationCode",
     "AugmenterConfig",
-    "DataField",
     "DocumentType",
+    "TTCAugmentation",
     "TTCAugmenterConfig",
+    "TTCAugmenterInput",
 ]
