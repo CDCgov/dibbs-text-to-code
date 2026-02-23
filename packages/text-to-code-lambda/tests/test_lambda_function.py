@@ -1,13 +1,13 @@
 import json
 
 import pytest
-from text_to_code_lambda import main
+from text_to_code_lambda import lambda_function
 
 
 class TestHandler:
     def test_handler(self):
         """Test handler."""
-        resp = main.handler({}, {})
+        resp = lambda_function.handler({}, {})
         assert resp == {"message": "DIBBS Text to Code!", "event": {}, "file_contents": []}
 
     @pytest.mark.parametrize("num_records", [1, 3])
@@ -32,7 +32,7 @@ class TestHandler:
         event = {"Records": records}
         context = {}
 
-        result = main.handler(event, context)
+        result = lambda_function.handler(event, context)
 
         assert result["file_contents"] == expected_contents
         assert len(result["file_contents"]) == num_records
@@ -42,7 +42,7 @@ class TestHandler:
         event = {"Records": []}
         context = {}
 
-        result = main.handler(event, context)
+        result = lambda_function.handler(event, context)
 
         assert result["file_contents"] == []
         assert len(result["file_contents"]) == 0
