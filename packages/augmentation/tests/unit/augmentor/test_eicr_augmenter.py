@@ -2,7 +2,6 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from augmentation.models import DataField
 from augmentation.models.augmentation import TTCAugmentation
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
@@ -10,6 +9,7 @@ from augmentation.models.config import TTCAugmenterConfig
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
+from shared_models import DataField
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
