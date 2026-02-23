@@ -2,6 +2,8 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from augmentation.models import DataField
+from augmentation.models.augmentation import TTCAugmentation
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
@@ -31,11 +33,11 @@ class TestEicrAugmenter:
     def test_no_document_data(self):
         """Tests raising error when no document data is provided."""
         with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
-            EICRAugmenter(document=None)
+            EICRAugmenter(None, [])
 
     def test_initialization(self):
         """Tests initialization of the TTC augmenter."""
-        augmenter = EICRAugmenter(document=BASIC_ECR)
+        augmenter = EICRAugmenter(BASIC_ECR, [])
         assert augmenter.application_code.value == ApplicationCode.TEXT_TO_CODE.value
         assert augmenter.config == DATA_CONFIG
         assert augmenter.original_xml == BASIC_ECR
@@ -48,7 +50,16 @@ class TestEicrAugmenter:
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         augmenter = EICRAugmenter(
-            document=BASIC_ECR,
+            BASIC_ECR,
+            [
+                TTCAugmentation(
+                    location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    data_type=DataField.LAB_TEST_NAME_RESULTED,
+                    code="10101010",
+                    display_text="Chad new LOINC code",
+                    original_text="Loser old LOINC",
+                )
+            ],
         )
         augmenter.augment()
 
@@ -64,7 +75,16 @@ class TestEicrAugmenter:
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         augmenter = EICRAugmenter(
-            document=BASIC_ECR_RELATED_DOC,
+            BASIC_ECR_RELATED_DOC,
+            [
+                TTCAugmentation(
+                    location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    data_type=DataField.LAB_TEST_NAME_RESULTED,
+                    code="10101010",
+                    display_text="Chad new LOINC code",
+                    original_text="Loser old LOINC",
+                )
+            ],
         )
         augmenter.augment()
 
@@ -78,8 +98,6 @@ class TestEicrAugmenter:
 
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
-        augmenter = EICRAugmenter(
-            document=EMPTY_ECR,
-        )
+        augmenter = EICRAugmenter(EMPTY_ECR, [])
         with pytest.raises(ValueError, match=r"Unable to find tag in eICR document for XPath"):
             augmenter.augment()
