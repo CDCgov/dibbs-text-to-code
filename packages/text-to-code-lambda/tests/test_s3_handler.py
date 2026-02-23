@@ -1,5 +1,6 @@
 import io
 
+import pytest
 from text_to_code_lambda import s3_handler
 
 
@@ -71,3 +72,24 @@ class TestCreateAWSAuth:
 
         assert auth.access_id == "test_access_key_id"
         assert auth.region == "us-east-1"
+
+class TestCheckS3ObjectExists:
+    def test_check_s3_object_exists(self, moto_setup):
+        """Test check S3 object exists."""
+        s3_handler.put_file(io.BytesIO(b"test content"), moto_setup.bucket_name, "test.txt")
+
+        exists = s3_handler.check_s3_object_exists(moto_setup, moto_setup.bucket_name, "test.txt")
+        assert exists
+
+    def test_check_s3_object_does_not_exist(self, moto_setup):
+        """Test check S3 object does not exist."""
+        exists = s3_handler.check_s3_object_exists(moto_setup, moto_setup.bucket_name, "nonexistent.txt")
+        assert not exists
+        
+
+    def test_check_s3_object_exists_unexpected_error(self, moto_setup):
+        """Test check S3 object exists with unexpected error."""
+        with pytest.raises(Exception) as e:
+            s3_handler.check_s3_object_exists(moto_setup, "nonexistent-bucket", "test.txt")
+        assert "NoSuchBucket" in str(e.value)
+            

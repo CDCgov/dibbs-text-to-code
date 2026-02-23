@@ -4,6 +4,7 @@ import typing
 import boto3
 from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
+from botocore.exceptions import ClientError
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
@@ -97,3 +98,24 @@ def put_file(file_obj: typing.BinaryIO, bucket_name: str, object_key: str):
     """
     client = create_s3_client()
     client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
+
+
+def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool:
+    """Checks that an S3 object exists.
+
+    :param s3_client: The S3 client.
+    :param bucket: The name of the S3 bucket.
+    :param key: The key of the S3 object.
+    :raises Exception: If an unexpected error occurs while fetching the S3 object.
+    :return: True if the S3 object exists, False otherwise.
+    """
+    try:
+        s3_client.head_object(Bucket=bucket, Key=key)
+        return True
+    except ClientError as e:
+        error_code = e.response["Error"]["Code"]
+
+        if error_code in ("404", "NoSuchKey"):
+            return False
+
+        raise Exception(f"Unexpected error while fetching file from S3: {key}", e)
