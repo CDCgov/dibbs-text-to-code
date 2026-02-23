@@ -10,8 +10,8 @@ def moto_setup(monkeypatch):
     """Setup test AWS."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", "us-east-1")
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
         bucket_name = "test-bucket"
 
         # Create the fake S3 bucket

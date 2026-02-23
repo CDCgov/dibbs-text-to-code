@@ -26,17 +26,24 @@ def strip_protocol(url: str) -> str:
     return url.removeprefix("https://").removeprefix("http://")
 
 
+def get_s3_credentials():
+    """Fetch AWS credentials from the environment """
+
+    return boto3.Session().get_credentials()
+
+
 def create_aws_auth() -> AWS4Auth:
     """
     Creates an AWS4Auth object for authenticating with AWS services.
 
     :return: AWS4Auth object
     """
-    credentials = boto3.Session().get_credentials()
+    credentials = get_s3_credentials()
+    
     return AWS4Auth(
         credentials.access_key,
         credentials.secret_key,
-        require_env("REGION"),
+        require_env("AWS_REGION"),
         "es",
         session_token=credentials.token,
     )
@@ -49,7 +56,7 @@ def create_s3_client() -> BaseClient:
     :return: S3 client
     """
     endpoint_url = os.getenv("S3_ENDPOINT_URL")
-    region_name = require_env("REGION")
+    region_name = require_env("AWS_REGION")
 
     return boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
 

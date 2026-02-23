@@ -9,8 +9,8 @@ class TestCreateS3Client:
         s3_client = s3_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
         assert s3_client.meta.region_name == "us-east-1"
-        assert s3_client._get_credentials().secret_key == "test"
-        assert s3_client._get_credentials().access_key == "test"
+        assert s3_client._get_credentials().secret_key == "test_secret_access_key"
+        assert s3_client._get_credentials().access_key == "test_access_key_id"
 
 
 class TestGetFileContentFromS3Event:
@@ -36,3 +36,38 @@ class TestPutFile:
 
         response = moto_setup.get_object(Bucket=moto_setup.bucket_name, Key="test.txt")
         assert response["Body"].read() == b"This eICR is good"
+
+class TestStripProtocol:
+    def test_strip_protocol(self):
+        """Test strip protocol."""
+        assert s3_handler.strip_protocol("https://test-endpoint-url.com") == "test-endpoint-url.com"
+        assert s3_handler.strip_protocol("http://test-endpoint-url.com") == "test-endpoint-url.com"
+        assert s3_handler.strip_protocol("test-endpoint-url.com") == "test-endpoint-url.com"
+
+class TestGetS3Credentials:
+    def test_get_s3_credentials(self, moto_setup):
+        """Test get S3 credentials set in conftest.py."""
+        credentials = s3_handler.get_s3_credentials()
+        assert credentials.access_key == "test_access_key_id"
+        assert credentials.secret_key == "test_secret_access_key"
+        assert credentials.token is None
+
+
+    def test_get_s3_credentials_with_token(self, monkeypatch):
+        """Test get S3 credentials with token."""
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test2")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test2")
+        monkeypatch.setenv("AWS_SESSION_TOKEN", "test-token")
+
+        credentials = s3_handler.get_s3_credentials()
+        assert credentials.access_key == "test2"
+        assert credentials.secret_key == "test2"
+        assert credentials.token == "test-token"
+    
+class TestCreateAWSAuth:
+    def test_create_aws_auth(self, moto_setup):
+        """Test create AWS auth."""
+        auth = s3_handler.create_aws_auth()
+
+        assert auth.access_id == "test_access_key_id"
+        assert auth.region == "us-east-1"
