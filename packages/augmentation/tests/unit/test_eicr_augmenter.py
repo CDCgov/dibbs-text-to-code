@@ -11,7 +11,7 @@ from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 from shared_models import DataField
 
-EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
+EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
 BASE_XPATH = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText/text()"
 
