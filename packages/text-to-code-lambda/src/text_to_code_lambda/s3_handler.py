@@ -16,7 +16,7 @@ def require_env(name: str) -> str:
     :return: The value of the environment variable."""
     value = os.getenv(name)
     if not value:
-        raise ValueError(f"{name} not set")
+        raise ValueError(f"{name} not set as an environment variable.")
     return value
 
 

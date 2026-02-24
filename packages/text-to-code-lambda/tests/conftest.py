@@ -13,6 +13,7 @@ def moto_setup(monkeypatch):
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
         bucket_name = "test-bucket"
+        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", "https://test-opensearch-endpoint.com")
 
         # Create the fake S3 bucket
         s3 = boto3.client(

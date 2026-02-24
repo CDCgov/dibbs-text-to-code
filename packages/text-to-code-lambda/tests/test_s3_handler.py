@@ -1,4 +1,5 @@
 import io
+from xmlrpc import client
 
 import pytest
 from text_to_code_lambda import s3_handler
@@ -93,3 +94,24 @@ class TestCheckS3ObjectExists:
             s3_handler.check_s3_object_exists(moto_setup, "nonexistent-bucket", "test.txt")
         assert "NoSuchBucket" in str(e.value)
             
+class TestCreateOpenSearchClient:
+    def test_create_opensearch_client(self, moto_setup):
+        """Test create OpenSearch client."""
+        auth = s3_handler.create_aws_auth()
+        client = s3_handler.create_opensearch_client(auth)
+
+        assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
+        assert client.transport.hosts[0]["port"] == 443
+
+class TestRequireEnv:
+    def test_require_env(self, monkeypatch):
+        """Test require env."""
+        monkeypatch.setenv("TEST_ENV_VAR", "test_value")
+        value = s3_handler.require_env("TEST_ENV_VAR")
+        assert value == "test_value"
+
+    def test_require_env_not_set(self, monkeypatch):
+        """Test require env not set."""
+        with pytest.raises(ValueError) as e:
+            s3_handler.require_env("NONEXISTENT_ENV_VAR")
+        assert str(e.value) == "NONEXISTENT_ENV_VAR not set as an environment variable."
