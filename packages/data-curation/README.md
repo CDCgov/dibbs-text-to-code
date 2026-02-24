@@ -77,7 +77,7 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files from said queries that are used to generate the end result data files used to create the TTC model(s).
 
-- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes.
+- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
 
 ## Data Files
 
@@ -327,6 +327,11 @@ code|text
 - [Download LOINC Relma](https://loinc.org/file-access/download-id/8763/) - :warning: For Windows Users Only :warning:
   - Locate and remember where the Relma.mdb database is (Typically located: `C:<path_to_relma_installation>\RELMA\RELMA.MDB`)
     :warning: **_Note that MAC Users will have difficulty installing Relma at this time due to inconsistencies with the Windows VMs available and what Relma supports - if you need to get the MS-Access Relma DB contact a team member that uses Windows_** :warning:
+
+- [Download LOINC ConsumerNames](https://loinc.org/downloads/)
+  - Download LOINC and unzip and extract downloaded file
+  - In the `Loinc_#.##\AccessoryFiles\ConsumerName` folder, that you extracted, find the ConsumerNames.csv file
+  - Save this in the `.\packages\data-curation\loinc` folder in this project
 
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
   - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
