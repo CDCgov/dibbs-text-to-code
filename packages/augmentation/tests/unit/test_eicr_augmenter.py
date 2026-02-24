@@ -1,5 +1,7 @@
+from datetime import datetime
 from pathlib import Path
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import pytest
 from augmentation.models.augmentation import TTCAugmentation
@@ -28,7 +30,7 @@ with eicr_path.open() as f:
     EMPTY_ECR = f.read()
 
 
-@pytest.mark.freeze_time("2026-02-13T15:27:57")
+@pytest.mark.time_machine(datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")))
 class TestEicrAugmenter:
     def test_no_document_data(self):
         """Tests raising error when no document data is provided."""
