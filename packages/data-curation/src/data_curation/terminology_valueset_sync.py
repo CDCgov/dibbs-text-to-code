@@ -98,7 +98,7 @@ def get_umls_snomed_lab_values():  # noqa: D103
             if snomed_code and snomed_text:
                 result_row = {
                     "code": snomed_code,
-                    "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", snomed_text).strip(),
+                    "text": _clean_text_string(snomed_text),
                 }
                 snomed_rows.append(result_row)
                 snomed_row_count += 1
@@ -142,7 +142,7 @@ def get_hl7_lab_interp():  # noqa: D103
             ):
                 result_row = {
                     "code": hl7_code,
-                    "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", hl7_text).strip(),
+                    "text": _clean_text_string(hl7_text),
                 }
                 hl7_rows.append(result_row)
         save_valueset_csv_file(hl7_filename, hl7_rows)
@@ -377,7 +377,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                         related_name = atom_result.get("name")
                         if related_name and related_name not in related_names:
                             related_names.append(
-                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                                _clean_text_string(related_name)
                             )
                             atom_row_count += 1
 
@@ -422,7 +422,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                             and related_name not in related_names
                         ):
                             related_names.append(
-                                re.sub(regex_patterns.MULTIPLE_SPACE, " ", related_name).strip()
+                                _clean_text_string(related_name)
                             )
                             crs_row_count += 1
 
@@ -463,83 +463,36 @@ def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D10
 
 
 def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:  # noqa: D103
-    result_code = loinc_result.get("LOINC_NUM")
-    result_row = {"code": result_code}
-    short_name = loinc_result.get("SHORTNAME")
-    long_name = loinc_result.get("LONG_COMMON_NAME")
-    display_name = loinc_result.get("DisplayName")
-    related_names = loinc_result.get("RELATEDNAMES2")
+    result_row = {"code": loinc_result.get("LOINC_NUM")}
+    # More human centered name for the concept
+    result_row["display_name"] =_clean_text_string(loinc_result.get("DisplayName"))
+    # ';' separated list of related terms to the concept/code/term in question
+    result_row["related_names"] = _clean_text_string(loinc_result.get("RELATEDNAMES2"))
+
+    # Paragraph of information concerning the concept/code/term in question
     defintion_desc = loinc_result.get("DefinitionDescription")
-    lab_type = loinc_result.get("ORDER_OBS")
-    result_row["lab_type"] = lab_type
-    full_name = loinc_result.get("FormalName")
+    if defintion_desc is not None:
+        if not _filter_loinc_term(defintion_desc):
+            result_row["definition_desc"] = _clean_text_string(defintion_desc)
+        else:
+            result_row["definition_desc"] = ""
+    result_row["lab_type"] = loinc_result.get("ORDER_OBS")
+    # provides the fully specified name aka "Formal Name" in loinc
+    result_row["full_name"] = _clean_text_string(loinc_result.get("FormalName"))
     # let's get the 6 components of loinc lab tests
-    property = loinc_result.get("PROPERTY")
-    time_aspect = loinc_result.get("TIME_ASPCT")
-    system = loinc_result.get("SYSTEM")
-    scale_type = loinc_result.get("SCALE_TYP")
-    method_type = loinc_result.get("METHOD_TYP")
-    class_type = loinc_result.get("CLASS")
-
-    if property:
-        result_row["property"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", property).strip()
-    else:
-        result_row["property"] = ""
-    
-    if time_aspect:
-        result_row["time_aspect"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", time_aspect).strip()
-    else:
-        result_row["time_aspect"] = ""
-    
-    if system:
-        result_row["system"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", system).strip()
-    else:
-        result_row["system"] = ""
-    if scale_type:
-        result_row["scale_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", scale_type).strip()
-    else:
-        result_row["scale_type"] = ""
-    if method_type:
-        result_row["method_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", method_type).strip()
-    else:
-        result_row["method_type"] = ""
-    if class_type:
-        result_row["class_type"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", class_type).strip()
-    else:
-        result_row["class_type"] = ""
-
-    if short_name is not None:
-        result_row["short_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", short_name).strip()
-    if long_name is not None:
-        result_row["long_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", long_name).strip()
+    result_row["property"] = _clean_text_string(loinc_result.get("PROPERTY"))
+    result_row["time_aspect"] = _clean_text_string(loinc_result.get("TIME_ASPCT"))
+    result_row["system"] = _clean_text_string(loinc_result.get("SYSTEM"))
+    result_row["scale_type"] = _clean_text_string(loinc_result.get("SCALE_TYP"))
+    result_row["method_type"] = _clean_text_string(loinc_result.get("METHOD_TYP"))
+    result_row["class_type"] = _clean_text_string(loinc_result.get("CLASS"))
+    result_row["short_name"] = _clean_text_string(loinc_result.get("SHORTNAME"))
+    result_row["long_name"] = _clean_text_string(loinc_result.get("LONG_COMMON_NAME"))
 
     # Adding additional fields to extract terms from to help supplement
     # data for learning in our models
     # NOTE: We can change/remove these additional fields later or even
     #  make them configurable
-
-    # More human centered name for the concept
-    if display_name is not None:
-        result_row["display_name"] = re.sub(
-            regex_patterns.MULTIPLE_SPACE, " ", display_name
-        ).strip()
-    # Paragraph of information concerning the concept/code/term in question
-    if defintion_desc is not None:
-        if not _filter_loinc_term(defintion_desc):
-            result_row["definition_desc"] = re.sub(
-                regex_patterns.MULTIPLE_SPACE, " ", defintion_desc
-            ).strip()
-        else:
-            result_row["definition_desc"] = ""
-    # ';' separated list of related terms to the concept/code/term in question
-    if related_names is not None:
-        result_row["related_names"] = re.sub(
-            regex_patterns.MULTIPLE_SPACE, " ", related_names
-        ).strip()
-
-    # provides the fully specified name aka "Formal Name" in loinc
-    if full_name is not None:
-        result_row["full_name"] = re.sub(regex_patterns.MULTIPLE_SPACE, " ", full_name).strip()
 
     loinc_order_rows.append(result_row)
 
@@ -656,7 +609,7 @@ def create_loinc_part_abbrv_syn_dicts():
     LOINC parts, which contains each LOINC Part Code, Name
     and Abbreviations and Synonyms
     """
-    file_path = "./loinc/LOINC_PARTS_ABBRV_SYNONYMS.txt"
+    file_path = "./packages/data-curation/loinc/LOINC_PARTS_ABBRV_SYNONYMS.txt"
 
     # Separate LOINC Part Dictionaries
     component_dict = {}
@@ -795,15 +748,9 @@ def get_hl7_encounter_act_codes():  # noqa: D103
                 ):
                     result_row = {
                         "code": hl7_code,
-                        "text": re.sub(regex_patterns.MULTIPLE_SPACE, " ", hl7_text).strip(),
+                        "text": _clean_text_string(hl7_text),
                     }
-                    if hl7_definition:
-                        result_row["description"] = re.sub(
-                            regex_patterns.MULTIPLE_SPACE, " ", hl7_definition
-                        ).strip()
-                    else:
-                        result_row["description"] = ""
-
+                    result_row["description"] = _clean_text_string(hl7_definition)
                     hl7_rows.append(result_row)
         # Hard coded external encounter
         # This is the specified code, based upon the eICR specificiation, if an encounter is
@@ -818,6 +765,13 @@ def get_hl7_encounter_act_codes():  # noqa: D103
         hl7_rows.append(external_encounter)
         print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
         save_valueset_csv_file(hl7_filename, hl7_rows)
+
+
+def _clean_text_string(value: str) -> str:
+    if value is not None:
+        return re.sub(regex_patterns.MULTIPLE_SPACE, " ", value).strip()
+    else:
+        return ""
 
 
 def get_vsac_rxnorm_medications():  # noqa: D103
