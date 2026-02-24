@@ -489,11 +489,6 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     result_row["short_name"] = _clean_text_string(loinc_result.get("SHORTNAME"))
     result_row["long_name"] = _clean_text_string(loinc_result.get("LONG_COMMON_NAME"))
 
-    # Adding additional fields to extract terms from to help supplement
-    # data for learning in our models
-    # NOTE: We can change/remove these additional fields later or even
-    #  make them configurable
-
     loinc_order_rows.append(result_row)
 
     return loinc_order_rows
