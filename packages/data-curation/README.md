@@ -75,7 +75,9 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ### loinc (folder)
 
-Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files that are used to generate some of the data files.
+Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files from said queries that are used to generate the end result data files used to create the TTC model(s).
+
+- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
 
 ## Data Files
 
@@ -86,18 +88,27 @@ These data files are for the Lab codes/concepts in LOINC for the base TTC model.
 #### Data Structure:
 
 ```csv
-code|short_name|long_name|display_name|definition_desc|related_names
-110636-8|APAP Msmt Ur|Acetaminophen [Measurement] in Urine|Acetaminophen (U) [Measurement]||ACET; Acetamidophenol; Acetaminoph; Acetominophen; APAP; c209; C55; Hydroxyacetanilide; Lab orders; Msmt; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; p-Acetamidophenol; Paracetamol; p-Hydroxyacetanilide; Tylenol; u209; UA; UR; Urn
-53781-1|Acetamin+Propoxyph Pnl Ur-mCnc|Acetaminophen and Propoxyphene panel [Mass/volume] - Urine|Acetaminophen and Propoxyphene panel (U) [Mass/Vol]||ACET; Acetamidophenol; Acetamin+Propoxyph Pnl; Acetaminoph; Acetominophen; Algaphan; APAP; c209; C55; Cosalgesic; Cotonal-65; Darvocet; Darvon; Depronal; Dextrogesic; Dextropropoxyphene; Distalgesic; Dolasan; Doloxene; D-propoxyphene; DRUG/TOXICOLOGY; Drugs; Hydroxyacetanilide; Level; Mass concentration; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; Napsalgesic; p-Acetamidophenol; Pan; PANEL.DRUG & TOXICOLOGY; Panl; Paracetamol; p-Hydroxyacetanilide; Pnl; Point in time; Propoxyph pnl; QNT; Quan; Quant; Quantitative; Random; Tylenol; u209; UA; UR; Urn
+code|lab_type|property|time_aspect|system|scale_type|method_type|class_type|short_name|long_name|display_name|definition_desc|related_names|full_name|consumer_name
+110636-8|Order|{Measurement}|-|Urine|-||LABORDERS.ONTOLOGY|APAP Msmt Ur|Acetaminophen [Measurement] in Urine|Acetaminophen (U) [Measurement]||ACET; Acetamidophenol; Acetaminoph; Acetominophen; APAP; c209; C55; Hydroxyacetanilide; Lab orders; Msmt; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; p-Acetamidophenol; Paracetamol; p-Hydroxyacetanilide; Tylenol; u209; UA; UR; Urn|Acetaminophen:{Measurement}:-:Urine:-:|Acetaminophen, Urine
+53781-1|Order|MCnc|Pt|Urine|Qn||PANEL.DRUG/TOX|Acetamin+Propoxyph Pnl Ur-mCnc|Acetaminophen and Propoxyphene panel [Mass/volume] - Urine|Acetaminophen and Propoxyphene panel (U) [Mass/Vol]||ACET; Acetamidophenol; Acetamin+Propoxyph Pnl; Acetaminoph; Acetominophen; Algaphan; APAP; c209; C55; Cosalgesic; Cotonal-65; Darvocet; Darvon; Depronal; Dextrogesic; Dextropropoxyphene; Distalgesic; Dolasan; Doloxene; D-propoxyphene; DRUG/TOXICOLOGY; Drugs; Hydroxyacetanilide; Level; Mass concentration; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; Napsalgesic; p-Acetamidophenol; Pan; PANEL.DRUG & TOXICOLOGY; Panl; Paracetamol; p-Hydroxyacetanilide; Pnl; Point in time; Propoxyph pnl; QNT; Quan; Quant; Quantitative; Random; Tylenol; u209; UA; UR; Urn|Acetaminophen & Propoxyphene panel:MCnc:Pt:Urine:Qn:|Acetaminophen and Propoxyphene panel, Urine
 
 ```
 
 - code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- lab_type: A code from LOINC indicating if the lab is an 'Order', an 'Observation' or 'Both'.
+- property: The LOINC 'Property' Axis - The specific attribute of the component being measured (e.g., length, mass, number).
+- time_aspect: The LOINC 'Time Aspect' Axis - The time frame or duration over which the measurement was made.
+- system: The LOINC 'System' Axis - The specimen source or origin of the measurement (e.g., serum, plasma, blood).
+- scale_type: The LOINC 'Scale' Axis - How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text).
+- method_type: The LOINC 'Method' Axis - The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term.
+- class_type: The LOINC 'Class' Axis.
 - short_name: A concise name used for quick displays, such as in a report's column header.
 - long_name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians.
 - display_name: A flexible field that can be the Long Common Name, Short Name, or another name for the term, depending on how the user or system wants to present it.
 - definition_desc (Fully-Specified Name): The formal, six-part description that provides the complete and standardized meaning of the observation.
 - related_names: This category can include various other terms or synonyms used to describe the same test or observation, helping to map local codes to the LOINC standard. List of terms is `;` delimited.
+- full_name: The Fully-Specified name of the LOINC concept.
+- consumer_name: A more comprehensive set of consumer-friendly names for LOINC codes.
 
 #### Extracts
 
@@ -316,6 +327,11 @@ code|text
 - [Download LOINC Relma](https://loinc.org/file-access/download-id/8763/) - :warning: For Windows Users Only :warning:
   - Locate and remember where the Relma.mdb database is (Typically located: `C:<path_to_relma_installation>\RELMA\RELMA.MDB`)
     :warning: **_Note that MAC Users will have difficulty installing Relma at this time due to inconsistencies with the Windows VMs available and what Relma supports - if you need to get the MS-Access Relma DB contact a team member that uses Windows_** :warning:
+
+- [Download LOINC ConsumerNames](https://loinc.org/downloads/)
+  - Download LOINC and unzip and extract downloaded file
+  - In the `Loinc_#.##\AccessoryFiles\ConsumerName` folder, that you extracted, find the ConsumerNames.csv file
+  - Save this in the `.\packages\data-curation\loinc` folder in this project
 
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
   - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
