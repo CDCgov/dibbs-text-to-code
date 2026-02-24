@@ -2,7 +2,7 @@
 name = "augmentation-lambda"
 version = "0.1.0"
 readme = "README.md"
-dependencies = []
+dependencies = ["aws-lambda-typing>=2.20.0"]
 
 [dependency-groups]
 dev = []
