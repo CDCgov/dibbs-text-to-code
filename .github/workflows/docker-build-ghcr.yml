@@ -149,7 +149,7 @@ jobs:
           file: Dockerfile.augmentation
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/ops:${{ steps.vars.outputs.version_tag }}
+          tags: ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/augmentation:${{ steps.vars.outputs.version_tag }}
           build-args: |
             VITE_GIT_HASH=${{ github.sha }}
             VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
