@@ -78,22 +78,36 @@ def create_opensearch_client(aws_auth: AWS4Auth) -> OpenSearch:
         connection_class=RequestsHttpConnection,)
 
 
-def get_file_content_from_s3_event(event: lambda_events.EventBridgeEvent) -> bytes:
+def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
     """
-    Extracts the file content from an S3 event triggered by a Lambda function.
+    Extracts the file content from an S3 bucket.
+
+    :param bucket_name: The name of the S3 bucket.
+    :param object_key: The key of the S3 object.
+    :return: The content of the file as a string.
+    """
+
+    client = create_s3_client()
+
+    # Check if object exists
+    if not check_s3_object_exists(client, bucket_name, object_key):
+        raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}")
+
+    response = client.get_object(Bucket=bucket_name, Key=object_key)
+    return response["Body"].read().decode("utf-8")
+
+def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) -> dict:
+    """
+    Extracts the file metadata from an S3 event triggered by a Lambda function.
 
     :param event: The S3 event containing the bucket and object key information.
-    :return: The content of the file as bytes.
+    :return: A dictionary containing the bucket name and object key.
     """
 
     bucket_name = event["detail"]["bucket"]["name"]
     object_key = event["detail"]["object"]["key"]
 
-    client = create_s3_client()
-
-    response = client.get_object(Bucket=bucket_name, Key=object_key)
-    return response["Body"].read()
-
+    return {"bucket_name": bucket_name, "object_key": object_key}
 
 def put_file(file_obj: typing.BinaryIO, bucket_name: str, object_key: str):
     """
@@ -126,3 +140,21 @@ def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool
             return False
 
         raise Exception(f"Unexpected error while fetching file from S3: {key}", e)
+    
+def get_persistence_id(object_key: str, input_prefix: str) -> str:
+    """Get the persistence_id from an S3 object key.
+
+    Object key format: <pipeline-step>/<persistance_id>
+    Example: TTCInput/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+    Returns: 2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+
+    :param object_key: The S3 object key
+    :param input_prefix: The pipeline step prefix (e.g., "TTCInput/")
+    :return: The persistence_id portion of the key
+
+    """
+    if not object_key.startswith(input_prefix):
+        raise ValueError(
+            f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'"
+        )
+    return object_key[len(input_prefix) :]

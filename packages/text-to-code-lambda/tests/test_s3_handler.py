@@ -15,8 +15,8 @@ class TestCreateS3Client:
         assert s3_client._get_credentials().access_key == "test_access_key_id"
 
 
-class TestGetFileContentFromS3Event:
-    def test_get_file_content_from_s3_event(self, moto_setup):
+class TestGetEventBridgeDataFromS3Event:
+    def test_get_eventbridge_data_from_s3_event(self, moto_setup):
         """Test get file content from S3 event."""
         moto_setup.put_object(
             Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
@@ -26,9 +26,24 @@ class TestGetFileContentFromS3Event:
             "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}}
         }
 
-        content = s3_handler.get_file_content_from_s3_event(event)
-        assert content == b"This eICR has errors"
+        content = s3_handler.get_eventbridge_data_from_s3_event(event)
+        assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
 
+class TestGetFileContentFromS3:
+    def test_get_file_content_from_s3(self, moto_setup):
+        """Test get file content from S3."""
+        moto_setup.put_object(
+            Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
+        )
+
+        content = s3_handler.get_file_content_from_s3(moto_setup.bucket_name, "test.txt")
+        assert content == "This eICR has errors"
+
+    def test_get_file_content_from_s3_nonexistent_object(self, moto_setup):
+        """Test get file content from S3 with nonexistent object."""
+        with pytest.raises(FileNotFoundError) as e:
+            s3_handler.get_file_content_from_s3(moto_setup.bucket_name, "nonexistent.txt")
+        assert str(e.value) == f"S3 object not found: {moto_setup.bucket_name}/nonexistent.txt"
 
 class TestPutFile:
     def test_put_file(self, moto_setup):
