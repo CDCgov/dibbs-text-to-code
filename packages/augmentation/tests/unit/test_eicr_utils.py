@@ -2,7 +2,7 @@ from pathlib import Path
 
 from augmentation.services import eicr_utils
 
-EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent.parent / "assets"
+EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
 with eicr_path.open() as f:
     EICR_OUTPUT = f.read()
