@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
+    <id root="12345678-1234-5678-1234-567812345678" assigningAuthorityName="text-to-code"/>
+    <setId root="87654321-4321-8765-4321-876543218765"/>
+    <effectiveTime value="20260213152757"/>
+    <versionNumber value="1"/>
+    <component>
+        <structuredBody>
+            <component>
+                <section>
+                    <entry>
+                        <component>
+                            <observation>
+                                <code displayName=" A custom code in display name. ">
+                                    <originalText>
+                    A custom code in original text.
+                  </originalText>
+                                </code>
+                                <author>
+                                    <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCR Data Augmentation"/>
+                                    <effectiveTime value="20260213152757"/>
+                                    <assignedAuthor>
+                                        <id nullFlavor="NA"/>
+                                        <addr nullFlavor="NA"/>
+                                        <telecom nullFlavor="NA"/>
+                                        <assignedAuthoringDevice>
+                                            <softwareName displayName="Data Augmentation Tool"/>
+                                        </assignedAuthoringDevice>
+                                    </assignedAuthor>
+                                </author>
+                            </observation>
+                        </component>
+                    </entry>
+                </section>
+            </component>
+        </structuredBody>
+    </component>
+    <relatedDocument typeCode="XFRM">
+        <parentDocument>
+            <id root="c8516bdc-8bb2-40aa-8dae-20a77546488f" assigningAuthorityName="original-document"/>
+            <setId extension="71b21273-c39e-40f9-a932-11e27ba9126d" root="1.2.840.114350.1.13.380.3.7.1.1"/>
+            <versionNumber value="1"/>
+        </parentDocument>
+    </relatedDocument>
+    <author>
+        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCR Data Augmentation"/>
+        <effectiveTime value="20260213152757"/>
+        <assignedAuthor>
+            <id nullFlavor="NA"/>
+            <addr nullFlavor="NA"/>
+            <telecom nullFlavor="NA"/>
+            <assignedAuthoringDevice>
+                <softwareName displayName="Data Augmentation Tool"/>
+            </assignedAuthoringDevice>
+        </assignedAuthor>
+    </author>
+</ClinicalDocument>

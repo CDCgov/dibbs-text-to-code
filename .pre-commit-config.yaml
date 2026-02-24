@@ -3,11 +3,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      # - prevent large file commits
-      - id: check-added-large-files
-        args:
-          # 30mb == 35,840kb
-          - --maxkb=35840
       # - validate toml syntax
       - id: check-toml
       # - validate yaml syntax
