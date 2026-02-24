@@ -72,7 +72,7 @@ class EICRAugmenter(Augmenter):
         new_eff_time_element.tail = old_eff_time_element.tail
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
 
-        # 3 next replace the setId tag if
+        # 3 next replace the setId tag
         old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_set_id_element = self._get_new_set_id()
