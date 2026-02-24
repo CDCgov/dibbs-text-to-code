@@ -1683,7 +1683,6 @@ dependencies = [
     { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "opensearch-py" },
-    { name = "requests" },
     { name = "requests-aws4auth" },
 ]
 
@@ -1697,7 +1696,6 @@ requires-dist = [
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "opensearch-py", specifier = ">=2.0.0" },
-    { name = "requests", specifier = ">=2.31.0" },
     { name = "requests-aws4auth", specifier = ">=1.1.3" },
 ]
 
