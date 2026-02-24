@@ -107,8 +107,12 @@ dev = [
 name = "augmentation-lambda"
 version = "0.1.0"
 source = { editable = "packages/augmentation-lambda" }
+dependencies = [
+    { name = "aws-lambda-typing" },
+]
 
 [package.metadata]
+requires-dist = [{ name = "aws-lambda-typing", specifier = ">=2.20.0" }]
 
 [package.metadata.requires-dev]
 dev = []
