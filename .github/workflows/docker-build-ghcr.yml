@@ -127,3 +127,31 @@ jobs:
             VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build and push TTC Lambda image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.lambda
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/lambda:${{ steps.vars.outputs.version_tag }}
+          build-args: |
+            VITE_GIT_HASH=${{ github.sha }}
+            VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push TTC Augmentation image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.augmentation
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/ops:${{ steps.vars.outputs.version_tag }}
+          build-args: |
+            VITE_GIT_HASH=${{ github.sha }}
+            VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
