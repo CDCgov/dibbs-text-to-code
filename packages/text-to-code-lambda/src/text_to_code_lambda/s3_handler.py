@@ -62,17 +62,17 @@ def create_s3_client() -> BaseClient:
     return boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
 
 
-def create_opensearch_client(awsauth: AWS4Auth) -> OpenSearch:
+def create_opensearch_client(aws_auth: AWS4Auth) -> OpenSearch:
     """
     Creates an OpenSearch client.
 
-    :param awsauth: AWS4Auth object for authentication
+    :param aws_auth: AWS4Auth object for authentication
     :return: OpenSearch client
     """
     endpoint_url = require_env("OPENSEARCH_ENDPOINT_URL")
     return OpenSearch(
         hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
-        http_auth=awsauth,
+        http_auth=aws_auth,
         use_ssl=True,
         verify_certs=True,
         connection_class=RequestsHttpConnection,)
