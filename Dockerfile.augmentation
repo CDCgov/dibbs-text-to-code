@@ -27,4 +27,4 @@ COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
 ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src/augmentation_lambda"
 
-CMD [ "augmentation_lambda.main.handler" ]
+CMD [ "augmentation_lambda.lambda_function.handler" ]
