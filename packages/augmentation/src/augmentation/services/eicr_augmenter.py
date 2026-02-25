@@ -3,9 +3,9 @@ from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
+from shared_models import TTCAugmentation
 
 from augmentation.models import ApplicationCode
-from augmentation.models import TTCAugmentation
 from augmentation.models import TTCAugmenterConfig
 from augmentation.services.augmenter import Augmenter
 
