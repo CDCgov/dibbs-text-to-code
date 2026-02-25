@@ -1,5 +1,5 @@
+from shared_models import DataField
 from text_to_code.models.eicr import Candidate
-from text_to_code.models.eicr import DataField
 from text_to_code.models.eicr import LabXPaths
 from text_to_code.services.evaluator import get_evaluation_criteria_for_data_field
 from text_to_code.services.evaluator import select_relevant_text

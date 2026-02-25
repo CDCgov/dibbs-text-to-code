@@ -22,7 +22,7 @@ class TTCAugmentation(BaseModel):
     location: str
     data_type: DataField
     code: str
-    display_text: str
+    display_name: str
     original_text: str
 
 
