@@ -63,26 +63,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-    augmentation-build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v6
-          with:
-            ref: ${{ github.event.inputs.ref || github.ref }}
+  augmentation-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
 
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-        - name: Test TTC Augmentation build
-          uses: docker/build-push-action@v6
-          with:
-            context: .
-            file: Dockerfile.augmentation
-            push: false
-            platforms: linux/amd64
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+      - name: Test TTC Augmentation build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.augmentation
+          push: false
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   build-and-push:
     runs-on: ubuntu-latest
