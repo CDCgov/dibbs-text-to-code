@@ -88,7 +88,7 @@ jobs:
 
           # Define image base URLs
           declare -A BASES=(
-            [APP]="text-to-code"
+            # [APP]="text-to-code"
             [LAMBDA]="lambda"
             [AUGMENTATION]="augmentation"
           )
@@ -118,21 +118,21 @@ jobs:
 
       - name: Debug Docker tags
         run: |
-          echo "APP_TAGS: ${{ steps.vars.outputs.app_tags }}"
+          # echo "APP_TAGS: ${{ steps.vars.outputs.app_tags }}"
           echo "LAMBDA_TAGS: ${{ steps.vars.outputs.lambda_tags }}"
           echo "AUGMENTATION_TAGS: ${{ steps.vars.outputs.augmentation_tags }}"
 
-      - name: Build and push TTC app image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.app
-          push: true
-          tags: ${{ steps.vars.outputs.app_tags }}
-          build-args: |
-            VITE_GIT_HASH=${{ github.sha }}
-            VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
-            VERSION=${{ steps.vars.outputs.version_tag }}
+      # - name: Build and push TTC app image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     file: Dockerfile.app
+      #     push: true
+      #     tags: ${{ steps.vars.outputs.app_tags }}
+      #     build-args: |
+      #       VITE_GIT_HASH=${{ github.sha }}
+      #       VITE_GIT_BRANCH=${{ github.event.inputs.ref || github.ref_name }}
+      #       VERSION=${{ steps.vars.outputs.version_tag }}
 
       - name: Build and push TTC Lambda image
         uses: docker/build-push-action@v6
