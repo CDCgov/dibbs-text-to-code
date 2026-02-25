@@ -88,6 +88,7 @@ dev = [
     { name = "pytest-mock" },
     { name = "pytest-snapshot" },
     { name = "time-machine" },
+    { name = "types-lxml" },
 ]
 
 [package.metadata]
@@ -101,6 +102,7 @@ dev = [
     { name = "pytest-mock", specifier = ">=3.15.1" },
     { name = "pytest-snapshot", specifier = ">=0.9.0" },
     { name = "time-machine", specifier = ">=3.2.0" },
+    { name = "types-lxml", specifier = ">=2026.2.16" },
 ]
 
 [[package]]
@@ -366,11 +368,11 @@ wheels = [
 
 [[package]]
 name = "cssselect"
-version = "1.3.0"
+version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/72/0a/c3ea9573b1dc2e151abfe88c7fe0c26d1892fe6ed02d0cdb30f0d57029d5/cssselect-1.3.0.tar.gz", hash = "sha256:57f8a99424cfab289a1b6a816a43075a4b00948c86b4dcf3ef4ee7e15f7ab0c7", size = 42870, upload-time = "2025-03-10T09:30:29.638Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/2e/cdfd8b01c37cbf4f9482eefd455853a3cf9c995029a46acd31dfaa9c1dd6/cssselect-1.4.0.tar.gz", hash = "sha256:fdaf0a1425e17dfe8c5cf66191d211b357cf7872ae8afc4c6762ddd8ac47fc92", size = 40589, upload-time = "2026-01-29T07:00:26.701Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/58/257350f7db99b4ae12b614a36256d9cc870d71d9e451e79c2dc3b23d7c3c/cssselect-1.3.0-py3-none-any.whl", hash = "sha256:56d1bf3e198080cc1667e137bc51de9cadfca259f03c2d4e09037b3e01e30f0d", size = 18786, upload-time = "2025-03-10T09:30:28.048Z" },
+    { url = "https://files.pythonhosted.org/packages/20/0c/7bb51e3acfafd16c48875bf3db03607674df16f5b6ef8d056586af7e2b8b/cssselect-1.4.0-py3-none-any.whl", hash = "sha256:c0ec5c0191c8ee39fcc8afc1540331d8b55b0183478c50e9c8a79d44dbceb1d8", size = 18540, upload-time = "2026-01-29T07:00:24.994Z" },
 ]
 
 [[package]]
@@ -401,7 +403,6 @@ dev = [
     { name = "requests" },
     { name = "ruff" },
     { name = "ty" },
-    { name = "types-lxml" },
 ]
 
 [package.metadata]
@@ -414,7 +415,6 @@ dev = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "ruff", specifier = ">=0.14.10" },
     { name = "ty", specifier = ">=0.0.10" },
-    { name = "types-lxml", specifier = ">=2026.1.1" },
 ]
 
 [[package]]
@@ -1616,11 +1616,11 @@ wheels = [
 
 [[package]]
 name = "soupsieve"
-version = "2.8.1"
+version = "2.8.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/89/23/adf3796d740536d63a6fbda113d07e60c734b6ed5d3058d1e47fc0495e47/soupsieve-2.8.1.tar.gz", hash = "sha256:4cf733bc50fa805f5df4b8ef4740fc0e0fa6218cf3006269afd3f9d6d80fd350", size = 117856, upload-time = "2025-12-18T13:50:34.655Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/ae/2d9c981590ed9999a0d91755b47fc74f74de286b0f5cee14c9269041e6c4/soupsieve-2.8.3.tar.gz", hash = "sha256:3267f1eeea4251fb42728b6dfb746edc9acaffc4a45b27e19450b676586e8349", size = 118627, upload-time = "2026-01-20T04:27:02.457Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/f3/b67d6ea49ca9154453b6d70b34ea22f3996b9fa55da105a79d8732227adc/soupsieve-2.8.1-py3-none-any.whl", hash = "sha256:a11fe2a6f3d76ab3cf2de04eb339c1be5b506a8a47f2ceb6d139803177f85434", size = 36710, upload-time = "2025-12-18T13:50:33.267Z" },
+    { url = "https://files.pythonhosted.org/packages/46/2c/1462b1d0a634697ae9e55b3cecdcb64788e8b7d63f54d923fcd0bb140aed/soupsieve-2.8.3-py3-none-any.whl", hash = "sha256:ed64f2ba4eebeab06cc4962affce381647455978ffc1e36bb79a545b91f45a95", size = 37016, upload-time = "2026-01-20T04:27:01.012Z" },
 ]
 
 [[package]]
@@ -1653,34 +1653,33 @@ name = "text-to-code"
 version = "0.1.0"
 source = { editable = "packages/text-to-code" }
 dependencies = [
+    { name = "lxml" },
+    { name = "pydantic" },
     { name = "sentence-transformers" },
     { name = "torch" },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "lxml" },
-    { name = "pydantic" },
+    { name = "types-lxml" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "lxml", specifier = ">=6.0.2" },
+    { name = "pydantic", specifier = ">=2.12.5" },
     { name = "sentence-transformers" },
     { name = "torch", specifier = "==2.9.1" },
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "lxml", specifier = ">=4.9.2" },
-    { name = "pydantic", specifier = ">=2.12.3" },
-]
+dev = [{ name = "types-lxml", specifier = ">=2026.2.16" }]
 
 [[package]]
 name = "text-to-code-lambda"
 version = "0.1.0"
 source = { editable = "packages/text-to-code-lambda" }
 dependencies = [
-    { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "opensearch-py" },
     { name = "requests-aws4auth" },
@@ -1688,19 +1687,22 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "aws-lambda-typing" },
     { name = "moto" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "opensearch-py", specifier = ">=2.0.0" },
     { name = "requests-aws4auth", specifier = ">=1.1.3" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "moto" }]
+dev = [
+    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
+    { name = "moto" },
+]
 
 [[package]]
 name = "threadpoolctl"
