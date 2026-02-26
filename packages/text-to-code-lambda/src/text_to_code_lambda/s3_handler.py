@@ -160,4 +160,4 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
         raise ValueError(
             f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'"
         )
-    return object_key[len(input_prefix) :]
+    return object_key[len(input_prefix):]
