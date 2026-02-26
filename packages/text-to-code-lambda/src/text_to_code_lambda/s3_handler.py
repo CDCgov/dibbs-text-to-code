@@ -48,50 +48,6 @@ def create_aws_auth() -> AWS4Auth:
         "es",
         session_token=credentials.token,
     )
-from botocore.exceptions import ClientError
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
-
-
-def require_env(name: str) -> str:
-    """Fetch a required environment variable or raise a clear error.
-
-    :param name: The name of the environment variable to fetch.
-    :return: The value of the environment variable."""
-    value = os.getenv(name)
-    if not value:
-        raise ValueError(f"{name} not set as an environment variable.")
-    return value
-
-
-def strip_protocol(url: str) -> str:
-    """Remove http/https from a URL. This is sometimes needed for AWS service
-    endpoints (like OpenSearch) that require the URL without the protocol.
-    :param url: The URL to strip.
-    :return: The URL without the protocol."""
-    return url.removeprefix("https://").removeprefix("http://")
-
-
-def get_s3_credentials():
-    """Fetch AWS credentials from the environment """
-
-    return boto3.Session().get_credentials()
-
-
-def create_aws_auth() -> AWS4Auth:
-    """
-    Creates an AWS4Auth object for authenticating with AWS services.
-
-    :return: AWS4Auth object
-    """
-    credentials = get_s3_credentials()
-    return AWS4Auth(
-        credentials.access_key,
-        credentials.secret_key,
-        require_env("AWS_REGION"),
-        "es",
-        session_token=credentials.token,
-    )
 
 
 def create_s3_client() -> BaseClient:
