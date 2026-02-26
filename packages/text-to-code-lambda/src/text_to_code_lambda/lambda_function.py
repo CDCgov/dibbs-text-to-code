@@ -1,12 +1,13 @@
 import json
 import os
 
-from aws_lambda_typing import context as lambda_context
-from aws_lambda_typing import events as lambda_events
 from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.data_classes import (SQSEvent, SQSRecord,
+                                                          event_source)
+from aws_lambda_powertools.utilities.typing import LambdaContext
+from text_to_code.services import schematron_processor
 
 from . import s3_handler
-from text_to_code.services import schematron_processor
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -21,44 +22,85 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 
-def handler(event: lambda_events.SQSEvent, context: lambda_context.Context):
+@event_source(data_class=SQSEvent)
+def handler(event: SQSEvent, context: LambdaContext):
     """
     Text to Code lambda entry point
-    """ 
-    logger.info(f"Received event with {len(event.get('Records', []))} record(s)")
+    """
+    logger.info(f"Received event with {len(event.records)} record(s)")
 
-    for record in event.get("Records", []):
-        body = record.get("body")
-        if not body:
-            continue
-        s3_event = json.loads(body)
+    failures = []
 
-        # Parse the EventBridge S3 event from the SQS message body
-        eventbridge_data = s3_handler.get_eventbridge_data_from_s3_event(s3_event)
-        logger.info(f"Processing S3 Object: s3://{eventbridge_data['bucket_name']}/{eventbridge_data['object_key']}")
+    for record in event.records:
+        try:
+            process_record(record)
+        except Exception as e:
+            logger.exception(f"Error processing record: {e}", message_id=record.message_id)
+            failures.append({"message_id": record.message_id, "error": str(e)})
 
-        # Extract persistence_id from the RR object key
-        persistence_id = s3_handler.get_persistence_id(eventbridge_data["object_key"], TTC_INPUT_PREFIX)
-        logger.info(f"Extracted persistence_id: {persistence_id}")
+        return {"statusCode": 200, "message": "TTC processed with some failures!", "failures": failures} if failures else {"statusCode": 200, "message": "TTC processed successfully!"}
+    
 
+def process_record(record: SQSRecord) -> None: 
+    """_summary_
+
+    :param record: _description_
+    """
+    if not record.body:
+        logger.warning("Empty SQS body", message_id=record.message_id)
+        return
+
+    s3_event = json.loads(record.body)
+    
+
+    # Parse the EventBridge S3 event from the SQS message body
+    eventbridge_data = s3_handler.get_eventbridge_data_from_s3_event(s3_event)
+    bucket = eventbridge_data["bucket_name"]
+    object_key = eventbridge_data["object_key"]
+    logger.info(f"Processing S3 Object: s3://{bucket}/{object_key}")
+
+    # Extract persistence_id from the RR object key
+    persistence_id = s3_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+    logger.info(f"Extracted persistence_id: {persistence_id}")
+
+    with logger.append_context_keys(
+        persistence_id=persistence_id,
+        bucket=bucket,
+        object_key=object_key,
+        message_id=record.message_id,
+    ):
+        _process_record_pipeline(bucket, persistence_id)
+
+
+def _process_record_pipeline(bucket: str, persistence_id: str) -> None:
+        logger.info("Starting TTC processing")
+        
         # S3 GET Schematron errors
         # TODO: Confirm with APHL that the Schematron errors will be stored in the same bucket and follow a consistent naming convention that allows us to derive the Schematron error object key from the persistence_id.
-        schematron_errors = s3_handler.get_file_content_from_s3(bucket_name=eventbridge_data["bucket_name"], object_key=f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}")
+
+        schematron_object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
+        logger.info("Loading Schematron errors", s3_key=schematron_object_key)
+        schematron_errors = s3_handler.get_file_content_from_s3(
+        bucket_name=bucket,
+        object_key=schematron_object_key,
+    )
         logger.info(f"Retrieved Schematron errors for persistence_id {persistence_id}: {schematron_errors}")
 
         # Process Schematron errors to identify relevant data fields for TTC processing
-        logger.info("Processing Schematron errors to identify relevant data fields for TTC processing")
+        logger.info("Extracting relevant fields")
         relevant_data_fields = schematron_processor.get_data_fields_from_schematron_error(schematron_errors)
         if not relevant_data_fields:
             logger.warning(f"No relevant data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}")
-            continue
+            return
 
         # Construct eICR path: s3://<bucket_name>/<EICR_Input_Prefix>/<persistance_id>
-        logger.info(f"Retrieving eICR from s3://{eventbridge_data['bucket_name']}/{EICR_INPUT_PREFIX}{persistence_id}")
+        logger.info(f"Retrieving eICR from s3://{bucket}/{EICR_INPUT_PREFIX}{persistence_id}")
 
         # S3 GET eICR
-        original_eicr_content = s3_handler.get_file_content_from_s3(bucket_name=eventbridge_data["bucket_name"], object_key=f"{EICR_INPUT_PREFIX}{persistence_id}")
-        logger.info(f"Retrieved eICR content for persistence_id {persistence_id}")
+        original_eicr_object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+        logger.info("Loading eICR", s3_key=original_eicr_object_key)
+        original_eicr_content = s3_handler.get_file_content_from_s3(bucket_name=bucket, object_key=original_eicr_object_key)
+        logger.info(f"Retrieved eICR content {original_eicr_object_key}")
 
         # Process the eICR for TTC
         logger.info(f"Starting eICR processing for persistence_id {persistence_id}")
@@ -82,13 +124,12 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context):
         logger.info(f"Creating output to pass to Augmentation Lambda for persistence_id {persistence_id}")
         # augmentation_output_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
         # s3_handler.put_file(file_obj = augmentation_data, bucket_name: eventbridge_data['bucket_name'], object_key = augmentation_output_key)
-        logger.info(f"Saved TTC output to s3://{eventbridge_data['bucket_name']}/{TTC_OUTPUT_PREFIX}{persistence_id}")
+        logger.info(f"Saved TTC output to s3://{bucket}/{TTC_OUTPUT_PREFIX}{persistence_id}")
 
         # Create the metadata object to save in S3 for analysis of TTC results
         logger.info(f"Creating the metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}")
         # metadata_output_key = f"{TTC_METADATA_PREFIX}{persistence_id}"
         # s3_handler.put_file(file_obj = metadata_content, bucket_name: eventbridge_data['bucket_name'], object_key = metadata_output_key)
-        logger.info(f"Saved TTC metadata to s3://{eventbridge_data['bucket_name']}/{TTC_METADATA_PREFIX}{persistence_id}")   
+        logger.info(f"Saved TTC metadata to s3://{bucket}/{TTC_METADATA_PREFIX}{persistence_id}")   
 
-
-    return {"statusCode": 200, "message": "TTC processed successfully!"}
+        return {"statusCode": 200, "message": "TTC processed successfully!"}
