@@ -22,9 +22,9 @@ RUN pip install --no-cache-dir "$(printf '%s' ".[${ENVIRONMENT}]")"
 RUN python -m spacy validate
 
 # Copy over the rest of the code
-COPY ./src ${LAMBDA_TASK_ROOT}/src
+COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
 ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src"
 
-CMD [ "aws_lambda.main.handler" ]
+CMD [ "text_to_code_lambda.lambda_function.handler" ]
