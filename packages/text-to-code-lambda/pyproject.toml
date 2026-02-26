@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["moto"]
+dev = ["aws-lambda-typing>=2.20.0", "moto"]
 
 [build-system]
 requires = ["hatchling"]
