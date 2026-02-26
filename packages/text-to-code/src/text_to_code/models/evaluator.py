@@ -3,8 +3,8 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 from pydantic import Field
+from shared_models import DataField
 
-from ..models.eicr import DataField
 from ..models.eicr import LabXPaths
 
 

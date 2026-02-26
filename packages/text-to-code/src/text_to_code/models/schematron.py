@@ -1,8 +1,7 @@
 from enum import Enum
 
 from pydantic import BaseModel
-
-from .eicr import DataField
+from shared_models import DataField
 
 
 class LabTestNameOrderedSchematronErrors(Enum):
