@@ -15,8 +15,8 @@ RUN microdnf install -y gcc-c++ make && microdnf clean all
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
-COPY ./pyproject.toml ${LAMBDA_TASK_ROOT}/pyproject.toml
-RUN pip install --no-cache-dir "$(printf '%s' ".[${ENVIRONMENT}]")"
+COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda"
 
 # Copy over the rest of the code
 COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/src

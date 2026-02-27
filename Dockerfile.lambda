@@ -15,11 +15,8 @@ RUN microdnf install -y gcc-c++ make && microdnf clean all
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
-COPY ./pyproject.toml ${LAMBDA_TASK_ROOT}/pyproject.toml
-RUN pip install --no-cache-dir "$(printf '%s' ".[${ENVIRONMENT}]")"
-# Improve Lambda startup time by validating SpaCy models upfront,
-# which preloads necessary libraries during build
-RUN python -m spacy validate
+COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
 
 # Copy over the rest of the code
 COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
