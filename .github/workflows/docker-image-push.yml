@@ -73,7 +73,11 @@ jobs:
         id: vars
         run: |
           # Get the branch/ref and version tag
-          REF_NAME="${{ github.event.inputs.ref || github.ref_name }}"
+          REF_NAME="${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
+            REF_NAME="${{ github.event.inputs.ref }}"
+          fi
+
           VERSION_TAG="${{ github.event.inputs.version_tag }}"
           # TTC_REGISTRY="${{ steps.ttc.outputs.registry }}"
 
@@ -92,7 +96,7 @@ jobs:
             [AUGMENTATION]="augmentation"
           )
 
-          for IMAGE in APP LAMBDA AUGMENTATION; do
+          for IMAGE in LAMBDA AUGMENTATION; do
             TAGS=()
 
             # GHCR
