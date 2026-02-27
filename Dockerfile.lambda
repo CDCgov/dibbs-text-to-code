@@ -17,9 +17,6 @@ RUN microdnf install -y gcc-c++ make && microdnf clean all
 # before copying the rest of the code allows for caching of the dependencies
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
-# Improve Lambda startup time by validating SpaCy models upfront,
-# which preloads necessary libraries during build
-RUN python -m spacy validate
 
 # Copy over the rest of the code
 COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
