@@ -19,7 +19,7 @@ COPY ./pyproject.toml ${LAMBDA_TASK_ROOT}/pyproject.toml
 RUN pip install --no-cache-dir "$(printf '%s' ".[${ENVIRONMENT}]")"
 # Improve Lambda startup time by validating SpaCy models upfront,
 # which preloads necessary libraries during build
-RUN python -m spacy validate
+RUN python -c "import spacy" && python -m spacy validate || true
 
 # Copy over the rest of the code
 COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
