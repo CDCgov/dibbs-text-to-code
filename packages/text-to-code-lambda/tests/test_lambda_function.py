@@ -15,6 +15,13 @@ class TestHandler:
         resp = lambda_function.handler(example_sqs_event, {})
         assert resp == {"statusCode": 200, "message": "TTC processed successfully!", "num_successes": 0}
 
+    def test_handler_with_empty_body(self, example_sqs_event, caplog_warning):
+        """Test handler with an empty SQS body."""
+        example_sqs_event["Records"][0]["body"] = None
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert "Empty SQS body" in caplog_warning.text
+        assert resp == {"statusCode": 200, "message": "TTC processed successfully!", "num_successes": 1}
+
     def test_handler_with_processing_failure(self, example_sqs_event, monkeypatch):
         """Test handler with a processing failure."""
         # Patch the process_record function to raise an exception for testing
