@@ -130,3 +130,19 @@ class TestRequireEnv:
         with pytest.raises(ValueError) as e:
             s3_handler.require_env("NONEXISTENT_ENV_VAR")
         assert str(e.value) == "NONEXISTENT_ENV_VAR not set as an environment variable."
+
+
+class TestGetPersistenceId:
+    def test_get_persistence_id(self):
+        """Test get persistence id."""
+        object_key = "TextToCodeSubmission/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+        persistence_id = s3_handler.get_persistence_id(object_key, "TextToCodeSubmission")
+
+        assert persistence_id == object_key.split("TextToCodeSubmission")[1]
+
+    def test_get_persistence_id_incorrect_prefix(self):
+        """Test get persistence id with incorrect prefix."""
+        object_key = "IncorrectPrefix/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+        with pytest.raises(ValueError) as e:
+            s3_handler.get_persistence_id(object_key, "TextToCodeSubmission")
+        assert str(e.value) == "Object key 'IncorrectPrefix/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234' does not start with expected prefix 'TextToCodeSubmission'"
