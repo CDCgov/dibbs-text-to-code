@@ -1,10 +1,10 @@
 import json
+import logging
 import os
 
 import boto3
 import moto
 import pytest
-import utils.path as utils
 
 
 @pytest.fixture(scope="function")
@@ -84,3 +84,15 @@ def example_sqs_event(example_s3_event_payload):
         ]
     }
 
+
+
+@pytest.fixture
+def caplog_warning(caplog):
+    """
+    Capture log warnings for tests
+
+    :param caplog: Pytest fixture for capturing log output
+    :return: Caplog instance with warning level set
+    """
+    caplog.set_level(logging.WARNING)
+    return caplog
