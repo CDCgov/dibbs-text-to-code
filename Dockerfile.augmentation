@@ -7,21 +7,21 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 ARG ENVIRONMENT=prod
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Initialize the aws_lambda directory
-RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/aws_lambda"
+# Initialize the augmentation_lambda directory
+RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/augmentation_lambda"
 
 # Install build tools for compiling C++ extensions
 RUN microdnf install -y gcc-c++ make && microdnf clean all
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
-COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
-RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
+COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda"
 
 # Copy over the rest of the code
-COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
+COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
-ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src"
+ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src/augmentation_lambda"
 
-CMD [ "text_to_code_lambda.lambda_function.handler" ]
+CMD [ "augmentation_lambda.lambda_function.handler" ]
