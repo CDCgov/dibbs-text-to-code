@@ -28,9 +28,9 @@ permissions:
 
 jobs:
   build-and-push:
-  env:
-    PUSH_GHCR: ${{ github.event_name == 'push' || github.event.inputs.push_ghcr == 'true' }}
-    PUSH_TTC: ${{ github.event_name == 'push' || github.event.inputs.push_ttc == 'true' }}
+    env:
+      PUSH_GHCR: ${{ github.event_name == 'push' || github.event.inputs.push_ghcr == 'true' }}
+      PUSH_TTC: ${{ github.event_name == 'push' || github.event.inputs.push_ttc == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
