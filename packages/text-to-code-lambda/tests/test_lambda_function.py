@@ -1,6 +1,3 @@
-import json
-
-import pytest
 from text_to_code_lambda import lambda_function
 
 
