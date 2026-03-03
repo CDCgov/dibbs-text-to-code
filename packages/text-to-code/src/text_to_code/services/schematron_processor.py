@@ -1,9 +1,9 @@
 from collections import defaultdict
 
 from lxml import etree
+from shared_models import DataField
 
 from text_to_code.models import schematron
-from text_to_code.models.eicr import DataField
 
 
 def get_data_element_from_schematron_error(schematron_error: str) -> DataField | None:

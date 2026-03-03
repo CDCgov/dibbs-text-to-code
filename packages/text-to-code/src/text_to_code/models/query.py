@@ -1,8 +1,7 @@
 import typing
 
 import pydantic
-
-from text_to_code.models.eicr import DataField
+from shared_models import DataField
 
 
 class DataFieldTypeMapping:

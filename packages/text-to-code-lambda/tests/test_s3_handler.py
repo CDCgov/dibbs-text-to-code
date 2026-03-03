@@ -1,5 +1,7 @@
 import io
+from xmlrpc import client
 
+import pytest
 from text_to_code_lambda import s3_handler
 
 
@@ -9,8 +11,8 @@ class TestCreateS3Client:
         s3_client = s3_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
         assert s3_client.meta.region_name == "us-east-1"
-        assert s3_client._get_credentials().secret_key == "test"
-        assert s3_client._get_credentials().access_key == "test"
+        assert s3_client._get_credentials().secret_key == "test_secret_access_key"
+        assert s3_client._get_credentials().access_key == "test_access_key_id"
 
 
 class TestGetFileContentFromS3Event:
@@ -36,3 +38,80 @@ class TestPutFile:
 
         response = moto_setup.get_object(Bucket=moto_setup.bucket_name, Key="test.txt")
         assert response["Body"].read() == b"This eICR is good"
+
+class TestStripProtocol:
+    def test_strip_protocol(self):
+        """Test strip protocol."""
+        assert s3_handler.strip_protocol("https://test-endpoint-url.com") == "test-endpoint-url.com"
+        assert s3_handler.strip_protocol("http://test-endpoint-url.com") == "test-endpoint-url.com"
+        assert s3_handler.strip_protocol("test-endpoint-url.com") == "test-endpoint-url.com"
+
+class TestGetS3Credentials:
+    def test_get_s3_credentials(self, moto_setup):
+        """Test get S3 credentials set in conftest.py."""
+        credentials = s3_handler.get_s3_credentials()
+        assert credentials.access_key == "test_access_key_id"
+        assert credentials.secret_key == "test_secret_access_key"
+        assert credentials.token is None
+
+
+    def test_get_s3_credentials_with_token(self, monkeypatch):
+        """Test get S3 credentials with token."""
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test2")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test2")
+        monkeypatch.setenv("AWS_SESSION_TOKEN", "test-token")
+
+        credentials = s3_handler.get_s3_credentials()
+        assert credentials.access_key == "test2"
+        assert credentials.secret_key == "test2"
+        assert credentials.token == "test-token"
+    
+class TestCreateAWSAuth:
+    def test_create_aws_auth(self, moto_setup):
+        """Test create AWS auth."""
+        auth = s3_handler.create_aws_auth()
+
+        assert auth.access_id == "test_access_key_id"
+        assert auth.region == "us-east-1"
+
+class TestCheckS3ObjectExists:
+    def test_check_s3_object_exists(self, moto_setup):
+        """Test check S3 object exists."""
+        s3_handler.put_file(io.BytesIO(b"test content"), moto_setup.bucket_name, "test.txt")
+
+        exists = s3_handler.check_s3_object_exists(moto_setup, moto_setup.bucket_name, "test.txt")
+        assert exists
+
+    def test_check_s3_object_does_not_exist(self, moto_setup):
+        """Test check S3 object does not exist."""
+        exists = s3_handler.check_s3_object_exists(moto_setup, moto_setup.bucket_name, "nonexistent.txt")
+        assert not exists
+        
+
+    def test_check_s3_object_exists_unexpected_error(self, moto_setup):
+        """Test check S3 object exists with unexpected error."""
+        with pytest.raises(Exception) as e:
+            s3_handler.check_s3_object_exists(moto_setup, "nonexistent-bucket", "test.txt")
+        assert "NoSuchBucket" in str(e.value)
+            
+class TestCreateOpenSearchClient:
+    def test_create_opensearch_client(self, moto_setup):
+        """Test create OpenSearch client."""
+        auth = s3_handler.create_aws_auth()
+        client = s3_handler.create_opensearch_client(auth)
+
+        assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
+        assert client.transport.hosts[0]["port"] == 443
+
+class TestRequireEnv:
+    def test_require_env(self, monkeypatch):
+        """Test require env."""
+        monkeypatch.setenv("TEST_ENV_VAR", "test_value")
+        value = s3_handler.require_env("TEST_ENV_VAR")
+        assert value == "test_value"
+
+    def test_require_env_not_set(self, monkeypatch):
+        """Test require env not set."""
+        with pytest.raises(ValueError) as e:
+            s3_handler.require_env("NONEXISTENT_ENV_VAR")
+        assert str(e.value) == "NONEXISTENT_ENV_VAR not set as an environment variable."
