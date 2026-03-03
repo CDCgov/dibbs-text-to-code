@@ -21,11 +21,8 @@ class Candidate(BaseModel):
     """Was this the selected candidate?"""
 
 
-class Augmentation(BaseModel):
-    """Model to hold metadata related to each Schematron error TTC attempted to fix.
-
-    TODO: This needs a new name. All of the attributes also need new names. Names are hard.
-    """
+class NonstandardCodeInstance(BaseModel):
+    """Model to hold metadata related to each Schematron error relevant TTC attempted to resolve. Specifically these are instances of nonstandard codes."""
 
     schematron_error: str
     """The text of the Schematron error."""
@@ -44,6 +41,6 @@ class Metadata(BaseModel):
 
     original_eicr_id: str
     augmented_eicr_id: str
-    augmentations: list[Augmentation]
-    """List of the 'augmentations' made by TTC. TODO: This needs a new name."""
+    nonstandard_codes: list[NonstandardCodeInstance]
+    """List of the nonstandard codes TTC attempted to resolve."""
     error: str
