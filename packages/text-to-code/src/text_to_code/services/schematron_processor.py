@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from lxml import etree
+from lxml.etree import Element
 from shared_models import DataField
 
 from text_to_code.models import schematron
@@ -33,36 +34,42 @@ def get_data_fields_from_schematron_error(
     if not schematron_output.strip():
         return {}
 
-    xml_root = etree.fromstring(schematron_output.encode("utf-8"))
+    xml_root = _create_xml_tree(schematron_output)
     data_fields_with_context = defaultdict(list)
 
     # Loop through schematron validation results
-    for result in xml_root:
-        for vr in result.findall("validationResult"):
-            try:
-                issue = vr.find("issue")
-                if issue is None:
-                    continue
-                message_elem = issue.find("message")
-                context_elem = issue.find("context")
-                if (
-                    message_elem is None
-                    or message_elem.text is None
-                    or context_elem is None
-                    or context_elem.text is None
-                ):
-                    continue
-                # Check if message matches any specified schematron errors
-                err_data_field = get_data_element_from_schematron_error(message_elem.text)
-                if err_data_field is None:
-                    continue
-                xpath = context_elem.text
-                # Add xpath if not already present (avoiding duplicates)
-                if xpath not in data_fields_with_context[err_data_field]:
-                    data_fields_with_context[err_data_field].append(xpath)
 
-            except Exception as e:
-                # TODO: we may want to log this somewhere instead of print
-                print(f"Error parsing schematron output: {e}")
+    for issue in xml_root.findall("failed-assert"):
+        try:
+            if issue is None:
                 continue
+            message_elem = issue.find("text")
+            context_elem = issue.get("location")
+            if message_elem is None or message_elem.text is None or context_elem is None:
+                continue
+            # Check if message matches any specified schematron errors
+            err_data_field = get_data_element_from_schematron_error(message_elem.text)
+            if err_data_field is None:
+                continue
+            xpath = context_elem.replace("Q{urn:hl7-org:v3}", "")
+            # Add xpath if not already present (avoiding duplicates)
+            if xpath not in data_fields_with_context[err_data_field]:
+                data_fields_with_context[err_data_field].append(xpath)
+
+        except Exception as e:
+            # TODO: we may want to log this somewhere instead of print
+            print(f"Error parsing schematron output: {e}")
+            continue
     return data_fields_with_context
+
+
+def _create_xml_tree(xml: str) -> Element:
+    """Remove all namespaces from an XML tree."""
+    tree = etree.fromstring(xml.encode("utf-8"))
+    for elem in tree.iter():
+        if not isinstance(elem.tag, str):
+            continue
+        elem.tag = etree.QName(elem).localname
+    # Remove namespace declarations
+    etree.cleanup_namespaces(tree)
+    return tree

@@ -29,7 +29,7 @@ source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages"]
+testpaths = ["packages", "e2e"]
 pythonpath = ["."]
 
 

@@ -33,5 +33,5 @@ class TTCAugmenterInput(BaseModel):
         frozen=True,
         extra="forbid",
     )
-    eicr_id: str
+    eicr: str
     augmentations: list[TTCAugmentation]

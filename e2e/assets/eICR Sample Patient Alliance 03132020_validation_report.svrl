@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svrl:schematron-output xmlns:cda="urn:hl7-org:v3"
+                        xmlns:error="https://doi.org/10.5281/zenodo.1495494#error"
+                        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                        xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+                        xmlns:schxslt="https://doi.org/10.5281/zenodo.1495494"
+                        xmlns:schxslt-api="https://doi.org/10.5281/zenodo.1495494#api"
+                        xmlns:sdtc="urn:hl7-org:sdtc"
+                        xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
+                        xmlns:svs="urn:ihe:iti:svs:2008"
+                        xmlns:voc="http://www.lantanagroup.com/voc"
+                        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <svrl:ns-prefix-in-attribute-values prefix="voc" uri="http://www.lantanagroup.com/voc"/>
+   <svrl:ns-prefix-in-attribute-values prefix="svs" uri="urn:ihe:iti:svs:2008"/>
+   <svrl:ns-prefix-in-attribute-values prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance"/>
+   <svrl:ns-prefix-in-attribute-values prefix="sdtc" uri="urn:hl7-org:sdtc"/>
+   <svrl:ns-prefix-in-attribute-values prefix="cda" uri="urn:hl7-org:v3"/>
+   <svrl:metadata xmlns:dct="http://purl.org/dc/terms/"
+                  xmlns:skos="http://www.w3.org/2004/02/skos/core#">
+      <dct:creator>
+         <dct:Agent>
+            <skos:prefLabel>SAXON/HE 12.9</skos:prefLabel>
+         </dct:Agent>
+      </dct:creator>
+      <dct:created>2026-02-27T14:21:27.109939-05:00</dct:created>
+      <dct:source>
+         <rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/">
+            <dct:creator>
+               <dct:Agent>
+                  <skos:prefLabel>SchXslt/1.10.1 SAXON/HE 12.9</skos:prefLabel>
+                  <schxslt.compile.typed-variables xmlns="https://doi.org/10.5281/zenodo.1495494#">true</schxslt.compile.typed-variables>
+               </dct:Agent>
+            </dct:creator>
+            <dct:created>2026-02-27T14:17:20.816909-05:00</dct:created>
+         </rdf:Description>
+      </dct:source>
+   </svrl:metadata>
+   <svrl:active-pattern name="p-validate_labOrder_ttc"
+                        id="p-validate_labOrder_ttc"
+                        documents="file:///Users/jnygaard/dev/Skylight/dibbs/eicr-schematron-validation/eicr-validator/eicr/eICR%20Sample%20Patient%20Alliance%2003132020.xml"/>
+   <svrl:fired-rule id="r-validate_labOrder_ttc"
+                    context="//cda:observation[cda:templateId/@root = '2.16.840.1.113883.10.20.22.4.44']"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[5]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameOrdered-wrongCodeSystem"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)          or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Ordered @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_labOrder_ttc"
+                    context="//cda:observation[cda:templateId/@root = '2.16.840.1.113883.10.20.22.4.44']"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[5]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[2]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameOrdered-wrongCodeSystem"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)          or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Ordered @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:active-pattern name="p-validate_resultObservation_ttc"
+                        id="p-validate_resultObservation_ttc"
+                        documents="file:///Users/jnygaard/dev/Skylight/dibbs/eicr-schematron-validation/eicr-validator/eicr/eICR%20Sample%20Patient%20Alliance%2003132020.xml"/>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[2]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[2]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[3]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[3]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[4]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[4]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[5]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[6]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[6]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[7]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labTestNameResulted-wrongCode"
+                       test="         not(cda:code/@code or cda:code/cda:translation/@code)            or cda:code[@codeSystem = '2.16.840.1.113883.6.1']          or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">
+      <svrl:text>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</svrl:text>
+   </svrl:failed-assert>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[7]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+   <svrl:fired-rule id="r-validate_resultObservation_ttc"
+                    context="//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]"/>
+   <svrl:failed-assert location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[10]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[8]/Q{urn:hl7-org:v3}observation[1]"
+                       id="ttc-labResultValue-noCode"
+                       test="         not(cda:value)          or cda:value[not(@nullFlavor)]">
+      <svrl:text>Text to Code: Lab Result Value is nullFlavor</svrl:text>
+   </svrl:failed-assert>
+</svrl:schematron-output>

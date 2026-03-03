@@ -16,6 +16,11 @@ class EicrProcessor:
         """
         self._xml_root = _create_xml_tree(eicr_data)
 
+    @property
+    def eicr_id(self) -> str:
+        """Get the ID of the eICR."""
+        return str(self._get_by_xpath("id/@root")[0])
+
     def _get_by_xpath(self, xpath: str) -> Element:
         return self._xml_root.xpath(xpath)
 
@@ -107,7 +112,8 @@ def _create_xml_tree(xml: str) -> Element:
     """Remove all namespaces from an XML tree."""
     tree = etree.fromstring(xml.encode("utf-8"))
     for elem in tree.iter():
-        # Remove namespace from tag
+        if not isinstance(elem.tag, str):
+            continue
         elem.tag = etree.QName(elem).localname
     # Remove namespace declarations
     etree.cleanup_namespaces(tree)

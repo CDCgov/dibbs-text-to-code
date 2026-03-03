@@ -41,6 +41,8 @@ class EICRAugmenter(Augmenter):
         self.new_set_id: str = str(uuid4())
         self.augmentations = augmentations
 
+        self.augment()
+
     def augment(self) -> None:
         """Apply augmentation to the eICR."""
         # Document level rules
@@ -73,17 +75,25 @@ class EICRAugmenter(Augmenter):
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
 
         # 3 next replace the setId tag
-        old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
-        # we need to retain the old tags 'tail' to preserve the spacing format
+        old_set_id_element = self._augmented_element.xpath("/ClinicalDocument/setId")
         new_set_id_element = self._get_new_set_id()
-        new_set_id_element.tail = old_set_id_element.tail
-        self._augmented_element.replace(old_set_id_element, new_set_id_element)
+
+        if old_set_id_element:
+            # we need to retain the old tags 'tail' to preserve the spacing format
+            new_set_id_element.tail = old_set_id_element.tail
+            self._augmented_element.replace(old_set_id_element, new_set_id_element)
+        else:
+            self._augmented_element.append(new_set_id_element)
+
         # 4 finally replace the versionNumber tag
-        old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
-        # we need to retain the old tags 'tail' to preserve the spacing format
+        old_version_element = self._augmented_element.xpath("/ClinicalDocument/versionNumber")
         new_version_element = self._get_new_version_number()
-        new_version_element.tail = old_version_element.tail
-        self._augmented_element.replace(old_version_element, new_version_element)
+        if old_version_element:
+            # we need to retain the old tags 'tail' to preserve the spacing format
+            new_version_element.tail = old_version_element.tail
+            self._augmented_element.replace(old_version_element, new_version_element)
+        else:
+            self._augmented_element.append(new_version_element)
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
@@ -91,8 +101,12 @@ class EICRAugmenter(Augmenter):
         related_doc.set("typeCode", "XFRM")
         parent_doc = etree.SubElement(related_doc, "parentDocument")
         parent_doc.append(self._get_old_document_id())
-        parent_doc.append(self._get_old_set_id())
-        parent_doc.append(self._get_old_version_number())
+        old_set_id = self._get_old_set_id()
+        if old_set_id:
+            parent_doc.append(old_set_id)
+        old_version_number = self._get_old_version_number()
+        if old_version_number:
+            parent_doc.append(old_version_number)
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
@@ -116,15 +130,19 @@ class EICRAugmenter(Augmenter):
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
 
-    def _get_old_set_id(self) -> Element:
+    def _get_old_set_id(self) -> Element | None:
         """Extract the parent document setId from original eICR document."""
-        parent_set_id = self._get_original_by_xpath("/ClinicalDocument/setId")
-        return parent_set_id
+        parent_set_id = self._original_element.xpath("/ClinicalDocument/setId")
+        if parent_set_id:
+            return parent_set_id
+        return None
 
-    def _get_old_version_number(self) -> Element:
+    def _get_old_version_number(self) -> Element | None:
         """Extract the parent versionNumber from original eICR document."""
-        version = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
-        return version
+        version = self._original_element.xpath("/ClinicalDocument/versionNumber")
+        if version:
+            return version
+        return None
 
     def _get_new_document_id(self) -> Element:
         """Generate a new document ID element for the augmented eICR document."""

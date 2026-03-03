@@ -8,7 +8,8 @@ class LabTestNameOrderedSchematronErrors(Enum):
     """The list of Schematron error messages relevant to the lab test name ordered data field."""
 
     MISSING_CODE_ATTRIBUTE = "Text to Code: Lab Test Name Ordered does not have a @code attribute"
-    INVALID_CODE_SYSTEM = "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1"
+    INVALID_CODE_SYSTEM_CODE = "Text to Code: Lab Test Name Ordered @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1"
+    INVALID_CODE_SYSTEM_CODE_TRANSLATION = "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1"
 
 
 class LabTestNameResultedSchematronErrors(Enum):
