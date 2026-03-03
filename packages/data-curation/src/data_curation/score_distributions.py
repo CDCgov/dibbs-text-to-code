@@ -15,11 +15,6 @@ Questions to answer:
 
 query_results = score_data["query_score_distribution"]
 
-# query_results = [
-#     q for q in query_results if q["search_scores"][0] >= 0.9 and \
-#         (q["search_scores"][0] - q["search_scores"][1]) >= 0.1
-# ]
-
 # The "Auto-Classification" Threshold
 # If something is in this category, just return the top score and don't
 # even worry about reranking or other processing

@@ -66,6 +66,14 @@ A script to house functions that can be used to generate data sets used to help 
 
 ---
 
+### score_distributions.py
+
+This is a working, draft copy of a script that analyzes a "results file" for the purpose of measuring distributions of predicted vs actual scores. A results file is a JSON-structured file that captures the search results and output for a testing set of data. It is computed as part of a performance evaluation run in Azure. For each query nonstandard input in the validation set, an entry is logged in the results file capturing the query input, the top-10 search results, and the cosine similarities of eaech of those results. That file can then be downloaded and used with this score_distributions script. The script reads the JSON and computes a number of aggregation metrics on the score distribution. It can be used to explore cutoff patterns and margins, such as the "auto-classification threshold" above which a search result is compelling enough to return as the correct answer without resorting to a reranker.
+
+---
+
+---
+
 ### synthetic_lab_results.py
 
 Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
