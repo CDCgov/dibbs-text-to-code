@@ -85,7 +85,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
               │         └──────────┼──────────┘                     │
               │                    │                                │
               │         ┌──────────▼──────────┐                     │
-              │         │     OpenSearch       │  KNN / HNSW index  │
+              │         │     OpenSearch      │  KNN / HNSW index   │
               │         └──────────┬──────────┘                     │
               │                    │ TTCAugmentation results        │
               │  SQS ──► augmentation-lambda                        │
