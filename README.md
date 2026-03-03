@@ -57,7 +57,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
 | [`shared-models`](packages/shared-models/) | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput` |
 | [`text-to-code`](packages/text-to-code/) | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building |
 | [`augmentation`](packages/augmentation/) | Writes TTC results back into eICR XML as `<translation>` elements |
-| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow, triggered by SQS → S3 events |
+| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow, triggered by S3 → SQS events |
 | [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events |
 | [`utils`](packages/utils/) | Path, regex, and LOINC name parsing utilities |
 | [`data-curation`](packages/data-curation/) | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
