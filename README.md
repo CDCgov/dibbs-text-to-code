@@ -70,30 +70,30 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
 
 ```
               ┌─────────────────────────────────────────────────────┐
-              │                   AWS Infrastructure                 │
-              │                                                      │
+              │                   AWS Infrastructure                │
+              │                                                     │
   eICR XML    │  SQS ──► text-to-code-lambda                        │
-  (from S3)   │                    │                                 │
+  (from S3)   │                    │                                │
               │         ┌──────────▼──────────┐                     │
-              │         │    text-to-code      │                     │
+              │         │    text-to-code     │                     │
               │         │  ┌───────────────┐  │                     │
               │         │  │ EicrProcessor │  │  XPath extraction   │
-              │         │  │   Evaluator   │  │  Candidate selection │
+              │         │  │   Evaluator   │  │  Candidate selection│
               │         │  │   Embedder    │  │  Vector embedding   │
               │         │  │ QueryBuilder  │  │  KNN query          │
               │         │  └───────┬───────┘  │                     │
               │         └──────────┼──────────┘                     │
-              │                    │                                 │
+              │                    │                                │
               │         ┌──────────▼──────────┐                     │
               │         │     OpenSearch       │  KNN / HNSW index  │
               │         └──────────┬──────────┘                     │
-              │                    │ TTCAugmentation results          │
+              │                    │ TTCAugmentation results        │
               │  SQS ──► augmentation-lambda                        │
-              │                    │                                 │
+              │                    │                                │
               │         ┌──────────▼──────────┐                     │
-              │         │    augmentation      │  XML modification  │
+              │         │    augmentation     │  XML modification   │
               │         └──────────┬──────────┘                     │
-              └──────────────────┬─┴───────────────────────────────-┘
+              └──────────────────┬─┴────────────────────────────────┘
                                  │
                       Augmented eICR XML (to S3)
 ```
