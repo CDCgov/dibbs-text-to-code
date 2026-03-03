@@ -11,7 +11,7 @@ class DataField(StrEnum):
     LAB_TEST_NAME_ORDERED = "Lab Test Name Ordered"
 
 
-class TTCAugmentation(BaseModel):
+class NonstandardCodeInstance(BaseModel):
     """Model with everything needed to modify a code."""
 
     model_config = ConfigDict(
@@ -34,4 +34,4 @@ class TTCAugmenterInput(BaseModel):
         extra="forbid",
     )
     eicr_id: str
-    augmentations: list[TTCAugmentation]
+    augmentations: list[NonstandardCodeInstance]

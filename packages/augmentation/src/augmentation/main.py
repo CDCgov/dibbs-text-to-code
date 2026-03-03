@@ -1,3 +1,5 @@
+"""I don't think we want this to be in `main.py` but I'm not 100% sure how this will get plumbed with AWS, so this is as good as anywhere for the moment."""
+
 from shared_models import TTCAugmenterInput
 
 from augmentation.models import Metadata
