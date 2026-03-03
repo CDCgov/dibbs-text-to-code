@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
+from shared_models import DataField
 
 
 class ApplicationCode(StrEnum):
@@ -9,11 +10,33 @@ class ApplicationCode(StrEnum):
     TEXT_TO_CODE = "text-to-code"
 
 
-class ReturnCode(StrEnum):
-    """Return code."""
+class Candidate(BaseModel):
+    """Model of the metadata for the nonstandard code candidates."""
 
-    SUCCESS = "success"
-    FAILURE = "failure"
+    value: str
+    """String value of candidate."""
+    xpath: str
+    """XPath to the candidate value in the original eICR."""
+    selected: bool
+    """Was this the selected candidate?"""
+
+
+class Augmentation(BaseModel):
+    """Model to hold metadata related to each Schematron error TTC attempted to fix.
+
+    TODO: This needs a new name. All of the attributes also need new names. Names are hard.
+    """
+
+    schematron_error: str
+    """The text of the Schematron error."""
+    schematron_error_xpath: str
+    """The XPath give by the Schematron error to the observation with a nonconforming code."""
+    field_type: DataField
+    """The `DataField` type of the nonconforming code."""
+    nonstandard_code_candidates: list[Candidate]
+    """List of the possible candidates to use in the Opensearch query."""
+    new_translation_xpath: str
+    """XPath to the translation added to the augmented eICR with the standard code."""
 
 
 class Metadata(BaseModel):
@@ -21,3 +44,6 @@ class Metadata(BaseModel):
 
     original_eicr_id: str
     augmented_eicr_id: str
+    augmentations: list[Augmentation]
+    """List of the 'augmentations' made by TTC. TODO: This needs a new name."""
+    error: str
