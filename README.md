@@ -98,7 +98,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
                       Augmented eICR XML (to S3)
 ```
 
-The **demo site** (FastAPI + React frontend) provides a local UI for testing the API. In production, the same FastAPI service is deployed as a Docker container, and the two Lambda functions handle large-scale eICR processing.
+The **demo site** (FastAPI + React frontend) provides a local UI for testing the API. In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Key Design Patterns
 
