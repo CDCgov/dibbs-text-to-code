@@ -1,5 +1,6 @@
+from shared_models import TTCAugmenterInput
+
 from augmentation.models import TTCAugmenterConfig
-from augmentation.models import TTCAugmenterInput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 
 

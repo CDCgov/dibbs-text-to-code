@@ -1,5 +1,4 @@
 from .eicr import Candidate
-from .eicr import DataField
 from .eicr import LabXPaths
 from .labs import BaseLabField
 from .labs import LabTestNameOrdered
@@ -19,7 +18,6 @@ __all__ = [
     "_SCHEMATRON_ENUM_TO_FIELD",
     "BaseLabField",
     "Candidate",
-    "DataField",
     "DataFieldTypeMapping",
     "LabTestNameOrdered",
     "LabTestNameOrderedSchematronErrors",

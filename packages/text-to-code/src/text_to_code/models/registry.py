@@ -1,4 +1,5 @@
-from .eicr import DataField
+from shared_models import DataField
+
 from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from text_to_code.models.eicr import DataField
+from shared_models import DataField
 from text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
 current_dir = Path(__file__).parent.parent

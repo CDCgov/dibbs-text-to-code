@@ -4,7 +4,6 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import pytest
-from augmentation.models.augmentation import TTCAugmentation
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
@@ -12,6 +11,7 @@ from augmentation.services.eicr_augmenter import EICRAugmenter
 from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 from shared_models import DataField
+from shared_models import TTCAugmentation
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()

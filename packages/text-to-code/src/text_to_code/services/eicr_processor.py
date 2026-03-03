@@ -1,8 +1,8 @@
 from lxml import etree
 from lxml.etree import Element
+from shared_models import DataField
 
 from text_to_code.models import Candidate
-from text_to_code.models import DataField
 from text_to_code.services.utils import get_config_for_data_field
 
 
