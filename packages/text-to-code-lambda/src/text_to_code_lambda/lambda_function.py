@@ -86,7 +86,7 @@ def process_record(record: SQSRecord) -> None:
         _process_record_pipeline(bucket, persistence_id)
 
 
-def _process_record_pipeline(bucket: str, persistence_id: str) -> None:
+def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     """The main pipeline for processing each record.
 
     The pipeline includes:

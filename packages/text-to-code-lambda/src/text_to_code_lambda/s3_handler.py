@@ -4,6 +4,7 @@ import typing
 import boto3
 from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
+from botocore.credentials import Credentials
 from botocore.exceptions import ClientError
 from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
@@ -33,7 +34,7 @@ def strip_protocol(url: str) -> str:
     return url.removeprefix("https://").removeprefix("http://")
 
 
-def get_s3_credentials() -> boto3.Session:
+def get_s3_credentials() -> Credentials:
     """Fetch AWS credentials from the environment."""
     return boto3.Session().get_credentials()
 
