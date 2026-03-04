@@ -504,7 +504,7 @@ def generate_augmented_examples(
             if prob <= config["enhancement_all"]["enhancement_prob"]:
                 performed_enhancement = True
                 ex_code = enhance_loinc_str(
-                    text=input_code,
+                    text=ex_code,
                     enhancement_type="all",
                     max_enhancements=config["enhancement_all"]["max_enhances"],
                 )
@@ -514,18 +514,18 @@ def generate_augmented_examples(
                 if prob <= config["enhancement_synonyms"]["enhancement_prob"]:
                     performed_enhancement = True
                     ex_code = enhance_loinc_str(
-                        text=input_code,
+                        text=ex_code,
                         enhancement_type="synonyms",
-                        max_enhancements=config["enhancement_synonyms"]["max_enhancements"],
+                        max_enhancements=config["enhancement_synonyms"]["max_enhances"],
                     )
             if "enhancement_abbreviation" in config:
                 prob = random.uniform(0.0, 1.0)
                 if prob <= config["enhancement_abbreviation"]["enhancement_prob"]:
                     performed_enhancement = True
                     ex_code = enhance_loinc_str(
-                        text=input_code,
+                        text=ex_code,
                         enhancement_type="abbrv",
-                        max_enhancements=config["enhancement_abbreviation"]["max_enhancements"],
+                        max_enhancements=config["enhancement_abbreviation"]["max_enhances"],
                     )
 
         # Use the right insertion probability threshold
@@ -638,9 +638,9 @@ def build_augmented_loinc_files(
 if __name__ == "__main__":
     build_augmented_loinc_files(
         "../../../../data/snoinc_extracts/loinc_lab_names_20251107.csv",
-        configs.LAMBDA_LOSS_SOFT_POSITIVE_AUGMENTATION,
-        num_lcn=5,
-        num_sn=3,
-        num_dn=3,
-        output_path_base="../../../../data/training_files/soft_lambda_loss_positives",
+        configs.SWITCHED_ANCHOR_POSITIVE_AUGMENTATION,
+        num_lcn=1,
+        num_sn=1,
+        num_dn=1,
+        output_path_base="../../../../data/training_files/switched_anchor_positives",
     )
