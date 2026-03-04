@@ -33,19 +33,20 @@ TTC has two sequential workflows:
 
 **1. Text-to-Code (TTC)**
 
-Given an eICR XML document, TTC:
-1. Parses the XML and extracts text candidates for each configured data field (e.g., lab test names) using XPath expressions
-2. Selects the best candidate text using priority-based evaluation criteria (e.g., prefers LOINC-sourced text over free text, enforces minimum word count)
-3. Embeds the selected text as a vector using a fine-tuned [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2) SentenceTransformer model
-4. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
-5. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
+Given an eICR XML document and a corresponding [Schematron](https://www.schematron.com/) validation report identifying relevant errors, TTC:
+1. Reads the Schematron report to identify which sections of the eICR contain errors that need standardized codes
+2. Parses the XML and extracts text candidates for each configured data field (e.g., lab test names) using XPath expressions
+3. Selects the best candidate text using priority-based evaluation criteria (e.g., prefers LOINC-sourced text over free text)
+4. Embeds the selected text as a vector using a fine-tuned [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2) SentenceTransformer model
+5. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
+6. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
 
 **2. Augmentation**
 
 Given TTC results, the augmenter:
-1. Updates document headers (ID, effective time, version number) to create a new derived document
-2. Preserves the original eICR as a `relatedDocument` reference
-3. Inserts an author entry identifying the TTC system
+1. Updates [clinical document](http://hl7.org/cda/us/ccda/StructureDefinition/USRealmHeader) headers (ID, effective time, version number) to create a new derived document
+2. Preserves the original eICR as a [`relatedDocument`](http://hl7.org/cda/stds/core/StructureDefinition/RelatedDocument) reference
+3. Inserts an author entry identifying the TTC system at the clinical document level and for every updated observation
 4. Writes `<translation>` elements at each code location with the matched standardized codes
 
 ### Repository Structure
@@ -98,13 +99,13 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
                       Augmented eICR XML (to S3)
 ```
 
-The **demo site** (FastAPI + React frontend) provides a local UI for testing the API. In production, the two Lambda functions handle large-scale eICR processing.
+A **demo site** (FastAPI + React frontend) is available for local testing of the API, though it is not currently under active development. In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Key Design Patterns
 
 - **Registry pattern**: `EICR_REGISTRY` and `EVALUATION_REGISTRY` map `DataField` enum values to their XPath/evaluation configuration. Adding support for a new clinical field only requires adding a new entry to each registry.
 - **Config-driven extraction**: XPath expressions for text candidate extraction are defined per data field in subclasses of `BaseLabField`, keeping extraction logic declarative and field-specific.
-- **Pluggable evaluation**: `BaseEvaluationCriteria` subclasses define candidate selection rules (priority ordering, minimum word count, code system preference) independently from the extraction logic.
+- **Pluggable evaluation**: `BaseEvaluationCriteria` subclasses define candidate selection rules (priority ordering, code system preference) independently from the extraction logic.
 
 ## Getting Started
 
