@@ -56,7 +56,7 @@ exclude = [
     "docs",
     "model-tuning",
     "packages/api",
-    "packages/utils/src",
+    "packages/utils",
 ]
 line-length = 100
 indent-width = 4
