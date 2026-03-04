@@ -56,7 +56,7 @@ def configure_opensearch_client() -> OpenSearch:
     return os_client, index_name
 
 
-def lambda_handler(event: dict, context: dict) -> dict:
+def handler(event: dict, context: dict) -> dict:
     """Lambda function to create an OpenSearch index with the appropriate mappings for storing LOINC code information and their corresponding vector embeddings.
 
     :param event: The event dict passed by AWS Lambda (not used in this function).
