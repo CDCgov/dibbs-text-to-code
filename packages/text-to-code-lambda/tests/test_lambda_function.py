@@ -1,48 +1,50 @@
-import json
-
-import pytest
 from text_to_code_lambda import lambda_function
 
 
 class TestHandler:
-    def test_handler(self):
-        """Test handler."""
-        resp = lambda_function.handler({}, {})
-        assert resp == {"message": "DIBBS Text to Code!", "event": {}, "file_contents": []}
+    def test_handler_success(self, example_sqs_event):
+        """Test handler with no failures."""
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_successes": 1,
+        }
 
-    @pytest.mark.parametrize("num_records", [1, 3])
-    def test_handler_reads_multiple_files(self, moto_setup, num_records):
-        """Test handler reads multiple files"""
-        expected_contents = []
+    def test_handler_with_no_records(self, example_sqs_event):
+        """Test handler with no records."""
+        example_sqs_event["Records"] = []
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_successes": 0,
+        }
 
-        # Create S3 events
-        records = []
-        for i in range(num_records):
-            key = f"test-{i}.txt"
-            content = f"Test file {i}".encode()
-            expected_contents.append(content)
+    def test_handler_with_empty_body(self, example_sqs_event, caplog_warning):
+        """Test handler with an empty SQS body."""
+        example_sqs_event["Records"][0]["body"] = None
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert "Empty SQS body" in caplog_warning.text
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_successes": 1,
+        }
 
-            moto_setup.put_object(Bucket=moto_setup.bucket_name, Key=key, Body=content)
+    def test_handler_with_processing_failure(self, example_sqs_event, monkeypatch):
+        """Test handler with a processing failure."""
 
-            s3_event = {
-                "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": key}}
-            }
-            records.append({"body": json.dumps(s3_event)})
-        # Create event and fake context
-        event = {"Records": records}
-        context = {}
+        # Patch the process_record function to raise an exception for testing
+        def mock_process_record(record) -> None:
+            raise Exception("Test processing error")
 
-        result = lambda_function.handler(event, context)
+        monkeypatch.setattr(lambda_function, "process_record", mock_process_record)
 
-        assert result["file_contents"] == expected_contents
-        assert len(result["file_contents"]) == num_records
-
-    def test_handler_no_records(self):
-        """Test handler with no records"""
-        event = {"Records": []}
-        context = {}
-
-        result = lambda_function.handler(event, context)
-
-        assert result["file_contents"] == []
-        assert len(result["file_contents"]) == 0
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert resp["statusCode"] == 200  # noqa: PLR2004
+        assert resp["message"] == "TTC processed with some failures!"
+        assert resp["num_failures"] == 1
+        assert resp["num_successes"] == 0
+        assert len(resp["failures"]) == 1
+        assert resp["failures"][0]["error"] == "Test processing error"

@@ -8,6 +8,8 @@ authors = [
     { name = "Eric Buckley", email = "ericbuckley@skylight.digital" },
     { name = "Joshua Nygaard", email = "jnygaard@skylight.digital" },
     { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
+    { name = "Nick Clyde", email = "nclyde@skylight.digital" },
+    { name = "Rob Mitchell", email = "robert.a.mitchell@skylight.digital" },
 ]
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -39,7 +41,7 @@ include = [
     "packages/augmentation-lambda/src",
     "packages/augmentation/src",
     "packages/text-to-code/src",
-    "package/utils/src"
+    "packages/text-to-code-lambda/src",
 ]
 
 [tool.ruff]
@@ -56,7 +58,6 @@ exclude = [
     "docs",
     "model-tuning",
     "packages/api",
-    "packages/text-to-code-lambda",
     "packages/utils",
 ]
 line-length = 100
@@ -110,6 +111,10 @@ force-single-line = true
     "D103",   # undocumented-public-function
     "S101",   # assert
     "ANN201", # missing-return-type-annotation
+    "ANN001", # missing type annotation for arguments from fixtures
+]
+"**/conftest.py" = [
+    "PT003", # pytest-extraneous-scope-function"
 ]
 
 [tool.ruff.lint.pydocstyle]
