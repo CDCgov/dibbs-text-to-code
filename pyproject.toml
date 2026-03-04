@@ -39,7 +39,8 @@ include = [
     "packages/augmentation-lambda/src",
     "packages/augmentation/src",
     "packages/text-to-code/src",
-    "package/utils/src"
+    "packages/text-to-code-lambda/src",
+    "packages/utils/src",
 ]
 
 [tool.ruff]
@@ -56,8 +57,6 @@ exclude = [
     "docs",
     "model-tuning",
     "packages/api",
-    "packages/text-to-code-lambda",
-    "packages/utils",
 ]
 line-length = 100
 indent-width = 4
@@ -110,6 +109,13 @@ force-single-line = true
     "D103",   # undocumented-public-function
     "S101",   # assert
     "ANN201", # missing-return-type-annotation
+    "ANN001", # missing type annotation for arguments from fixtures
+]
+"**/conftest.py" = [
+    "ANN001", # missing type annotation for arguments from fixtures
+    "ANN201", # missing-return-type-annotation
+    "PT003",  # missing-fixture-assertion
+
 ]
 
 [tool.ruff.lint.pydocstyle]

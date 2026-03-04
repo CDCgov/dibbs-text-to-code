@@ -35,7 +35,9 @@ def moto_setup(monkeypatch):
 @pytest.fixture
 def example_s3_event_payload():
     """Inner S3 event payload (what SQS body contains as JSON string).
-    This example content comes from APHL"""
+
+    This example content comes from APHL
+    """
     return {
         "version": "0",
         "id": "12345678-1234-5678-9012-123456789012",
@@ -59,6 +61,7 @@ def example_s3_event_payload():
             "reason": "PutObject",
         },
     }
+
 
 @pytest.fixture
 def example_sqs_event(example_s3_event_payload):
@@ -85,11 +88,9 @@ def example_sqs_event(example_s3_event_payload):
     }
 
 
-
 @pytest.fixture
 def caplog_warning(caplog):
-    """
-    Capture log warnings for tests
+    """Capture log warnings for tests.
 
     :param caplog: Pytest fixture for capturing log output
     :return: Caplog instance with warning level set
