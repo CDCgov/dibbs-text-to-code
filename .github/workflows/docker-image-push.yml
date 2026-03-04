@@ -26,6 +26,8 @@ jobs:
     strategy:
       matrix:
         include:
+          - name: index
+            dockerfile: Dockerfile.index
           - name: lambda
             dockerfile: Dockerfile.lambda
           - name: augmentation
@@ -41,6 +43,15 @@ jobs:
         id: repo
         run: |
           echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            index:
+              - 'Dockerfile.index'
+              - 'packages/index-lambda/**'
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
@@ -63,6 +74,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
 
       - name: Build and push image
+        if: ${{ matrix.name != 'index' || github.event_name == 'workflow_dispatch' || steps.changes.outputs.index == 'true' }}
         uses: docker/build-push-action@v6
         with:
           context: .
