@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture(scope="function")
-def moto_setup(monkeypatch):
+def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", "us-east-1")
@@ -33,7 +33,7 @@ def moto_setup(monkeypatch):
 
 
 @pytest.fixture
-def example_s3_event_payload():
+def example_s3_event_payload() -> dict:
     """Inner S3 event payload (what SQS body contains as JSON string).
 
     This example content comes from APHL
@@ -64,7 +64,7 @@ def example_s3_event_payload():
 
 
 @pytest.fixture
-def example_sqs_event(example_s3_event_payload):
+def example_sqs_event(example_s3_event_payload: dict) -> dict:
     """Full SQS event that mimics real Lambda input."""
     return {
         "Records": [
@@ -89,7 +89,7 @@ def example_sqs_event(example_s3_event_payload):
 
 
 @pytest.fixture
-def caplog_warning(caplog):
+def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
     """Capture log warnings for tests.
 
     :param caplog: Pytest fixture for capturing log output

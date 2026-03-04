@@ -8,6 +8,8 @@ authors = [
     { name = "Eric Buckley", email = "ericbuckley@skylight.digital" },
     { name = "Joshua Nygaard", email = "jnygaard@skylight.digital" },
     { name = "Marcelle Goggins", email = "marcelle@skylight.digital" },
+    { name = "Nick Clyde", email = "nclyde@skylight.digital" },
+    { name = "Rob Mitchell", email = "robert.a.mitchell@skylight.digital" },
 ]
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -112,10 +114,7 @@ force-single-line = true
     "ANN001", # missing type annotation for arguments from fixtures
 ]
 "**/conftest.py" = [
-    "ANN001", # missing type annotation for arguments from fixtures
-    "ANN201", # missing-return-type-annotation
-    "PT003",  # missing-fixture-assertion
-
+    "PT003", # pytest-extraneous-scope-function"
 ]
 
 [tool.ruff.lint.pydocstyle]
