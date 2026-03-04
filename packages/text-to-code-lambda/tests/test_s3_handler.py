@@ -118,11 +118,12 @@ class TestCheckS3ObjectExists:
 class TestCreateOpenSearchClient:
     def test_create_opensearch_client(self, moto_setup):
         """Test create OpenSearch client."""
+        expected_port = 443  # The expected default port for the OpenSearch client.
         auth = s3_handler.create_aws_auth()
         client = s3_handler.create_opensearch_client(auth)
 
         assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
-        assert client.transport.hosts[0]["port"] == 443  # noqa: PLR2004
+        assert client.transport.hosts[0]["port"] == expected_port
 
 
 class TestRequireEnv:
