@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
-from shared_models import TTCAugmentation
+from shared_models import NonstandardCodeInstance
 
 from augmentation.models import ApplicationCode
 from augmentation.models import TTCAugmenterConfig
@@ -23,7 +23,7 @@ class EICRAugmenter(Augmenter):
     def __init__(
         self,
         document: str,
-        augmentations: list[TTCAugmentation],
+        augmentations: list[NonstandardCodeInstance],
         config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
     ):
@@ -188,12 +188,12 @@ class EICRAugmenter(Augmenter):
         author = self._generate_author()
         self._augmented_element.append(author)
 
-    def _handle_author_entry(self, augmentation: TTCAugmentation) -> None:
+    def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
         entry = self._get_augmented_tag_by_xpath(augmentation.location)
         author = self._generate_author()
         entry.append(author)
 
-    def _handle_translation(self, augmentation: TTCAugmentation) -> None:
+    def _handle_translation(self, augmentation: NonstandardCodeInstance) -> None:
         entry_code = self._get_augmented_tag_by_xpath(augmentation.location + "/code")
 
         new_translation = etree.SubElement(entry_code, "translation")

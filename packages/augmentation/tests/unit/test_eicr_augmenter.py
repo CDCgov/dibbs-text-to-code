@@ -11,7 +11,7 @@ from augmentation.services.eicr_augmenter import EICRAugmenter
 from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 from shared_models import DataField
-from shared_models import TTCAugmentation
+from shared_models import NonstandardCodeInstance
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
@@ -54,7 +54,7 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(
             BASIC_ECR,
             [
-                TTCAugmentation(
+                NonstandardCodeInstance(
                     location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     data_type=DataField.LAB_TEST_NAME_RESULTED,
                     code="10101010",
@@ -79,7 +79,7 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(
             BASIC_ECR_RELATED_DOC,
             [
-                TTCAugmentation(
+                NonstandardCodeInstance(
                     location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     data_type=DataField.LAB_TEST_NAME_RESULTED,
                     code="10101010",
