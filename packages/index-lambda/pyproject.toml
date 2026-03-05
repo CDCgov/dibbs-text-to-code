@@ -2,7 +2,7 @@
 name = "index-lambda"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["boto3", "opensearch-py", "requests_aws4auth"]
+dependencies = ["boto3", "opensearch-py", "requests_aws4auth", "aws_lambda_typing>=2.20.0", "botocore"]
 
 [dependency-groups]
 dev = []

@@ -1,59 +1,4 @@
-import os
-
-import boto3
-from opensearchpy import OpenSearch
-from opensearchpy import RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
-
-
-def _require_env(name: str) -> str:
-    """Fetch a required environment variable or raise a clear error.
-
-    :param name: The name of the environment variable to fetch.
-    """
-    value = os.getenv(name)
-    if not value:
-        raise ValueError(f"{name} not set")
-    return value
-
-
-def _strip_protocol(url: str) -> str:
-    """Remove http/https from a URL.
-
-    :param url: The URL to strip the protocol from.
-    """
-    return url.removeprefix("https://").removeprefix("http://")
-
-
-def configure_opensearch_client() -> OpenSearch:
-    """Configure the OpenSearch client using environment variables for authentication and connection details."""
-    # Configuration set up
-    region = _require_env("REGION")
-    service = "es"
-    host = _strip_protocol(_require_env("OPENSEARCH_ENDPOINT"))
-
-    # Index name
-    index_name = _require_env("INDEX_NAME")
-
-    # Authentication
-    credentials = boto3.Session().get_credentials()
-    awsauth = AWS4Auth(
-        credentials.access_key,
-        credentials.secret_key,
-        region,
-        service,
-        session_token=credentials.token,
-    )
-
-    # OpenSearch client
-    os_client = OpenSearch(
-        hosts=[{"host": host, "port": 443}],
-        http_auth=awsauth,
-        use_ssl=True,
-        verify_certs=True,
-        connection_class=RequestsHttpConnection,
-    )
-    return os_client, index_name
+from s3_handler import create_opensearch_client
 
 
 def handler(event: dict, context: dict) -> dict:
@@ -79,22 +24,21 @@ def handler(event: dict, context: dict) -> dict:
                         "parameters": {"ef_construction": 128, "m": 16},
                     },
                 },
-                "loinc_type": {"type": "text"},
-                "loinc_code": {"type": "text"},
-                "loinc_name_type": {"type": "text"},
+                "loinc_type": {"type": "keyword"},
+                "loinc_code": {"type": "keyword"},
+                "loinc_name_type": {"type": "keyword"},
                 "property": {"type": "keyword"},
                 "time_aspect": {"type": "keyword"},
                 "system": {"type": "keyword"},
                 "scale_type": {"type": "keyword"},
                 "method_type": {"type": "keyword"},
                 "class_type": {"type": "keyword"},
-                "type": {"type": "text"},
             },
         },
     }
 
     # Configure OpenSearch client
-    os_client, index_name = configure_opensearch_client()
+    os_client, index_name = create_opensearch_client()
 
     # Create index if it doesn't already exist
     if not os_client.indices.exists(index=index_name):
