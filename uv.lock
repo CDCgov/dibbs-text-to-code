@@ -13,6 +13,7 @@ members = [
     "augmentation-lambda",
     "data-curation",
     "dibbs-text-to-code-root",
+    "index-lambda",
     "shared-models",
     "text-to-code",
     "text-to-code-lambda",
@@ -668,6 +669,30 @@ sdist = { url = "https://files.pythonhosted.org/packages/6f/6d/0703ccc57f3a72335
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0e/61/66938bbb5fc52dbdf84594873d5b51fb1f7c7794e9c0f5bd885f30bc507b/idna-3.11-py3-none-any.whl", hash = "sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea", size = 71008, upload-time = "2025-10-12T14:55:18.883Z" },
 ]
+
+[[package]]
+name = "index-lambda"
+version = "0.1.0"
+source = { editable = "packages/index-lambda" }
+dependencies = [
+    { name = "aws-lambda-typing" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "opensearch-py" },
+    { name = "requests-aws4auth" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "opensearch-py" },
+    { name = "requests-aws4auth" },
+]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "iniconfig"
