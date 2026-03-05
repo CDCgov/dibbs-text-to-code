@@ -9,6 +9,17 @@ class MockIndices:
         self._exists_calls = 0
         self.description_vector_type = description_vector_type
 
+    def exists(self, index: str) -> bool:
+        """Mock exists method that returns False on the first call and True on subsequent calls to simulate index creation."""
+        self._exists_calls += 1
+        return self._exists_calls != 1
+
+    def create(self, index: str, body: dict) -> None:
+        """Mock create method that does nothing."""
+
+    def delete(self, index: str) -> None:
+        """Mock delete method that does nothing."""
+
     def get_settings(self, index: str) -> dict:
         """Mock get_settings method that returns a fixed settings dictionary."""
         return {INDEX_NAME: {"settings": {"index": {"knn": "true"}}}}
