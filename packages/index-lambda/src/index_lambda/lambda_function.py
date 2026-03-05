@@ -1,4 +1,8 @@
-from . import s3_handler
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../text-to-code-lambda/src"))
+from text_to_code_lambda import s3_handler
 
 
 def handler(event: dict, context: dict) -> dict:
