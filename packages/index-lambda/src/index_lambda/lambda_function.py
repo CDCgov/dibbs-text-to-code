@@ -1,4 +1,4 @@
-from s3_handler import create_opensearch_client
+from . import s3_handler
 
 
 def handler(event: dict, context: dict) -> dict:
@@ -38,7 +38,7 @@ def handler(event: dict, context: dict) -> dict:
     }
 
     # Configure OpenSearch client
-    os_client, index_name = create_opensearch_client()
+    os_client, index_name = s3_handler.create_opensearch_client()
 
     # Create index if it doesn't already exist
     if not os_client.indices.exists(index=index_name):
