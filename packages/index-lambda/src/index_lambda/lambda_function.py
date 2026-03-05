@@ -38,7 +38,9 @@ def handler(event: dict, context: dict) -> dict:
     }
 
     # Configure OpenSearch client
-    os_client, index_name = s3_handler.create_opensearch_client()
+    aws_auth = s3_handler.create_aws_auth()
+    os_client = s3_handler.create_opensearch_client(aws_auth)
+    index_name = s3_handler.require_env("INDEX_NAME")
 
     # Create index if it doesn't already exist
     if not os_client.indices.exists(index=index_name):
