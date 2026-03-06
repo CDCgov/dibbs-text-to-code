@@ -60,6 +60,7 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": size,
+            "_source": {"excludes": ["descriptionVector"]},
             "query": {
                 "bool": {
                     "filter": [
@@ -96,6 +97,7 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": 10,
+            "_source": {"excludes": ["descriptionVector"]},
             "query": {
                 "bool": {
                     "filter": [
@@ -129,6 +131,7 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": 10,
+            "_source": {"excludes": ["descriptionVector"]},
             "query": {
                 "bool": {
                     "filter": [

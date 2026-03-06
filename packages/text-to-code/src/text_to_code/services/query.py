@@ -74,6 +74,7 @@ class QueryBuilder:
         self._size = params.size
         self.with_terms_filter(params)
         self.with_knn(params)
+        self._vector_field = params.vector_field
         return self
 
     def build(self) -> dict:
@@ -83,6 +84,9 @@ class QueryBuilder:
         """
         return {
             "size": self._size,
+            "_source": {
+                "excludes": [self._vector_field]
+            },  # Exclude the vector field from the results to reduce payload size & improve performance
             "query": {
                 "bool": {
                     "filter": self._filters,
