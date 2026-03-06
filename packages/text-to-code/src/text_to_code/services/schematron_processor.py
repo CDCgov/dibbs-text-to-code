@@ -27,7 +27,7 @@ def get_data_fields_from_schematron_error(
     :param schematron_output: The data from the Schematron validation
         run against the eICR document, containing errors that may
         be relevant for TTC processing.
-    :returns: Dictionary of Data Field name and list of XPaths of where
+    :returns: Dictionary of Data Field names and list of XPaths of where
         to find data within the eICR for TTC processing.
     """
     if not schematron_output.strip():
