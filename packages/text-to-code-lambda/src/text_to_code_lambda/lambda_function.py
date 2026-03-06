@@ -6,9 +6,12 @@ from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
+from text_to_code.services import embedder
 from text_to_code.services import evaluator
 from text_to_code.services import schematron_processor
+from text_to_code.services.query import QueryBuilder
 
 from . import s3_handler
 
@@ -24,6 +27,12 @@ TTC_METADATA_PREFIX = os.getenv("TTC_METADATA_PREFIX", "TTCMetadata/")
 AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
+OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
+
+# Initialize Auth and clients outside of the handler for connection reuse
+auth = s3_handler.create_aws_auth()
+opensearch_client = s3_handler.create_opensearch_client(auth)
+s3_client = s3_handler.create_s3_client()
 
 
 @event_source(data_class=SQSEvent)
@@ -114,7 +123,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     logger.info("Loading Schematron errors", s3_key=f"{schematron_bucket_name}/{persistence_id}")
     schematron_errors = s3_handler.get_file_content_from_s3(
         bucket_name=schematron_bucket_name,
-        object_key=f"{persistence_id}/test_schematron.xml",
+        object_key=f"{persistence_id}",
     )
 
     # Process Schematron errors to identify relevant data fields for TTC processing
@@ -143,68 +152,79 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     # Process the eICR for TTC
     logger.info(f"Starting eICR processing for persistence_id {persistence_id}")
 
+    # Note: this looping logic will need to be updated once the outputs for
+    # the schematron_processor, eicr_processor, and evaluator are updated.
     for data_field, error_xpaths in schematron_data_fields.items():
         # Get evaluation criteria for the current data field
         criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
         ttc_output[data_field] = []
-        for error_xpath in error_xpaths:
+
+        # Retrieve candidate text strings for each error in the eICR based on the Schematron error_context and the original eICR content
+        for error_context in error_xpaths:
             text_candidates = eicr_processor.EicrProcessor(
                 original_eicr_content
-            ).get_text_candidates(error_xpath, data_field)
+            ).get_text_candidates(error_context, data_field)
             ttc_output[data_field].append(
-                {"error_xpath": error_xpath, "text_candidates": text_candidates}
+                {"error_context": error_context, "text_candidates": text_candidates}
             )
+
             # Evaluate candidates and select relevant text for each error in the eICR
             logger.info(
                 f"Evaluating candidates and selecting relevant text for each error in the eICR for persistence_id {persistence_id}"
             )
+
             # For each error, evaluate candidates and select the most relevant text string to submit to OpenSearch
             selected_text = evaluator.select_relevant_text(
                 candidates=text_candidates, criteria=criteria
             )
             ttc_output[data_field][-1]["selected_text"] = selected_text
 
-    # for data_field, data in ttc_output.items():
-    #     print(f"{data_field}:")
-    #     if len(data) > 1:
-    #         for item in data:
-    #             print(item)
-    #     else:
-    #         print(data)
-    #     print()
-    #     print("------")
+            # Embed the relevant text strings for each error in the eICR
+            logger.info(
+                f"Embedding the relevant text strings for each error in the eICR for persistence_id {persistence_id}"
+            )
+            # If no relevant text string was selected for the error, we can skip the embedding and querying steps for that error
+            selected_text = "test test test"
+            if selected_text is None:
+                continue
 
-    # TODO: If there are no relevant text strings to submit to OpenSearch for any errors, log this and skip the OpenSearch submission step.
+            vector_embedding = embedder.Embedder().embed(selected_text)
 
-    # # Embed the relevant text strings for each error in the eICR
-    # logger.info(
-    #     f"Embedding the relevant text strings for each error in the eICR for persistence_id {persistence_id}"
-    # )
-    # # TODO: Implement the logic to embed the relevant text strings for each error
+            # Generate the OpenSearch query based on the relevant text string embedding and any other relevant information
+            vector_parameters = query_models.VectorSearchParams(
+                vector=vector_embedding, data_field=data_field
+            )
 
-    # # Query OpenSearch with the relevant text strings and retrieve the code suggestions
-    # logger.info(
-    #     f"Querying OpenSearch with the relevant text strings and retrieving code suggestions for persistence_id {persistence_id}"
-    # )
-    # # TODO: Implement the query logic here
+            logger.info(
+                f"Querying OpenSearch with the relevant text strings and retrieving code suggestions for persistence_id {persistence_id}"
+            )
+            query = QueryBuilder().with_vector_search(vector_parameters).build()
+            print(query)
 
-    # # Create output to pass to Augmentation Lambda
-    # logger.info(
-    #     f"Creating output to pass to Augmentation Lambda for persistence_id {persistence_id}"
-    # )
-    # # TODO: Add function to generate augmentation output
-    # # augmentation_output_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
-    # # s3_handler.put_file(file_obj = augmentation_data, bucket_name: eventbridge_data['bucket_name'], object_key = augmentation_output_key)
-    # logger.info(f"Saved TTC output to s3://{bucket}/{TTC_OUTPUT_PREFIX}{persistence_id}")
+            # # Query OpenSearch with the relevant text strings and retrieve the code suggestions
+            # opensearch_retrieved_scores = opensearch_client.search(
+            #     index=OPENSEARCH_INDEX.value,
+            #     body=query,
+            # )
 
-    # # Create the metadata object to save in S3 fo
-    # r analysis of TTC results
-    # logger.info(
-    #     f"Creating the metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}"
-    # )
-    # # TODO: Add function to generate metadata content (similar to augmentation output)
-    # # metadata_output_key = f"{TTC_METADATA_PREFIX}{persistence_id}"
-    # # s3_handler.put_file(file_obj = metadata_content, bucket_name: eventbridge_data['bucket_name'], object_key = metadata_output_key)
-    # logger.info(f"Saved TTC metadata to s3://{bucket}/{TTC_METADATA_PREFIX}{persistence_id}")
+            # TODO: Add Reranker code here once added to the Evaluator service
+
+            # TODO: Save reranker scores
+
+            # # Create the analytics metadata object to save in S3 for analysis of TTC results
+            # logger.info(
+            #     f"Creating the analytics metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}"
+            # )
+            # ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
+            # s3_handler.put_file(file_obj = metadata_content, bucket_name: ttc_metadata_output_bucket_name, object_key = persistence_id)
+
+            # # Create output to pass to Augmentation Lambda
+            # logger.info(
+            #     f"Creating output to pass to Augmentation Lambda for persistence_id {persistence_id}"
+            # )
+            # # TODO: Add function to generate augmentation output
+            # # augmentation_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
+            # # s3_handler.put_file(file_obj = augmentation_data, bucket_name = augmentation_output_bucket_name, object_key = persistence_id)
+            # logger.info(f"Saved TTC output to s3://{TTC_OUTPUT_PREFIX}{persistence_id}")
 
     return {"statusCode": 200, "message": "TTC processed successfully!"}
