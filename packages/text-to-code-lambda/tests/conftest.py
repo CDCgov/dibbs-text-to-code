@@ -145,7 +145,7 @@ def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
             schematron_output = f.read()
         s3.put_object(
             Bucket=s3.schematron_bucket_name,
-            Key=f"{test_persistance_id}/test_schematron.xml",
+            Key=f"{test_persistance_id}",
             Body=schematron_output,
         )
 
