@@ -1,13 +1,12 @@
 import json
 import os
 
+import s3_handler
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
-
-from . import s3_handler
 
 # Initialize the logger
 logger = Logger(service="ttc")

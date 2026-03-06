@@ -2,7 +2,14 @@
 name = "index-lambda"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["boto3", "opensearch-py", "requests_aws4auth", "aws_lambda_typing>=2.20.0", "botocore"]
+dependencies = [
+    "boto3",
+    "opensearch-py",
+    "requests-aws4auth",
+    "aws-lambda-typing>=2.20.0",
+    "botocore",
+    "s3-handler",
+]
 
 [dependency-groups]
 dev = []
@@ -13,3 +20,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/index_lambda"]
+
+[tool.uv.sources]
+s3-handler = { workspace = true }

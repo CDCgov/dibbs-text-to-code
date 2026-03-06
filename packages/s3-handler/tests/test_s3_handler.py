@@ -1,7 +1,7 @@
 import io
 
 import pytest
-from text_to_code_lambda import s3_handler
+import s3_handler
 
 
 class TestCreateS3Client:
