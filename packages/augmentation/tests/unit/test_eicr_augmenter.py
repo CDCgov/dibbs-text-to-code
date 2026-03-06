@@ -4,12 +4,15 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import pytest
+from augmentation.models import Metadata
+from augmentation.models import NonstandardCodeInstanceMetadata
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
+from shared_models import Code
 from shared_models import DataField
 from shared_models import NonstandardCodeInstance
 
@@ -55,19 +58,39 @@ class TestEicrAugmenter:
             BASIC_ECR,
             [
                 NonstandardCodeInstance(
-                    location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
-                    data_type=DataField.LAB_TEST_NAME_RESULTED,
-                    code="10101010",
-                    display_name="Chad new LOINC code",
-                    original_text="Loser old LOINC",
+                    schematron_error="text-to-code-test",
+                    schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    field_type=DataField.LAB_TEST_NAME_RESULTED,
+                    new_translation=Code(
+                        code="10101010",
+                        display_name="Chad new LOINC code",
+                        original_text="Loser old LOINC",
+                    ),
                 )
             ],
         )
-        augmenter.augment()
+        metadata = augmenter.augment()
 
         result = augmenter.augmented_xml
 
         snapshot.assert_match(result, "basic_eicr_augmented.xml")
+        assert metadata == Metadata(
+            original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
+            augmented_eicr_id="12345678-1234-5678-1234-567812345678",
+            nonstandard_codes=[
+                NonstandardCodeInstanceMetadata(
+                    schematron_error="text-to-code-test",
+                    schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    field_type=DataField.LAB_TEST_NAME_RESULTED,
+                    new_translation=Code(
+                        code="10101010",
+                        display_name="Chad new LOINC code",
+                        original_text="Loser old LOINC",
+                    ),
+                    new_translation_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation",
+                )
+            ],
+        )
 
     def test_eicr_related_doc(self, mocker: MockerFixture, snapshot: Snapshot):
         """Tests augmentor run method."""
@@ -76,22 +99,43 @@ class TestEicrAugmenter:
 
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
-        augmenter = EICRAugmenter(
-            BASIC_ECR_RELATED_DOC,
-            [
-                NonstandardCodeInstance(
-                    location="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
-                    data_type=DataField.LAB_TEST_NAME_RESULTED,
+        nonstandard_codes = [
+            NonstandardCodeInstance(
+                schematron_error="text-to-code-test",
+                schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                field_type=DataField.LAB_TEST_NAME_RESULTED,
+                new_translation=Code(
                     code="10101010",
                     display_name="Chad new LOINC code",
                     original_text="Loser old LOINC",
-                )
-            ],
+                ),
+            )
+        ]
+        augmenter = EICRAugmenter(
+            BASIC_ECR_RELATED_DOC,
+            nonstandard_codes,
         )
-        augmenter.augment()
+        metadata = augmenter.augment()
 
         result = augmenter.augmented_xml
         snapshot.assert_match(result, "basic_eicr_related_doc_augmented.xml")
+        assert metadata == Metadata(
+            original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
+            augmented_eicr_id="12345678-1234-5678-1234-567812345678",
+            nonstandard_codes=[
+                NonstandardCodeInstanceMetadata(
+                    schematron_error="text-to-code-test",
+                    schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    field_type=DataField.LAB_TEST_NAME_RESULTED,
+                    new_translation=Code(
+                        code="10101010",
+                        display_name="Chad new LOINC code",
+                        original_text="Loser old LOINC",
+                    ),
+                    new_translation_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation",
+                )
+            ],
+        )
 
     def test_empty_eicr(self, mocker: MockerFixture):
         """Tests augmentor run method."""
@@ -100,6 +144,8 @@ class TestEicrAugmenter:
 
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
-        augmenter = EICRAugmenter(EMPTY_ECR, [])
-        with pytest.raises(ValueError, match=r"Unable to find tag in eICR document for XPath"):
-            augmenter.augment()
+        with pytest.raises(
+            ValueError,
+            match=r"Unable to find tag in eICR document for XPath: /ClinicalDocument/id/@root",
+        ):
+            EICRAugmenter(EMPTY_ECR, [])

@@ -29,9 +29,9 @@ def augment(input: TTCAugmenterInput) -> None:
     """Main entry point for the augmentation service."""
     eicr: str = _retrieve_eicr(input.eicr_id)
     config = _retrieve_config()
-    augmenter = EICRAugmenter(eicr, input.augmentations, config)
+    augmenter = EICRAugmenter(eicr, input.nonstandard_codes, config)
 
-    metadata = Metadata(original_eicr_id=input.eicr_id, augmented_eicr_id=augmenter.new_doc_id)
+    metadata = augmenter.augment()
 
     _save_eicr(augmenter.augmented_xml)
     _save_metadata(metadata)
