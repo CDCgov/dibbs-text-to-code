@@ -1,13 +1,12 @@
 import json
 import os
 
+import lambda_handler
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
-
-from . import s3_handler
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -68,13 +67,13 @@ def process_record(record: SQSRecord) -> None:
     s3_event = json.loads(record.body)
 
     # Parse the EventBridge S3 event from the SQS message body
-    eventbridge_data = s3_handler.get_eventbridge_data_from_s3_event(s3_event)
+    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     bucket = eventbridge_data["bucket_name"]
     object_key = eventbridge_data["object_key"]
     logger.info(f"Processing S3 Object: s3://{bucket}/{object_key}")
 
     # Extract persistence_id from the RR object key
-    persistence_id = s3_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
     logger.info(f"Extracted persistence_id: {persistence_id}")
 
     with logger.append_context_keys(
@@ -110,7 +109,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
 
     schematron_object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
     logger.info("Loading Schematron errors", s3_key=schematron_object_key)
-    # schematron_errors = s3_handler.get_file_content_from_s3(bucket_name=bucket,
+    # schematron_errors = lambda_handler.get_file_content_from_s3(bucket_name=bucket,
     #                                                         object_key=schematron_object_key,)
     # logger.info(f"Retrieved Schematron errors for persistence_id {persistence_id}: {schematron_errors}")
 
@@ -127,7 +126,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     # S3 GET eICR
     original_eicr_object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
     logger.info("Loading eICR", s3_key=original_eicr_object_key)
-    # original_eicr_content = s3_handler.get_file_content_from_s3(bucket_name=bucket, object_key=original_eicr_object_key)
+    # original_eicr_content = lambda_handler.get_file_content_from_s3(bucket_name=bucket, object_key=original_eicr_object_key)
     logger.info(f"Retrieved eICR content {original_eicr_object_key}")
 
     # Process the eICR for TTC
@@ -160,7 +159,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     )
     # TODO: Add function to generate augmentation output
     # augmentation_output_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
-    # s3_handler.put_file(file_obj = augmentation_data, bucket_name: eventbridge_data['bucket_name'], object_key = augmentation_output_key)
+    # lambda_handler.put_file(file_obj = augmentation_data, bucket_name: eventbridge_data['bucket_name'], object_key = augmentation_output_key)
     logger.info(f"Saved TTC output to s3://{bucket}/{TTC_OUTPUT_PREFIX}{persistence_id}")
 
     # Create the metadata object to save in S3 for analysis of TTC results
@@ -169,7 +168,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     )
     # TODO: Add function to generate metadata content (similar to augmentation output)
     # metadata_output_key = f"{TTC_METADATA_PREFIX}{persistence_id}"
-    # s3_handler.put_file(file_obj = metadata_content, bucket_name: eventbridge_data['bucket_name'], object_key = metadata_output_key)
+    # lambda_handler.put_file(file_obj = metadata_content, bucket_name: eventbridge_data['bucket_name'], object_key = metadata_output_key)
     logger.info(f"Saved TTC metadata to s3://{bucket}/{TTC_METADATA_PREFIX}{persistence_id}")
 
     return {"statusCode": 200, "message": "TTC processed successfully!"}

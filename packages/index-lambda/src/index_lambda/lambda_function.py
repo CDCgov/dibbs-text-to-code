@@ -1,8 +1,4 @@
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../../text-to-code-lambda/src"))
-from text_to_code_lambda import s3_handler
+import lambda_handler
 
 
 def handler(event: dict, context: dict) -> dict:
@@ -42,9 +38,9 @@ def handler(event: dict, context: dict) -> dict:
     }
 
     # Configure OpenSearch client
-    aws_auth = s3_handler.create_aws_auth()
-    os_client = s3_handler.create_opensearch_client(aws_auth)
-    index_name = s3_handler.require_env("INDEX_NAME")
+    aws_auth = lambda_handler.create_aws_auth()
+    os_client = lambda_handler.create_opensearch_client(aws_auth)
+    index_name = lambda_handler.require_env("INDEX_NAME")
 
     # Create index if it doesn't already exist
     if not os_client.indices.exists(index=index_name):

@@ -14,6 +14,7 @@ members = [
     "data-curation",
     "dibbs-text-to-code-root",
     "index-lambda",
+    "lambda-handler",
     "shared-models",
     "text-to-code",
     "text-to-code-lambda",
@@ -680,6 +681,7 @@ dependencies = [
     { name = "botocore" },
     { name = "opensearch-py" },
     { name = "requests-aws4auth" },
+    { name = "lambda-handler" },
 ]
 
 [package.metadata]
@@ -689,6 +691,7 @@ requires-dist = [
     { name = "botocore" },
     { name = "opensearch-py" },
     { name = "requests-aws4auth" },
+    { name = "lambda-handler", editable = "packages/lambda-handler" },
 ]
 
 [package.metadata.requires-dev]
@@ -1493,6 +1496,25 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/a8/c688ef7e29983976820d18710f955751d9f4d4eb69df658af3d006e2ba3e/ruff-0.15.4-py3-none-win_amd64.whl", hash = "sha256:04196ad44f0df220c2ece5b0e959c2f37c777375ec744397d21d15b50a75264f", size = 11651048, upload-time = "2026-02-26T20:04:17.191Z" },
     { url = "https://files.pythonhosted.org/packages/3e/0a/9e1be9035b37448ce2e68c978f0591da94389ade5a5abafa4cf99985d1b2/ruff-0.15.4-py3-none-win_arm64.whl", hash = "sha256:60d5177e8cfc70e51b9c5fad936c634872a74209f934c1e79107d11787ad5453", size = 10966776, upload-time = "2026-02-26T20:03:56.908Z" },
 ]
+
+[[package]]
+name = "lambda-handler"
+version = "0.1.0"
+source = { editable = "packages/lambda-handler" }
+dependencies = [
+    { name = "boto3" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "moto" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "boto3", specifier = ">=1.40.60" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "moto" }]
 
 [[package]]
 name = "s3transfer"
