@@ -7,16 +7,41 @@ import boto3
 import moto
 import pytest
 
+EICR_INPUT_PREFIX = "eCRMessageV2"
+SCHEMATRON_ERROR_PREFIX = "schematronErrors"
+TTC_INPUT_PREFIX = "TextToCodeSubmission"
+TTC_OUTPUT_PREFIX = "TTCOutput"
+TTC_METADATA_PREFIX = "TTCMetadata"
+AWS_REGION = "us-east-1"
+AWS_ACCESS_KEY_ID = "test_access_key_id"
+AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
+OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
+TEST_BUCKET_NAME = "test-bucket"
+TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+
+
+def pytest_configure() -> None:
+    """Configure env variables for pytest."""
+    os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
+    os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
+    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
+    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
+    os.environ["TTC_METADATA_PREFIX"] = TTC_METADATA_PREFIX
+    os.environ["AWS_REGION"] = AWS_REGION
+    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
+    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
+    os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
+
 
 @pytest.fixture(scope="function")
 def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS."""
     with moto.mock_aws():
-        monkeypatch.setenv("AWS_REGION", "us-east-1")
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
-        bucket_name = "test-bucket"
-        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", "https://test-opensearch-endpoint.com")
+        monkeypatch.setenv("AWS_REGION", AWS_REGION)
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+        bucket_name = TEST_BUCKET_NAME
+        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
 
         # Create the fake S3 bucket
         s3 = boto3.client(
@@ -52,7 +77,7 @@ def example_s3_event_payload() -> dict:
             "version": "0",
             "bucket": {"name": "eCRMessageV2"},
             "object": {
-                "key": "TextToCodeSubmission/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+                "key": f"{TTC_INPUT_PREFIX}/{TEST_PERSISTENCE_ID}",
                 "size": 1024,
                 "etag": "0123456789abcdef0123456789abcdef",
                 "sequencer": "0055AED6DCD90281E5",
@@ -100,22 +125,20 @@ def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
     return caplog
 
 
+# @pytest.fixture
+# def s3_client() -> boto3.client:
+#     """Create a boto3 S3 client for testing with moto.
+
+#     :yield: boto3 S3 client
+#     """
+#     with moto.mock_aws():
+#         yield boto3.client("s3", region_name="us-east-1")
+
+
 @pytest.fixture(scope="function")
 def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS."""
-    test_persistance_id = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
-
     with moto.mock_aws():
-        monkeypatch.setenv("EICR_INPUT_PREFIX", "eCRMessageV2")
-        monkeypatch.setenv("SCHEMATRON_ERROR_PREFIX", "schematronErrors")
-        monkeypatch.setenv("TTC_INPUT_PREFIX", "TextToCodeSubmission")
-        monkeypatch.setenv("TTC_OUTPUT_PREFIX", "TTCOutput")
-        monkeypatch.setenv("TTC_METADATA_PREFIX", "TTCMetadata")
-        monkeypatch.setenv("AWS_REGION", "us-east-1")
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
-        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", "https://test-opensearch-endpoint.com")
-
         # Create the fake S3 bucket
         s3 = boto3.client(
             "s3",
@@ -145,7 +168,7 @@ def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
             schematron_output = f.read()
         s3.put_object(
             Bucket=s3.schematron_bucket_name,
-            Key=f"{test_persistance_id}",
+            Key=TEST_PERSISTENCE_ID,
             Body=schematron_output,
         )
 
@@ -155,7 +178,7 @@ def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
             ecr_message = f.read()
         s3.put_object(
             Bucket=s3.ecr_bucket_name,
-            Key=f"{test_persistance_id}",
+            Key=TEST_PERSISTENCE_ID,
             Body=ecr_message,
         )
 
