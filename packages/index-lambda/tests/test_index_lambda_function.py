@@ -43,7 +43,7 @@ class MockOpenSearchClient:
         self.indices = MockIndices(description_vector_type)
 
 
-def patch_s3_handler(monkeypatch, description_vector_type: str) -> None:
+def patch_lambda_handler(monkeypatch, description_vector_type: str) -> None:
     def mock_create_aws_auth() -> object:
         """Mock create_aws_auth function that returns a dummy AWS auth object."""
         return object()
@@ -58,19 +58,19 @@ def patch_s3_handler(monkeypatch, description_vector_type: str) -> None:
             return INDEX_NAME
         raise ValueError(f"Unexpected env var requested: {name}")
 
-    monkeypatch.setattr(lambda_function.s3_handler, "create_aws_auth", mock_create_aws_auth)
+    monkeypatch.setattr(lambda_function.lambda_handler, "create_aws_auth", mock_create_aws_auth)
     monkeypatch.setattr(
-        lambda_function.s3_handler,
+        lambda_function.lambda_handler,
         "create_opensearch_client",
         mock_create_opensearch_client,
     )
-    monkeypatch.setattr(lambda_function.s3_handler, "require_env", mock_require_env)
+    monkeypatch.setattr(lambda_function.lambda_handler, "require_env", mock_require_env)
 
 
 class TestHandler:
     def test_handler_success(self, monkeypatch):
         """Test handler creates the index when it does not exist and returns expected response."""
-        patch_s3_handler(monkeypatch, "knn_vector")
+        patch_lambda_handler(monkeypatch, "knn_vector")
 
         resp = lambda_function.handler({}, {})
 
@@ -88,7 +88,7 @@ class TestHandler:
 
     def test_handler_recreates_index_when_vector_mapping_incorrect(self, monkeypatch):
         """Test handler recreates the index when description_vector mapping is not knn_vector."""
-        patch_s3_handler(monkeypatch, "keyword")
+        patch_lambda_handler(monkeypatch, "keyword")
 
         resp = lambda_function.handler({}, {})
 
