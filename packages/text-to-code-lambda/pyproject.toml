@@ -20,4 +20,4 @@ build-backend = "hatchling.build"
 packages = ["src/text_to_code_lambda"]
 
 [tool.uv.sources]
-s3-handler = { workspace = true }
+lambda-handler = { workspace = true }

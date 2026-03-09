@@ -8,7 +8,7 @@ dependencies = [
     "requests-aws4auth",
     "aws-lambda-typing>=2.20.0",
     "botocore",
-    "s3-handler",
+    "lambda-handler",
 ]
 
 [dependency-groups]
@@ -22,4 +22,4 @@ build-backend = "hatchling.build"
 packages = ["src/index_lambda"]
 
 [tool.uv.sources]
-s3-handler = { workspace = true }
+lambda-handler = { workspace = true }

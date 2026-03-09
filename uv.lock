@@ -14,7 +14,7 @@ members = [
     "data-curation",
     "dibbs-text-to-code-root",
     "index-lambda",
-    "s3-handler",
+    "lambda-handler",
     "shared-models",
     "text-to-code",
     "text-to-code-lambda",
@@ -681,7 +681,7 @@ dependencies = [
     { name = "botocore" },
     { name = "opensearch-py" },
     { name = "requests-aws4auth" },
-    { name = "s3-handler" },
+    { name = "lambda-handler" },
 ]
 
 [package.metadata]
@@ -691,7 +691,7 @@ requires-dist = [
     { name = "botocore" },
     { name = "opensearch-py" },
     { name = "requests-aws4auth" },
-    { name = "s3-handler", editable = "packages/s3-handler" },
+    { name = "lambda-handler", editable = "packages/lambda-handler" },
 ]
 
 [package.metadata.requires-dev]
@@ -1498,9 +1498,9 @@ wheels = [
 ]
 
 [[package]]
-name = "s3-handler"
+name = "lambda-handler"
 version = "0.1.0"
-source = { editable = "packages/s3-handler" }
+source = { editable = "packages/lambda-handler" }
 dependencies = [
     { name = "boto3" },
 ]

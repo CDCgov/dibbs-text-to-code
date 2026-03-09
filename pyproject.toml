@@ -43,7 +43,7 @@ include = [
     "packages/text-to-code/src",
     "packages/text-to-code-lambda/src",
     "packages/index-lambda/src",
-    "packages/s3-handler/src",    
+    "packages/lambda-handler/src",    
 ]
 
 [tool.ruff]
@@ -133,5 +133,5 @@ members = [
     "packages/utils",
     "packages/shared-models",
     "packages/index-lambda",
-    "packages/s3-handler",
+    "packages/lambda-handler",
 ]
