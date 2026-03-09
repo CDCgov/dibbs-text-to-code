@@ -19,3 +19,10 @@ class Candidate(BaseModel):
     value: str
     xpath: LabXPaths
     system: str | None = None
+
+
+class EicrMetadata(BaseModel):
+    """Model representing metadata extracted from an eICR."""
+
+    eicr_id: str | None = None
+    eicr_vendor: str | None = None

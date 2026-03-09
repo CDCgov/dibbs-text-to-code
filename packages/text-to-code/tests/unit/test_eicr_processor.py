@@ -5,6 +5,7 @@ from lxml.etree import XMLSyntaxError
 from shared_models import DataField
 from text_to_code.models import Candidate
 from text_to_code.models import LabXPaths
+from text_to_code.models.eicr import EicrMetadata
 from text_to_code.services.eicr_processor import EicrProcessor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
@@ -89,4 +90,18 @@ class TestReferences:
         expected = "A more complicated reference With extra nodes"
         assert results[2] == Candidate(
             value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
+        )
+
+
+class TestEicrMetadata:
+    def test_get_eicr_metadata(self):
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        result = EicrProcessor(eicr_output).get_eicr_metadata()
+
+        assert result == EicrMetadata(
+            eicr_id="10c13861-86a8-4a9a-aec6-b615921178df",
+            eicr_vendor="TBD Device",
         )

@@ -3,6 +3,7 @@ from lxml.etree import Element
 from shared_models import DataField
 
 from text_to_code.models import Candidate
+from text_to_code.models.eicr import EicrMetadata
 from text_to_code.services.utils import get_config_for_data_field
 
 
@@ -63,6 +64,38 @@ class EicrProcessor:
             return candidates
         return candidates
 
+    def get_eicr_metadata(self) -> EicrMetadata:
+        """Get the eICR metadata."""
+        eicr_id: str | None = None
+        eicr_vendor: str | None = None
+
+        try:
+            eicr_id_nodes = self._get_by_xpath("/ClinicalDocument/id/@root")
+            if eicr_id_nodes:
+                first_eicr_id = eicr_id_nodes[0]
+                if isinstance(first_eicr_id, str):
+                    stripped_eicr_id = first_eicr_id.strip()
+                    if stripped_eicr_id:
+                        eicr_id = stripped_eicr_id
+
+            eicr_vendor_nodes = self._get_by_xpath(
+                "/ClinicalDocument/author/assignedAuthor/assignedAuthoringDevice/manufacturerModelName/@displayName"
+            )
+            if eicr_vendor_nodes:
+                first_eicr_vendor = eicr_vendor_nodes[0]
+                if isinstance(first_eicr_vendor, str):
+                    stripped_eicr_vendor = first_eicr_vendor.strip()
+                    if stripped_eicr_vendor:
+                        eicr_vendor = stripped_eicr_vendor
+
+        except Exception as e:
+            print(f"Error extracting eicr metadata from eicr message: {e}")
+
+        return EicrMetadata(
+            eicr_id=eicr_id,
+            eicr_vendor=eicr_vendor,
+        )
+
     def resolve_reference(self, reference_value: str | None) -> str | None:
         """Get the text of the first node with an ID attribute that matches the reference."""
         reference_value = reference_value.strip() if reference_value else ""
@@ -108,7 +141,8 @@ def _create_xml_tree(xml: str) -> Element:
     tree = etree.fromstring(xml.encode("utf-8"))
     for elem in tree.iter():
         # Remove namespace from tag
-        elem.tag = etree.QName(elem).localname
+        if isinstance(elem.tag, str):
+            elem.tag = etree.QName(elem).localname
     # Remove namespace declarations
     etree.cleanup_namespaces(tree)
     return tree
