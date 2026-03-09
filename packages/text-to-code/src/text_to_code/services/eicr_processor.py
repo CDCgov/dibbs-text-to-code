@@ -1,8 +1,10 @@
 from lxml import etree
 from lxml.etree import Element
+from shared_models import II
 from shared_models import DataField
 
 from text_to_code.models import Candidate
+from text_to_code.models.eicr import Metadata
 from text_to_code.services.utils import get_config_for_data_field
 
 
@@ -101,6 +103,37 @@ class EicrProcessor:
                 text_parts.append(child.tail.strip())
 
         return " ".join(filter(None, text_parts))
+
+    @property
+    def eicr_metadata(self) -> Metadata:
+        """Get the eICR ID from the XML."""
+        id_element = self._xml_root.find(".//id")
+        if id_element is None or id_element.get("nullFlavor") is not None:
+            raise ValueError("No ID element found in eICR XML.")
+        instance_identifer = II(
+            root=id_element.get("root"),
+            extension=id_element.get("extension"),
+            assigning_authority_name=id_element.get("assigningAuthorityName"),
+            displayable=_to_bool(id_element.get("displayable")),
+            null_flavor=id_element.get("nullFlavor"),
+        )
+        vendor = self._xml_root.find(
+            ".//author/assignedAuthor/AuthoringDevice/manufacturerModelName"
+        )
+        return Metadata(
+            eicr_id=instance_identifer,
+            eicr_vendor=vendor.text if vendor is not None else None
+        )
+
+
+def _to_bool(value: str | None) -> bool | None:
+    if value is None:
+        return None
+    if value.lower() == "true":
+        return True
+    if value.lower() == "false":
+        return False
+    return None
 
 
 def _create_xml_tree(xml: str) -> Element:

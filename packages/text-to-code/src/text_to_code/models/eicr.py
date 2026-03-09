@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
+from shared_models import II
 
 
 class LabXPaths(StrEnum):
@@ -19,3 +20,10 @@ class Candidate(BaseModel):
     value: str
     xpath: LabXPaths
     system: str | None = None
+
+
+class Metadata(BaseModel):
+    """Model representing metadata about the eICR."""
+
+    eicr_id: II
+    eicr_vendor: str | None = None
