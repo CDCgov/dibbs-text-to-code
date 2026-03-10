@@ -1,6 +1,7 @@
 import json
 import os
 
+import boto3
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
@@ -29,15 +30,35 @@ S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 
-# Initialize Auth and clients outside of the handler for connection reuse
-auth = s3_handler.create_aws_auth()
-opensearch_client = s3_handler.create_opensearch_client(auth)
-s3_client = s3_handler.create_s3_client()
+# Cache clients and auth to reuse across Lambda invocations
+_cached_auth = None
+_cached_opensearch_client = None
+_cached_s3_client = None
 
 
 @event_source(data_class=SQSEvent)
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
-    """Text to Code lambda entry point."""
+    """Text to Code lambda entry point.
+
+    :param event: The SQS event containing the S3 event data for processing.
+    :param context: The Lambda context object.
+    :return: A dictionary containing the status code, message, and any relevant data about the processing results.
+    """
+    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
+
+    # Initialize cached clients if they don't exist
+    if _cached_auth is None:
+        _cached_auth = s3_handler.create_aws_auth()
+    auth = _cached_auth
+
+    if _cached_opensearch_client is None:
+        _cached_opensearch_client = s3_handler.create_opensearch_client(auth)
+    opensearch_client = _cached_opensearch_client
+
+    if _cached_s3_client is None:
+        _cached_s3_client = s3_handler.create_s3_client()
+    s3_client = _cached_s3_client
+
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
     failures = []
@@ -45,7 +66,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     for record in event.records:
         try:
-            process_record(record)
+            process_record(record, s3_client, opensearch_client)
             successes.append(record.message_id)
         except Exception as e:
             logger.exception(f"Error processing record: {e}", message_id=record.message_id)
@@ -68,7 +89,9 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     )
 
 
-def process_record(record: SQSRecord) -> None:
+def process_record(
+    record: SQSRecord, s3_client: boto3.client, opensearch_client: boto3.client
+) -> None:
     """Process each SQS record.
 
     :param record: The SQS record to process
@@ -92,10 +115,15 @@ def process_record(record: SQSRecord) -> None:
     with logger.append_context_keys(
         persistence_id=persistence_id,
     ):
-        _process_record_pipeline(bucket, persistence_id)
+        _process_record_pipeline(bucket, persistence_id, s3_client, opensearch_client)
 
 
-def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
+def _process_record_pipeline(
+    bucket: str,
+    persistence_id: str,
+    s3_client: boto3.client,
+    opensearch_client: boto3.client,
+) -> dict:
     """The main pipeline for processing each record.
 
     The pipeline includes:
@@ -120,7 +148,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     # S3 GET Schematron errors
     # TODO: Confirm with APHL that the Schematron errors will be stored in the same bucket and follow a consistent naming convention that allows us to derive the Schematron error object key from the persistence_id.
     schematron_bucket_name = SCHEMATRON_ERROR_PREFIX.split("/")[0]
-    logger.info("Loading Schematron errors", s3_key=f"{schematron_bucket_name}/{persistence_id}")
+    logger.info("Loading Schematron errors", s3_key=f"{schematron_bucket_name}{persistence_id}")
     schematron_errors = s3_handler.get_file_content_from_s3(
         bucket_name=schematron_bucket_name,
         object_key=f"{persistence_id}",
@@ -147,7 +175,7 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
     original_eicr_content = s3_handler.get_file_content_from_s3(
         bucket_name=bucket, object_key=persistence_id
     )
-    logger.info(f"Retrieved eICR content {persistence_id}")
+    logger.info(f"Retrieved eICR content for persistence_id {persistence_id}")
 
     # Process the eICR for TTC
     logger.info(f"Starting eICR processing for persistence_id {persistence_id}")
@@ -199,32 +227,32 @@ def _process_record_pipeline(bucket: str, persistence_id: str) -> dict:
                 f"Querying OpenSearch with the relevant text strings and retrieving code suggestions for persistence_id {persistence_id}"
             )
             query = QueryBuilder().with_vector_search(vector_parameters).build()
-            print(query)
 
-            # # Query OpenSearch with the relevant text strings and retrieve the code suggestions
-            # opensearch_retrieved_scores = opensearch_client.search(
-            #     index=OPENSEARCH_INDEX.value,
-            #     body=query,
-            # )
+            # Query OpenSearch with the relevant text strings and retrieve the code suggestions
+            opensearch_retrieved_scores = opensearch_client.search(
+                index=OPENSEARCH_INDEX,
+                body=query,
+            )
+            print(opensearch_retrieved_scores)
 
-            # TODO: Add Reranker code here once added to the Evaluator service
+    # TODO: Add Reranker code here once added to the Evaluator service
 
-            # TODO: Save reranker scores
+    # TODO: Save reranker scores
 
-            # # Create the analytics metadata object to save in S3 for analysis of TTC results
-            # logger.info(
-            #     f"Creating the analytics metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}"
-            # )
-            # ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
-            # s3_handler.put_file(file_obj = metadata_content, bucket_name: ttc_metadata_output_bucket_name, object_key = persistence_id)
+    # # Create the analytics metadata object to save in S3 for analysis of TTC results
+    # logger.info(
+    #     f"Creating the analytics metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}"
+    # )
+    # ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
+    # s3_handler.put_file(file_obj = metadata_content, bucket_name: ttc_metadata_output_bucket_name, object_key = persistence_id)
 
-            # # Create output to pass to Augmentation Lambda
-            # logger.info(
-            #     f"Creating output to pass to Augmentation Lambda for persistence_id {persistence_id}"
-            # )
-            # # TODO: Add function to generate augmentation output
-            # # augmentation_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
-            # # s3_handler.put_file(file_obj = augmentation_data, bucket_name = augmentation_output_bucket_name, object_key = persistence_id)
-            # logger.info(f"Saved TTC output to s3://{TTC_OUTPUT_PREFIX}{persistence_id}")
+    # # Create output to pass to Augmentation Lambda
+    # logger.info(
+    #     f"Creating output to pass to Augmentation Lambda for persistence_id {persistence_id}"
+    # )
+    # # TODO: Add function to generate augmentation output
+    # # augmentation_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
+    # # s3_handler.put_file(file_obj = augmentation_data, bucket_name = augmentation_output_bucket_name, object_key = persistence_id)
+    # logger.info(f"Saved TTC output to s3://{TTC_OUTPUT_PREFIX}{persistence_id}")
 
     return {"statusCode": 200, "message": "TTC processed successfully!"}
