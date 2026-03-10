@@ -42,6 +42,8 @@ include = [
     "packages/augmentation/src",
     "packages/text-to-code/src",
     "packages/text-to-code-lambda/src",
+    "packages/index-lambda/src",
+    "packages/lambda-handler/src",    
 ]
 
 [tool.ruff]
@@ -130,4 +132,6 @@ members = [
     "packages/text-to-code-lambda",
     "packages/utils",
     "packages/shared-models",
+    "packages/index-lambda",
+    "packages/lambda-handler",
 ]
