@@ -36,116 +36,6 @@ def pytest_configure() -> None:
     os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
 
 
-# @pytest.fixture(scope="function")
-# def aws_mock():
-#     """Mocks AWS services."""
-#     with moto.mock_aws():
-#         yield
-
-
-# @pytest.fixture(scope="function")
-# def s3_client(aws_mock) -> boto3.client:
-#     """Creates a mocked S3 client."""
-#     return boto3.client(
-#         "s3",
-#         region_name=os.environ["AWS_REGION"],
-#         aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-#         aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-#     )
-
-
-# @pytest.fixture(scope="function")
-# def s3_buckets(s3_client) -> dict:
-#     """Creates required buckets."""
-#     buckets = {
-#         "ecr": os.getenv("EICR_INPUT_PREFIX").split("/")[0],
-#         "schematron": os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0],
-#         "ttc_input": os.getenv("TTC_INPUT_PREFIX").split("/")[0],
-#         "ttc_output": os.getenv("TTC_OUTPUT_PREFIX").split("/")[0],
-#         "ttc_metadata": os.getenv("TTC_METADATA_PREFIX").split("/")[0],
-#     }
-
-#     for bucket in buckets.values():
-#         s3_client.create_bucket(Bucket=bucket)
-
-#     return buckets
-
-
-# @pytest.fixture(scope="function")
-# def s3_test_data(s3_client: boto3.client, s3_buckets: dict) -> str:
-#     """Populates S3 with test files."""
-#     current_dir = Path(__file__).parent.parent.parent
-
-#     schematron_path = current_dir / "text-to-code/tests/assets/test_schematron_errors.xml"
-#     with schematron_path.open() as f:
-#         s3_client.put_object(
-#             Bucket=s3_buckets["schematron"],
-#             Key=TEST_PERSISTENCE_ID,
-#             Body=f.read(),
-#         )
-
-#     ecr_path = current_dir / "text-to-code/tests/assets/basic_test_eicr.xml"
-#     with ecr_path.open() as f:
-#         s3_client.put_object(
-#             Bucket=s3_buckets["ecr"],
-#             Key=TEST_PERSISTENCE_ID,
-#             Body=f.read(),
-#         )
-
-#     return TEST_PERSISTENCE_ID
-
-
-# @pytest.fixture(scope="function")
-# def mock_opensearch() -> MagicMock:
-#     """Mock OpenSearch client."""
-#     client = MagicMock()
-
-#     client.search.return_value = {
-#         "hits": {
-#             "total": {"value": 1},
-#             "hits": [
-#                 {"_id": "1", "_score": 0.95, "_source": {"code": "A123", "display": "Test Code"}}
-#             ],
-#         }
-#     }
-
-#     return client
-
-
-# @pytest.fixture(scope="function")
-# def mock_auth() -> MagicMock:
-#     """Mocks AWS authentication.
-
-#     :return: Mocked AWS authentication
-#     """
-#     return MagicMock()
-
-
-@pytest.fixture(scope="function")
-def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
-    """Setup test AWS."""
-    with moto.mock_aws():
-        monkeypatch.setenv("AWS_REGION", AWS_REGION)
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
-        bucket_name = TEST_BUCKET_NAME
-        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
-
-        # Create the fake S3 bucket
-        s3 = boto3.client(
-            "s3",
-            region_name=os.environ["AWS_REGION"],
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        )
-        s3.create_bucket(Bucket=bucket_name)
-
-        # Add convenience attribute for tests
-        s3.bucket_name = bucket_name
-
-        yield s3
-
-
 @pytest.fixture
 def example_s3_event_payload() -> dict:
     """Inner S3 event payload (what SQS body contains as JSON string).
@@ -214,9 +104,13 @@ def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
 
 
 @pytest.fixture(scope="function")
-def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS environment."""
     with moto.mock_aws():
+        monkeypatch.setenv("AWS_REGION", AWS_REGION)
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
         # Create the fake S3 bucket
         s3 = boto3.client(
             "s3",

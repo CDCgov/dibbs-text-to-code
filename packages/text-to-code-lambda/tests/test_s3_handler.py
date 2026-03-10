@@ -5,7 +5,7 @@ from text_to_code_lambda import s3_handler
 
 
 class TestCreateS3Client:
-    def test_create_s3_client(self, moto_setup):
+    def test_create_s3_client(self, mock_aws_setup):
         """Test create S3 client."""
         s3_client = s3_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
@@ -15,44 +15,49 @@ class TestCreateS3Client:
 
 
 class TestGetEventBridgeDataFromS3Event:
-    def test_get_eventbridge_data_from_s3_event(self, moto_setup):
+    def test_get_eventbridge_data_from_s3_event(self, mock_aws_setup):
         """Test get file content from S3 event."""
-        moto_setup.put_object(
-            Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
+        mock_aws_setup.put_object(
+            Bucket=mock_aws_setup.ecr_bucket_name, Key="test.txt", Body=b"This eICR has errors"
         )
 
         event = {
-            "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}}
+            "detail": {
+                "bucket": {"name": mock_aws_setup.ecr_bucket_name},
+                "object": {"key": "test.txt"},
+            }
         }
 
         content = s3_handler.get_eventbridge_data_from_s3_event(event)
-        assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
+        assert content == {"bucket_name": mock_aws_setup.ecr_bucket_name, "object_key": "test.txt"}
 
 
 class TestGetFileContentFromS3:
-    def test_get_file_content_from_s3(self, moto_setup):
+    def test_get_file_content_from_s3(self, mock_aws_setup):
         """Test get file content from S3."""
-        moto_setup.put_object(
-            Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
+        mock_aws_setup.put_object(
+            Bucket=mock_aws_setup.ecr_bucket_name, Key="test.txt", Body=b"This eICR has errors"
         )
 
-        content = s3_handler.get_file_content_from_s3(moto_setup.bucket_name, "test.txt")
+        content = s3_handler.get_file_content_from_s3(mock_aws_setup.ecr_bucket_name, "test.txt")
         assert content == "This eICR has errors"
 
-    def test_get_file_content_from_s3_nonexistent_object(self, moto_setup):
+    def test_get_file_content_from_s3_nonexistent_object(self, mock_aws_setup):
         """Test get file content from S3 with nonexistent object."""
         with pytest.raises(FileNotFoundError) as e:
-            s3_handler.get_file_content_from_s3(moto_setup.bucket_name, "nonexistent.txt")
-        assert str(e.value) == f"S3 object not found: {moto_setup.bucket_name}/nonexistent.txt"
+            s3_handler.get_file_content_from_s3(mock_aws_setup.ecr_bucket_name, "nonexistent.txt")
+        assert (
+            str(e.value) == f"S3 object not found: {mock_aws_setup.ecr_bucket_name}/nonexistent.txt"
+        )
 
 
 class TestPutFile:
-    def test_put_file(self, moto_setup):
+    def test_put_file(self, mock_aws_setup):
         """Test put file."""
         fobj = io.BytesIO(b"This eICR is good")
-        s3_handler.put_file(fobj, moto_setup.bucket_name, "test.txt")
+        s3_handler.put_file(fobj, mock_aws_setup.ecr_bucket_name, "test.txt")
 
-        response = moto_setup.get_object(Bucket=moto_setup.bucket_name, Key="test.txt")
+        response = mock_aws_setup.get_object(Bucket=mock_aws_setup.ecr_bucket_name, Key="test.txt")
         assert response["Body"].read() == b"This eICR is good"
 
 
@@ -65,7 +70,7 @@ class TestStripProtocol:
 
 
 class TestGetS3Credentials:
-    def test_get_s3_credentials(self, moto_setup):
+    def test_get_s3_credentials(self, mock_aws_setup):
         """Test get S3 credentials set in conftest.py."""
         credentials = s3_handler.get_s3_credentials()
         assert credentials.access_key == "test_access_key_id"
@@ -85,7 +90,7 @@ class TestGetS3Credentials:
 
 
 class TestCreateAWSAuth:
-    def test_create_aws_auth(self, moto_setup):
+    def test_create_aws_auth(self, mock_aws_setup):
         """Test create AWS auth."""
         auth = s3_handler.create_aws_auth()
 
@@ -94,29 +99,31 @@ class TestCreateAWSAuth:
 
 
 class TestCheckS3ObjectExists:
-    def test_check_s3_object_exists(self, moto_setup):
+    def test_check_s3_object_exists(self, mock_aws_setup):
         """Test check S3 object exists."""
-        s3_handler.put_file(io.BytesIO(b"test content"), moto_setup.bucket_name, "test.txt")
+        s3_handler.put_file(io.BytesIO(b"test content"), mock_aws_setup.ecr_bucket_name, "test.txt")
 
-        exists = s3_handler.check_s3_object_exists(moto_setup, moto_setup.bucket_name, "test.txt")
+        exists = s3_handler.check_s3_object_exists(
+            mock_aws_setup, mock_aws_setup.ecr_bucket_name, "test.txt"
+        )
         assert exists
 
-    def test_check_s3_object_does_not_exist(self, moto_setup):
+    def test_check_s3_object_does_not_exist(self, mock_aws_setup):
         """Test check S3 object does not exist."""
         exists = s3_handler.check_s3_object_exists(
-            moto_setup, moto_setup.bucket_name, "nonexistent.txt"
+            mock_aws_setup, mock_aws_setup.ecr_bucket_name, "nonexistent.txt"
         )
         assert not exists
 
-    def test_check_s3_object_exists_unexpected_error(self, moto_setup):
+    def test_check_s3_object_exists_unexpected_error(self, mock_aws_setup):
         """Test check S3 object exists with unexpected error."""
         with pytest.raises(Exception, match="Unexpected error while fetching file from S3") as e:
-            s3_handler.check_s3_object_exists(moto_setup, "nonexistent-bucket", "test.txt")
+            s3_handler.check_s3_object_exists(mock_aws_setup, "nonexistent-bucket", "test.txt")
         assert "The specified bucket does not exist" in str(e.value)
 
 
 class TestCreateOpenSearchClient:
-    def test_create_opensearch_client(self, moto_setup):
+    def test_create_opensearch_client(self, mock_aws_setup):
         """Test create OpenSearch client."""
         expected_port = 443  # The expected default port for the OpenSearch client.
         auth = s3_handler.create_aws_auth()

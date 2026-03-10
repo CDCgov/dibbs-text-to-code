@@ -2,7 +2,7 @@ from text_to_code_lambda import lambda_function
 
 
 class TestHandler:
-    def test_handler_success(self, example_sqs_event, full_moto_setup, mock_opensearch):
+    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_opensearch):
         """Test handler with no failures."""
         expected_num_errors = 3
         resp = lambda_function.handler(example_sqs_event, {})
