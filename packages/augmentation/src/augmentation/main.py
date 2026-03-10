@@ -1,6 +1,9 @@
 """I don't think we want this to be in `main.py` but I'm not 100% sure how this will get plumbed with AWS, so this is as good as anywhere for the moment."""
 
+from io import BytesIO
+
 from shared_models import TTCAugmenterInput
+from text_to_code_lambda.s3_handler import put_file
 
 from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
@@ -15,14 +18,14 @@ def _retrieve_config() -> TTCAugmenterConfig:
     return TTCAugmenterConfig()
 
 
-def _save_eicr(eicr: str) -> None:
+def _save_eicr(eicr: str, eicr_id: str) -> None:
     """Save augmented eICR to S3 bucket."""
-    pass
+    put_file(BytesIO(eicr.encode("utf-8")), "augmented_eicrs", eicr_id)
 
 
 def _save_metadata(metadata: Metadata) -> None:
     """Save augmentation metadata to S3 bucket."""
-    pass
+    put_file(BytesIO(metadata.model_dump_json().encode("utf-8")), "augmentation_metadata", f"{metadata.augmented_eicr_id}_metadata.json")
 
 
 def augment(input: TTCAugmenterInput) -> None:
@@ -33,5 +36,5 @@ def augment(input: TTCAugmenterInput) -> None:
 
     metadata = augmenter.augment()
 
-    _save_eicr(augmenter.augmented_xml)
+    _save_eicr(augmenter.augmented_xml, input.eicr_id)
     _save_metadata(metadata)
