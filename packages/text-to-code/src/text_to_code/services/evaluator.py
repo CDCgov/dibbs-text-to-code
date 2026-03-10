@@ -109,19 +109,21 @@ def select_relevant_text(
     :returns: The selected Candidate, or None if no candidate is viable.
     """
     for priority in criteria.ordered_priorities():
-        best = _resolve_best_for_xpath(
+        best_candidate = _resolve_best_for_xpath(
             candidates=candidates,
             xpath=priority.xpath,
             preference=criteria.translation_preference,
         )
-        if best is None:
+        if best_candidate is None:
             continue
 
-        chosen = best.value.strip()
-        if not chosen:
+        if best_candidate.value is None:
             continue
 
-        return best
+        if not best_candidate.value.strip():
+            continue
+
+        return best_candidate
 
     return None
 
