@@ -2,16 +2,19 @@ import json
 import logging
 import os
 from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import boto3
 import moto
 import pytest
+from text_to_code_lambda import lambda_function
 
-EICR_INPUT_PREFIX = "eCRMessageV2"
-SCHEMATRON_ERROR_PREFIX = "schematronErrors"
-TTC_INPUT_PREFIX = "TextToCodeSubmission"
-TTC_OUTPUT_PREFIX = "TTCOutput"
-TTC_METADATA_PREFIX = "TTCMetadata"
+EICR_INPUT_PREFIX = "eCRMessageV2/"
+SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
+TTC_INPUT_PREFIX = "TextToCodeSubmission/"
+TTC_OUTPUT_PREFIX = "TTCOutput/"
+TTC_METADATA_PREFIX = "TTCMetadata/"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
 AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
@@ -31,6 +34,91 @@ def pytest_configure() -> None:
     os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
     os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
     os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
+
+
+# @pytest.fixture(scope="function")
+# def aws_mock():
+#     """Mocks AWS services."""
+#     with moto.mock_aws():
+#         yield
+
+
+# @pytest.fixture(scope="function")
+# def s3_client(aws_mock) -> boto3.client:
+#     """Creates a mocked S3 client."""
+#     return boto3.client(
+#         "s3",
+#         region_name=os.environ["AWS_REGION"],
+#         aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+#         aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+#     )
+
+
+# @pytest.fixture(scope="function")
+# def s3_buckets(s3_client) -> dict:
+#     """Creates required buckets."""
+#     buckets = {
+#         "ecr": os.getenv("EICR_INPUT_PREFIX").split("/")[0],
+#         "schematron": os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0],
+#         "ttc_input": os.getenv("TTC_INPUT_PREFIX").split("/")[0],
+#         "ttc_output": os.getenv("TTC_OUTPUT_PREFIX").split("/")[0],
+#         "ttc_metadata": os.getenv("TTC_METADATA_PREFIX").split("/")[0],
+#     }
+
+#     for bucket in buckets.values():
+#         s3_client.create_bucket(Bucket=bucket)
+
+#     return buckets
+
+
+# @pytest.fixture(scope="function")
+# def s3_test_data(s3_client: boto3.client, s3_buckets: dict) -> str:
+#     """Populates S3 with test files."""
+#     current_dir = Path(__file__).parent.parent.parent
+
+#     schematron_path = current_dir / "text-to-code/tests/assets/test_schematron_errors.xml"
+#     with schematron_path.open() as f:
+#         s3_client.put_object(
+#             Bucket=s3_buckets["schematron"],
+#             Key=TEST_PERSISTENCE_ID,
+#             Body=f.read(),
+#         )
+
+#     ecr_path = current_dir / "text-to-code/tests/assets/basic_test_eicr.xml"
+#     with ecr_path.open() as f:
+#         s3_client.put_object(
+#             Bucket=s3_buckets["ecr"],
+#             Key=TEST_PERSISTENCE_ID,
+#             Body=f.read(),
+#         )
+
+#     return TEST_PERSISTENCE_ID
+
+
+# @pytest.fixture(scope="function")
+# def mock_opensearch() -> MagicMock:
+#     """Mock OpenSearch client."""
+#     client = MagicMock()
+
+#     client.search.return_value = {
+#         "hits": {
+#             "total": {"value": 1},
+#             "hits": [
+#                 {"_id": "1", "_score": 0.95, "_source": {"code": "A123", "display": "Test Code"}}
+#             ],
+#         }
+#     }
+
+#     return client
+
+
+# @pytest.fixture(scope="function")
+# def mock_auth() -> MagicMock:
+#     """Mocks AWS authentication.
+
+#     :return: Mocked AWS authentication
+#     """
+#     return MagicMock()
 
 
 @pytest.fixture(scope="function")
@@ -77,7 +165,7 @@ def example_s3_event_payload() -> dict:
             "version": "0",
             "bucket": {"name": "eCRMessageV2"},
             "object": {
-                "key": f"{TTC_INPUT_PREFIX}/{TEST_PERSISTENCE_ID}",
+                "key": f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
                 "size": 1024,
                 "etag": "0123456789abcdef0123456789abcdef",
                 "sequencer": "0055AED6DCD90281E5",
@@ -125,19 +213,9 @@ def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
     return caplog
 
 
-# @pytest.fixture
-# def s3_client() -> boto3.client:
-#     """Create a boto3 S3 client for testing with moto.
-
-#     :yield: boto3 S3 client
-#     """
-#     with moto.mock_aws():
-#         yield boto3.client("s3", region_name="us-east-1")
-
-
 @pytest.fixture(scope="function")
 def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
-    """Setup test AWS."""
+    """Setup test AWS environment."""
     with moto.mock_aws():
         # Create the fake S3 bucket
         s3 = boto3.client(
@@ -183,3 +261,84 @@ def full_moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         )
 
         yield s3
+
+
+@pytest.fixture(autouse=True)
+def reset_opensearch_cache() -> None:
+    """Reset cached OpenSearch client before every test."""
+    lambda_function._cached_opensearch_client = None
+
+
+@pytest.fixture(scope="function")
+def mock_opensearch() -> MagicMock:
+    """Mock OpenSearch client.
+
+    We have to use MagicMock here instead of moto because
+    moto's mocked version of OpenSearch does not support the search functionality,
+    only the creation and deletion of indices.
+    """
+    opensearch_client = MagicMock()
+
+    opensearch_client.search.return_value = {
+        "took": 57,
+        "timed_out": False,
+        "_shards": {"total": 1, "successful": 1, "skipped": 0, "failed": 0},
+        "hits": {
+            "total": {"value": 3},
+            "hits": [
+                {
+                    "_index": "ttc_index",
+                    "_id": "rbLli5wBhppl0u9qtwLN",
+                    "_score": 0.95,
+                    "_source": {
+                        "id": 0,
+                        "loinc_code": "109224-6",
+                        "loinc_name_type": "Long Common Name",
+                        "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                        "loinc_type": "Order",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+                {
+                    "_index": "ttc_index",
+                    "_id": "123455wBhppl0u9qtABC",
+                    "_score": 0.88,
+                    "_source": {
+                        "id": 1,
+                        "loinc_code": "82041-5",
+                        "loinc_name_type": "Short Name",
+                        "description": "Weed Allerg Mix3 IgE Qn",
+                        "loinc_type": "Order",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+                {
+                    "_index": "ttc_index",
+                    "_id": "123455wBhppl0u9qtABC",
+                    "_score": 0.65,
+                    "_source": {
+                        "id": 4,
+                        "loinc_code": "15273-6",
+                        "loinc_name_type": "Fully-Specified Name",
+                        "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                        "loinc_type": "Both",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+            ],
+        },
+    }
+
+    with patch(
+        "text_to_code_lambda.s3_handler.create_opensearch_client", return_value=opensearch_client
+    ):
+        yield opensearch_client
