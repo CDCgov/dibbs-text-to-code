@@ -92,8 +92,11 @@ class QueryBuilder:
         return {
             "size": self._size,
             "_source": {
-                "excludes": [self._vector_field]
-            },  # Exclude the vector field from the results to reduce payload size & improve performance
+                "excludes": [
+                    self._vector_field
+                ],  # Exclude the vector field from the results to reduce payload size & improve performance
+                "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
+            },
             "query": {
                 "bool": {
                     "filter": self._filters,
