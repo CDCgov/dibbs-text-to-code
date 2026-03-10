@@ -97,7 +97,7 @@ def select_relevant_text(
     *,
     candidates: list[Candidate],
     criteria: BaseEvaluationCriteria,
-) -> str | None:
+) -> Candidate | None:
     """Select the single most relevant viable text string from a list of candidates.
 
     Evaluation proceeds in priority order:
@@ -106,7 +106,7 @@ def select_relevant_text(
 
     :param candidates: All Candidate entries extracted for the current observation/error.
     :param criteria: The evaluation criteria defining priority order and translation behavior.
-    :returns: The selected text string to submit to OpenSearch, or None if no candidate is viable.
+    :returns: The selected Candidate, or None if no candidate is viable.
     """
     for priority in criteria.ordered_priorities():
         best = _resolve_best_for_xpath(
@@ -121,7 +121,7 @@ def select_relevant_text(
         if not chosen:
             continue
 
-        return chosen
+        return best
 
     return None
 
