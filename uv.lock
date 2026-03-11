@@ -13,6 +13,8 @@ members = [
     "augmentation-lambda",
     "data-curation",
     "dibbs-text-to-code-root",
+    "index-lambda",
+    "lambda-handler",
     "shared-models",
     "text-to-code",
     "text-to-code-lambda",
@@ -670,6 +672,32 @@ wheels = [
 ]
 
 [[package]]
+name = "index-lambda"
+version = "0.1.0"
+source = { editable = "packages/index-lambda" }
+dependencies = [
+    { name = "aws-lambda-typing" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "lambda-handler" },
+    { name = "opensearch-py" },
+    { name = "requests-aws4auth" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "lambda-handler", editable = "packages/lambda-handler" },
+    { name = "opensearch-py" },
+    { name = "requests-aws4auth" },
+]
+
+[package.metadata.requires-dev]
+dev = []
+
+[[package]]
 name = "iniconfig"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -707,6 +735,25 @@ sdist = { url = "https://files.pythonhosted.org/packages/41/f2/d34e8b3a08a9cc79a
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/91/984aca2ec129e2757d1e4e3c81c3fcda9d0f85b74670a094cc443d9ee949/joblib-1.5.3-py3-none-any.whl", hash = "sha256:5fc3c5039fc5ca8c0276333a188bbd59d6b7ab37fe6632daa76bc7f9ec18e713", size = 309071, upload-time = "2025-12-15T08:41:44.973Z" },
 ]
+
+[[package]]
+name = "lambda-handler"
+version = "0.1.0"
+source = { editable = "packages/lambda-handler" }
+dependencies = [
+    { name = "boto3" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "moto" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "boto3", specifier = ">=1.40.60" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "moto" }]
 
 [[package]]
 name = "lxml"

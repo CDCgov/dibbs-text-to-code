@@ -2,6 +2,7 @@ import json
 import os
 
 import boto3
+import lambda_handler
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
@@ -13,8 +14,6 @@ from text_to_code.services import embedder
 from text_to_code.services import evaluator
 from text_to_code.services import schematron_processor
 from text_to_code.services.query import QueryBuilder
-
-from . import s3_handler
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -48,15 +47,15 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     # Initialize cached clients if they don't exist
     if _cached_auth is None:
-        _cached_auth = s3_handler.create_aws_auth()
+        _cached_auth = lambda_handler.create_aws_auth()
     auth = _cached_auth
 
     if _cached_opensearch_client is None:
-        _cached_opensearch_client = s3_handler.create_opensearch_client(auth)
+        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
     opensearch_client = _cached_opensearch_client
 
     if _cached_s3_client is None:
-        _cached_s3_client = s3_handler.create_s3_client()
+        _cached_s3_client = lambda_handler.create_s3_client()
     s3_client = _cached_s3_client
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
@@ -103,13 +102,13 @@ def process_record(
     s3_event = json.loads(record.body)
 
     # Parse the EventBridge S3 event from the SQS message body
-    eventbridge_data = s3_handler.get_eventbridge_data_from_s3_event(s3_event)
+    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     bucket = eventbridge_data["bucket_name"]
     object_key = eventbridge_data["object_key"]
     logger.info(f"Processing S3 Object: s3://{bucket}/{object_key}")
 
     # Extract persistence_id from the RR object key
-    persistence_id = s3_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
     logger.info(f"Extracted persistence_id: {persistence_id}")
 
     with logger.append_context_keys(
@@ -149,7 +148,7 @@ def _process_record_pipeline(
     # TODO: Confirm with APHL that the Schematron errors will be stored in the same bucket and follow a consistent naming convention that allows us to derive the Schematron error object key from the persistence_id.
     schematron_bucket_name = SCHEMATRON_ERROR_PREFIX.split("/")[0]
     logger.info("Loading Schematron errors", s3_key=f"{schematron_bucket_name}{persistence_id}")
-    schematron_errors = s3_handler.get_file_content_from_s3(
+    schematron_errors = lambda_handler.get_file_content_from_s3(
         bucket_name=schematron_bucket_name,
         object_key=f"{persistence_id}",
     )
@@ -172,7 +171,7 @@ def _process_record_pipeline(
     # S3 GET eICR
     ecr_bucket_name = EICR_INPUT_PREFIX.split("/")[0]
     logger.info("Loading eICR", s3_key=f"{ecr_bucket_name}/{persistence_id}")
-    original_eicr_content = s3_handler.get_file_content_from_s3(
+    original_eicr_content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket, object_key=persistence_id
     )
     logger.info(f"Retrieved eICR content for persistence_id {persistence_id}")
