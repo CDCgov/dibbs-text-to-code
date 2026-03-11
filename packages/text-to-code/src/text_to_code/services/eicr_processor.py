@@ -121,8 +121,7 @@ class EicrProcessor:
             ".//author/assignedAuthor/assignedAuthoringDevice/softwareName"
         )
         return Metadata(
-            eicr_id=instance_identifer,
-            eicr_vendor=vendor.text if vendor is not None else None
+            eicr_id=instance_identifer, eicr_vendor=vendor.text if vendor is not None else None
         )
 
 
