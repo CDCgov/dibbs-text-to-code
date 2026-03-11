@@ -6,6 +6,8 @@ from datetime import datetime
 from lxml import etree
 from lxml.etree import Element
 
+from augmentation.models import Metadata
+
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
 from .eicr_utils import clean_xml_tree
@@ -49,7 +51,7 @@ class Augmenter(ABC):
         return self.application_code.value
 
     @abstractmethod
-    def augment(self) -> None:
+    def augment(self) -> Metadata:
         """Internal method to perform augmentation logic."""
         pass
 
