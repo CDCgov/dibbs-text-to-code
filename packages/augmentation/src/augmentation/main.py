@@ -2,8 +2,8 @@
 
 from io import BytesIO
 
+from lambda_handler.lambda_handler import put_file
 from shared_models import TTCAugmenterInput
-from text_to_code_lambda.s3_handler import put_file
 
 from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
@@ -25,7 +25,11 @@ def _save_eicr(eicr: str, eicr_id: str) -> None:
 
 def _save_metadata(metadata: Metadata) -> None:
     """Save augmentation metadata to S3 bucket."""
-    put_file(BytesIO(metadata.model_dump_json().encode("utf-8")), "augmentation_metadata", f"{metadata.augmented_eicr_id}_metadata.json")
+    put_file(
+        BytesIO(metadata.model_dump_json().encode("utf-8")),
+        "augmentation_metadata",
+        f"{metadata.augmented_eicr_id}_metadata.json",
+    )
 
 
 def augment(input: TTCAugmenterInput) -> None:
