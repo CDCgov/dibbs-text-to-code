@@ -4,6 +4,19 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 
+class CdaInstanceIdentifier(BaseModel):
+    """CDA Instance Identifier (II) data type.
+
+    https://build.fhir.org/ig/HL7/CDA-core-2.0/StructureDefinition-II.html
+    """
+
+    null_flavor: str | None = None
+    assigning_authority_name: str | None = None
+    displayable: bool | None = None
+    root: str | None = None
+    extension: str | None = None
+
+
 class DataField(StrEnum):
     """Enum for eICR data fields relevant to the TTC module."""
 
