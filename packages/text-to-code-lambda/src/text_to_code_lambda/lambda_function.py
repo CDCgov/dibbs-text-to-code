@@ -37,7 +37,7 @@ _cached_s3_client = None
 
 
 @event_source(data_class=SQSEvent)
-def handler(event: SQSEvent, context: LambdaContext) -> dict:
+def lambda_handler(event: SQSEvent, context: LambdaContext) -> dict:
     """Text to Code lambda entry point.
 
     :param event: The SQS event containing the S3 event data for processing.
@@ -244,7 +244,7 @@ def _process_record_pipeline(
     #     f"Creating the analytics metadata object to save in S3 for analysis of TTC results for persistence_id {persistence_id}"
     # )
     # ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
-    # s3_handler.put_file(file_obj = metadata_content, bucket_name: ttc_metadata_output_bucket_name, object_key = persistence_id)
+    # lambda_handler.put_file(file_obj = metadata_content, bucket_name: ttc_metadata_output_bucket_name, object_key = persistence_id)
 
     # # Create output to pass to Augmentation Lambda
     # logger.info(
@@ -252,7 +252,7 @@ def _process_record_pipeline(
     # )
     # # TODO: Add function to generate augmentation output
     # # augmentation_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
-    # # s3_handler.put_file(file_obj = augmentation_data, bucket_name = augmentation_output_bucket_name, object_key = persistence_id)
+    # # lambda_handler.put_file(file_obj = augmentation_data, bucket_name = augmentation_output_bucket_name, object_key = persistence_id)
     # logger.info(f"Saved TTC output to s3://{TTC_OUTPUT_PREFIX}{persistence_id}")
 
     return {"statusCode": 200, "message": "TTC processed successfully!"}
