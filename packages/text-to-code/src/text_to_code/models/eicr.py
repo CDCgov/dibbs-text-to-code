@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
-from shared_models import II
+from shared_models import CdaInstanceIdentifier
 
 
 class LabXPaths(StrEnum):
@@ -25,5 +25,5 @@ class Candidate(BaseModel):
 class Metadata(BaseModel):
     """Model representing metadata about the eICR."""
 
-    eicr_id: II
+    eicr_id: CdaInstanceIdentifier
     eicr_vendor: str | None = None

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 
-class II(BaseModel):
+class CdaInstanceIdentifier(BaseModel):
     """CDA Instance Identifier (II) data type.
 
     https://build.fhir.org/ig/HL7/CDA-core-2.0/StructureDefinition-II.html

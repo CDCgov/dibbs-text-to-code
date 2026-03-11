@@ -1,6 +1,6 @@
 from lxml import etree
 from lxml.etree import Element
-from shared_models import II
+from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
 
 from text_to_code.models import Candidate
@@ -110,7 +110,7 @@ class EicrProcessor:
         id_element = self._xml_root.find(".//id")
         if id_element is None or id_element.get("nullFlavor") is not None:
             raise ValueError("No ID element found in eICR XML.")
-        instance_identifer = II(
+        instance_identifer = CdaInstanceIdentifier(
             root=id_element.get("root"),
             extension=id_element.get("extension"),
             assigning_authority_name=id_element.get("assigningAuthorityName"),

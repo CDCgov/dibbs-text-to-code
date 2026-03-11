@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 from lxml.etree import XMLSyntaxError
-from shared_models import II
+from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
 from text_to_code.models import Candidate
 from text_to_code.models import LabXPaths
@@ -73,7 +73,7 @@ class TestBasicEicrProcessor:
 
     def test_metadata(self, eicr_metadata: Metadata):
         assert eicr_metadata == Metadata(
-            eicr_id=II(root="c8516bdc-8bb2-40aa-8dae-20a77546488f"),
+            eicr_id=CdaInstanceIdentifier(root="c8516bdc-8bb2-40aa-8dae-20a77546488f"),
             eicr_vendor="Test eCR Vendor Name",
         )
 
