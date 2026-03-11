@@ -228,11 +228,10 @@ def _process_record_pipeline(
             query = QueryBuilder().with_vector_search(vector_parameters).build()
 
             # Query OpenSearch with the relevant text strings and retrieve the code suggestions
-            opensearch_retrieved_scores = opensearch_client.search(
-                index=OPENSEARCH_INDEX,
-                body=query,
+            opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
+                query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
             )
-            print(opensearch_retrieved_scores)
+            print(f"OpenSearch retrieved scores: {opensearch_retrieved_scores}")
 
     # TODO: Add Reranker code here once added to the Evaluator service
 
