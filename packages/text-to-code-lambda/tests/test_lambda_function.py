@@ -5,7 +5,7 @@ class TestHandler:
     def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_opensearch):
         """Test handler with no failures."""
         expected_num_errors = 3
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.lambda_handler(example_sqs_event, {})
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -19,7 +19,7 @@ class TestHandler:
         """Test handler with no records."""
         example_sqs_event["Records"] = []
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.lambda_handler(example_sqs_event, {})
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -32,7 +32,7 @@ class TestHandler:
         """Test handler with an empty SQS body."""
         example_sqs_event["Records"][0]["body"] = None
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.lambda_handler(example_sqs_event, {})
         assert "Empty SQS body" in caplog_warning.text
         assert resp == {
             "statusCode": 200,
