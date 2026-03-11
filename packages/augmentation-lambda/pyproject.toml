@@ -13,3 +13,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/augmentation_lambda"]
+
+[tool.uv.sources]
+lambda-handler = { workspace = true }
