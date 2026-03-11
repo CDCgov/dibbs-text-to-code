@@ -1,0 +1,46 @@
+<!-- Simplified eICR to test resolving references similiar to Altera -->
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:cda="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc"
+  xmlns:voc="http://www.lantanagroup.com/voc"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <title>Plan of Treatment</title>
+          <text>
+            <table border="1" width="100%">
+              <thead>
+                <tr>
+                  <th>Planned Observation</th>
+                  <th>Planned Observation Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <content ID="potObsContent">Gastrointestinal Profile, Stool, PCR</content>
+                  </td>
+                  <td>
+                    <content ID="potObsDate1">2025-07-24T00:00:00-04:00</content> 
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+          <entry>
+            <component>
+              <observation>
+                <code code="53942-9" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" sdtc:valueSet="2.16.840.1.114222.11.7508" sdtc:valueSetVersion="2025-03-18">
+                  <originalText>
+                    <reference value="#potObsContent" />
+                  </originalText>
+                </code>
+              </observation>
+            </component>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

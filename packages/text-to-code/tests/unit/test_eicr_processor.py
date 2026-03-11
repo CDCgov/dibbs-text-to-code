@@ -90,3 +90,39 @@ class TestReferences:
         assert results[2] == Candidate(
             value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
         )
+
+
+class TestAlteraReference:
+    @pytest.fixture(scope="class")
+    def results(self) -> list[Candidate]:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "altera_reference.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        eicr_processor = EicrProcessor(eicr_output)
+
+        return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+    def test_reference_in_code(self, results: list[Candidate]):
+        expected_0 = "Free Triiodothyronine, Serum -AM Routine"
+        expected_1 = "Free Triiodothyronine, Serum -AM Routine 24-Jul-2025 Request"
+        assert results == [
+            Candidate(value=expected_0, xpath=LabXPaths.CODE_ORIGINAL_TEXT),
+            Candidate(value=expected_1, xpath=LabXPaths.CODE_TEXT),
+        ]
+
+
+class TestAthenahealthReference:
+    @pytest.fixture(scope="class")
+    def results(self) -> list[Candidate]:
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "athenahealth_reference.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        eicr_processor = EicrProcessor(eicr_output)
+
+        return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+    def test_reference_in_code(self, results: list[Candidate]):
+        expected = "Gastrointestinal Profile, Stool, PCR"
+        assert results == [Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT)]
