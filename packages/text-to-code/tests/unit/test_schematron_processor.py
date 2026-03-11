@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from shared_models import DataField
+from text_to_code.models.schematron import SchematronErrorReport
 from text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
 
 current_dir = Path(__file__).parent.parent
@@ -23,15 +24,24 @@ class TestSchematronProcessor:
         )
 
         expected_lab_test_name_resulted = 2
-        expected_lab_test_name_ordered = 1
+        expected_lab_test_name_ordered = 2
+
+        data_fields_by_field = {
+            data_field_errors.data_field: data_field_errors.errors
+            for data_field_errors in error_result.data_fields
+        }
 
         assert (
-            len(error_result[DataField.LAB_TEST_NAME_RESULTED]) == expected_lab_test_name_resulted
+            len(data_fields_by_field[DataField.LAB_TEST_NAME_RESULTED])
+            == expected_lab_test_name_resulted
         )
-        assert len(error_result[DataField.LAB_TEST_NAME_ORDERED]) == expected_lab_test_name_ordered
+        assert (
+            len(data_fields_by_field[DataField.LAB_TEST_NAME_ORDERED])
+            == expected_lab_test_name_ordered
+        )
 
     def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""
         result = get_data_fields_from_schematron_error(schematron_errors)
 
-        assert result == {}
+        assert result == SchematronErrorReport(data_fields=[])

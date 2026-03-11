@@ -35,3 +35,36 @@ class SchematronConfig(BaseModel):
 
     schematron_errors: list[SchematronErrors]
     """The list of Schematron error messages relevant to the data field."""
+
+
+class SchematronErrorDetail(BaseModel):
+    """Structured details for a Schematron validation error."""
+
+    error_message: str
+    """The Schematron error message."""
+
+    error_context: str
+    """The XPath context associated with the error."""
+
+    error_test: str | None = None
+    """The Schematron test expression associated with the error."""
+
+    error_id: str | None = None
+    """The Schematron identifier associated with the error, if present."""
+
+
+class DataFieldSchematronErrors(BaseModel):
+    """Schematron errors grouped under a specific data field."""
+
+    data_field: DataField
+    """The data field associated with the listed errors."""
+
+    errors: list[SchematronErrorDetail]
+    """The list of Schematron errors for the data field."""
+
+
+class SchematronErrorReport(BaseModel):
+    """Structured report of Schematron errors grouped by data field."""
+
+    data_fields: list[DataFieldSchematronErrors]
+    """The grouped Schematron errors."""
