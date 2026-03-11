@@ -52,3 +52,47 @@ class VectorSearchParams(pydantic.BaseModel):
         else:
             raise ValueError(f"Unsupported filter field: {self.filter_field}")
         return self
+
+
+class S3Location(pydantic.BaseModel):
+    """Represents the location of a file in S3, indicating which file contained the relevant data."""
+
+    bucket: str
+    key: str
+
+
+class OpenSearchHit(pydantic.BaseModel):
+    """Represents a single search result hit returned from OpenSearch."""
+
+    score: float
+    id: int
+    loinc_code: str
+    loinc_name_type: str
+    description: str
+    loinc_type: str
+    s3: S3Location
+
+
+class OpenSearchHits(pydantic.BaseModel):
+    """Represents all of the search result hits returned from OpenSearch."""
+
+    total_hits: int
+    hits: list[OpenSearchHit]
+
+
+class OpenSearchShards(pydantic.BaseModel):
+    """Represents the shard information returned from OpenSearch."""
+
+    total: int
+    successful: int
+    skipped: int
+    failed: int
+
+
+class OpenSearchResult(pydantic.BaseModel):
+    """Represents the overall search result returned from OpenSearch, including hits and shard information."""
+
+    took: int
+    timed_out: bool
+    _shards: OpenSearchShards
+    hits: OpenSearchHits

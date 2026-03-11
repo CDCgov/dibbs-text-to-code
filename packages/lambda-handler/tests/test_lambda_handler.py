@@ -162,3 +162,41 @@ class TestGetPersistenceId:
         object_key = "IncorrectPrefix/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
         with pytest.raises(ValueError, match="does not start with expected prefix"):
             lambda_handler.get_persistence_id(object_key, "TextToCodeSubmission")
+
+
+# class TestRetrieveOpenSearchResults:
+#     def test_retrieve_opensearch_results(self, mock_opensearch):
+#         """Test retrieve OpenSearch results."""
+#         query = {"query": {"match_all": {}}}
+#         index = "test-index"
+
+#         expected_response = {
+#             "hits": {
+#                 "total": {"value": 1, "relation": "eq"},
+#                 "hits": [
+#                     {
+#                         "_index": index,
+#                         "_id": "1",
+#                         "_score": 1.0,
+#                         "_source": {"field1": "value1", "field2": "value2"},
+#                     }
+#                 ],
+#             },
+#             "_shards": {"total": 1, "successful": 1, "skipped": 0, "failed": 0},
+#         }
+
+#         mock_opensearch.search.return_value = expected_response
+
+#         response = lambda_handler.retrieve_opensearch_results(query, index, mock_opensearch)
+
+#         assert response.total_hits == expected_response["hits"]["total"]["value"]
+#         assert len(response.hits) == len(expected_response["hits"]["hits"])
+#         assert response.hits[0].id == int(expected_response["hits"]["hits"][0]["_id"])
+#         assert response.hits[0].score == expected_response["hits"]["hits"][0]["_score"]
+#         assert (
+#             response.hits[0].loinc_code == expected_response["hits"]["hits"][0]["_source"]["field1"]
+#         )
+#         assert (
+#             response.hits[0].loinc_name_type
+#             == expected_response["hits"]["hits"][0]["_source"]["field2"]
+#         )

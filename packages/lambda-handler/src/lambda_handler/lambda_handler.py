@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
+from text_to_code.models import OpenSearchResult
 
 
 def require_env(name: str) -> str:
@@ -160,3 +161,21 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
             f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'"
         )
     return object_key[len(input_prefix) :]
+
+
+def retrieve_opensearch_results(
+    query: dict, index: str, opensearch_client: OpenSearch
+) -> OpenSearchResult:
+    """Retrieves search results from OpenSearch based on the provided query.
+
+    :param query: The OpenSearch query to execute.
+    :param index: The OpenSearch index to search.
+    :param open_search_client: The OpenSearch client to use for the query.
+    :return: The search results returned by OpenSearch.
+    """
+    response = opensearch_client.search(
+        index=index,
+        body=query,
+    )
+
+    return OpenSearchResult(**response)
