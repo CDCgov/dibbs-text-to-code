@@ -233,6 +233,7 @@ def mock_opensearch() -> MagicMock:
     }
 
     with patch(
-        "text_to_code_lambda.s3_handler.create_opensearch_client", return_value=opensearch_client
+        "lambda_handler.lambda_handler.create_opensearch_client",
+        return_value=opensearch_client,
     ):
         yield opensearch_client
