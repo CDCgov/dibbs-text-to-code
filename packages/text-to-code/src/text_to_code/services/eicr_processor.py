@@ -118,7 +118,7 @@ class EicrProcessor:
             null_flavor=id_element.get("nullFlavor"),
         )
         vendor = self._xml_root.find(
-            ".//author/assignedAuthor/AuthoringDevice/manufacturerModelName"
+            ".//author/assignedAuthor/assignedAuthoringDevice/softwareName"
         )
         return Metadata(
             eicr_id=instance_identifer,
