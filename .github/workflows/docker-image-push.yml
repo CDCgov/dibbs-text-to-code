@@ -75,7 +75,7 @@ jobs:
 
       - name: Build and push image
         if: ${{ matrix.name != 'index' || github.event_name == 'workflow_dispatch' || steps.changes.outputs.index == 'true' }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
