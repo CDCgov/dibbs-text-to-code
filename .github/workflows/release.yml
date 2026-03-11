@@ -51,7 +51,7 @@ jobs:
         run: echo "PACKAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           # We are building this image to be compatible with an AWS Lambda execution
           # environment, thus we need to explicitly build for linux/amd64 and set
