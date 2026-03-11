@@ -37,7 +37,7 @@ _cached_s3_client = None
 
 
 @event_source(data_class=SQSEvent)
-def lambda_handler(event: SQSEvent, context: LambdaContext) -> dict:
+def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """Text to Code lambda entry point.
 
     :param event: The SQS event containing the S3 event data for processing.
