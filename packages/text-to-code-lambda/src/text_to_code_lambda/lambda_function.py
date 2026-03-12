@@ -1,3 +1,4 @@
+import io
 import json
 import os
 
@@ -246,7 +247,7 @@ def _process_record_pipeline(
 
             # Generate the OpenSearch query based on the relevant text string embedding and any other relevant information
             vector_parameters = query_models.VectorSearchParams(
-                vector=vector_embedding, data_field=data_field
+                vector=vector_embedding.tolist(), data_field=data_field
             )
 
             logger.info(
@@ -267,7 +268,7 @@ def _process_record_pipeline(
     logger.info(f"Saving TTC output to S3 for persistence_id {persistence_id}")
     ttc_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
     lambda_handler.put_file(
-        file_obj=json.dumps(ttc_output, default=str),
+        file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
         bucket_name=ttc_output_bucket_name,
         object_key=persistence_id,
     )
@@ -276,7 +277,7 @@ def _process_record_pipeline(
     logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
     ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
     lambda_handler.put_file(
-        file_obj=json.dumps(ttc_metadata_output, default=str),
+        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
         bucket_name=ttc_metadata_output_bucket_name,
         object_key=persistence_id,
     )
