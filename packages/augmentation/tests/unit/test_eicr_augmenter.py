@@ -118,6 +118,8 @@ class TestEicrAugmenter:
         metadata = augmenter.augment()
 
         result = augmenter.augmented_xml
+        print("HERE")
+        print(result)
         snapshot.assert_match(result, "basic_eicr_related_doc_augmented.xml")
         assert metadata == Metadata(
             original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",

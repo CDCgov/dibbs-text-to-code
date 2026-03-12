@@ -85,11 +85,13 @@ class EICRAugmenter(Augmenter):
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_id_element = self._get_new_document_id()
         new_id_element.tail = old_id_element.tail
-        self._add_previous_element_comment("new-document-id", new_id_element)
         self._augmented_element.replace(old_id_element, new_id_element)
 
         # 2 replace the effectiveTime tag
         old_eff_time_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
+        self._add_previous_element_comment(
+            "time of data augmentation operation ", old_eff_time_element
+        )
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_eff_time_element = self._get_new_effective_time()
         new_eff_time_element.tail = old_eff_time_element.tail
@@ -100,31 +102,47 @@ class EICRAugmenter(Augmenter):
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_set_id_element = self._get_new_set_id()
         new_set_id_element.tail = old_set_id_element.tail
-        self._add_previous_element_comment("new-document-setId", new_set_id_element)
+        self._add_previous_element_comment("new-document-setId ", old_set_id_element)
         self._augmented_element.replace(old_set_id_element, new_set_id_element)
         # 4 finally replace the versionNumber tag
         old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_version_element = self._get_new_version_number()
         new_version_element.tail = old_version_element.tail
-        self._add_previous_element_comment("new-document-versionNumber", new_version_element)
+        self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
         self._augmented_element.replace(old_version_element, new_version_element)
-        # 5 add the new templateId tag
+
+        # 5 add the new templateId tag which will also include the comments in order
         template_id = self._get_augmented_template_id()
-        self._add_previous_element_comment("eICR Data Augmentation Header", template_id)
         # find the newly added and updated document id and put the templateId right before it
         new_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
+        self._add_previous_element_comment("eICR Data Augmentation Header ", new_id)
         new_id.addprevious(template_id)
+        self._add_previous_element_comment("new-document-id ", new_id)
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
         related_doc = etree.SubElement(self._augmented_element, "relatedDocument")
         related_doc.set("typeCode", "XFRM")
-        self._add_previous_element_comment(" typeCode 'XFRM'", related_doc)
+        self._add_previous_element_comment(" typeCode 'XFRM' ", related_doc)
         parent_doc = etree.SubElement(related_doc, "parentDocument")
-        parent_doc.append(self._get_old_document_id())
-        parent_doc.append(self._get_old_set_id())
-        parent_doc.append(self._get_old_version_number())
+        parent_doc_id = self._get_old_document_id()
+        parent_doc.append(parent_doc_id)
+        # comments need to be added to the element after it's been appended to the
+        # parent data element
+        self._add_previous_element_comment(
+            "ClinicalDocument/id of the document to replace ", parent_doc_id
+        )
+        if parent_doc_id.get("assigningAuthorityName") == "original-document":
+            self._add_previous_element_comment("original-document-id ", parent_doc_id)
+        else:
+            self._add_previous_element_comment("input-document-id ", parent_doc_id)
+        parent_set_id = self._get_old_set_id()
+        parent_doc.append(parent_set_id)
+        self._add_previous_element_comment("input-document-setId ", parent_set_id)
+        parent_version_number = self._get_old_version_number()
+        parent_doc.append(parent_version_number)
+        self._add_previous_element_comment("input-document-versionNumber ", parent_version_number)
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
@@ -144,26 +162,18 @@ class EICRAugmenter(Augmenter):
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
         parent_doc_id = self._get_original_by_xpath("/ClinicalDocument/id")
-        self._add_previous_element_comment(
-            "ClinicalDocument/id of the document to replace", parent_doc_id
-        )
         if parent_doc_id.get("assigningAuthorityName") is None:
             parent_doc_id.set("assigningAuthorityName", "original-document")
-            self._add_previous_element_comment("oroginal-document-id", parent_doc_id)
-        else:
-            self._add_previous_element_comment("input-document-id", parent_doc_id)
         return parent_doc_id
 
     def _get_old_set_id(self) -> Element:
         """Extract the parent document setId from original eICR document."""
         parent_set_id = self._get_original_by_xpath("/ClinicalDocument/setId")
-        self._add_previous_element_comment("input-document-setId", parent_set_id)
         return parent_set_id
 
     def _get_old_version_number(self) -> Element:
         """Extract the parent versionNumber from original eICR document."""
         version = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
-        self._add_previous_element_comment("input-document-versionNumber", version)
         return version
 
     def _get_new_document_id(self) -> Element:
@@ -183,9 +193,6 @@ class EICRAugmenter(Augmenter):
         """Generate an effectiveTime element for the augmented eICR document."""
         effective_time_tag = etree.Element("effectiveTime")
         effective_time_tag.set("value", self.augmentation_date.strftime("%Y%m%d%H%M%S"))
-        self._add_previous_element_comment(
-            "time of data augmentation operation", effective_time_tag
-        )
         return effective_time_tag
 
     def _get_new_version_number(self) -> Element:
@@ -206,7 +213,7 @@ class EICRAugmenter(Augmenter):
 
     def _add_previous_element_comment(self, comment: str, element: Element) -> None:
         """Generate an XML comment element with the given comment text and add it before the specified element."""
-        comment_element = etree.Comment(f"DATA AUGMENTATION: {comment}")
+        comment_element = etree.Comment(f"DATA AUGMENTATION: {comment.strip()} ")
         element.addprevious(comment_element)
 
     def _get_old_xrfm_related_document(self) -> Element | None:
@@ -222,16 +229,6 @@ class EICRAugmenter(Augmenter):
     def _generate_author(self, level: str = "header") -> Element:
         null_flavor_comment = " set to nullFlavor 'NA' "
         author = etree.Element("author")
-        if level == "header":
-            self._add_previous_element_comment(
-                (
-                    "Header-level Author to flag that this document "
-                    "has been transformed on the platform (e.g. to add text-to-code information)"
-                    "The functionCode holds the tool used/type of transform (e.g. text-to-code)"
-                    "and the time holds the time of the transformation/operation"
-                ),
-                author,
-            )
         function_code = etree.SubElement(author, "functionCode")
         function_code.set("code", value=self.config.author_function_code)
         function_code.set("codeSystem", value=self.config.author_function_code_system)
@@ -258,7 +255,19 @@ class EICRAugmenter(Augmenter):
                 ),
                 function_code,
             )
-        author.append(self._get_new_effective_time())
+        author_eff_time = self._get_new_effective_time()
+        author.append(author_eff_time)
+        self._add_previous_element_comment("time of data augmentation operation ", author_eff_time)
+        if level == "header":
+            self._add_previous_element_comment(
+                (
+                    "Header-level Author to flag that this document"
+                    "has been transformed on the platform (e.g. to add text-to-code information)"
+                    "The functionCode holds the tool used/type of transform (e.g. text-to-code)"
+                    "and the time holds the time of the transformation/operation"
+                ),
+                author,
+            )
         assigned_author = etree.SubElement(author, "assignedAuthor")
         id = etree.SubElement(assigned_author, "id")
         id.set("nullFlavor", "NA")
