@@ -240,6 +240,7 @@ def _process_record_pipeline(
                 f"Embedding the relevant text strings for each error in the eICR for persistence_id {persistence_id}"
             )
             # If no relevant text was selected for the error, we can skip the embedding and querying steps for that error
+            # TODO: update this to perhaps return better info?
             if selected_candidate is None:
                 continue
             # TODO: update embedder with TTC model
