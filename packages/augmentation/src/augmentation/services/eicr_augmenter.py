@@ -85,6 +85,7 @@ class EICRAugmenter(Augmenter):
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_id_element = self._get_new_document_id()
         new_id_element.tail = old_id_element.tail
+        self._add_previous_element_comment("new-document-id", new_id_element)
         self._augmented_element.replace(old_id_element, new_id_element)
 
         # 2 replace the effectiveTime tag
@@ -92,6 +93,9 @@ class EICRAugmenter(Augmenter):
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_eff_time_element = self._get_new_effective_time()
         new_eff_time_element.tail = old_eff_time_element.tail
+        self._add_previous_element_comment(
+            "time of data augmentation operation", new_eff_time_element
+        )
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
 
         # 3 next replace the setId tag
@@ -99,16 +103,21 @@ class EICRAugmenter(Augmenter):
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_set_id_element = self._get_new_set_id()
         new_set_id_element.tail = old_set_id_element.tail
+        self._add_previous_element_comment("new-document-setId", new_set_id_element)
         self._augmented_element.replace(old_set_id_element, new_set_id_element)
         # 4 finally replace the versionNumber tag
         old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_version_element = self._get_new_version_number()
         new_version_element.tail = old_version_element.tail
+        self._add_previous_element_comment("new-document-versionNumber", new_version_element)
         self._augmented_element.replace(old_version_element, new_version_element)
         # 5 add the new templateId tag
         template_id = self._get_augmented_template_id()
-        self._augmented_element.append(template_id)
+        self._add_previous_element_comment("eICR Data Augmentation Header", template_id)
+        # find the newly added and updated document id and put the templateId right before it
+        new_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
+        new_id.addprevious(template_id)
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
@@ -185,6 +194,11 @@ class EICRAugmenter(Augmenter):
         template_id_tag.set("root", "2.16.840.1.113883.10.20.15.2.1.3")
         template_id_tag.set("extension", "2025-11-01")
         return template_id_tag
+
+    def _add_previous_element_comment(self, comment: str, element: Element) -> None:
+        """Generate an XML comment element with the given comment text and add it before the specified element."""
+        comment_element = etree.Comment(f"DATA AUGMENTATION: {comment}")
+        element.addprevious(comment_element)
 
     def _get_old_xrfm_related_document(self) -> Element | None:
         """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""
