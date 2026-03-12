@@ -51,7 +51,7 @@ class TTCAugmenterConfig(AugmenterConfig):
     # TODO: The function code is currently a constant (used for both lab orders and results), but will need to be dynamic when additional fields with different function codes are introduced.
     author_function_code: str = "code-text-to-code"
     author_function_code_system: str = "2.16.840.1.113663.10.20.15.2.7.1"
-    author_function_code_system_name: str = "eCR Data Augmentation"
+    author_function_code_system_name: str = "eCRDataAugmentation"
 
     @model_validator(mode="after")
     def validate_rules(self) -> "TTCAugmenterConfig":

@@ -106,6 +106,9 @@ class EICRAugmenter(Augmenter):
         new_version_element = self._get_new_version_number()
         new_version_element.tail = old_version_element.tail
         self._augmented_element.replace(old_version_element, new_version_element)
+        # 5 add the new templateId tag
+        template_id = self._get_augmented_template_id()
+        self._augmented_element.append(template_id)
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
@@ -174,6 +177,14 @@ class EICRAugmenter(Augmenter):
         # TODO: we may need to have some way to increment this later
         version_number_tag.set("value", "1")
         return version_number_tag
+
+    def _get_augmented_template_id(self) -> Element:
+        """Generate a new templateId element for the augmented eICR document."""
+        # this new templateId is defined in the Augmentation Spec V2
+        template_id_tag = etree.Element("templateId")
+        template_id_tag.set("root", "2.16.840.1.113883.10.20.15.2.1.3")
+        template_id_tag.set("extension", "2025-11-01")
+        return template_id_tag
 
     def _get_old_xrfm_related_document(self) -> Element | None:
         """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""

@@ -18,7 +18,7 @@
                                     <translation code="10101010" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Chad new LOINC code" originalText="Loser old LOINC"/>
                                 </code>
                                 <author>
-                                    <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCR Data Augmentation"/>
+                                    <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
                                     <effectiveTime value="20260213152757"/>
                                     <assignedAuthor>
                                         <id nullFlavor="NA"/>
@@ -44,7 +44,7 @@
         </parentDocument>
     </relatedDocument>
     <author>
-        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCR Data Augmentation"/>
+        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
         <effectiveTime value="20260213152757"/>
         <assignedAuthor>
             <id nullFlavor="NA"/>
