@@ -1,3 +1,6 @@
+import json
+
+import lambda_handler
 from text_to_code_lambda import lambda_function
 
 
@@ -9,11 +12,41 @@ class TestHandler:
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
-            "num_successes": 1,
+            "num_success_eicrs": 1,
         }
 
         # Assert that the number of calls to opensearch_client.search is equal to the expected number of errors
         assert mock_opensearch.search.call_count == expected_num_errors
+
+        # Assert that the TTC output was saved to S3
+        ttc_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=mock_aws_setup.ttc_output_bucket_name,
+                object_key=mock_aws_setup.persistence_id,
+            )
+        )
+        # TODO: update the content to match expected output type once we complete ticket #327 and update the test data
+        assert ttc_output is not None
+        assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert "schematron_errors" in ttc_output
+        assert "eicr_metadata" in ttc_output
+        assert "opensearch_retrieved_scores" not in ttc_output["schematron_errors"]
+
+        # Assert that the TTC metadata output was saved to S3 with the expected content
+        ttc_metadata_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=mock_aws_setup.ttc_metadata_bucket_name,
+                object_key=mock_aws_setup.persistence_id,
+            )
+        )
+        assert ttc_metadata_output is not None
+        assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert "eicr_metadata" in ttc_metadata_output
+        assert "schematron_errors" in ttc_metadata_output
+        assert (
+            "opensearch_retrieved_scores"
+            in ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
         """Test handler with no records."""
@@ -23,9 +56,9 @@ class TestHandler:
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
-            "num_successes": 0,
+            "num_success_eicrs": 0,
         }
-        assert resp["num_successes"] == 0
+        assert resp["num_success_eicrs"] == 0
         assert mock_opensearch.search.call_count == expected_num_errors
 
     def test_handler_with_empty_body(self, example_sqs_event, caplog_warning, mock_opensearch):
@@ -37,23 +70,6 @@ class TestHandler:
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
-            "num_successes": 1,
+            "num_success_eicrs": 1,
         }
         assert mock_opensearch.search.call_count == expected_num_errors
-
-    # def test_handler_with_processing_failure(self, example_sqs_event, monkeypatch):
-    #     """Test handler with a processing failure."""
-
-    #     # Patch the process_record function to raise an exception for testing
-    #     def mock_process_record(record) -> None:
-    #         raise Exception("Test processing error")
-
-    #     monkeypatch.setattr(lambda_function, "process_record", mock_process_record)
-
-    #     resp = lambda_function.handler(example_sqs_event, {})
-    #     assert resp["statusCode"] == 200
-    #     assert resp["message"] == "TTC processed with some failures!"
-    #     assert resp["num_failures"] == 1
-    #     assert resp["num_successes"] == 0
-    #     assert len(resp["failures"]) == 1
-    #     assert resp["failures"][0]["error"] == "Test processing error"

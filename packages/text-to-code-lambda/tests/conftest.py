@@ -130,6 +130,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.ttc_input_bucket_name = os.getenv("TTC_INPUT_PREFIX").split("/")[0]
         s3.ttc_output_bucket_name = os.getenv("TTC_OUTPUT_PREFIX").split("/")[0]
         s3.ttc_metadata_bucket_name = os.getenv("TTC_METADATA_PREFIX").split("/")[0]
+        s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put test Schematron error file in the mock S3 bucket
         current_dir = Path(__file__).parent.parent.parent
