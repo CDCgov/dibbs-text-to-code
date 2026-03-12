@@ -4,10 +4,6 @@ from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted
 from .query import DataFieldTypeMapping
-from .query import OpenSearchHit
-from .query import OpenSearchHits
-from .query import OpenSearchResult
-from .query import OpenSearchShards
 from .query import VectorSearchParams
 from .registry import EICR_REGISTRY
 from .registry import default_model
@@ -28,10 +24,6 @@ __all__ = [
     "LabTestNameResulted",
     "LabTestNameResultedSchematronErrors",
     "LabXPaths",
-    "OpenSearchHit",
-    "OpenSearchHits",
-    "OpenSearchResult",
-    "OpenSearchShards",
     "SchematronConfig",
     "SchematronErrors",
     "VectorSearchParams",

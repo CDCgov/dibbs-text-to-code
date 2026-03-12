@@ -9,7 +9,8 @@ from botocore.exceptions import ClientError
 from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
-from text_to_code.models import OpenSearchResult
+
+from .models import OpenSearchResult
 
 
 def require_env(name: str) -> str:
