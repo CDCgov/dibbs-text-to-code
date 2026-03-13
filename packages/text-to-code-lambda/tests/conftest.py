@@ -1,35 +1,39 @@
 import json
 import logging
 import os
+from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import boto3
 import moto
 import pytest
+from text_to_code_lambda import lambda_function
+
+EICR_INPUT_PREFIX = "eCRMessageV2/"
+SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
+TTC_INPUT_PREFIX = "TextToCodeSubmission/"
+TTC_OUTPUT_PREFIX = "TTCOutput/"
+TTC_METADATA_PREFIX = "TTCMetadata/"
+AWS_REGION = "us-east-1"
+AWS_ACCESS_KEY_ID = "test_access_key_id"
+AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
+OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
+TEST_BUCKET_NAME = "test-bucket"
+TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 
 
-@pytest.fixture(scope="function")
-def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
-    """Setup test AWS."""
-    with moto.mock_aws():
-        monkeypatch.setenv("AWS_REGION", "us-east-1")
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
-        bucket_name = "test-bucket"
-        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", "https://test-opensearch-endpoint.com")
-
-        # Create the fake S3 bucket
-        s3 = boto3.client(
-            "s3",
-            region_name=os.environ["AWS_REGION"],
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        )
-        s3.create_bucket(Bucket=bucket_name)
-
-        # Add convenience attribute for tests
-        s3.bucket_name = bucket_name
-
-        yield s3
+def pytest_configure() -> None:
+    """Configure env variables for pytest."""
+    os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
+    os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
+    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
+    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
+    os.environ["TTC_METADATA_PREFIX"] = TTC_METADATA_PREFIX
+    os.environ["AWS_REGION"] = AWS_REGION
+    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
+    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
+    os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
 
 
 @pytest.fixture
@@ -49,9 +53,9 @@ def example_s3_event_payload() -> dict:
         "resources": ["arn:aws:s3:::my-bucket-name"],
         "detail": {
             "version": "0",
-            "bucket": {"name": "ecr-bucket"},
+            "bucket": {"name": "eCRMessageV2"},
             "object": {
-                "key": "TextToCodeSubmission/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+                "key": f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
                 "size": 1024,
                 "etag": "0123456789abcdef0123456789abcdef",
                 "sequencer": "0055AED6DCD90281E5",
@@ -97,3 +101,140 @@ def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
     """
     caplog.set_level(logging.WARNING)
     return caplog
+
+
+@pytest.fixture(scope="function")
+def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+    """Setup test AWS environment."""
+    with moto.mock_aws():
+        monkeypatch.setenv("AWS_REGION", AWS_REGION)
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
+        # Create the fake S3 bucket
+        s3 = boto3.client(
+            "s3",
+            region_name=os.environ["AWS_REGION"],
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+        )
+        s3.create_bucket(Bucket=os.getenv("EICR_INPUT_PREFIX").split("/")[0])
+        s3.create_bucket(Bucket=os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0])
+        s3.create_bucket(Bucket=os.getenv("TTC_INPUT_PREFIX").split("/")[0])
+        s3.create_bucket(Bucket=os.getenv("TTC_OUTPUT_PREFIX").split("/")[0])
+        s3.create_bucket(Bucket=os.getenv("TTC_METADATA_PREFIX").split("/")[0])
+
+        # Add convenience attribute for tests
+        s3.ecr_bucket_name = os.getenv("EICR_INPUT_PREFIX").split("/")[0]
+        s3.schematron_bucket_name = os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0]
+        s3.ttc_input_bucket_name = os.getenv("TTC_INPUT_PREFIX").split("/")[0]
+        s3.ttc_output_bucket_name = os.getenv("TTC_OUTPUT_PREFIX").split("/")[0]
+        s3.ttc_metadata_bucket_name = os.getenv("TTC_METADATA_PREFIX").split("/")[0]
+        s3.persistence_id = TEST_PERSISTENCE_ID
+
+        # Put test Schematron error file in the mock S3 bucket
+        current_dir = Path(__file__).parent.parent.parent
+        schematron_path = (
+            current_dir / "text-to-code" / "tests" / "assets" / "test_schematron_errors.xml"
+        )
+        with schematron_path.open() as f:
+            schematron_output = f.read()
+        s3.put_object(
+            Bucket=s3.schematron_bucket_name,
+            Key=TEST_PERSISTENCE_ID,
+            Body=schematron_output,
+        )
+
+        # Put test eCR message file in the mock S3 bucket
+        ecr_path = current_dir / "text-to-code" / "tests" / "assets" / "basic_test_eicr.xml"
+        with ecr_path.open() as f:
+            ecr_message = f.read()
+        s3.put_object(
+            Bucket=s3.ecr_bucket_name,
+            Key=TEST_PERSISTENCE_ID,
+            Body=ecr_message,
+        )
+
+        yield s3
+
+
+@pytest.fixture(autouse=True)
+def reset_opensearch_cache() -> None:
+    """Reset cached OpenSearch client before every test."""
+    lambda_function._cached_opensearch_client = None
+
+
+@pytest.fixture(scope="function")
+def mock_opensearch() -> MagicMock:
+    """Mock OpenSearch client.
+
+    We have to use MagicMock here instead of moto because
+    moto's mocked version of OpenSearch does not support the search functionality,
+    only the creation and deletion of indices.
+    """
+    opensearch_client = MagicMock()
+
+    opensearch_client.search.return_value = {
+        "took": 57,
+        "timed_out": False,
+        "_shards": {"total": 1, "successful": 1, "skipped": 0, "failed": 0},
+        "hits": {
+            "total": {"value": 3},
+            "hits": [
+                {
+                    "_index": "ttc_index",
+                    "_id": "rbLli5wBhppl0u9qtwLN",
+                    "_score": 0.95,
+                    "_source": {
+                        "id": 0,
+                        "loinc_code": "109224-6",
+                        "loinc_name_type": "Long Common Name",
+                        "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                        "loinc_type": "Order",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+                {
+                    "_index": "ttc_index",
+                    "_id": "123455wBhppl0u9qtABC",
+                    "_score": 0.88,
+                    "_source": {
+                        "id": 1,
+                        "loinc_code": "82041-5",
+                        "loinc_name_type": "Short Name",
+                        "description": "Weed Allerg Mix3 IgE Qn",
+                        "loinc_type": "Order",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+                {
+                    "_index": "ttc_index",
+                    "_id": "123455wBhppl0u9qtABC",
+                    "_score": 0.65,
+                    "_source": {
+                        "id": 4,
+                        "loinc_code": "15273-6",
+                        "loinc_name_type": "Fully-Specified Name",
+                        "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                        "loinc_type": "Both",
+                        "s3": {
+                            "bucket": "dibbs-ttc",
+                            "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+                        },
+                    },
+                },
+            ],
+        },
+    }
+
+    with patch(
+        "lambda_handler.create_opensearch_client",
+        return_value=opensearch_client,
+    ):
+        yield opensearch_client

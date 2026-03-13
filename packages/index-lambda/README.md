@@ -8,7 +8,7 @@
 
 🚧 Under Construction 🚧
 
-This 'module' has been created for handling the initial indexing of Open Search data. It runs one time during deployment to create the opensearch index with the appropriate mappings. It exists currently under the DIBBS-TEXT-TO-CODE project and product repo as this will be necessary to leverage Open Search for the aws and augmentation lambdas.
+This 'module' has been created for handling the initial indexing of Open Search data. It runs one time during deployment to create the OpenSearch index with the appropriate mappings. It exists currently under the DIBBS-TEXT-TO-CODE project and product repo as this will be necessary to leverage Open Search for the TTC and Augmentation lambdas.
 
 ## Getting Started
 
