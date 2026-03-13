@@ -240,18 +240,18 @@ class EICRAugmenter(Augmenter):
         if level == "header":
             self._add_previous_element_comment(
                 (
-                    "functionCode specifies type of change"
-                    "'text-to-code' which signifies this document has been transformed using the"
-                    "text-to-code data augmentation tool"
+                    "functionCode specifies type of change "
+                    "'text-to-code' which signifies this document has been transformed using the "
+                    "text-to-code data augmentation tool "
                 ),
                 function_code,
             )
         else:
             self._add_previous_element_comment(
                 (
-                    "functionCode specifies type of change"
-                    f"'{self.config.author_function_code}' which signifies that the code in this observation"
-                    "has been augmented with a code derived from the text in the code element"
+                    "functionCode specifies type of change "
+                    f"'{self.config.author_function_code}' which signifies that the code in this observation "
+                    "has been augmented with a code derived from the text in the code element "
                 ),
                 function_code,
             )
@@ -261,10 +261,10 @@ class EICRAugmenter(Augmenter):
         if level == "header":
             self._add_previous_element_comment(
                 (
-                    "Header-level Author to flag that this document"
-                    "has been transformed on the platform (e.g. to add text-to-code information)"
-                    "The functionCode holds the tool used/type of transform (e.g. text-to-code)"
-                    "and the time holds the time of the transformation/operation"
+                    "Header-level Author to flag that this document "
+                    "has been transformed on the platform (e.g. to add text-to-code information) "
+                    "The functionCode holds the tool used/type of transform (e.g. text-to-code) "
+                    "and the time holds the time of the transformation/operation "
                 ),
                 author,
             )
@@ -305,7 +305,7 @@ class EICRAugmenter(Augmenter):
             "This data has been augmented with a standard LOINC code", entry_code
         )
         self._add_previous_element_comment(
-            "The data in the code and code/orginalText data elements is the original data",
+            "The data in the code and code/originalText data elements is the original data",
             entry_code,
         )
         new_translation = etree.SubElement(entry_code, "translation")

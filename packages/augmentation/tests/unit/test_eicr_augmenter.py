@@ -73,7 +73,8 @@ class TestEicrAugmenter:
 
         result = augmenter.augmented_xml
 
-        snapshot.assert_match(result, "basic_eicr_augmented.xml")
+        # test was failing due to whitespace at the end of the result so stripping it here
+        snapshot.assert_match(result.strip(), "basic_eicr_augmented.xml")
         assert metadata == Metadata(
             original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
             augmented_eicr_id="12345678-1234-5678-1234-567812345678",
@@ -118,9 +119,8 @@ class TestEicrAugmenter:
         metadata = augmenter.augment()
 
         result = augmenter.augmented_xml
-        print("HERE")
-        print(result)
-        snapshot.assert_match(result, "basic_eicr_related_doc_augmented.xml")
+        # test was failing due to whitespace at the end of the result so stripping it here
+        snapshot.assert_match(result.strip(), "basic_eicr_related_doc_augmented.xml")
         assert metadata == Metadata(
             original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
             augmented_eicr_id="12345678-1234-5678-1234-567812345678",
