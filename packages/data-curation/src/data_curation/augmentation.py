@@ -254,7 +254,7 @@ def enhance_loinc_str(
     :param min_enhancements: The minimum number of enhancements to apply.
     :return: The enhanced text.
     """
-    if max_enhancements <= min_enhancements:
+    if max_enhancements < min_enhancements:
         raise ValueError("max_enhancements must be greater than min_enhancements")
 
     # Step 1: build all substring candidates, including singletons
