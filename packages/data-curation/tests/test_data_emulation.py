@@ -80,13 +80,13 @@ class TestBuildAndProcessTTCandHeuristics:
 class TestBuildLOINCAxisExample:
     def test_regular_full_build(self):
         ex = data_emulation.build_loinc_axis_example(FENTANYL_STRUCT)
-        assert ex == "Fenpat Random Ur Qual Scn"
+        assert ex == "Fenpat Position Emmision Tomography Ur Qual Scn"
     def test_skip_time(self):
         ex = data_emulation.build_loinc_axis_example(ERYTHROCYTES_STRUCT)
-        assert ex == "Red cells Count Point in time Blood Quantitative Auto"
+        assert ex == "Red cells Count Positron Emission Tomography Blood Quantitative Auto"
     def test_skip_scale(self):
         ex = data_emulation.build_loinc_axis_example(CBC_STRUCT)
-        assert ex == "CBC W Auto Diff Random Whole blood Quan"
+        assert ex == "CBC W Auto Diff Position Emmision Tomography Whole blood Quan"
 
 class TestBuildShortNameHyphenVariant:
     def test_no_hyphen(self):
@@ -142,7 +142,7 @@ class TestCreateSyntheticExamplesForCode:
         assert set(synthetic_examples["long_common_name"]) == {
             "fentaNYL Detection (Presence) Screen",
             "[Presence] Actiq Scn Method",
-            "Sublimaze PET Scan Ur Ql Scn",
+            "Sublimaze Radnuc.PET Ur Ql Scn",
             "of in [Presence] Urine by Actiq Scn Method",
             "POC Screening fentaNYL Detection",
             "fentaNYL (Presence) in Urine by Screen method",
@@ -177,7 +177,7 @@ class TestCreateSyntheticExamplesForCode:
             "Erythrocytes Count [#/volume] in Whole Blood by Automated count",
             "POC Automated Erythrocytes Count (#/volume)",
             "POC Erythrocytes in Blood Automated count",
-            "Red blood cells absolutes Radnuc.PET Whole blood Quantitative Auto",
+            "Red blood cells absolutes Random Whole blood Quantitative Auto",
             "by corpuscle [#/volume] in Blood blood Red Auto count",
             "corpuscle [Number/volume] Blood blood Red Auto count"
         }
@@ -214,7 +214,7 @@ class TestCreateSyntheticExamplesForCode:
         assert set(synthetic_examples["long_common_name"]) == {
             "Blood CBC W Auto Differential panel -",
             "CBC W Auto Diff Blood - Pnl",
-            "CBC W Auto Diff PET Scan Whole blood Quantitative",
+            "CBC W Auto Diff Radnuc.PET Whole blood Quantitative",
             "CBC W Auto Differential panel - Serum, Plasma or Blood",
             "POC Blood CBC W Auto Differential panel",
             "POC CBC W Auto Diff Blood Pnl",
