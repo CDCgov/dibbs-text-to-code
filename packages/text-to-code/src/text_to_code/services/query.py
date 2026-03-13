@@ -25,7 +25,14 @@ class KNNQuery(pydantic.BaseModel):
 
 
 class TermsFilter(pydantic.BaseModel):
-    """Builds a terms filter for the query."""
+    """Builds a terms filter for the query.
+
+    The filter narrows down the search results to only include documents where the
+    specified field matches one of the provided values, ensuring that TTC retrieves
+    codes relevant to the specific data field. That is, it only returns LOINC codes
+    of type "Order" or "Both" for the lab test name ordered data field, and only LOINC
+    codes of type "Observation" or "Both" for the lab test result data field.
+    """
 
     field: str = pydantic.Field(default="type", description="The field to filter on, e.g., 'type'.")
     value: list[str] = pydantic.Field(
@@ -74,6 +81,7 @@ class QueryBuilder:
         self._size = params.size
         self.with_terms_filter(params)
         self.with_knn(params)
+        self._vector_field = params.vector_field
         return self
 
     def build(self) -> dict:
@@ -83,6 +91,12 @@ class QueryBuilder:
         """
         return {
             "size": self._size,
+            "_source": {
+                "excludes": [
+                    self._vector_field
+                ],  # Exclude the vector field from the results to reduce payload size & improve performance
+                "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
+            },
             "query": {
                 "bool": {
                     "filter": self._filters,

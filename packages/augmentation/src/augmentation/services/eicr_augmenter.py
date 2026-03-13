@@ -3,10 +3,12 @@ from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
-from shared_models import TTCAugmentation
+from shared_models import NonstandardCodeInstance
 
 from augmentation.models import ApplicationCode
+from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
+from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
 
 
@@ -23,7 +25,7 @@ class EICRAugmenter(Augmenter):
     def __init__(
         self,
         document: str,
-        augmentations: list[TTCAugmentation],
+        nonstandard_codes: list[NonstandardCodeInstance],
         config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
     ):
@@ -37,11 +39,12 @@ class EICRAugmenter(Augmenter):
 
         super().__init__(document, config, ApplicationCode.TEXT_TO_CODE, augmentation_date)
 
+        self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.new_doc_id: str = str(uuid4())
         self.new_set_id: str = str(uuid4())
-        self.augmentations = augmentations
+        self.nonstandard_codes = nonstandard_codes
 
-    def augment(self) -> None:
+    def augment(self) -> Metadata:
         """Apply augmentation to the eICR."""
         # Document level rules
         if "document_id_header" in self.config.rules["document"]:
@@ -50,12 +53,31 @@ class EICRAugmenter(Augmenter):
         if "author_header" in self.config.rules["document"]:
             self._handle_author_header()
 
-        for augmentation in self.augmentations:
-            data_type_rules = self.config.rules[augmentation.data_type]
+        nonstandard_code_metadata: list[NonstandardCodeInstanceMetadata] = []
+
+        for nonstandard_code_instance in self.nonstandard_codes:
+            data_type_rules = self.config.rules[nonstandard_code_instance.field_type]
             if "author_entry" in data_type_rules:
-                self._handle_author_entry(augmentation)
+                self._handle_author_entry(nonstandard_code_instance)
             if "translation" in data_type_rules:
-                self._handle_translation(augmentation)
+                new_translation_path = self._handle_translation(nonstandard_code_instance)
+
+            nonstandard_code_metadata.append(
+                NonstandardCodeInstanceMetadata(
+                    schematron_error=nonstandard_code_instance.schematron_error,
+                    schematron_error_xpath=nonstandard_code_instance.schematron_error_xpath,
+                    field_type=nonstandard_code_instance.field_type,
+                    new_translation=nonstandard_code_instance.new_translation,
+                    new_translation_xpath=new_translation_path,
+                )
+            )
+
+        metadata = Metadata(
+            original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
+            augmented_eicr_id=self.new_doc_id,
+            nonstandard_codes=nonstandard_code_metadata,
+        )
+        return metadata
 
     def _handle_document_id_header(self) -> None:
         # 1 first replace the id tag
@@ -188,17 +210,24 @@ class EICRAugmenter(Augmenter):
         author = self._generate_author()
         self._augmented_element.append(author)
 
-    def _handle_author_entry(self, augmentation: TTCAugmentation) -> None:
-        entry = self._get_augmented_tag_by_xpath(augmentation.location)
+    def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
+        entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
         author = self._generate_author()
         entry.append(author)
 
-    def _handle_translation(self, augmentation: TTCAugmentation) -> None:
-        entry_code = self._get_augmented_tag_by_xpath(augmentation.location + "/code")
+    def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
+        entry_code = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath + "/code")
 
         new_translation = etree.SubElement(entry_code, "translation")
-        new_translation.set("code", augmentation.code)
+        _set_attribute(new_translation, "code", augmentation.new_translation.code)
         new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
         new_translation.set("codeSystemName", "LOINC")
-        new_translation.set("DisplayName", augmentation.display_name)
-        new_translation.set("originalText", augmentation.original_text)
+        _set_attribute(new_translation, "DisplayName", augmentation.new_translation.display_name)
+        _set_attribute(new_translation, "originalText", augmentation.new_translation.original_text)
+
+        return self._augmented_element.getroottree().getpath(new_translation)
+
+
+def _set_attribute(element: Element, key: str, value: str | None) -> None:
+    if value:
+        element.set(key, value)

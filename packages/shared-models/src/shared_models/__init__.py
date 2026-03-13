@@ -4,6 +4,19 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 
+class CdaInstanceIdentifier(BaseModel):
+    """CDA Instance Identifier (II) data type.
+
+    https://build.fhir.org/ig/HL7/CDA-core-2.0/StructureDefinition-II.html
+    """
+
+    null_flavor: str | None = None
+    assigning_authority_name: str | None = None
+    displayable: bool | None = None
+    root: str | None = None
+    extension: str | None = None
+
+
 class DataField(StrEnum):
     """Enum for eICR data fields relevant to the TTC module."""
 
@@ -11,19 +24,39 @@ class DataField(StrEnum):
     LAB_TEST_NAME_ORDERED = "Lab Test Name Ordered"
 
 
-class TTCAugmentation(BaseModel):
-    """Model with everything needed to modify a code."""
+class Code(BaseModel):
+    """Model for CDA "ConceptDescriptor". This is the type of the new translation."""
 
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",
     )
 
-    location: str
-    data_type: DataField
-    code: str
-    display_name: str
-    original_text: str
+    code: str | None = None
+    code_system: str | None = None
+    code_system_name: str | None = None
+    display_name: str | None = None
+    value_set: str | None = None
+    value_set_version: str | None = None
+    original_text: str | None = None
+
+
+class NonstandardCodeInstance(BaseModel):
+    """Model with the information needed to update a nonstandard code."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    schematron_error: str
+    """The text of the Schematron error. This is only needed so that the augmentation metadata can save it."""
+    schematron_error_xpath: str
+    """The XPath give by the Schematron error to the observation with a nonconforming code."""
+    field_type: DataField
+    """The `DataField` type of the nonconforming code."""
+    new_translation: Code
+    """The new translation."""
 
 
 class TTCAugmenterInput(BaseModel):
@@ -34,4 +67,4 @@ class TTCAugmenterInput(BaseModel):
         extra="forbid",
     )
     eicr_id: str
-    augmentations: list[TTCAugmentation]
+    nonstandard_codes: list[NonstandardCodeInstance]

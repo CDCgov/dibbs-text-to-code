@@ -23,6 +23,8 @@ updates:
       interval: 'weekly'
       day: 'wednesday'
       time: '12:00'
+    exclude-paths:
+      - 'frontend/'
   - package-ecosystem: 'docker'
     directory: '/'
     open-pull-requests-limit: 2
