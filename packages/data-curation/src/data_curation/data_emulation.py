@@ -1063,7 +1063,7 @@ if __name__ == "__main__":
             display_name = display_name.strip(),
             consumer_name = consumer_name.strip(),
             fully_specified_name = fully_specified_name.strip(),
-            lab_type = lab_type.strip(),
+            lab_type = lab_type.strip().lower(),
             class_type = class_type.strip(),
             property = property_axis.strip() if _axis_is_valid(property_axis.strip()) else None,
             time = time_axis.strip() if _axis_is_valid(time_axis.strip()) else None,
@@ -1077,7 +1077,7 @@ if __name__ == "__main__":
         synthetic_examples = create_synthetic_examples_for_code(structured_loinc)
         search_train_lcns, reranker_train_lcns, validation_lcns = \
             _allocate_generated_loincs_to_training_arrays(
-                structured_loinc["long_common_name"],
+                structured_loinc.long_common_name,
                 synthetic_examples["long_common_name"],
                 search_train_lcns,
                 reranker_train_lcns,
@@ -1085,7 +1085,7 @@ if __name__ == "__main__":
             )
         search_train_dns, reranker_train_dns, validation_dns = \
             _allocate_generated_loincs_to_training_arrays(
-                structured_loinc["display_name"],
+                structured_loinc.display_name,
                 synthetic_examples["display_name"],
                 search_train_dns,
                 reranker_train_dns,
@@ -1094,7 +1094,7 @@ if __name__ == "__main__":
         if INCLUDE_CN_IN_FINAL_OUTPUT:
             search_train_cns, reranker_train_cns, validation_cns = \
                 _allocate_generated_loincs_to_training_arrays(
-                    structured_loinc["consumer_name"],
+                    structured_loinc.consumer_name,
                     synthetic_examples["consumer_name"],
                     search_train_cns,
                     reranker_train_cns,
@@ -1103,7 +1103,7 @@ if __name__ == "__main__":
         # We'll have to randomize and divide up short names at the end,
         # there just aren't enough to apportion for each code
         for ex_string in synthetic_examples["short_name"]:
-            sns.append( (structured_loinc["short_name"], ex_string) )
+            sns.append( (structured_loinc.short_name, ex_string) )
     
     # Now we'll divide up short names 50-30-20 across training and testing
     random.shuffle(sns)
