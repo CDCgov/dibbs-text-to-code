@@ -132,6 +132,7 @@ class LabTestNameOrderedEvaluationCriteria(BaseEvaluationCriteria):
             XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
             XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
             XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
+            XPathPriority(xpath=LabXPaths.OBSERVATION_TEXT, priority=5),
         ]
     )
 
@@ -162,6 +163,7 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
             XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME, priority=2),
             XPathPriority(xpath=LabXPaths.CODE_ORIGINAL_TEXT, priority=3),
             XPathPriority(xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT, priority=4),
+            XPathPriority(xpath=LabXPaths.OBSERVATION_TEXT, priority=5),
         ]
     )
 
