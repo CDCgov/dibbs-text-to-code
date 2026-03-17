@@ -9,9 +9,6 @@ from data_curation.schemas.loinc_struct import LoincStruct, LabType
 from utils import normalize
 from utils import path
 
-keys = list(data_emulation.LOINC_ENHANCEMENTS.keys())
-print(keys[:10])
-
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 assert len(LOINC_ENHANCEMENTS) > 0
