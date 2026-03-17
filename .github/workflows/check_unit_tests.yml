@@ -30,7 +30,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          uv run pytest --cov --trace-config
+          uv run pytest --cov --trace-config -s
 
       - name: Generate coverage report
         run: |
