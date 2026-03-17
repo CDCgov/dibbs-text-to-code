@@ -173,6 +173,11 @@ To run a single unit test, use the following command:
 pytest tests/unit/test_utils.py::test_function
 ```
 
+To update snapshots:
+```sh
+pytest --snapshot-update
+```
+
 ### Type checks
 
 To run type checks, use the following command:
