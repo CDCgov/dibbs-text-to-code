@@ -12,9 +12,6 @@ on:
         description: "Destroy state backend resources (WARNING: irreversible)"
         type: boolean
         default: false
-  push:
-    branches:
-      - nickclyde/setup-terraform
 
 concurrency:
   group: bootstrap-terraform-state
@@ -55,7 +52,7 @@ jobs:
         run: terraform plan
 
       - name: Terraform Apply
-        # if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy }}
         working-directory: terraform/bootstrap
         run: terraform apply -auto-approve
 
