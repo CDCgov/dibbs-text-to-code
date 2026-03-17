@@ -22,7 +22,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
+                    <tr ID="row_reference_1">
                       <td ID="simple_reference_1">
                         My reference
                       </td>
@@ -39,6 +39,9 @@
                 </table>
               </text>
               <observation>
+                <text>
+                  <reference value="#row_reference_1" />
+                </text>
                 <code>
                   <originalText>
                     <reference value="#simple_reference_1" />

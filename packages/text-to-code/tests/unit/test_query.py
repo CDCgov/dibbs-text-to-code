@@ -60,6 +60,10 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": size,
+            "_source": {
+                "excludes": ["descriptionVector"],
+                "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
+            },
             "query": {
                 "bool": {
                     "filter": [
@@ -96,6 +100,10 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": 10,
+            "_source": {
+                "excludes": ["descriptionVector"],
+                "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
+            },
             "query": {
                 "bool": {
                     "filter": [
@@ -129,6 +137,10 @@ class TestQueryBuilder:
 
         expected_query = {
             "size": 10,
+            "_source": {
+                "excludes": ["descriptionVector"],
+                "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
+            },
             "query": {
                 "bool": {
                     "filter": [
