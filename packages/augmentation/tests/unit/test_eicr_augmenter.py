@@ -38,7 +38,7 @@ class TestEicrAugmenter:
     def test_no_document_data(self):
         """Tests raising error when no document data is provided."""
         with pytest.raises(ValueError, match=r"Document payload must be a non-empty string!"):
-            EICRAugmenter(None, [])
+            EICRAugmenter("", [])
 
     def test_initialization(self):
         """Tests initialization of the TTC augmenter."""
