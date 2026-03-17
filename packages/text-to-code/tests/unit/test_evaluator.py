@@ -23,9 +23,7 @@ def test_selects_code_display_name_when_present_and_non_empty() -> None:
 
     selected = select_relevant_text(candidates=candidates, criteria=criteria)
 
-    assert (
-        selected == "SARS-CoV-2 (COVID-19) RNA [Presence] in Specimen by NAA with probe detection"
-    )
+    assert selected == candidates[0]
 
 
 def test_falls_back_to_translation_display_name_when_code_display_name_missing() -> None:
@@ -46,7 +44,7 @@ def test_falls_back_to_translation_display_name_when_code_display_name_missing()
 
     selected = select_relevant_text(candidates=candidates, criteria=criteria)
 
-    assert selected == "SARS-CoV-2 RNA Spec Ql NAA+probe"
+    assert selected == candidates[0]
 
 
 def test_prefers_loinc_translation_over_snomed_when_multiple_translation_display_names() -> None:
@@ -67,7 +65,7 @@ def test_prefers_loinc_translation_over_snomed_when_multiple_translation_display
 
     selected = select_relevant_text(candidates=candidates, criteria=criteria)
 
-    assert selected == "Preferred LOINC text"
+    assert selected == candidates[1]
 
 
 def test_prefers_snomed_translation_when_no_loinc_translation_present() -> None:
@@ -88,7 +86,7 @@ def test_prefers_snomed_translation_when_no_loinc_translation_present() -> None:
 
     selected = select_relevant_text(candidates=candidates, criteria=criteria)
 
-    assert selected == "Preferred SNOMED text"
+    assert selected == candidates[0]
 
 
 def test_falls_back_to_code_original_text_when_code_display_name_is_blank() -> None:
@@ -109,7 +107,7 @@ def test_falls_back_to_code_original_text_when_code_display_name_is_blank() -> N
 
     selected = select_relevant_text(candidates=candidates, criteria=criteria)
 
-    assert selected == "COVID19 PCR QUALITATIVE"
+    assert selected == candidates[1]
 
 
 def test_returns_none_when_all_candidates_are_blank_or_missing_for_priorities() -> None:

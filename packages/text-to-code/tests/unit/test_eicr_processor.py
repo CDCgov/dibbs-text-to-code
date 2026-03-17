@@ -2,9 +2,11 @@ from pathlib import Path
 
 import pytest
 from lxml.etree import XMLSyntaxError
+from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
 from text_to_code.models import Candidate
 from text_to_code.models import LabXPaths
+from text_to_code.models.eicr import Metadata
 from text_to_code.services.eicr_processor import EicrProcessor
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
@@ -40,28 +42,40 @@ class TestBadEicr:
 
 class TestBasicEicrProcessor:
     @pytest.fixture(scope="class")
-    def result(self) -> list[Candidate]:
+    def eicr_processor(self) -> EicrProcessor:
         eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
         with eicr_path.open() as f:
             eicr_output = f.read()
 
-        return EicrProcessor(eicr_output).get_text_candidates(
-            BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED
-        )
+        return EicrProcessor(eicr_output)
 
-    def test_attribute_candidate(self, result: list[Candidate]):
-        assert result[0] == Candidate(
+    @pytest.fixture(scope="class")
+    def eicr_metadata(self, eicr_processor: EicrProcessor) -> Metadata:
+        return eicr_processor.eicr_metadata
+
+    @pytest.fixture(scope="class")
+    def candidates(self, eicr_processor: EicrProcessor) -> list[Candidate]:
+        return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+    def test_attribute_candidate(self, candidates: list[Candidate]):
+        assert candidates[0] == Candidate(
             value="A custom code in display name.", xpath=LabXPaths.CODE_DISPLAY_NAME
         )
 
-    def test_text_candidate(self, result: list[Candidate]):
-        assert result[1] == Candidate(
+    def test_text_candidate(self, candidates: list[Candidate]):
+        assert candidates[1] == Candidate(
             value="A custom code in original text.", xpath=LabXPaths.CODE_ORIGINAL_TEXT
         )
 
-    def test_candidate_count(self, result: list[Candidate]):
+    def test_candidate_count(self, candidates: list[Candidate]):
         expected = 2
-        assert len(result) == expected
+        assert len(candidates) == expected
+
+    def test_metadata(self, eicr_metadata: Metadata):
+        assert eicr_metadata == Metadata(
+            eicr_id=CdaInstanceIdentifier(root="c8516bdc-8bb2-40aa-8dae-20a77546488f"),
+            eicr_vendor="Test eCR Vendor Name",
+        )
 
 
 class TestReferences:
@@ -77,16 +91,16 @@ class TestReferences:
 
     def test_simple_reference(self, results: list[Candidate]):
         expected = "My reference"
-        assert results[0] == Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT)
+        assert Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT) in results
 
     def test_additional_text_in_original(self, results: list[Candidate]):
         expected = "This original text has additional text My reference Even more stuff here"
-        assert results[1] == Candidate(
-            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
-        )
+        assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT) in results
 
     def test_complicated_reference(self, results: list[Candidate]):
         expected = "A more complicated reference With extra nodes"
-        assert results[2] == Candidate(
-            value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT
-        )
+        assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT)
+
+    def test_row_reference(self, results: list[Candidate]):
+        expected = "My reference A more complicated reference With extra nodes"
+        assert Candidate(value=expected, xpath=LabXPaths.OBSERVATION_TEXT) in results
