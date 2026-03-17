@@ -50,8 +50,8 @@ os_client = OpenSearch(
 )
 
 
-def lambda_handler(event, context):
-    # Create index with vectors mapping
+def lambda_handler(event: dict, context: object) -> dict:
+    """Create or recreate the OpenSearch KNN index."""
     mapping = {
         "settings": {
             "index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}
