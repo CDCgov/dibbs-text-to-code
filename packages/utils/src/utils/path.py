@@ -67,7 +67,7 @@ def load_loinc_enhancements(cwd: str):
     matches = glob.glob(pattern)
 
     enhancements = {}
-    for match in matches:
+    for match in sorted(matches):
         match_path = pathlib.Path(match)
         match_path = pathlib.Path(*match_path.parts[levels:])
         m = read_json(match_path)
