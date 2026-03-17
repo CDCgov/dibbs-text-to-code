@@ -3,11 +3,14 @@ import json
 import lambda_handler
 from text_to_code_lambda import lambda_function
 
+EXPECTED_RESULTED_ERRORS = 2
+EXPECTED_ORDERED_ERRORS = 2
+
 
 class TestHandler:
     def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_opensearch):
         """Test handler with no failures."""
-        expected_num_errors = 3
+        expected_num_errors = 4
         resp = lambda_function.handler(example_sqs_event, {})
         assert resp == {
             "statusCode": 200,
@@ -30,7 +33,20 @@ class TestHandler:
         assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "schematron_errors" in ttc_output
         assert "eicr_metadata" in ttc_output
-        assert "opensearch_retrieved_scores" not in ttc_output["schematron_errors"]
+        assert (
+            len(ttc_output["schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_output["schematron_errors"]["Lab Test Name Ordered"]) == EXPECTED_ORDERED_ERRORS
+        )
+        assert (
+            "opensearch_retrieved_scores"
+            not in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        assert "candidate" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert "error_context" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert "error_id" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
         ttc_metadata_output = json.loads(
@@ -43,6 +59,14 @@ class TestHandler:
         assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "eicr_metadata" in ttc_metadata_output
         assert "schematron_errors" in ttc_metadata_output
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Ordered"])
+            == EXPECTED_ORDERED_ERRORS
+        )
         assert (
             "opensearch_retrieved_scores"
             in ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]
