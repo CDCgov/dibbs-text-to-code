@@ -35,6 +35,45 @@ class TestSchematronProcessor:
         assert len(lab_test_name_resulted_errors) == expected_lab_test_name_resulted
         assert len(lab_test_name_ordered_errors) == expected_lab_test_name_ordered
 
+    def test_get_schematron_error_detail_fields(self):
+        self.file_setup()
+        error_result = get_data_fields_from_schematron_error(
+            self.SCHEMATRON_ERROR_FILE,
+        )
+
+        expected_total_errors = 4
+
+        assert len(error_result) == expected_total_errors
+
+        lab_test_name_resulted_error = next(
+            error
+            for error in error_result
+            if error.field == DataField.LAB_TEST_NAME_RESULTED
+            and error.error_message
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+        )
+
+        assert lab_test_name_resulted_error.eicr_id is None
+        assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
+        assert (
+            lab_test_name_resulted_error.error
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+        )
+        assert (
+            lab_test_name_resulted_error.error_message
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+        )
+        assert (
+            lab_test_name_resulted_error.error_context
+            == "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
+        )
+        assert (
+            lab_test_name_resulted_error.error_test
+            == " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code"
+        )
+        assert lab_test_name_resulted_error.error_id is None
+        assert lab_test_name_resulted_error.candidate is None
+
     def test_get_schematron_error_empty_xml(self):
         schematron_errors = ""
         result = get_data_fields_from_schematron_error(schematron_errors)
