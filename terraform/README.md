@@ -1,89 +1,159 @@
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+# Terraform Infrastructure Overview
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.7.4 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.86.0 |
-| <a name="requirement_opensearch"></a> [opensearch](#requirement\_opensearch) | 2.3.2 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.3 |
+This directory contains Terraform configuration for deploying the TTC (Text-to-Code) Lambda and its supporting AWS infrastructure. All resources are deployed into a private VPC with no public internet access.
 
-## Providers
+## Architecture
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.86.1 |
+```
+S3 Bucket (dibbs-text-to-code)
+    │
+    ├── ingestion/ prefix
+    │       │
+    │       └── OpenSearch Ingestion Pipeline (OSIS)
+    │               │  polls monthly, reads NDJSON
+    │               ▼
+    │       OpenSearch Domain (ttc-os-domain)
+    │               ▲
+    │               │ KNN queries
+    └── TTC Lambda (ttc-lambda, container image from ECR)
+```
 
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | 5.16.0 |
+All components live inside a private VPC (no NAT gateway, no internet gateway). Lambda and OpenSearch communicate over a VPC endpoint; S3 is accessed via a Gateway VPC endpoint (no internet required).
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [aws_cloudwatch_log_group.ttc_ingestion_pipeline_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_iam_role.lambda_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role.os_ingestion_pipeline_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy.lambda_opensearch_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy.os_ingestion_pipeline_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy_attachment.cloudwatch_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.s3_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.vpc_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_lambda_function.index_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
-| [aws_lambda_function.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
-| [aws_lambda_invocation.index_bootstrap](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_invocation) | resource |
-| [aws_lambda_layer_version.lambda_layer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_layer_version) | resource |
-| [aws_opensearch_domain.os](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearch_domain) | resource |
-| [aws_opensearch_vpc_endpoint.os_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearch_vpc_endpoint) | resource |
-| [aws_osis_pipeline.ttc_ingestion_pipeline](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/osis_pipeline) | resource |
-| [aws_security_group.lambda_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_security_group.opensearch_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_vpc_endpoint.s3_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
-| [aws_vpc_security_group_egress_rule.lambda_all_egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
-| [aws_vpc_security_group_egress_rule.opensearch_all_egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
-| [aws_vpc_security_group_ingress_rule.opensearch_https_from_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
-| [aws_iam_policy_document.lambda_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.opensearch_access_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+### Networking (`main.tf`)
 
-## Inputs
+- **VPC** (`module.vpc`): A private-only VPC (`10.0.0.0/16`) with three private subnets across three availability zones (`us-east-2a/b/c`). No NAT gateway or internet gateway — all traffic stays within AWS.
+- **S3 VPC Endpoint** (`aws_vpc_endpoint.s3_endpoint`): Gateway endpoint routing S3 traffic through the private route tables, allowing Lambda to read/write S3 without internet access.
+- **Lambda Security Group** (`aws_security_group.lambda_sg`): Attached to all Lambda functions. Allows all outbound traffic; no inbound rules (Lambda initiates all connections).
+- **OpenSearch Security Group** (`aws_security_group.opensearch_sg`): Allows inbound HTTPS (port 443) only from the Lambda security group. All outbound traffic permitted.
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | The zones that the private subnets and OpenSearch domain will be deployed in. Must be in the same region as specified in the 'region' variable | `list(string)` | <pre>[<br>  "us-east-2a",<br>  "us-east-2b",<br>  "us-east-2c"<br>]</pre> | no |
-| <a name="input_index_lambda_function_name"></a> [index\_lambda\_function\_name](#input\_index\_lambda\_function\_name) | The name of the lambda function responsible for creating the OpenSearch index at deployment time | `string` | `"ttc-index-lambda"` | no |
-| <a name="input_index_lambda_function_zip_path"></a> [index\_lambda\_function\_zip\_path](#input\_index\_lambda\_function\_zip\_path) | Path to the index lambda function zip file | `string` | `"lambda/build/index_lambda_function.zip"` | no |
-| <a name="input_index_lambda_handler"></a> [index\_lambda\_handler](#input\_index\_lambda\_handler) | Lambda handler for the index lambda function | `string` | `"index_lambda_function.lambda_handler"` | no |
-| <a name="input_index_name"></a> [index\_name](#input\_index\_name) | The name of the index in OpenSearch created by the index lambda function at deployment time | `string` | `"ttc-index"` | no |
-| <a name="input_ingestion_pipeline_name"></a> [ingestion\_pipeline\_name](#input\_ingestion\_pipeline\_name) | Ingestion Pipeline Variables | `string` | `"ttc-ingestion-pipeline"` | no |
-| <a name="input_ingestion_prefix"></a> [ingestion\_prefix](#input\_ingestion\_prefix) | The prefix for the ingestion pipeline 'folder' in the s3 bucket. Files added to this prefix will be ingested into OpenSearch by the ingestion pipeline | `string` | `"ingestion"` | no |
-| <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | The name of the main TTC lambda | `string` | `"ttc-lambda"` | no |
-| <a name="input_lambda_function_zip_path"></a> [lambda\_function\_zip\_path](#input\_lambda\_function\_zip\_path) | Path to the main TTC lambda file | `string` | `"lambda/build/lambda_function.zip"` | no |
-| <a name="input_lambda_handler"></a> [lambda\_handler](#input\_lambda\_handler) | Lambda handler for the main TTC lambda | `string` | `"lambda_function.lambda_handler"` | no |
-| <a name="input_lambda_layer_name"></a> [lambda\_layer\_name](#input\_lambda\_layer\_name) | The name of the Lambda layer that contains the TTC lambda dependencies | `string` | `"ttc-lambda-layer"` | no |
-| <a name="input_lambda_layer_zip_path"></a> [lambda\_layer\_zip\_path](#input\_lambda\_layer\_zip\_path) | Path to the lambda layer the main TTC lambda | `string` | `"lambda/build/lambda_layer.zip"` | no |
-| <a name="input_lambda_os_actions"></a> [lambda\_os\_actions](#input\_lambda\_os\_actions) | The actions that the Lambda function can perform on OpenSearch | `list(string)` | <pre>[<br>  "es:ESHttpGet",<br>  "es:ESHttpPost",<br>  "es:ESHttpPut",<br>  "es:ESHttpDelete",<br>  "es:ESHttpHead",<br>  "es:ESHttpPatch",<br>  "es:ESHttpOptions"<br>]</pre> | no |
-| <a name="input_lambda_runtime"></a> [lambda\_runtime](#input\_lambda\_runtime) | The runtime for the main TTC and index lambda functions | `string` | `"python3.12"` | no |
-| <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | The timeout for the main TTC and index lambda functions in seconds, default is 15 minutes which is the maximum timeout allowed for Lambda functions. | `number` | `900` | no |
-| <a name="input_opensearch_domain_name"></a> [opensearch\_domain\_name](#input\_opensearch\_domain\_name) | ## OpenSearch Variables | `string` | `"ttc-os-domain"` | no |
-| <a name="input_opensearch_engine_version"></a> [opensearch\_engine\_version](#input\_opensearch\_engine\_version) | The version of the OpenSearch engine; must be >= 3.1 to support OpenSearch KNN queries which are used for vector search in the main TTC lambda function | `string` | `"OpenSearch_3.1"` | no |
-| <a name="input_owner"></a> [owner](#input\_owner) | The owner of the infrastructure | `string` | `"skylight"` | no |
-| <a name="input_private_subnet_cidrs"></a> [private\_subnet\_cidrs](#input\_private\_subnet\_cidrs) | The private subnets | `list(string)` | <pre>[<br>  "10.0.1.0/24",<br>  "10.0.2.0/24",<br>  "10.0.3.0/24"<br>]</pre> | no |
-| <a name="input_project"></a> [project](#input\_project) | The project name | `string` | `"dibbs-ttc"` | no |
-| <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `"us-east-2"` | no |
-| <a name="input_s3_bucket"></a> [s3\_bucket](#input\_s3\_bucket) | The name of the s3\_bucket where TTC data is stored | `string` | `"dibbs-ttc"` | no |
-| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | ## VPC Variables | `string` | `"10.0.0.0/16"` | no |
+### OpenSearch (`main.tf`)
 
-## Outputs
+- **OpenSearch Domain** (`aws_opensearch_domain.os`): A 3-node `r5.large.search` cluster with zone awareness across all three AZs. Configured with:
+  - Encryption at rest and node-to-node encryption
+  - HTTPS enforced with TLS 1.2+
+  - Engine version `OpenSearch_3.1` (minimum required for KNN vector queries)
+  - Access policy permitting the Lambda IAM role, the ingestion pipeline role, and the deploying IAM principal
+- **OpenSearch VPC Endpoint** (`aws_opensearch_vpc_endpoint.os_vpc_endpoint`): Exposes the domain inside the VPC. Its endpoint URL is injected into the TTC Lambda as `OPENSEARCH_ENDPOINT_URL`.
 
-| Name | Description |
-|------|-------------|
-| <a name="output_lambda_function_name"></a> [lambda\_function\_name](#output\_lambda\_function\_name) | The name of the main TTC lambda function |
-| <a name="output_lambda_role_arn"></a> [lambda\_role\_arn](#output\_lambda\_role\_arn) | The ARN of the IAM role attached to the main and index TTC lambda functions |
-| <a name="output_opensearch_arn"></a> [opensearch\_arn](#output\_opensearch\_arn) | The ARN of the OpenSearch domain |
-| <a name="output_opensearch_endpoint"></a> [opensearch\_endpoint](#output\_opensearch\_endpoint) | The OpenSearch endpoint URL |
-| <a name="output_opensearch_vpc_endpoint"></a> [opensearch\_vpc\_endpoint](#output\_opensearch\_vpc\_endpoint) | The VPC endpoint URL for the OpenSearch domain |
-<!-- END_TF_DOCS -->
+### ECR (`main.tf`)
+
+- **ECR Repository** (`aws_ecr_repository.ttc_lambda`): Stores the Docker container image for the main TTC Lambda. The image installs all workspace Python packages (`shared-models`, `lambda-handler`, `text-to-code`, `text-to-code-lambda`) and bakes in the SentenceTransformer model (`intfloat/e5-large-v2`) at build time. Images are built and pushed by CI/CD during `terraform apply`.
+
+### IAM (`main.tf`)
+
+- **Lambda IAM Role** (`aws_iam_role.lambda_role`): Shared by both Lambda functions. Attached policies:
+  - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
+  - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
+  - `AmazonS3FullAccess` — S3 read/write (TODO: scope down to specific bucket/prefix)
+  - Inline policy — grants OpenSearch HTTP actions (`ESHttpGet/Post/Put/Delete/Head/Patch/Options`)
+- **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetObject` on the data bucket and full OpenSearch HTTP access on the domain.
+
+### Lambda Functions (`main.tf`, `lambda/`)
+
+#### Lambda Layer (`aws_lambda_layer_version.lambda_layer`)
+
+Contains Python dependencies (`opensearch-py`, `requests-aws4auth`, `boto3`, etc.) used by the index bootstrap Lambda. Deployed from `lambda/build/lambda_layer.zip`.
+
+#### Index Bootstrap Lambda (`ttc-index-lambda`, `lambda/index_lambda_function.py`)
+
+Responsible for creating the OpenSearch KNN index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
+
+The index it creates has these field mappings:
+- `id` — keyword
+- `description` — full-text
+- `descriptionVector` — 1024-dimension `knn_vector` using HNSW (faiss, cosine similarity, ef_construction=128, m=16)
+- `type` — keyword (used for filtering, e.g. `"Order"` vs `"Result"`)
+
+If the index already exists but lacks the correct `knn_vector` mapping, the function deletes and recreates it.
+
+#### Main TTC Lambda (`ttc-lambda`, `lambda/Dockerfile`)
+
+Deployed as a **container image** from ECR (`package_type = "Image"`). The Docker image (`lambda/Dockerfile`) is built from the repo root with `-f terraform/lambda/Dockerfile` and installs the full `text-to-code-lambda` package along with its workspace dependencies (`shared-models`, `lambda-handler`, `text-to-code`).
+
+At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handler`, which:
+1. Loads the SentenceTransformer model from `/opt/model` during initialization (cold start)
+2. Parses eICR XML documents from S3 to extract text candidates
+3. Evaluates and selects the best candidate for each data field
+4. Generates embeddings and executes KNN queries against OpenSearch
+5. Returns standardized code mappings (LOINC/SNOMED)
+
+Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `BUCKET_NAME`, `MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
+
+### OpenSearch Ingestion Pipeline (`main.tf`)
+
+An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
+- Polls `s3://dibbs-text-to-code/ingestion/` monthly for new NDJSON files
+- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
+- Runs within the VPC using the same private subnets as Lambda
+- Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
+- Scales between 1 and 4 OCUs (OpenSearch Compute Units)
+
+The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index exists before any data is loaded.
+
+## Deployment Order
+
+Terraform manages dependency ordering automatically, but conceptually the sequence is:
+
+1. VPC, subnets, security groups, S3 endpoint created
+2. ECR repository created
+3. Docker image built and pushed to ECR (in CI/CD, before full `terraform apply`)
+4. OpenSearch domain and VPC endpoint created
+5. Lambda IAM role and layer created
+6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index in OpenSearch
+7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
+8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
+
+## State Backend
+
+Terraform state is stored remotely in **AWS S3** with DynamoDB locking:
+- Bucket: `dibbs-ttc-terraform-state`
+- Key: `terraform.tfstate`
+- Region: `us-east-2`
+- Lock table: `dibbs-ttc-terraform-lock`
+
+The backend resources are created by the bootstrap configuration in `bootstrap/`.
+
+## File Layout
+
+```
+terraform/
+├── _config.tf                    # Terraform backend (S3) and provider versions
+├── _data.tf                      # Data sources (current AWS caller identity)
+├── _outputs.tf                   # Outputs (endpoints, ARNs, function names, ECR URL)
+├── _variables.tf                 # All input variables with defaults
+├── main.tf                       # All AWS resources
+├── s3.tf                         # S3 bucket for ingestion data
+├── OVERVIEW.md                   # This file
+├── README.md                     # Auto-generated terraform-docs output
+├── bootstrap/                    # One-time setup for S3 state backend + DynamoDB lock table
+│   ├── main.tf
+│   ├── _variables.tf
+│   └── _outputs.tf
+└── lambda/
+    ├── Dockerfile                # Container image: installs workspace packages + model
+    ├── index_lambda_function.py  # Creates/validates the OpenSearch KNN index
+    └── build/
+        ├── index_lambda_function.zip
+        └── lambda_layer.zip
+```
+
+## Prerequisites
+
+Before running `terraform apply`:
+
+1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table.
+2. **Lambda layer zip**: Build and place the Lambda layer at `lambda/build/lambda_layer.zip`
+3. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/`. The OSIS pipeline will ingest these into OpenSearch.
+4. **Docker**: CI/CD builds the container image automatically. For local development, Docker must be available to build the image.
+
+> **Note:** The SentenceTransformer model and heavy Python dependencies (sentence-transformers, torch) are baked into the Lambda container image at build time via the Dockerfile. The Dockerfile installs the real `text-to-code-lambda` package and all its workspace dependencies.
+
+## Known TODOs
+
+- OpenSearch error logs should be sent to CloudWatch Logs (noted in `main.tf`)
+- S3 IAM policy should be scoped down to the specific bucket and prefix instead of `AmazonS3FullAccess`
+- Polling frequency for the OSIS pipeline is set to monthly since LOINC updates infrequently, but can be adjusted as needed
+- The `/ingestion/` prefix in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually
