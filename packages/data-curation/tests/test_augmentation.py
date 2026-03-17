@@ -29,7 +29,7 @@ assert len(LOINC_ENHANCEMENTS) > 0
         (
             "SARS-CoV-2 E gene Resp Ql NAA+probe",
             5,
-            "E gene Resp SARS-CoV-2 Ql NAA+probe",
+            "E SARS-CoV-2 gene Resp Ql NAA+probe",
         ),
         # More deletions than words
         ("B pert Spt Ql Cult", 10, "Spt pert B Ql Cult"),
@@ -55,13 +55,13 @@ class TestCharDeletion:
     def test_random_char_deletion(self):
         """Test random character deletion."""
         test_string = self.LOINC_LAB_TEXT_1
-        expected_result = "5Hydroytryptophan [Measureent] n rie"
+        expected_result = "5Hydroxytrypophan [Masuremet] in Uine"
         result = augmentation.random_char_deletion(test_string, 3, 8, 2, "char")
         assert len(result) < len(test_string)
         assert result == expected_result
 
         test_string = self.LOINC_LAB_TEXT_3
-        expected_result = "Thi term is intnded to collate similar measurements for the LOINC SNOMED CT Collaboration i a ontological view. Addtionally i can be used to communicate a laboraory order, either alone or in combinaion with specimen or other information in the odr. It may NOT be sed to report back the measured patient value."
+        expected_result = "This term is intended to collate similar measuremets for the LOINC SNOMED CT Collaboration in an ontological view. ddtionally, it can be use to communicate a laboratory order, either alone or i combination with specimen or oher information in the rder. It may NOT b used to report back the measured patient vale."
         result = augmentation.random_char_deletion(test_string, 3, 15, 4, "char")
         assert len(result) < len(test_string)
         assert result == expected_result
@@ -69,9 +69,9 @@ class TestCharDeletion:
     def test_random_char_deletion_word(self):
         """Test random char deletion word."""
         test_string = self.LOINC_LAB_TEXT_2
-        expected_result = "6-oxo-piperidine-2-carbxylate and 6(R+S)-oxo-propylpiperidine-2-carboxylate panel  Urine and Serum or Plasma"
+        expected_result = "6-oxo-piperidine-2-carboxylate ad 6(R+S)-oxo-propylpiperidine-2-carboxylate panel - Une n erum or Plasma"
         result = augmentation.random_char_deletion(test_string, 1, 10, 3, "word")
-        assert len(test_string) == len(result) + 2
+        assert len(test_string) == len(result) + 6
         assert result == expected_result
 
 
@@ -85,7 +85,7 @@ class TestCharDeletion:
             "Blood",
             ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"],
             3,
-            "Erythrocytes Blood Volume fraction",
+            "Volume fraction Blood Blood Erythrocytes",
         ),
         # No LOINC names
         ("Hematocrit of Blood", [], 3, "Hematocrit of Blood"),
@@ -94,7 +94,7 @@ class TestCharDeletion:
             "Hematocrit [Volume Fraction] of Blood by calculation",
             ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"],
             5,
-            "Erythrocytes Hematocrit [Volume Fraction] of Volume fraction Blood by calculation",
+            "CalcRBC Hematocrit [Volume Calculation Fraction] Blood of Blood by Erythrocytes calculation",
         ),
     ],
 )
@@ -208,7 +208,7 @@ class TestEnhanceLoinc:
         enhanced_code = augmentation.enhance_loinc_str(code_str, "all", 5)
         assert (
             enhanced_code
-            == "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) immune globulin e Ab [Measurement] in Serum"
+            == "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) Immunoglobulin E Ab [Measurement] in Serum"
         )  # noqa
 
         # Case 3: Multiple enhancements, one singleton and one substring
@@ -219,7 +219,7 @@ class TestEnhanceLoinc:
         enhanced_code = augmentation.enhance_loinc_str(code_str, "all", 5, min_enhancements=2)
         assert (
             enhanced_code
-            == "Epidermal Allergen Mix epid allerg mix Ab.IgE [Measurement] panel - ur"
+            == "Epidermal Allergen Mix Dander Ab.IgE [Measurement] panel - Urn"
         )  # noqa
 
 
@@ -256,9 +256,9 @@ class TestEnhanceLoincError:
             3,
             AUGMENTATION_WITHOUT_ENHANCEMENT,
             [
-                "CalcRC [Volume Fraction] of by Hematocrit Blood calculation",
-                "CalcRBC Hematorit Fraction] HBBC of Blood by [Voume Volume fraction calculation",
-                "Hematocrit [Volume Fraction] of Blood % mL by calculation",
+                "Hematocrit [Volume Fraction] of Blood by calculation Blood",
+                "% Hematocrit mL [Volume Fraction] of Blood by Erythrocytes calculation",
+                "Volume fracion % mL Hematocrt Calulation [Volume Fration] of Blood by calculation",
             ],
         ),
     ],

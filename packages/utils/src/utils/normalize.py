@@ -33,8 +33,11 @@ def merge_enhancements(
         for key, value in d.items():
             key = key.lower()
             code = value["code"]
-            abbrvs = [a.lower() for a in value.get("abbrv", [])]
-            synonyms = [s.lower() for s in value.get("synonyms", [])]
+            # We want the key to be lowercase, but not the values--this way, we
+            # can always search regardless of the input formatting, but we'll
+            # get back something already LOINC-capitalization expected
+            abbrvs = [a for a in value.get("abbrv", [])]
+            synonyms = [s for s in value.get("synonyms", [])]
 
             if key not in merged:
                 merged[key] = {
