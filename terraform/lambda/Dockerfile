@@ -1,0 +1,30 @@
+FROM public.ecr.aws/lambda/python:3.12
+
+# Install build tools for C++ extensions
+RUN microdnf install -y gcc-c++ make && microdnf clean all
+
+# Copy and install workspace packages in dependency order
+COPY ./packages/shared-models ${LAMBDA_TASK_ROOT}/shared-models
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/shared-models"
+
+COPY ./packages/lambda-handler ${LAMBDA_TASK_ROOT}/lambda-handler
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
+
+COPY ./packages/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
+
+COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
+
+# Download model at build time (baked into image)
+RUN python -c "\
+from huggingface_hub import snapshot_download; \
+snapshot_download( \
+    repo_id='intfloat/e5-large-v2', \
+    local_dir='/opt/model', \
+    ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'] \
+)"
+
+ENV MODEL_PATH="/opt/model"
+
+CMD ["text_to_code_lambda.lambda_function.handler"]

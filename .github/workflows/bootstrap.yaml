@@ -1,0 +1,62 @@
+name: Bootstrap Terraform State Backend
+run-name: Bootstrap Terraform State Backend by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply changes (if false, only runs plan)"
+        type: boolean
+        default: false
+      destroy:
+        description: "Destroy state backend resources (WARNING: irreversible)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: bootstrap-terraform-state
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Bootstrap
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.14.7
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TTC_TERRAFORM_ROLE_ARN }}
+          role-session-name: githubBootstrapWorkflow
+          aws-region: ${{ vars.TTC_AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/bootstrap
+        run: terraform init
+
+      - name: Terraform Plan
+        if: ${{ !inputs.apply && !inputs.destroy }}
+        working-directory: terraform/bootstrap
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: ${{ inputs.apply && !inputs.destroy }}
+        working-directory: terraform/bootstrap
+        run: terraform apply -auto-approve
+
+      - name: Terraform Destroy
+        if: ${{ inputs.destroy }}
+        working-directory: terraform/bootstrap
+        run: terraform destroy -auto-approve

@@ -1,0 +1,500 @@
+locals {
+  vpc_name = "${var.project}-${var.owner}-${terraform.workspace}"
+  tags = {
+    Name      = local.vpc_name
+    project   = var.project
+    owner     = var.owner
+    workspace = terraform.workspace
+  }
+}
+
+#############
+# ECR Repository
+#############
+resource "aws_ecr_repository" "ttc_lambda" {
+  name         = "ttc-lambda"
+  force_delete = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.tags
+}
+
+#############
+# Lambda Function Zip Archives
+#############
+data "archive_file" "index_lambda_function" {
+  type        = "zip"
+  source_file = "${path.module}/lambda/index_lambda_function.py"
+  output_path = "${path.module}/lambda/build/index_lambda_function.zip"
+}
+
+#############
+# VPC
+# Note: If APHL wants to use their own VPC without this module, they will need to provide
+# the VPC ID, private subnet IDs, and replace the calls to this module.
+#############
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.16.0"
+
+  name            = local.vpc_name
+  cidr            = var.vpc_cidr
+  azs             = var.availability_zones
+  private_subnets = var.private_subnet_cidrs
+  # if internal is true, then the VPC will not have a NAT or internet gateway
+  enable_nat_gateway = false
+  single_nat_gateway = false
+  create_igw         = false
+  tags               = local.tags
+}
+
+#############
+# S3 VPC Endpoint
+#############
+resource "aws_vpc_endpoint" "s3_endpoint" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = module.vpc.private_route_table_ids
+
+  tags = {
+    Name = "ttc-s3-endpoint"
+  }
+}
+
+#############
+# Security Groups
+#############
+resource "aws_vpc_security_group_egress_rule" "lambda_all_egress" {
+  security_group_id = aws_security_group.lambda_sg.id
+
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "-1"
+}
+
+resource "aws_security_group" "lambda_sg" {
+  name        = "ttc-lambda-sg"
+  description = "Security group for TTC Lambda function"
+  vpc_id      = module.vpc.vpc_id
+
+  tags = {
+    Name = "ttc-lambda-sg"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "opensearch_all_egress" {
+  security_group_id = aws_security_group.opensearch_sg.id
+
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "-1"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "opensearch_https_from_lambda" {
+  security_group_id = aws_security_group.opensearch_sg.id
+
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+
+  referenced_security_group_id = aws_security_group.lambda_sg.id
+  description                  = "Allow HTTPS access from Lambda SG"
+}
+
+
+resource "aws_security_group" "opensearch_sg" {
+  name        = "ttc-opensearch-sg"
+  description = "Security group for TTC OpenSearch domain to allow HTTPS access from Lambda"
+  vpc_id      = module.vpc.vpc_id
+
+  tags = { Name = "ttc-opensearch-sg" }
+
+}
+
+#############
+# OpenSearch Domain
+#############
+data "aws_iam_policy_document" "opensearch_access_policy" {
+  statement {
+    sid    = "AllowLambdaRole"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.lambda_role.arn, aws_iam_role.os_ingestion_pipeline_role.arn, data.aws_caller_identity.current.arn]
+    }
+    actions   = var.lambda_os_actions
+    resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
+  }
+}
+
+# TODO: Ensure that OpenSearch error logs (at a minimum) are sent to CloudWatch Logs
+resource "aws_opensearch_domain" "os" {
+  domain_name    = var.opensearch_domain_name
+  engine_version = var.opensearch_engine_version
+
+  vpc_options {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.opensearch_sg.id]
+  }
+
+  cluster_config {
+    instance_type          = "r5.large.search"
+    instance_count         = 3
+    zone_awareness_enabled = true
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_type = "gp3"
+    volume_size = 10
+  }
+
+  advanced_security_options {
+    enabled = false
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+  access_policies = data.aws_iam_policy_document.opensearch_access_policy.json
+
+  tags = { Name = var.opensearch_domain_name }
+}
+
+resource "aws_opensearch_vpc_endpoint" "os_vpc_endpoint" {
+  domain_arn = aws_opensearch_domain.os.arn
+  vpc_options {
+    security_group_ids = [aws_security_group.opensearch_sg.id]
+    subnet_ids         = module.vpc.private_subnets
+  }
+}
+
+#############
+# IAM Role for Lambda
+#############
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "lambda_role" {
+  name               = "ttc-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  tags               = { Name = "ttc-lambda-role" }
+}
+
+resource "aws_iam_role_policy_attachment" "vpc_access" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+#TODO: Limit S3 access to specific bucket and prefix
+resource "aws_iam_role_policy_attachment" "s3_access" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "lambda_opensearch_policy" {
+  name = "lambda-opensearch-inline-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = var.lambda_os_actions
+        Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"
+      }
+    ]
+  })
+}
+
+# ####################
+# # Lambda Layer
+# ####################
+resource "aws_lambda_layer_version" "lambda_layer" {
+  layer_name          = var.lambda_layer_name
+  compatible_runtimes = [var.lambda_runtime]
+  filename            = var.lambda_layer_zip_path
+
+  # Ensures Terraform updates the layer if the zip content changes
+  source_code_hash = filebase64sha256(var.lambda_layer_zip_path)
+
+}
+
+
+#############
+# Lambda Function
+#############
+
+resource "aws_lambda_function" "lambda" {
+  function_name = var.lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.ttc_lambda.repository_url}:${var.ttc_lambda_image_tag}"
+  timeout       = var.lambda_timeout
+  memory_size   = 3008
+
+  vpc_config {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.lambda_sg.id, aws_security_group.opensearch_sg.id]
+  }
+
+  environment {
+    variables = {
+      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
+      OPENSEARCH_INDEX        = var.index_name
+      REGION                  = var.region
+      BUCKET_NAME             = var.s3_bucket
+      MODEL_PATH              = "/opt/model"
+      EICR_INPUT_PREFIX       = var.eicr_input_prefix
+      SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
+      TTC_INPUT_PREFIX        = var.ttc_input_prefix
+      TTC_OUTPUT_PREFIX       = var.ttc_output_prefix
+      TTC_METADATA_PREFIX     = var.ttc_metadata_prefix
+    }
+  }
+
+  tags = { Name = var.lambda_function_name }
+}
+
+##############
+# OpenSearch Ingestion Pipeline
+###############
+
+# IAM Role for OpenSearch Ingestion Pipeline
+resource "aws_iam_role" "os_ingestion_pipeline_role" {
+  name = "ttc-os-ingestion-pipeline-role"
+
+  # Trust policy for pipeline service
+  assume_role_policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Principal" : {
+            "Service" : "osis-pipelines.amazonaws.com"
+          },
+          "Action" : "sts:AssumeRole"
+        }
+      ]
+    }
+
+  )
+}
+
+resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
+  name = "ttc-os-ingestion-pipeline-inline-policy"
+  role = aws_iam_role.os_ingestion_pipeline_role.id
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Sid" : "AllowS3BucketListing",
+          "Effect" : "Allow",
+          "Action" : [
+            "s3:ListBucket"
+          ],
+          "Resource" : "arn:aws:s3:::${var.s3_bucket}"
+        },
+        {
+          "Sid" : "AllowS3ObjectAccess",
+          "Effect" : "Allow",
+          "Action" : [
+            "s3:GetObject"
+          ],
+          "Resource" : "arn:aws:s3:::${var.s3_bucket}/*"
+        },
+        {
+          "Sid" : "OpenSearchAccess",
+          "Effect" : "Allow",
+          "Action" : [
+            "es:ESHttpPost",
+            "es:ESHttpPut",
+            "es:ESHttpGet",
+            "es:ESHttpDelete",
+            "es:ESHttpHead",
+            "es:DescribeDomain"
+          ],
+          "Resource" : [
+            "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*",
+            "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}"
+          ]
+        },
+        {
+          "Sid" : "CloudWatchLogsForPipeline",
+          "Effect" : "Allow",
+          "Action" : [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogGroups",
+            "logs:DescribeLogStreams"
+          ],
+          "Resource" : "*"
+        }
+      ]
+    }
+
+  )
+
+}
+
+resource "aws_cloudwatch_log_group" "ttc_ingestion_pipeline_logs" {
+  name              = "/aws/vendedlogs/OpenSearchIngestion/${var.ingestion_pipeline_name}/audit-logs"
+  retention_in_days = 14
+}
+
+
+resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
+  pipeline_name = var.ingestion_pipeline_name
+
+
+  min_units = 1
+  max_units = 4
+
+  vpc_options {
+    subnet_ids = module.vpc.private_subnets
+    security_group_ids = [
+      aws_security_group.opensearch_sg.id,
+      aws_security_group.lambda_sg.id
+    ]
+  }
+
+  # Publishing to CloudWatch Logs
+  log_publishing_options {
+    is_logging_enabled = true
+    cloudwatch_log_destination {
+      log_group = aws_cloudwatch_log_group.ttc_ingestion_pipeline_logs.name
+    }
+
+  }
+
+  pipeline_configuration_body = <<-EOT
+    version: '2'
+    extension:
+      osis_configuration_metadata:
+        builder_type: visual
+
+    ttc-ingestion-pipeline:
+      source:
+        s3:
+          acknowledgments: true
+          scan:
+            buckets:
+              - bucket:
+                  name: ${var.s3_bucket}
+                  filter:
+                    include_prefix:
+                      - ${var.ingestion_prefix}
+            scheduling:
+              interval: PT720H
+          aws:
+            region: ${var.region}
+            sts_role_arn: ${aws_iam_role.os_ingestion_pipeline_role.arn}
+          codec:
+            ndjson: {}
+          compression: none
+          workers: '1'
+
+
+      processor: []
+
+      sink:
+        - opensearch:
+            hosts:
+              - https://${aws_opensearch_domain.os.endpoint}
+            aws:
+              serverless: false
+              region: ${var.region}
+              sts_role_arn: ${aws_iam_role.os_ingestion_pipeline_role.arn}
+            index_type: custom
+            index: ${var.index_name}
+            bulk_size: '5'
+            flush_timeout: '300'
+      
+  EOT
+
+  depends_on = [
+    aws_lambda_invocation.index_bootstrap
+  ]
+}
+
+# ##############
+# # OpenSearch Index
+# ###############
+
+#############
+# Lambda Function for Index Creation
+#############
+
+resource "aws_lambda_invocation" "index_bootstrap" {
+  function_name = aws_lambda_function.index_lambda.function_name
+  input = jsonencode({
+    action = "create_index"
+    index  = var.index_name
+  })
+
+  depends_on = [aws_lambda_function.index_lambda]
+}
+
+resource "aws_lambda_function" "index_lambda" {
+  function_name    = var.index_lambda_function_name
+  role             = aws_iam_role.lambda_role.arn
+  handler          = var.index_lambda_handler
+  runtime          = var.lambda_runtime
+  filename         = data.archive_file.index_lambda_function.output_path
+  source_code_hash = data.archive_file.index_lambda_function.output_base64sha256
+  timeout          = var.lambda_timeout
+
+  layers = [
+    aws_lambda_layer_version.lambda_layer.arn
+  ]
+
+  vpc_config {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.lambda_sg.id, aws_security_group.opensearch_sg.id]
+  }
+
+  environment {
+    variables = {
+      OPENSEARCH_DOMAIN   = var.opensearch_domain_name
+      OPENSEARCH_ENDPOINT = aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint
+      REGION              = var.region
+      INDEX_NAME          = var.index_name
+      BUCKET_NAME         = var.s3_bucket
+    }
+  }
+
+  tags = { Name = var.index_lambda_function_name }
+}
+

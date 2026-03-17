@@ -1,0 +1,91 @@
+name: Deploy Text-to-Code AWS demo
+run-name: Deploy Text-to-Code AWS demo by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply changes (if false, only runs plan)"
+        type: boolean
+        default: false
+      destroy:
+        description: "Destroy all resources (WARNING: irreversible)"
+        type: boolean
+        default: false
+  push:
+    branches:
+      - nickclyde/setup-terraform
+
+concurrency:
+  group: deploy-text-to-code-aws-demo
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy_text_to_code:
+    name: Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.14.7
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TTC_TERRAFORM_ROLE_ARN }}
+          role-session-name: githubDeploymentWorkflow
+          aws-region: ${{ vars.TTC_AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Create ECR repository
+        # if: ${{ inputs.apply && !inputs.destroy }}
+        working-directory: terraform
+        run: terraform apply -auto-approve -target=aws_ecr_repository.ttc_lambda
+
+      - name: Login to Amazon ECR
+        # if: ${{ inputs.apply && !inputs.destroy }}
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get ECR repository URL
+        # if: ${{ inputs.apply && !inputs.destroy }}
+        id: ecr-url
+        working-directory: terraform
+        run: |
+          ECR_URL=$(terraform output -raw ecr_repository_url)
+          echo "ecr_url=$ECR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        # if: ${{ !inputs.destroy }}
+        run: |
+          ECR_URL="${{ steps.ecr-url.outputs.ecr_url }}"
+          docker build -f terraform/lambda/Dockerfile -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" .
+          docker push "$ECR_URL:${{ github.sha }}"
+          docker push "$ECR_URL:latest"
+
+      - name: Terraform Plan
+        # if: ${{ !inputs.apply && !inputs.destroy }}
+        working-directory: terraform
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: ${{ inputs.apply && !inputs.destroy }}
+        working-directory: terraform
+        run: terraform apply -auto-approve -var="ttc_lambda_image_tag=${{ github.sha }}"
+
+      - name: Terraform Destroy
+        if: ${{ inputs.destroy }}
+        working-directory: terraform
+        run: terraform destroy -auto-approve
