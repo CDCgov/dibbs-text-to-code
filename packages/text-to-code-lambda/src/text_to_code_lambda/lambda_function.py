@@ -337,7 +337,6 @@ def _process_record_pipeline(
     original_eicr_content = _load_original_eicr(bucket, persistence_id)
     _populate_eicr_metadata(original_eicr_content, ttc_output, ttc_metadata_output)
     _process_schematron_errors(
-        persistence_id,
         original_eicr_content,
         schematron_data_fields,
         opensearch_client,
