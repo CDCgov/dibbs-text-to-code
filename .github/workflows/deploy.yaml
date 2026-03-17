@@ -41,9 +41,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.TTC_TERRAFORM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.TERRAFORM_ROLE_ARN }}
           role-session-name: githubDeploymentWorkflow
-          aws-region: ${{ vars.TTC_AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Init
         working-directory: terraform
