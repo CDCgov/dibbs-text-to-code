@@ -41,6 +41,7 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 ### ECR (`main.tf`)
 
 - **ECR Repository** (`aws_ecr_repository.ttc_lambda`): Stores the Docker container image for the main TTC Lambda. The image installs all workspace Python packages (`shared-models`, `lambda-handler`, `text-to-code`, `text-to-code-lambda`) and bakes in the SentenceTransformer model (`intfloat/e5-large-v2`) at build time. Images are built and pushed by CI/CD during `terraform apply`.
+- **ECR Repository** (`aws_ecr_repository.index_lambda`): Stores the Docker container image for the index bootstrap Lambda, built from `Dockerfile.index` at repo root.
 
 ### IAM (`main.tf`)
 
@@ -53,25 +54,15 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 
 ### Lambda Functions (`main.tf`, `lambda/`)
 
-#### Lambda Layer (`aws_lambda_layer_version.lambda_layer`)
+#### Index Bootstrap Lambda (`ttc-index-lambda`, `packages/index-lambda`)
 
-Contains Python dependencies (`opensearch-py`, `requests-aws4auth`, `boto3`, etc.) used by the index bootstrap Lambda. Deployed from `lambda/build/lambda_layer.zip`.
+Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
 
-#### Index Bootstrap Lambda (`ttc-index-lambda`, `lambda/index_lambda_function.py`)
+The index it creates has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
 
-Responsible for creating the OpenSearch KNN index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
+#### Main TTC Lambda (`ttc-lambda`, `Dockerfile.ttc`)
 
-The index it creates has these field mappings:
-- `id` — keyword
-- `description` — full-text
-- `descriptionVector` — 1024-dimension `knn_vector` using HNSW (faiss, cosine similarity, ef_construction=128, m=16)
-- `type` — keyword (used for filtering, e.g. `"Order"` vs `"Result"`)
-
-If the index already exists but lacks the correct `knn_vector` mapping, the function deletes and recreates it.
-
-#### Main TTC Lambda (`ttc-lambda`, `lambda/Dockerfile`)
-
-Deployed as a **container image** from ECR (`package_type = "Image"`). The Docker image (`lambda/Dockerfile`) is built from the repo root with `-f terraform/lambda/Dockerfile` and installs the full `text-to-code-lambda` package along with its workspace dependencies (`shared-models`, `lambda-handler`, `text-to-code`).
+Deployed as a **container image** from ECR (`package_type = "Image"`). The Docker image (`Dockerfile.ttc` at repo root) installs the full `text-to-code-lambda` package along with its workspace dependencies (`shared-models`, `lambda-handler`, `text-to-code`).
 
 At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handler`, which:
 1. Loads the SentenceTransformer model from `/opt/model` during initialization (cold start)
@@ -98,10 +89,10 @@ The pipeline **depends on** the index bootstrap invocation completing first, ens
 Terraform manages dependency ordering automatically, but conceptually the sequence is:
 
 1. VPC, subnets, security groups, S3 endpoint created
-2. ECR repository created
-3. Docker image built and pushed to ECR (in CI/CD, before full `terraform apply`)
+2. ECR repositories created (TTC lambda + index lambda)
+3. Docker images built and pushed to ECR (in CI/CD, before full `terraform apply`)
 4. OpenSearch domain and VPC endpoint created
-5. Lambda IAM role and layer created
+5. Lambda IAM role created
 6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index in OpenSearch
 7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
 8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
@@ -132,12 +123,7 @@ terraform/
 │   ├── main.tf
 │   ├── _variables.tf
 │   └── _outputs.tf
-└── lambda/
-    ├── Dockerfile                # Container image: installs workspace packages + model
-    ├── index_lambda_function.py  # Creates/validates the OpenSearch KNN index
-    └── build/
-        ├── index_lambda_function.zip
-        └── lambda_layer.zip
+└── (no lambda/ subdirectory — Dockerfiles live at repo root as Dockerfile.ttc and Dockerfile.index)
 ```
 
 ## Prerequisites
@@ -145,9 +131,8 @@ terraform/
 Before running `terraform apply`:
 
 1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table.
-2. **Lambda layer zip**: Build and place the Lambda layer at `lambda/build/lambda_layer.zip`
-3. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/`. The OSIS pipeline will ingest these into OpenSearch.
-4. **Docker**: CI/CD builds the container image automatically. For local development, Docker must be available to build the image.
+2. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/`. The OSIS pipeline will ingest these into OpenSearch.
+3. **Docker**: CI/CD builds both container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda) automatically. For local development, Docker must be available to build the images.
 
 > **Note:** The SentenceTransformer model and heavy Python dependencies (sentence-transformers, torch) are baked into the Lambda container image at build time via the Dockerfile. The Dockerfile installs the real `text-to-code-lambda` package and all its workspace dependencies.
 

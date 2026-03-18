@@ -52,31 +52,12 @@ variable "lambda_function_name" {
   description = "The name of the main TTC lambda"
 }
 
-variable "lambda_runtime" {
-  type        = string
-  default     = "python3.12"
-  description = "The runtime for the main TTC and index lambda functions"
-}
-
 variable "lambda_timeout" {
   type        = number
   default     = 900
   description = "The timeout for the main TTC and index lambda functions in seconds, default is 15 minutes which is the maximum timeout allowed for Lambda functions."
 }
 
-
-variable "lambda_layer_name" {
-  type        = string
-  default     = "ttc-lambda-layer"
-  description = "The name of the Lambda layer that contains the TTC lambda dependencies"
-
-}
-
-variable "lambda_layer_zip_path" {
-  type        = string
-  default     = "lambda/build/lambda_layer.zip"
-  description = "Path to the lambda layer the main TTC lambda"
-}
 
 variable "lambda_os_actions" {
   type = list(string)
@@ -98,13 +79,6 @@ variable "index_lambda_function_name" {
   default     = "ttc-index-lambda"
   description = "The name of the lambda function responsible for creating the OpenSearch index at deployment time"
 }
-
-variable "index_lambda_handler" {
-  type        = string
-  default     = "index_lambda_function.lambda_handler"
-  description = "Lambda handler for the index lambda function"
-}
-
 
 # Ingestion Pipeline Variables
 variable "ingestion_pipeline_name" {
@@ -166,5 +140,11 @@ variable "ttc_lambda_image_tag" {
   type        = string
   default     = "latest"
   description = "The image tag for the TTC Lambda container image in ECR"
+}
+
+variable "index_lambda_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The image tag for the index Lambda container image in ECR"
 }
 

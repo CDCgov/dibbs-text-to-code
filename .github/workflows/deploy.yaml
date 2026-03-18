@@ -12,9 +12,9 @@ on:
         description: "Destroy all resources (WARNING: irreversible)"
         type: boolean
         default: false
-  push:
-    branches:
-      - nickclyde/setup-terraform
+  # push:
+  #   branches:
+  #     - nickclyde/setup-terraform
 
 concurrency:
   group: deploy-text-to-code-aws-demo
@@ -49,41 +49,51 @@ jobs:
         working-directory: terraform
         run: terraform init
 
-      - name: Create ECR repository
-        # if: ${{ inputs.apply && !inputs.destroy }}
+      - name: Create ECR repositories
+        if: ${{ inputs.apply && !inputs.destroy }}
         working-directory: terraform
-        run: terraform apply -auto-approve -target=aws_ecr_repository.ttc_lambda
+        run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda
 
       - name: Login to Amazon ECR
-        # if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy }}
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Get ECR repository URL
-        # if: ${{ inputs.apply && !inputs.destroy }}
+      - name: Get ECR repository URLs
+        if: ${{ inputs.apply && !inputs.destroy }}
         id: ecr-url
         working-directory: terraform
         run: |
+          INDEX_ECR_URL=$(terraform output -raw index_ecr_repository_url)
+          echo "index_ecr_url=$INDEX_ECR_URL" >> "$GITHUB_OUTPUT"
           ECR_URL=$(terraform output -raw ecr_repository_url)
           echo "ecr_url=$ECR_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push Docker image
-        # if: ${{ !inputs.destroy }}
+      - name: Build and push Index Docker image
+        if: ${{ inputs.apply && !inputs.destroy }}
+        run: |
+          INDEX_ECR_URL="${{ steps.ecr-url.outputs.index_ecr_url }}"
+          docker build -f Dockerfile.index -t "$INDEX_ECR_URL:${{ github.sha }}" -t "$INDEX_ECR_URL:latest" .
+          docker push "$INDEX_ECR_URL:${{ github.sha }}"
+          docker push "$INDEX_ECR_URL:latest"
+
+      - name: Build and push TTC Docker image
+        if: ${{ inputs.apply && !inputs.destroy }}
         run: |
           ECR_URL="${{ steps.ecr-url.outputs.ecr_url }}"
-          docker build -f terraform/lambda/Dockerfile -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" .
+          docker build -f Dockerfile.ttc -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" .
           docker push "$ECR_URL:${{ github.sha }}"
           docker push "$ECR_URL:latest"
 
       - name: Terraform Plan
-        # if: ${{ !inputs.apply && !inputs.destroy }}
+        if: ${{ !inputs.apply && !inputs.destroy }}
         working-directory: terraform
         run: terraform plan
 
       - name: Terraform Apply
         if: ${{ inputs.apply && !inputs.destroy }}
         working-directory: terraform
-        run: terraform apply -auto-approve -var="ttc_lambda_image_tag=${{ github.sha }}"
+        run: terraform apply -auto-approve -var="index_lambda_image_tag=${{ github.sha }}" -var="ttc_lambda_image_tag=${{ github.sha }}"
 
       - name: Terraform Destroy
         if: ${{ inputs.destroy }}

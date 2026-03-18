@@ -22,13 +22,15 @@ resource "aws_ecr_repository" "ttc_lambda" {
   tags = local.tags
 }
 
-#############
-# Lambda Function Zip Archives
-#############
-data "archive_file" "index_lambda_function" {
-  type        = "zip"
-  source_file = "${path.module}/lambda/index_lambda_function.py"
-  output_path = "${path.module}/lambda/build/index_lambda_function.zip"
+resource "aws_ecr_repository" "index_lambda" {
+  name         = "ttc-index-lambda"
+  force_delete = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.tags
 }
 
 #############
@@ -235,20 +237,6 @@ resource "aws_iam_role_policy" "lambda_opensearch_policy" {
     ]
   })
 }
-
-# ####################
-# # Lambda Layer
-# ####################
-resource "aws_lambda_layer_version" "lambda_layer" {
-  layer_name          = var.lambda_layer_name
-  compatible_runtimes = [var.lambda_runtime]
-  filename            = var.lambda_layer_zip_path
-
-  # Ensures Terraform updates the layer if the zip content changes
-  source_code_hash = filebase64sha256(var.lambda_layer_zip_path)
-
-}
-
 
 #############
 # Lambda Function
@@ -468,17 +456,11 @@ resource "aws_lambda_invocation" "index_bootstrap" {
 }
 
 resource "aws_lambda_function" "index_lambda" {
-  function_name    = var.index_lambda_function_name
-  role             = aws_iam_role.lambda_role.arn
-  handler          = var.index_lambda_handler
-  runtime          = var.lambda_runtime
-  filename         = data.archive_file.index_lambda_function.output_path
-  source_code_hash = data.archive_file.index_lambda_function.output_base64sha256
-  timeout          = var.lambda_timeout
-
-  layers = [
-    aws_lambda_layer_version.lambda_layer.arn
-  ]
+  function_name = var.index_lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.index_lambda.repository_url}:${var.index_lambda_image_tag}"
+  timeout       = var.lambda_timeout
 
   vpc_config {
     subnet_ids         = module.vpc.private_subnets
@@ -487,11 +469,10 @@ resource "aws_lambda_function" "index_lambda" {
 
   environment {
     variables = {
-      OPENSEARCH_DOMAIN   = var.opensearch_domain_name
-      OPENSEARCH_ENDPOINT = aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint
-      REGION              = var.region
-      INDEX_NAME          = var.index_name
-      BUCKET_NAME         = var.s3_bucket
+      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
+      REGION                  = var.region
+      INDEX_NAME              = var.index_name
+      BUCKET_NAME             = var.s3_bucket
     }
   }
 
