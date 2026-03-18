@@ -23,7 +23,6 @@ COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
 # Copy over model files and augmentation; shouldn't need index
-COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/augmentation-lambda/src
 COPY ./packages/text-to-code/src/services ${LAMBDA_TASK_ROOT}/src/services
 COPY ./packages/text-to-code/src/models ${LAMBDA_TASK_ROOT}/src/models
 
