@@ -49,6 +49,14 @@ jobs:
         working-directory: terraform
         run: terraform init
 
+      - name: Terraform Format Check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
       - name: Create ECR repositories
         if: ${{ inputs.apply && !inputs.destroy }}
         working-directory: terraform

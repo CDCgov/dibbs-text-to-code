@@ -46,6 +46,14 @@ jobs:
         working-directory: terraform/bootstrap
         run: terraform init
 
+      - name: Terraform Format Check
+        working-directory: terraform/bootstrap
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: terraform/bootstrap
+        run: terraform validate
+
       - name: Terraform Plan
         if: ${{ !inputs.apply && !inputs.destroy }}
         working-directory: terraform/bootstrap

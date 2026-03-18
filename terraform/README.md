@@ -117,8 +117,7 @@ terraform/
 ├── _variables.tf                 # All input variables with defaults
 ├── main.tf                       # All AWS resources
 ├── s3.tf                         # S3 bucket for ingestion data
-├── OVERVIEW.md                   # This file
-├── README.md                     # Auto-generated terraform-docs output
+├── README.md                     # This file
 ├── bootstrap/                    # One-time setup for S3 state backend + DynamoDB lock table
 │   ├── main.tf
 │   ├── _variables.tf
