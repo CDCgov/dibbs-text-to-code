@@ -13,6 +13,9 @@ RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/text_to_code_lambda"
 # Install build tools for compiling C++ extensions
 RUN microdnf install -y gcc-c++ make && microdnf clean all
 
+# Copy handler
+COPY ./packages/text-to-code-lambda/src/text_to_code_lambda/lambda_function.py ${LAMBDA_TASK_ROOT}/src/text_to_code_lambda/lambda_function.py
+
 # Copy over just the requirements-lambda.txt file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
 COPY ./packages/text-to-code-lambda/requirements-lambda.txt .
