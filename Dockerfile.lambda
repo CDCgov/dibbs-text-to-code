@@ -13,21 +13,19 @@ RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/text_to_code_lambda"
 # Install build tools for compiling C++ extensions
 RUN microdnf install -y gcc-c++ make && microdnf clean all
 
-# Copy over just the pyproject.toml file and install the dependencies doing this
+# Copy over just the requirements-lambda.txt file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
-COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
-RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
+COPY ./packages/text-to-code-lambda/requirements-lambda.txt .
+RUN pip install --no-cache-dir -r requirements-lambda.txt
 
 # Copy over the rest of the code
 COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
 
 # Copy over model files and augmentation; shouldn't need index
-COPY ./packages/text-to-code/src ${LAMBDA_TASK_ROOT}/text-to-code/src
-
-# Copy over other lambdas
 COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/augmentation-lambda/src
-
+COPY ./packages/text-to-code/src/services ${LAMBDA_TASK_ROOT}/src/services
+COPY ./packages/text-to-code/src/models ${LAMBDA_TASK_ROOT}/src/models
 
 ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src"
 
