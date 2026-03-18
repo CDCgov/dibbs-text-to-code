@@ -7,8 +7,8 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 ARG ENVIRONMENT=prod
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Initialize the aws_lambda directory
-RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/aws_lambda"
+# Initialize the text_to_code_lambda directory
+RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/text_to_code_lambda"
 
 # Install build tools for compiling C++ extensions
 RUN microdnf install -y gcc-c++ make && microdnf clean all
@@ -21,6 +21,13 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
 # Copy over the rest of the code
 COPY ./packages/text-to-code-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
+
+# Copy over model files and augmentation; shouldn't need index
+COPY ./packages/text-to-code/src ${LAMBDA_TASK_ROOT}/text-to-code/src
+
+# Copy over other lambdas
+COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/augmentation-lambda/src
+
 
 ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/src"
 
