@@ -85,3 +85,18 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Login to APHL ECR
+        if: ${{ matrix.name != 'index' }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ secrets.APHL_ECR_REPOSITORY_URL }}
+          username: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.APHL_AWS_SECRET_ACCESS_KEY }}
+
+      - name: Push to APHL ECR
+        if: ${{ matrix.name != 'index' }}
+        run: |
+          GHCR_IMAGE="ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.name }}:latest"
+          ECR_IMAGE="${{ secrets.APHL_ECR_REPOSITORY_URL }}/${{ matrix.name }}:latest"
+          docker buildx imagetools create --tag "$ECR_IMAGE" "$GHCR_IMAGE"
