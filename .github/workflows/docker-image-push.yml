@@ -28,8 +28,8 @@ jobs:
         include:
           - name: index
             dockerfile: Dockerfile.index
-          - name: lambda
-            dockerfile: Dockerfile.lambda
+          - name: ttc
+            dockerfile: Dockerfile.ttc
           - name: augmentation
             dockerfile: Dockerfile.augmentation
 
@@ -85,3 +85,23 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Configure APHL AWS credentials
+        if: ${{ matrix.name != 'index' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.APHL_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to APHL ECR
+        if: ${{ matrix.name != 'index' }}
+        id: aphl-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push to APHL ECR
+        if: ${{ matrix.name != 'index' }}
+        run: |
+          GHCR_IMAGE="ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.name }}:latest"
+          ECR_IMAGE="${{ secrets.APHL_ECR_REPOSITORY_URL }}/${{ matrix.name }}:latest"
+          docker buildx imagetools create --tag "$ECR_IMAGE" "$GHCR_IMAGE"

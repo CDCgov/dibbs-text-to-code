@@ -4,3 +4,10 @@ frontend/.vite
 frontend/coverage
 **/.DS_Store
 **/node_modules
+.git
+.venv
+.ruff_cache
+e2e
+docs
+terraform
+**/__pycache__

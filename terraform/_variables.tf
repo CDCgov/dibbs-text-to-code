@@ -1,0 +1,150 @@
+### General Variables
+variable "project" {
+  description = "The project name"
+  type        = string
+  default     = "dibbs-ttc"
+}
+
+variable "owner" {
+  description = "The owner of the infrastructure"
+  type        = string
+  default     = "skylight"
+}
+
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+### OpenSearch Variables
+variable "opensearch_domain_name" {
+  type    = string
+  default = "ttc-os-domain"
+}
+
+variable "opensearch_engine_version" {
+  type        = string
+  default     = "OpenSearch_3.1"
+  description = "The version of the OpenSearch engine; must be >= 3.1 to support OpenSearch KNN queries which are used for vector search in the main TTC lambda function"
+}
+
+### VPC Variables
+variable "vpc_cidr" {
+  type    = string
+  default = "10.0.0.0/16"
+}
+
+variable "private_subnet_cidrs" {
+  description = "The private subnets"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+}
+variable "availability_zones" {
+  type        = list(string)
+  default     = ["us-east-2a", "us-east-2b", "us-east-2c"]
+  description = "The zones that the private subnets and OpenSearch domain will be deployed in. Must be in the same region as specified in the 'region' variable"
+}
+
+### Lambda Variables
+variable "lambda_function_name" {
+  type        = string
+  default     = "ttc-lambda"
+  description = "The name of the main TTC lambda"
+}
+
+variable "lambda_timeout" {
+  type        = number
+  default     = 900
+  description = "The timeout for the main TTC and index lambda functions in seconds, default is 15 minutes which is the maximum timeout allowed for Lambda functions."
+}
+
+
+variable "lambda_os_actions" {
+  type = list(string)
+  default = [
+    "es:ESHttpGet",
+    "es:ESHttpPost",
+    "es:ESHttpPut",
+    "es:ESHttpDelete",
+    "es:ESHttpHead",
+    "es:ESHttpPatch",
+    "es:ESHttpOptions"
+  ]
+  description = "The actions that the Lambda function can perform on OpenSearch"
+
+}
+
+variable "index_lambda_function_name" {
+  type        = string
+  default     = "ttc-index-lambda"
+  description = "The name of the lambda function responsible for creating the OpenSearch index at deployment time"
+}
+
+# Ingestion Pipeline Variables
+variable "ingestion_pipeline_name" {
+  type    = string
+  default = "ttc-ingestion-pipeline"
+}
+
+variable "s3_bucket" {
+  type        = string
+  default     = "dibbs-text-to-code"
+  description = "The name of the s3_bucket where TTC data is stored"
+}
+
+variable "ingestion_prefix" {
+  type        = string
+  default     = "ingestion"
+  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Files added to this prefix will be ingested into OpenSearch by the ingestion pipeline"
+}
+
+variable "index_name" {
+  type        = string
+  default     = "ttc-index"
+  description = "The name of the index in OpenSearch created by the index lambda function at deployment time"
+}
+
+### S3 Prefix Variables (for TTC Lambda)
+variable "eicr_input_prefix" {
+  type        = string
+  default     = "eCRMessageV2/"
+  description = "S3 prefix for eICR input files"
+}
+
+variable "schematron_error_prefix" {
+  type        = string
+  default     = "schematronErrors/"
+  description = "S3 prefix for schematron error files"
+}
+
+variable "ttc_input_prefix" {
+  type        = string
+  default     = "TextToCodeSubmission/"
+  description = "S3 prefix for TTC input submission files"
+}
+
+variable "ttc_output_prefix" {
+  type        = string
+  default     = "TTCOutput/"
+  description = "S3 prefix for TTC output files"
+}
+
+variable "ttc_metadata_prefix" {
+  type        = string
+  default     = "TTCMetadata/"
+  description = "S3 prefix for TTC metadata files"
+}
+
+### Container Image Variables
+variable "ttc_lambda_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The image tag for the TTC Lambda container image in ECR"
+}
+
+variable "index_lambda_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The image tag for the index Lambda container image in ECR"
+}
+
