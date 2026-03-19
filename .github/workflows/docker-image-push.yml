@@ -86,13 +86,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Configure APHL AWS credentials
+        if: ${{ matrix.name != 'index' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.APHL_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Login to APHL ECR
         if: ${{ matrix.name != 'index' }}
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ secrets.APHL_ECR_REPOSITORY_URL }}
-          username: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.APHL_AWS_SECRET_ACCESS_KEY }}
+        id: aphl-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push to APHL ECR
         if: ${{ matrix.name != 'index' }}
