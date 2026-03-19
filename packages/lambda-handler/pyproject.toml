@@ -2,7 +2,7 @@
 name = "lambda-handler"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["boto3>=1.40.60"]
+dependencies = ["boto3>=1.40.60", "pydantic>=2.0.0"]
 
 [dependency-groups]
 dev = ["moto"]
