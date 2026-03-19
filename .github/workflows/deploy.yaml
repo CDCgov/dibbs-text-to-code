@@ -12,6 +12,9 @@ on:
         description: "Destroy all resources (WARNING: irreversible)"
         type: boolean
         default: false
+  push:
+    branches:
+      - main
 
 concurrency:
   group: deploy-text-to-code-aws-demo
