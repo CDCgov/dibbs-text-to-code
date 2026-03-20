@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+from augmentation.models.application import Metadata
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
@@ -68,3 +69,15 @@ class TTCAugmenterInput(BaseModel):
     )
     eicr_id: str
     nonstandard_codes: list[NonstandardCodeInstance]
+
+
+class TTCAugmenterOutput(BaseModel):
+    """Output of the augmentation service."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    augmented_eicr: str
+    metadata: Metadata
