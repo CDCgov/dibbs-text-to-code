@@ -15,6 +15,9 @@ RUN microdnf install -y gcc-c++ make && microdnf clean all
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
+COPY ./packages/lambda-handler ${LAMBDA_TASK_ROOT}/lambda-handler
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
+
 COPY ./packages/index-lambda ${LAMBDA_TASK_ROOT}/index-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/index-lambda"
 
