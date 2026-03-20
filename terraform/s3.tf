@@ -2,6 +2,11 @@
 # S3 Bucket
 # Stores ingestion data for TTC
 #############
+import {
+  to = aws_s3_bucket.ttc
+  id = "dibbs-text-to-code"
+}
+
 resource "aws_s3_bucket" "ttc" {
   bucket = var.s3_bucket
 
