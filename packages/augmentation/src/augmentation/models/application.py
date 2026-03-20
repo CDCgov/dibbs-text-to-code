@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from shared_models import NonstandardCodeInstance
 
 
@@ -28,3 +29,15 @@ class Metadata(BaseModel):
     nonstandard_codes: list[NonstandardCodeInstanceMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None
+
+
+class TTCAugmenterOutput(BaseModel):
+    """Output of the augmentation service."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    augmented_eicr: str
+    metadata: Metadata

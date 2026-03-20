@@ -1,10 +1,10 @@
 import json
 
+from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from aws_lambda_typing import context as lambda_context
 from aws_lambda_typing import events as lambda_events
 from shared_models import TTCAugmenterInput
-from shared_models import TTCAugmenterOutput
 
 from augmentation.models import TTCAugmenterConfig
 
