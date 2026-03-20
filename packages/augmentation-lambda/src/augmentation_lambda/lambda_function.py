@@ -24,7 +24,12 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> d
 
         try:
             payload = json.loads(record["body"])
-            augmenter_input = TTCAugmenterInput.model_validate(payload)
+            augmenter_input = TTCAugmenterInput.model_validate(
+                {
+                    "eicr_id": payload["eicr_id"],
+                    "nonstandard_codes": payload["nonstandard_codes"],
+                }
+            )
 
             eicr = payload["eicr"]
 
