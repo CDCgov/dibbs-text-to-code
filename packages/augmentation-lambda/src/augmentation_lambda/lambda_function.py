@@ -1,4 +1,5 @@
 import json
+from typing import TypedDict
 
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
@@ -9,7 +10,14 @@ from shared_models import TTCAugmenterInput
 from augmentation.models import TTCAugmenterConfig
 
 
-def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> dict[str, object]:
+class HandlerResponse(TypedDict):
+    """Response from the AWS Lambda handler."""
+
+    results: list[dict[str, object]]
+    batchItemFailures: list[dict[str, str]]
+
+
+def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> HandlerResponse:
     """AWS Lambda handler for augmenting eICRs with nonstandard codes.
 
     :param event: The SQS event containing messages with eICRs to augment.
@@ -48,6 +56,7 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> d
             metadata = augmenter.augment()
 
             output = TTCAugmenterOutput(
+                eicr_id=augmenter_input.eicr_id,
                 augmented_eicr=augmenter.augmented_xml,
                 metadata=metadata,
             )

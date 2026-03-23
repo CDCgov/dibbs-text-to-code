@@ -68,6 +68,7 @@ def test_handler_returns_success_result(mocker) -> None:
                 "messageId": "message-1",
                 "status": "success",
                 "result": {
+                    "eicr_id": "source-eicr-id",
                     "augmented_eicr": '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>',
                     "metadata": {
                         "original_eicr_id": "original-doc-id",
@@ -266,6 +267,7 @@ def test_handler_returns_mixed_batch_results(mocker) -> None:
                 "messageId": "message-5",
                 "status": "success",
                 "result": {
+                    "eicr_id": "source-eicr-id-1",
                     "augmented_eicr": '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>',
                     "metadata": {
                         "original_eicr_id": "original-doc-id",
@@ -283,3 +285,30 @@ def test_handler_returns_mixed_batch_results(mocker) -> None:
         ],
         "batchItemFailures": [{"itemIdentifier": "message-6"}],
     }
+
+
+def test_handler_returns_input_eicr_id_in_output(mocker) -> None:
+    """Tests that the handler returns the input eicr_id in the success result.
+
+    :param mocker: The pytest-mock fixture for mocking objects.
+    """
+    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
+
+    event = {
+        "Records": [
+            {
+                "messageId": "message-7",
+                "body": json.dumps(
+                    {
+                        "eicr_id": "traceable-eicr-id",
+                        "eicr": "<ClinicalDocument />",
+                        "nonstandard_codes": [],
+                    }
+                ),
+            }
+        ]
+    }
+
+    result = lambda_function.handler(event, None)
+
+    assert result["results"][0]["result"]["eicr_id"] == "traceable-eicr-id"

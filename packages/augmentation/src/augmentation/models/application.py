@@ -39,5 +39,6 @@ class TTCAugmenterOutput(BaseModel):
         extra="forbid",
     )
 
+    eicr_id: str
     augmented_eicr: str
     metadata: Metadata
