@@ -19,14 +19,23 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
 
-# Download model at build time (baked into image)
+# Download retriever at build time (baked into image)
 RUN python -c "\
-from huggingface_hub import snapshot_download; \
-snapshot_download( \
+    from huggingface_hub import snapshot_download; \
+    snapshot_download( \
     repo_id='intfloat/e5-large-v2', \
     local_dir='/opt/model', \
     ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'] \
-)"
+    )"
+
+# Download reranker at build time (baked into image)
+RUN python -c "\
+    from huggingface_hub import snapshot_download; \
+    snapshot_download( \
+    repo_id='cross-encoder/stsb-roberta-large', \
+    local_dir='/opt/model', \
+    ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'] \
+    )"
 
 ENV MODEL_PATH="/opt/model"
 
