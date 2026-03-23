@@ -742,6 +742,7 @@ version = "0.1.0"
 source = { editable = "packages/lambda-handler" }
 dependencies = [
     { name = "boto3" },
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -750,7 +751,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "boto3", specifier = ">=1.40.60" }]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.40.60" },
+    { name = "pydantic", specifier = ">=2.12.5" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "moto" }]
