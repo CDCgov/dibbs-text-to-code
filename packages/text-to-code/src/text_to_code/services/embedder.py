@@ -12,9 +12,8 @@ class Embedder:
     def embed(self, text: str) -> Tensor:
         """Encode a text string into a vector representation.
 
-        The dimensionality and
-        values of the vector form are determined by the application's default
-        Retriever Model.
+        The dimensionality and values of the vector form are determined
+        by the application's default Retriever Model.
 
         :param text: Text string to embed.
         :returns: Tensor representation of input text.

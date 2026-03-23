@@ -9,7 +9,7 @@ class Reranker:
     """Scores and sorts OpenSearch results."""
 
     def rerank(self, nonstandard_in: str, hits: list[str]) -> list[dict]:
-        """Do reranking.
+        """Re-sorts hits by cross-encoder score values.
 
         Given a list of text strings returned from OpenSearch, score and sort
         the search hits using the Text-to-Code system's default Reranker model.
