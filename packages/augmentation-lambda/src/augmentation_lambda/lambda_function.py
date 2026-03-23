@@ -41,12 +41,14 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> H
 
             eicr = payload["eicr"]
 
+            # TODO: will need to determine config based on application code when there are multiple applications using the augmentation service. For now, since TTC is the only application, we can directly initialize the config as a TTC config.
             config = (
                 TTCAugmenterConfig.model_validate(payload["config"])
                 if "config" in payload
                 else TTCAugmenterConfig()
             )
 
+            # TODO: in the future, when there are multiple applications using the augmentation service, we will need to determine which augmenter to use based on the application code in the config. For now, since TTC is the only application, we can directly initialize the EICRAugmenter.
             augmenter = EICRAugmenter(
                 document=eicr,
                 nonstandard_codes=augmenter_input.nonstandard_codes,
@@ -55,6 +57,7 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> H
 
             metadata = augmenter.augment()
 
+            # TODO: the output of the augmenter will likely need to be modified when there are multiple applications and augmenters, but for now we can directly create a TTC augmenter output.
             output = TTCAugmenterOutput(
                 eicr_id=augmenter_input.eicr_id,
                 augmented_eicr=augmenter.augmented_xml,
