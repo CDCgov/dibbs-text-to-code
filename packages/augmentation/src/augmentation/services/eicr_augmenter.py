@@ -229,24 +229,15 @@ class EICRAugmenter(Augmenter):
     def _generate_author(self, level: str = "header") -> Element:
         null_flavor_comment = " set to nullFlavor 'NA' "
         author = etree.Element("author")
-        function_code = etree.SubElement(author, "functionCode")
-        function_code.set("code", value=self.config.author_function_code)
-        function_code.set("codeSystem", value=self.config.author_function_code_system)
-        function_code.set("codeSystemName", value=self.config.author_function_code_system_name)
-        # TODO: Eventually we wwill not only separate by header vs. data_element
+        # TODO: Eventually we will not only separate by header vs. data_element
         # but will also separate out the various comments by the various data element
         # type being modified. This can easily be stored in the model for the data elemnts
         # For now we are hard coding for code-text-to-code and observation in the comment
-        if level == "header":
-            self._add_previous_element_comment(
-                (
-                    "functionCode specifies type of change "
-                    "'text-to-code' which signifies this document has been transformed using the "
-                    "text-to-code data augmentation tool "
-                ),
-                function_code,
-            )
-        else:
+        if level != "header":
+            function_code = etree.SubElement(author, "functionCode")
+            function_code.set("code", value=self.config.author_function_code)
+            function_code.set("codeSystem", value=self.config.author_function_code_system)
+            function_code.set("codeSystemName", value=self.config.author_function_code_system_name)
             self._add_previous_element_comment(
                 (
                     "functionCode specifies type of change "
