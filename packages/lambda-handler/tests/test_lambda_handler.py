@@ -1,7 +1,8 @@
 import io
 
-import lambda_handler
 import pytest
+
+import lambda_handler
 
 
 class TestCreateS3Client:

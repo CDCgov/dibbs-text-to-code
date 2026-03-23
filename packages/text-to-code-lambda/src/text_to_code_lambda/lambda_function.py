@@ -2,7 +2,6 @@ import io
 import json
 import os
 
-import lambda_handler
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
@@ -10,6 +9,8 @@ from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.client import BaseClient
 from opensearchpy import OpenSearch
+
+import lambda_handler
 from text_to_code.models import eicr as eicr_models
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor

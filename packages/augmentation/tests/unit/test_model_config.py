@@ -1,4 +1,5 @@
 import pytest
+
 from augmentation.models.application import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig

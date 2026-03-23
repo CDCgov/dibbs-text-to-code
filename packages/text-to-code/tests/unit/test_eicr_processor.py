@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from lxml.etree import XMLSyntaxError
+
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
 from text_to_code.models import Candidate
