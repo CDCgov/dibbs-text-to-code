@@ -103,7 +103,6 @@ mypy-init-return = true
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
 force-single-line = true
-known-first-party = ["augmentation", "augmentation_lambda", "shared_models", "lambda_handler", "text_to_code", "text_to_code_lambda", "index_lambda"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
