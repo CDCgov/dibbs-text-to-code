@@ -78,7 +78,10 @@ class TestHandler:
         predicted_candidate = ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0][
             "reranker_processed_results"
         ][0]
-        assert predicted_candidate["code_string"] == ""
+        assert (
+            predicted_candidate["code_string"]
+            == "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk"
+        )
         assert round(predicted_candidate["score"], 3) == 0.0
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
