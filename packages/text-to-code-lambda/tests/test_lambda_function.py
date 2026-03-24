@@ -82,7 +82,7 @@ class TestHandler:
             predicted_candidate["code_string"]
             == "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk"
         )
-        assert round(predicted_candidate["score"], 3) == 0.0
+        assert round(float(predicted_candidate["score"]), 3) == 0.0
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
         """Test handler with no records."""
