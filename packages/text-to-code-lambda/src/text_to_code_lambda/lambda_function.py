@@ -15,6 +15,7 @@ from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
 from text_to_code.services import embedder
 from text_to_code.services import evaluator
+from text_to_code.services import reranker
 from text_to_code.services import schematron_processor
 from text_to_code.services.query import QueryBuilder
 
@@ -264,8 +265,16 @@ def _process_schematron_errors(
             query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
         )
 
+        # The OpenSearch results object has a couple levels of nesting,
+        # but all we care about for reranking is extracting the actual
+        # text strings of the ANN LOINC codes
+        results_list = opensearch_retrieved_scores.hits.hits
+        retrieved_loinc_names = [hit.source.description for hit in results_list]
+        ranked_results = reranker.rerank(selected_candidate.value, retrieved_loinc_names)
+
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
+        metadata_error["reranker_processed_results"] = ranked_results
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
