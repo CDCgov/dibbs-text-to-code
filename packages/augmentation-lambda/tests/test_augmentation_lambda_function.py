@@ -1,8 +1,9 @@
 import json
 
-from augmentation.models import Metadata
 from augmentation_lambda import lambda_function
 from shared_models import TTCAugmenterInput
+
+from augmentation.models import Metadata
 
 
 class FakeAugmenter:
