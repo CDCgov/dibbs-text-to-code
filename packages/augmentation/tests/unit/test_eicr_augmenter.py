@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from pytest_mock import MockerFixture
-from syrupy import Snapshot
+from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata
 from augmentation.models import NonstandardCodeInstanceMetadata
