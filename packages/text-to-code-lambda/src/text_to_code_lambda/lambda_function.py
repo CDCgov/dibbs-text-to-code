@@ -270,7 +270,7 @@ def _process_schematron_errors(
         # text strings of the ANN LOINC codes
         results_list = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = reranker.rerank(selected_candidate.value, retrieved_loinc_names)
+        ranked_results = reranker.Reranker().rerank(selected_candidate.value, retrieved_loinc_names)
 
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
