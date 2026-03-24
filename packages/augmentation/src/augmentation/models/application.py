@@ -16,6 +16,7 @@ class ApplicationCode(StrEnum):
         obj = str.__new__(cls, code)
         obj._value_ = code
         obj.display = display
+        obj.code = code
         return obj
 
 
