@@ -3,13 +3,13 @@ from uuid import uuid4
 
 from lxml import etree
 from lxml.etree import Element
-from shared_models import NonstandardCodeInstance
 
 from augmentation.models import ApplicationCode
 from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
+from shared_models import NonstandardCodeInstance
 
 
 class EICRAugmenter(Augmenter):

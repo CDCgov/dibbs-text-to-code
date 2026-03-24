@@ -1,5 +1,4 @@
 from shared_models import DataField
-
 from text_to_code.models.labs import BaseLabField
 from text_to_code.models.registry import EICR_REGISTRY
 

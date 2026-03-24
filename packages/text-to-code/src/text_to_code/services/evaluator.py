@@ -1,5 +1,4 @@
 from shared_models import DataField
-
 from text_to_code.models.evaluator import EVALUATION_REGISTRY
 from text_to_code.models.evaluator import BaseEvaluationCriteria
 from text_to_code.models.evaluator import CodeTranslation
