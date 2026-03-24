@@ -48,10 +48,18 @@ class Augmenter(ABC):
         return clean_xml_tree(v)
 
     def _get_application_code_value(self) -> str:
-        return self.application_code.code
+        # added this check to satisfy the type checker
+        # we will never return an ""
+        if hasattr(self.application_code, "code"):
+            return self.application_code.code
+        return ""
 
     def _get_application_code_display(self) -> str:
-        return self.application_code.display
+        # added this check to satisfy the type checker
+        # we will never return an ""
+        if hasattr(self.application_code, "display"):
+            return self.application_code.display
+        return ""
 
     @abstractmethod
     def augment(self) -> Metadata:
