@@ -278,6 +278,10 @@ class EICRAugmenter(Augmenter):
         software_name.set("codeSystem", value=self.config.author_function_code_system)
         software_name.set("codeSystemName", value=self.config.author_function_code_system_name)
         software_name.set("displayName", self._get_application_code_display())
+        self._add_previous_element_comment(
+            " assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool",
+            software_name,
+        )
 
         return author
 

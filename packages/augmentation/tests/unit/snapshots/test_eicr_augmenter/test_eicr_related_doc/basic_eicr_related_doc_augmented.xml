@@ -47,7 +47,8 @@
                                         <telecom nullFlavor="NA"/>
                                         <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
                                         <assignedAuthoringDevice>
-                                            <softwareName displayName="Data Augmentation Tool"/>
+                                            <!-- DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
+                                            <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
                                         </assignedAuthoringDevice>
                                     </assignedAuthor>
                                 </author>
@@ -71,8 +72,6 @@
         </parentDocument>
     </relatedDocument>
     <author>
-        <!--DATA AUGMENTATION: functionCode specifies type of change 'text-to-code' which signifies this document has been transformed using the text-to-code data augmentation tool -->
-        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113663.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
         <!--DATA AUGMENTATION: time of data augmentation operation -->
         <effectiveTime value="20260213152757"/>
         <assignedAuthor>
@@ -84,7 +83,8 @@
             <telecom nullFlavor="NA"/>
             <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
             <assignedAuthoringDevice>
-                <softwareName displayName="Data Augmentation Tool"/>
+                <!-- DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
+                <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
             </assignedAuthoringDevice>
         </assignedAuthor>
     </author>
