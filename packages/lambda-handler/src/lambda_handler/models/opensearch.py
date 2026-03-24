@@ -1,26 +1,6 @@
 import pydantic
 
-
-class S3Location(pydantic.BaseModel):
-    """Represents the location of a file in S3, indicating which file contained the relevant data."""
-
-    bucket: str = pydantic.Field(description="The S3 bucket where the file is located.")
-    key: str = pydantic.Field(description="The S3 key (path) where the file is located.")
-
-
-class OpenSearchHitSource(pydantic.BaseModel):
-    """Represents a single search result _source returned from OpenSearch."""
-
-    id: int = pydantic.Field(
-        description="The unique ID from the embedding data of the search result hit."
-    )
-    loinc_code: str = pydantic.Field(description="The LOINC code of the search result hit.")
-    loinc_name_type: str = pydantic.Field(
-        description="The LOINC name type of the search result hit."
-    )
-    description: str = pydantic.Field(description="The description of the search result hit.")
-    loinc_type: str = pydantic.Field(description="The LOINC type of the search result hit.")
-    s3: S3Location = pydantic.Field(description="The S3 location of the search result hit.")
+from shared_models import OpenSearchHitSource
 
 
 class OpenSearchHit(pydantic.BaseModel):
