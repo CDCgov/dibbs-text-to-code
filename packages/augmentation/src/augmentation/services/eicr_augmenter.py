@@ -274,7 +274,10 @@ class EICRAugmenter(Augmenter):
             " set to 'Data Augmentation Tool' ", assigned_authoring_device
         )
         software_name = etree.SubElement(assigned_authoring_device, "softwareName")
-        software_name.set("displayName", "Data Augmentation Tool")
+        software_name.set("code", value=self._get_application_code_value())
+        software_name.set("codeSystem", value=self.config.author_function_code_system)
+        software_name.set("codeSystemName", value=self.config.author_function_code_system_name)
+        software_name.set("displayName", self._get_application_code_display())
 
         return author
 
