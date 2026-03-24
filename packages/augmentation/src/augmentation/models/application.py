@@ -2,6 +2,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+
 from shared_models import NonstandardCodeInstance
 
 
