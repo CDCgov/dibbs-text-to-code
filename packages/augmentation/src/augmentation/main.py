@@ -2,12 +2,11 @@
 
 from io import BytesIO
 
-from lambda_handler.lambda_handler import put_file
-from shared_models import TTCAugmenterInput
-
 from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
 from augmentation.services.eicr_augmenter import EICRAugmenter
+from lambda_handler.lambda_handler import put_file
+from shared_models import TTCAugmenterInput
 
 
 def _retrieve_eicr(eicr_id: str) -> str:

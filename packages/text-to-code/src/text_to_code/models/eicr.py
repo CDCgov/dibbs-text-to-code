@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
+
 from shared_models import CdaInstanceIdentifier
 
 

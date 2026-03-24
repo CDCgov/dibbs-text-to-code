@@ -1,9 +1,9 @@
 from enum import Enum
 
 from pydantic import BaseModel
+
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
-
 from text_to_code.models.eicr import Candidate
 
 

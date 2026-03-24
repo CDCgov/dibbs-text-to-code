@@ -8,6 +8,7 @@ from unittest.mock import patch
 import boto3
 import moto
 import pytest
+
 from text_to_code_lambda import lambda_function
 
 EICR_INPUT_PREFIX = "eCRMessageV2/"

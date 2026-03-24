@@ -1,5 +1,6 @@
 import pydantic
 import pytest
+
 from shared_models import DataField
 from text_to_code.models import VectorSearchParams
 from text_to_code.models.query import DataFieldTypeMapping
