@@ -71,6 +71,15 @@ class TestHandler:
             "opensearch_retrieved_scores"
             in ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]
         )
+        assert (
+            "reranker_processed_results"
+            in ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        predicted_candidate = ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0][
+            "reranker_processed_results"
+        ][0]
+        assert predicted_candidate["code_string"] == ""
+        assert round(predicted_candidate["score"], 3) == 0.0
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
         """Test handler with no records."""
