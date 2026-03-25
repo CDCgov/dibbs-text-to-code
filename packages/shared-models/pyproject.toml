@@ -3,9 +3,7 @@ name = "shared-models"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "Josh Nygaard", email = "jnygaard@skylight.digital" }
-]
+authors = [{ name = "Josh Nygaard", email = "jnygaard@skylight.digital" }]
 requires-python = ">=3.11, <3.13"
 dependencies = []
 
