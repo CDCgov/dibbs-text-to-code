@@ -33,6 +33,11 @@ S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 
+# Instantiate wrapper objects for the sentence-transformers models
+# to re-use across invocations
+RETRIEVER = embedder.Embedder()
+RERANKER = reranker.Reranker()
+
 # Cache clients and auth to reuse across Lambda invocations
 _cached_auth = None
 _cached_opensearch_client = None
@@ -250,7 +255,7 @@ def _process_schematron_errors(
         if selected_candidate is None:
             continue
 
-        vector_embedding = embedder.Embedder().embed(selected_candidate.value)
+        vector_embedding = RETRIEVER.embed(selected_candidate.value)
 
         vector_parameters = query_models.VectorSearchParams(
             vector=vector_embedding.tolist(), data_field=data_field
@@ -270,7 +275,7 @@ def _process_schematron_errors(
         # text strings of the ANN LOINC codes
         results_list = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = reranker.Reranker().rerank(selected_candidate.value, retrieved_loinc_names)
+        ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
 
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores

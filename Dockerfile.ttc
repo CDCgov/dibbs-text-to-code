@@ -24,7 +24,7 @@ RUN python -c "\
     from huggingface_hub import snapshot_download; \
     snapshot_download( \
     repo_id='intfloat/e5-large-v2', \
-    local_dir='/opt/model', \
+    local_dir='/opt/retriever_model', \
     ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'] \
     )"
 
@@ -33,10 +33,11 @@ RUN python -c "\
     from huggingface_hub import snapshot_download; \
     snapshot_download( \
     repo_id='cross-encoder/stsb-roberta-large', \
-    local_dir='/opt/model', \
+    local_dir='/opt/reranker_model', \
     ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'] \
     )"
 
-ENV MODEL_PATH="/opt/model"
+ENV RETRIEVER_MODEL_PATH="/opt/retriever_model"
+ENV RERANKER_MODEL_PATH="/opt/reranker_model"
 
 CMD ["text_to_code_lambda.lambda_function.handler"]

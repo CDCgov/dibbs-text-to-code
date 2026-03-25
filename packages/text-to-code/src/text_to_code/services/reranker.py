@@ -23,6 +23,4 @@ class Reranker:
         """
         ranks = _RERANKER.rank(nonstandard_in, hits)
         sorted_ranks = [{"code_string": hits[r["corpus_id"]], "score": r["score"]} for r in ranks]
-        # Want the scores in descending order, default `sorted` method is ascending
-        sorted_ranks = sorted(sorted_ranks, key=lambda x: x["score"], reverse=True)
         return sorted_ranks
