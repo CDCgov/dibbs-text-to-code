@@ -17,10 +17,13 @@
     - [Dependencies](#dependencies)
     - [Command Line](#command-line)
     - [Direct Relma DB Queries](#direct-relma-db-queries)
+- [Outdated](#outdated-files)
 
 ## Overview
 
 The `data_curation` folder contains scripts for TTC model development, tuning, and evaluation. Most of the scripts leverage data that is being pulled from the LOINC, UMLS, and HL7 APIs. However, some require the LOINC RelmaDB (MS-Access database).
+
+The TTC team built the synthetic data it uses for model development over two attempts. In the first attempt, we used heuristics generated from studying research papers on medical ontology standardization to create "pseudorandom" synthetic examples. These variants had lots of random deletions, word order swaps, and word substitutions. However, once we studied excerpts of production data, we realized these heuristics were extremely unrepresentative of the way data was non-uniform in reality. This led to our second attempt, during we created a systematic set of "variation rules" that allowed us to manipulate our synthetic data with more awareness of context and structure. Some of the files in this package relate to our first attempt at synthetic data work, rather than the current scripts we're actually using from our second attempt. These files are documented in an "Outdated" section at the end of this README.
 
 ## Scripts
 
@@ -32,7 +35,7 @@ Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to prov
 
 ### augmentation.py
 
-A collection of data modification utilities for terminology datasets, designed to support model training and tuning.
+A collection of data modification utilities for terminology datasets, designed to create synthetic data suitable for model training and tuning.
 
 This module provides functions to introduce controlled randomness into text data by:
 
@@ -43,6 +46,8 @@ This module provides functions to introduce controlled randomness into text data
 These transformations are useful for creating augmented datasets that improve model robustness and generalization, particularly when dealing with noisy or variant terminology (e.g., clinical terms, lab names, or LOINC entries).
 
 All randomization behaviors and transformation parameters are configurable via the `configs.py` module, allowing users to fine-tune augmentation intensity, probability distributions, and substitution rules.
+
+**NOTE**: Most of the randomization function in this module
 
 ---
 
@@ -504,5 +509,11 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `<your repo location>\data_curation\loinc` and then click `OK`.
   - When the "Export Text Wizard" appears select `Finish`.
   - This will save the query results in the [data folder](../../data/)
+
+---
+
+## Outdated Files
+
+The scripts and files detailed here pertain to Version 1 of the Text-to-Code team's synthetic data generation. This code created data based on properties we pulled from research papers during our literature review, but these properties did not match the tendencies of production data.
 
 ---

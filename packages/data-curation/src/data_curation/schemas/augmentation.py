@@ -12,12 +12,6 @@ import pydantic
 from typing_extensions import Annotated
 
 
-class EnhancementType(str, enum.Enum):
-    ABBRV = "abbrv"
-    SYNONYMS = "synonyms"
-    ALL = "all"
-
-
 class EnhancementOptions(pydantic.BaseModel):
     """
     The schema for a dictionary of probability settings used for input enhancement
