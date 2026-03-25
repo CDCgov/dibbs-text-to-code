@@ -261,7 +261,8 @@ resource "aws_lambda_function" "lambda" {
       OPENSEARCH_INDEX        = var.index_name
       REGION                  = var.region
       BUCKET_NAME             = var.s3_bucket
-      MODEL_PATH              = "/opt/model"
+      RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
+      RERANKER_MODEL_PATH     = "/opt/reranker_model"
       EICR_INPUT_PREFIX       = var.eicr_input_prefix
       SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
       TTC_INPUT_PREFIX        = var.ttc_input_prefix

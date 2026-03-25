@@ -9,5 +9,10 @@ EICR_REGISTRY: dict[DataField, type[BaseLabField]] = {
     DataField.LAB_TEST_NAME_ORDERED: LabTestNameOrdered,
 }
 
-# Default model name for SentenceTransformer, representing the model TTC used most extensively
-default_model: str = "intfloat/e5-large-v2"
+# Text-to-Code Retrieval model, used for searching approximate neighborhoods
+# to find semantically similar candidates
+TTC_RETRIEVER: str = "intfloat/e5-large-v2"
+
+# Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
+# found by the approximate neighbor search
+TTC_RERANKER: str = "cross-encoder/stsb-roberta-large"
