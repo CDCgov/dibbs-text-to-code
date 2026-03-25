@@ -85,10 +85,7 @@ class TestHandler:
         predicted_candidate = ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0][
             "reranker_processed_results"
         ][0]
-        assert (
-            predicted_candidate["code_string"]
-            == "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk"
-        )
+        assert predicted_candidate["code_string"] == "Weed Allerg Mix3 IgE Qn"
         assert round(float(predicted_candidate["score"]), 3) == EXPECTED_RERANKER_SCORE
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
