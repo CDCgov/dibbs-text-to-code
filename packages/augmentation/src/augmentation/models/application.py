@@ -13,7 +13,8 @@ class ApplicationCode(StrEnum):
     # element 1 - Application Code Display Name (for human readability)
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
-    def __new__(cls, code: str, display: str):  # noqa: ANN204, D102
+    def __new__(cls, code: str, display: str) -> "ApplicationCode":
+        """Create a new instance of the ApplicationCode enum with code and display attributes."""
         # use the base type's __new__ to create the enum instance
         obj = str.__new__(cls, code)
         obj._value_ = code
