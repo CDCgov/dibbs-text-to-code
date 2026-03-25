@@ -21,7 +21,7 @@ def handler(event: dict, context: dict) -> dict:
                         "name": "hnsw",
                         "space_type": "cosinesimil",
                         "engine": "faiss",
-                        "parameters": {"ef_construction": 128, "m": 16},
+                        "parameters": {"ef_construction": 400, "m": 64},
                     },
                 },
                 "loinc_type": {"type": "keyword"},

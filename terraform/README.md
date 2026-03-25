@@ -65,17 +65,19 @@ The index it creates has LOINC-specific field mappings including `description_ve
 Deployed as a **container image** from ECR (`package_type = "Image"`). The Docker image (`Dockerfile.ttc` at repo root) installs the full `text-to-code-lambda` package along with its workspace dependencies (`shared-models`, `lambda-handler`, `text-to-code`).
 
 At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handler`, which:
+
 1. Loads the SentenceTransformer model from `/opt/model` during initialization (cold start)
 2. Parses eICR XML documents from S3 to extract text candidates
 3. Evaluates and selects the best candidate for each data field
 4. Generates embeddings and executes KNN queries against OpenSearch
 5. Returns standardized code mappings (LOINC/SNOMED)
 
-Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `BUCKET_NAME`, `MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
+Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `BUCKET_NAME`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
 
 ### OpenSearch Ingestion Pipeline (`main.tf`)
 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
+
 - Polls `s3://dibbs-text-to-code/ingestion/` monthly for new NDJSON files
 - Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
 - Runs within the VPC using the same private subnets as Lambda
@@ -100,6 +102,7 @@ Terraform manages dependency ordering automatically, but conceptually the sequen
 ## State Backend
 
 Terraform state is stored remotely in **AWS S3** with DynamoDB locking:
+
 - Bucket: `dibbs-ttc-terraform-state`
 - Key: `terraform.tfstate`
 - Region: `us-east-2`
