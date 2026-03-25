@@ -2,7 +2,6 @@ import os
 import typing
 
 import boto3
-from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
 from botocore.credentials import Credentials
 from botocore.exceptions import ClientError
@@ -98,18 +97,6 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
 
     response = client.get_object(Bucket=bucket_name, Key=object_key)
     return response["Body"].read().decode("utf-8")
-
-
-def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) -> dict:
-    """Extracts the file metadata from an S3 event triggered by a Lambda function.
-
-    :param event: The S3 event containing the bucket and object key information.
-    :return: A dictionary containing the bucket name and object key.
-    """
-    bucket_name = event["detail"]["bucket"]["name"]
-    object_key = event["detail"]["object"]["key"]
-
-    return {"bucket_name": bucket_name, "object_key": object_key}
 
 
 def put_file(file_obj: typing.BinaryIO, bucket_name: str, object_key: str) -> None:

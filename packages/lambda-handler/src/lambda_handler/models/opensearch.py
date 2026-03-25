@@ -1,3 +1,6 @@
+from functools import cached_property
+
+from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -7,6 +10,21 @@ class S3Location(BaseModel):
 
     bucket: str = Field(description="The S3 bucket where the file is located.")
     key: str = Field(description="The S3 key (path) where the file is located.")
+
+    @classmethod
+    def from_sqs_record(cls, record: SQSRecord) -> "S3Location":
+        """Create an S3Location model from an SQSRecord."""
+        return cls.model_validate(
+            {
+                "bucket": record.json_body["detail"]["bucket"]["name"],
+                "key": record.json_body["object"]["key"],
+            }
+        )
+
+    @cached_property
+    def address(self) -> str:
+        """Return the address string in the form: `'s3://{self.bucket}/{self.key}'`."""
+        return f"s3://{self.bucket}/{self.key}"
 
 
 class OpenSearchHitSource(BaseModel):

@@ -8,9 +8,10 @@ from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.client import BaseClient
-from opensearchpy import OpenSearch
+from opensearchpy.client import OpenSearch
 
 import lambda_handler
+from lambda_handler.models.opensearch import S3Location
 from text_to_code.models import eicr as eicr_models
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
@@ -53,20 +54,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     :param context: The Lambda context object.
     :return: A dictionary containing the status code, message, and any relevant data about the processing results.
     """
-    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
-
-    # Initialize cached clients if they don't exist
-    if _cached_auth is None:
-        _cached_auth = lambda_handler.create_aws_auth()
-    auth = _cached_auth
-
-    if _cached_opensearch_client is None:
-        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
-    opensearch_client = _cached_opensearch_client
-
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    opensearch_client, s3_client = _initilize_clients()
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
@@ -99,6 +87,27 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     )
 
 
+def _initilize_clients() -> tuple[OpenSearch, BaseClient]:
+    """Initlize auth, OpenSearch, and S3 clients, and return the OpenSearch and S3 clients.
+
+    TODO: I Do not love that this function initilizes all 3, but only returns 2.
+    """
+    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
+    if _cached_auth is None:
+        _cached_auth = lambda_handler.create_aws_auth()
+    auth = _cached_auth
+
+    if _cached_opensearch_client is None:
+        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
+    opensearch_client = _cached_opensearch_client
+
+    if _cached_s3_client is None:
+        _cached_s3_client = lambda_handler.create_s3_client()
+    s3_client = _cached_s3_client
+
+    return opensearch_client, s3_client
+
+
 def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: OpenSearch) -> None:
     """Process each SQS record.
 
@@ -108,22 +117,16 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
         logger.warning("Empty SQS body", message_id=record.message_id)
         return
 
-    s3_event = json.loads(record.body)
+    s3_location = S3Location.from_sqs_record(record)
+    logger.info(f"Processing S3 Object: {s3_location.address}")
 
-    # Parse the EventBridge S3 event from the SQS message body
-    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-    bucket = eventbridge_data["bucket_name"]
-    object_key = eventbridge_data["object_key"]
-    logger.info(f"Processing S3 Object: s3://{bucket}/{object_key}")
-
-    # Extract persistence_id from the RR object key
-    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+    persistence_id = lambda_handler.get_persistence_id(s3_location.key, TTC_INPUT_PREFIX)
     logger.info(f"Extracted persistence_id: {persistence_id}")
 
     with logger.append_context_keys(
         persistence_id=persistence_id,
     ):
-        _process_record_pipeline(bucket, persistence_id, s3_client, opensearch_client)
+        _process_record_pipeline(s3_location.bucket, persistence_id, s3_client, opensearch_client)
 
 
 def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
@@ -133,8 +136,8 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :return: The TTC output and TTC metadata output dictionaries.
     """
     # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
-    ttc_output: dict = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
-    ttc_metadata_output: dict = {
+    ttc_output = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
+    ttc_metadata_output = {
         "persistence_id": "",
         "eicr_metadata": {},
         "schematron_errors": {},

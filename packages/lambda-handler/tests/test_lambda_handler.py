@@ -15,21 +15,6 @@ class TestCreateS3Client:
         assert s3_client._get_credentials().access_key == "test_access_key_id"
 
 
-class TestGetEventBridgeDataFromS3Event:
-    def test_get_eventbridge_data_from_s3_event(self, moto_setup):
-        """Test get file content from S3 event."""
-        moto_setup.put_object(
-            Bucket=moto_setup.bucket_name, Key="test.txt", Body=b"This eICR has errors"
-        )
-
-        event = {
-            "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}}
-        }
-
-        content = lambda_handler.get_eventbridge_data_from_s3_event(event)
-        assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
-
-
 class TestGetFileContentFromS3:
     def test_get_file_content_from_s3(self, moto_setup):
         """Test get file content from S3."""
