@@ -51,15 +51,13 @@ class Augmenter(ABC):
         # added this check to satisfy the type checker
         if hasattr(self.application_code, "code"):
             return self.application_code.code
-        # we will never return an ""
-        return ""
+        raise Exception("we will never return an ''")
 
     def _get_application_code_display(self) -> str:
         # added this check to satisfy the type checker
         if hasattr(self.application_code, "display"):
             return self.application_code.display
-        # we will never return an ""
-        return ""
+        raise Exception("we will never return an ''")
 
     @abstractmethod
     def augment(self) -> Metadata:
