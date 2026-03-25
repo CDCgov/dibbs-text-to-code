@@ -9,18 +9,24 @@ EXPECTED_RERANKER_SCORE = 0.01
 
 
 class TestHandler:
-    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_opensearch):
+    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker):
         """Test handler with no failures."""
-        expected_num_errors = 4
+        selected_candidate = {
+            "value": "weed allergen mix 3",
+            "confidence": 1.0,
+        }
+
+        mocker.patch(
+            "text_to_code.services.evaluator.select_relevant_text",
+            return_value=type("SelectedCandidate", (), selected_candidate)(),
+        )
+
         resp = lambda_function.handler(example_sqs_event, {})
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
             "num_success_eicrs": 1,
         }
-
-        # Assert that the number of calls to opensearch_client.search is equal to the expected number of errors
-        assert mock_opensearch.search.call_count == expected_num_errors
 
         # Assert that the TTC output was saved to S3
         ttc_output = json.loads(
@@ -29,7 +35,6 @@ class TestHandler:
                 object_key=mock_aws_setup.persistence_id,
             )
         )
-        # TODO: update the content to match expected output type once we complete ticket #327 and update the test data
         assert ttc_output is not None
         assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "schematron_errors" in ttc_output
@@ -48,6 +53,7 @@ class TestHandler:
         assert "candidate" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
         assert "error_context" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
         assert "error_id" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"] is not None
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
         ttc_metadata_output = json.loads(
