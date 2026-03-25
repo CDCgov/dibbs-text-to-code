@@ -5,7 +5,7 @@ from text_to_code_lambda import lambda_function
 
 EXPECTED_RESULTED_ERRORS = 2
 EXPECTED_ORDERED_ERRORS = 2
-EXPECTED_RERANKER_SCORE = 0.01
+EXPECTED_RERANKER_SCORE = 0.83
 
 
 class TestHandler:
