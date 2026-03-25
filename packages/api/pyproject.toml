@@ -2,15 +2,10 @@
 name = "api"
 version = "0.1.0"
 description = ""
-dependencies = [
-    "fastapi",
-    "opensearch-py==3.0.0"
-]
+dependencies = ["fastapi", "opensearch-py==3.0.0"]
 
 [dependency-groups]
-dev = [
-  "fastapi[standard]"
-]
+dev = ["fastapi[standard]"]
 
 [tool.ruff]
 extend = "../../pyproject.toml"
