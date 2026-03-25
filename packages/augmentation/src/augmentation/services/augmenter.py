@@ -49,16 +49,16 @@ class Augmenter(ABC):
 
     def _get_application_code_value(self) -> str:
         # added this check to satisfy the type checker
-        # we will never return an ""
         if hasattr(self.application_code, "code"):
             return self.application_code.code
+        # we will never return an ""
         return ""
 
     def _get_application_code_display(self) -> str:
         # added this check to satisfy the type checker
-        # we will never return an ""
         if hasattr(self.application_code, "display"):
             return self.application_code.display
+        # we will never return an ""
         return ""
 
     @abstractmethod
