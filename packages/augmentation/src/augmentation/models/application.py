@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -6,18 +6,14 @@ from pydantic import ConfigDict
 from shared_models import NonstandardCodeInstance
 
 
-class ApplicationCode(StrEnum):
+class ApplicationCode(Enum):
     """The list of applications that will leveraging Augmentation functionality."""
 
-    # element 0 - Application Code
-    # element 1 - Application Code Display Name (for human readability)
-    value: str
     display: str
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
-    def __new__(cls, value: str, display: str) -> "ApplicationCode":
-        """Create a new instance of the ApplicationCode enum with code and display attributes."""
-        # use the base type's __new__ to create the enum instance
+    def __new__(cls, value: str, display: str) -> object:
+        """Initialize ApplicationCode enum."""
         obj = object.__new__(cls)
         obj._value_ = value
         obj.display = display

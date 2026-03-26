@@ -48,7 +48,7 @@ class Augmenter(ABC):
         return clean_xml_tree(v)
 
     def _get_application_code_value(self) -> str:
-        return self.application_code.value
+        return self.application_code.value[0]
 
     def _get_application_code_display(self) -> str:
         return self.application_code.display
