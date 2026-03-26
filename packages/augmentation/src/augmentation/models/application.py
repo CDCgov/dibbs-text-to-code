@@ -9,10 +9,10 @@ from shared_models import NonstandardCodeInstance
 class ApplicationCode(StrEnum):
     """The list of applications that will leveraging Augmentation functionality."""
 
-    display: str
-
     # element 0 - Application Code
     # element 1 - Application Code Display Name (for human readability)
+    value: str
+    display: str
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
     def __new__(cls, value: str, display: str) -> "ApplicationCode":
