@@ -18,7 +18,7 @@ class ApplicationCode(StrEnum):
     def __new__(cls, value: str, display: str) -> "ApplicationCode":
         """Create a new instance of the ApplicationCode enum with code and display attributes."""
         # use the base type's __new__ to create the enum instance
-        obj = object.__new__(cls, value, display)
+        obj = object.__new__(cls)
         obj._value_ = value
         obj.display = display
         return obj
