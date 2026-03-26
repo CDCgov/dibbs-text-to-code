@@ -10,6 +10,7 @@ from text_to_code.models import Candidate
 from text_to_code.models import LabXPaths
 from text_to_code.models.eicr import Metadata
 from text_to_code.services.eicr_processor import EicrProcessor
+from text_to_code.services.utils import get_config_for_data_field
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 
@@ -33,6 +34,7 @@ class TestEmptyEicrProcessor:
 
     def test_get_text_candidates_logs_when_xpath_lookup_fails(self):
         processor = EicrProcessor("<tag />")
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
 
         with (
             patch.object(processor, "_get_by_xpath", side_effect=Exception("boom")),
@@ -43,15 +45,11 @@ class TestEmptyEicrProcessor:
         assert result == []
         mock_exception.assert_called_once_with(
             "Failed to extract text candidates from eICR",
-            base_xpath=BASE_XPATH,
-            data_field=str(DataField.LAB_TEST_NAME_RESULTED),
-            sub_xpaths=[
-                LabXPaths.CODE_DISPLAY_NAME,
-                LabXPaths.CODE_ORIGINAL_TEXT,
-                LabXPaths.OBSERVATION_TEXT,
-                LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
-                LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT,
-            ],
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+            },
         )
 
 

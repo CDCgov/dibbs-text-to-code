@@ -66,9 +66,11 @@ class EicrProcessor:
         except Exception:
             logger.exception(
                 "Failed to extract text candidates from eICR",
-                base_xpath=base_xpath,
-                data_field=str(data_field),
-                sub_xpaths=sub_xpaths,
+                extra={
+                    "base_xpath": base_xpath,
+                    "data_field": str(data_field),
+                    "sub_xpaths": sub_xpaths,
+                },
             )
             return candidates
         return candidates
