@@ -15,7 +15,7 @@ class S3Location(BaseModel):
         return cls.model_validate(
             {
                 "bucket": record.json_body["detail"]["bucket"]["name"],
-                "key": record.json_body["object"]["key"],
+                "key": record.json_body["detail"]["object"]["key"],
             }
         )
 

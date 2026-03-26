@@ -9,7 +9,7 @@ class TestS3Location:
         expected_key = "expected_key"
         record = SQSRecord(
             {
-                "body": f'{{"detail": {{"bucket": {{"name": "{expected_bucket}"}}}},"object": {{"key": "{expected_key}"}}}}'
+                "body": f'{{"detail": {{"bucket": {{"name": "{expected_bucket}"}},"object": {{"key": "{expected_key}"}}}}}}'
             }
         )
 
