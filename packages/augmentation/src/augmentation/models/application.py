@@ -13,7 +13,7 @@ class ApplicationCode(Enum):
     display: str
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
-    def __new__(cls, value: str, display: str) -> object:
+    def __new__(cls, value: str, display: str) -> "ApplicationCode":
         """Initialize ApplicationCode enum."""
         obj = object.__new__(cls)
         obj._value_ = value
