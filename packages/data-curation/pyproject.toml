@@ -2,7 +2,16 @@
 name = "data-curation"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["python-dotenv", "requests"]
+dependencies = [
+  "en_core_web_sm",
+  "python-dotenv",
+  "requests",
+  "spacy",
+  "spacy-lookups-data",
+]
+
+[tool.uv.sources]
+en_core_web_sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz" }
 
 [build-system]
 requires = ["hatchling"]

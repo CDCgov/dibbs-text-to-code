@@ -2,6 +2,8 @@ import os
 import random
 import sys
 
+import pytest
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import loinc_utils
@@ -14,6 +16,29 @@ LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 assert len(LOINC_ENHANCEMENTS) > 0
 
 random.seed(3141)
+
+@pytest.mark.parametrize(
+    "text, max_perms, expected",
+    [
+        # Empty string
+        ("", 3, ""),
+        # Single word
+        ("Blood", 3, "Blood"),
+        # Multiple words with special characters
+        (
+            "SARS-CoV-2 E gene Resp Ql NAA+probe",
+            5,
+            "E SARS-CoV-2 gene Resp Ql NAA+probe",
+        ),
+        # More deletions than words
+        ("B pert Spt Ql Cult", 10, "Spt pert B Ql Cult"),
+    ],
+)
+class TestScrambleWordOrder:
+    def test_scramble_word_order(self, text, max_perms, expected):
+        """Test scramble word order."""
+        result = loinc_utils.scramble_word_order(text, max_perms=max_perms)
+        assert result == expected
 
 class TestAxisIsValid:
     def test_null_string(self):

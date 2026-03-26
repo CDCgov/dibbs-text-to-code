@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [Scripts](#scripts)
+- [Deprecated Scripts](#deprecated-scripts)
 - [Data Files](#data-files)
   - [LOINC](#loinc)
   - [LOINC Part Synonyms & Abbreviations](#loinc-part-synonyms-&-abbreviations)
@@ -20,9 +21,74 @@
 
 ## Overview
 
-The `data_curation` folder contains scripts for TTC model development, tuning, and evaluation. Most of the scripts leverage data that is being pulled from the LOINC, UMLS, and HL7 APIs. However, some require the LOINC RelmaDB (MS-Access database).
+The `data_curation` folder contains scripts dedicated to collecting and combining various LOINC data into formats suitable for model development, tuning, and evaluation. Most of the scripts leverage data that is being pulled from the LOINC, UMLS, and HL7 APIs. However, some require the LOINC RelmaDB (MS-Access database).
+
+The TTC team built the synthetic data it uses for model development over two attempts. In the first attempt, "Synthetic Augmentation," we used heuristics created from studying research papers on medical ontology standardization to create "pseudorandom" synthetic examples. These variants had lots of random deletions, word order swaps, and word substitutions (the "Augmentation" in the name of this phase refers to supplementing and varying the semantic content of a LOINC code to create what was nominally a richer example). However, once we studied excerpts of production data, we realized these heuristics were extremely unrepresentative of the way data was non-uniform in reality. Synthetically Augmented data was frequently too short (due to missing words and characters) or too long (due to inserting semantically similar words without removing existing equivalents), and didn't match the type of structures we frequently saw in production data (i.e. Synthetically Augmented examples frequently had multiple repetitions of the same concept, whereas production data typically had _less_ information that _implied_ a particular concept).
+
+This led to our second attempt, "Production Emulation." During this phase, we created a systematic set of "variation rules" that allowed us to manipulate our synthetic data with more awareness of context and structure. These included formulas for how to build LOINC codes derived from studying frequently occuring patterns, as well as common ways labs send variant parts of the LOINC axes.
+
+The files in this package are divided by attempt. All of our Synthetic Augmentation code has been deprecated since the development of our Production Emulation scripts, and we have stored the files from our first phase in the `archive/` directory. More information about these files can be found in the [Deprecated Scripts](#deprecated-scripts) section of this README, below the section for our current working scripts. All files outside of this `archive/` directory are current, working files the TTC team is using.
 
 ## Scripts
+
+### data_emulation.py
+
+This is the main synthetic data generation script for TTC data creation Phase 2 ("Production Emulation"). The file is complex and is heavily documented, so for most details, we recommend looking at the file directly. However, the general workflow of the script is as follows:
+
+For each LOINC code in a specified LOINC data file (containing name variants for LOINC codes as well as various attributes like LOINC axes and Lab Types):
+
+- Construct a `LOINC_STRUCT` object out of the code to standardize and systematize its properties for use in the rest of the script.
+- Process each name variant for the code (Long Common Name, Short Name, etc.) iteratively, applying different procedures depending on the variant in question (in most cases, Consumer Name is excluded due to non-uniqueness across LOINC codes).
+- For Short Names and Fully-Specified Names, apply a small set of format-based rules to generate context-aware variants using colons, dashes, and other delimiters that help specify the key component of the LOINC code.
+- For Display Names, apply a more rigorous set of "Variation Rules" on different parts of the code string, using patterns extracted from production data to create semantically equivalent but structurally different versions of the code (e.g. with the Testing Modality moved or truncated; with the Component axis abbreviated or replaced by an equivalent Related Name; with parenthetical abbreviations inserted or removed; with Measurement words indicating scale or ordinal quantification used in place of testing methods proper; etc.).
+- For Long Common Names, apply the above Variation Rules in addition to a set of specific "Direct Build Formulas." These Formulas provide several ways to construct structurally varied LOINC codes directly out of the LOINC attribute axes and Related Names, and we observed many instances of production data that used these in place of standard codes.
+- When each name variant has been processed and synthetic candidates created, apply a small amount of post-processing to the examples to make them increasingly distinct (e.g. changing conjunction delimiters; denoting tests as "Point-of-Care" POC; truncating long strings; etc.).
+- Write the variants and their corresponding original string into a file as a set of positive pairs for model tuning.
+
+For specific details on any of these points, see the script itself.
+
+---
+
+### loinc_enhancement.py
+
+This script contains the code needed to perform Enhancements on various parts of LOINC codes. For the purposes of synthetic data generation, "Enhancement" refers to the process of substituting an acronym, abbreviation, or semantically similar/related word for all or part of a LOINC code string (e.g. replacing "Red Blood Cells" with "RBC," or substituting "Fenpat" for "Fentanyl"). Enhancement works by combining LOINC Related Names and Attribute Axes extracted from the LOINC API and supplemented with the RELMA Database into a single, searchable dictionary whose keys are commonly occuring phrases in the LOINC ontology.
+
+LOINC Enhancement is a five step procedure documented more concretely in the script itself, but follows this approach:
+
+- Determine all possible combinations of adjacent words in the LOINC code string, including singleton words
+- Filter these combinations to only include candidates which are keys in the LOINC Enhancement dictionary
+- Construct a list of "maximally disjoint" candidates, which are the longest candidates that include particular substrings (for example, "Ur" is a candidate in the enhancement dictionary, but so is its larger parent "Urine," of which it is an abbreviation; in this case, we want to keep "Urine" as a candidate but not "Ur" because this would leave three letters on the table)
+- Determine the maximum number of enhancements that can be performed with this set of disjoint candidates
+- For each enhancement, choose a dictionary replacement and apply it to the code string
+
+The resulting code string is returned for further processing in other data generation tasks.
+
+---
+
+### loinc_utils.py
+
+This script contains a number of simple helper functions designed to streamline synthetic data generation. They are all small in scale and involve identifying different parts of a LOINC code string (such as the modality), textually manipulating pieces of a string (scrambling word order, identifying parenthetical and bracket chunks), and combining different pieces of LOINC information for a larger function to make more complex variations.
+
+---
+
+### post_process.py
+
+This script contains a number of small post-processing functions that can be applied individually or sequentially to synthetically-generated LOINC code strings. Post-processing differs from generating Variations on LOINC names in its scale: each post-processing function is small in scope and corresponds to a change that could nominally be applied to _many_ different LOINC codes and name variants (for example, prepending "POC" to turn a code into a Point-of-Care code; or, exchanging conjunction delimiters like '+' or '&' for a joining '/'). This allows them to be applied individually to codes, or to apply multiple post-processors all to the same name code.
+
+---
+
+### score_distributions.py
+
+This is a working, draft copy of a script that analyzes a "results file" for the purpose of measuring distributions of predicted vs actual scores. A results file is a JSON-structured file that captures the search results and output for a testing set of data. It is computed as part of a performance evaluation run in Azure. For each query nonstandard input in the validation set, an entry is logged in the results file capturing the query input, the top-10 search results, and the cosine similarities of eaech of those results. That file can then be downloaded and used with this score_distributions script. The script reads the JSON and computes a number of aggregation metrics on the score distribution. It can be used to explore cutoff patterns and margins, such as the "auto-classification threshold" above which a search result is compelling enough to return as the correct answer without resorting to a reranker.
+
+---
+
+### synthetic_lab_results.py
+
+Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
+and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript can introduce randomized case changes and typos.
+
+---
 
 ### terminology_valueset_sync.py
 
@@ -30,17 +96,33 @@ Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to prov
 
 ---
 
+### tsdae.py
+
+This script contains the code needed to generate training data specifically for running the TSDAE algorithm on an off-the-shelf model. TSDAE data differs from the "positive pair" data needed to fine tune a model in that it consists of unlabeled, whole English sentences. There is no specific class that the model is trying to learn; rather, the model is focused on updating its vectors representations of words it already knows by using the additional domain context provided by the English sentences. TTC uses the "Part Description" sections of LOINC codes to create this sentence-level data, since it appropriately mirrors the domain that a model will eventually be fine-tuned with.
+
+---
+
+### loinc (folder)
+
+Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files from said queries that are used to generate the end result data files used to create the TTC model(s).
+
+- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
+
+## Deprecated Scripts
+
+The scripts detailed here pertain to Version 1 of the Text-to-Code team's synthetic data generation. This code created data based on properties we pulled from research papers during our literature review, but these properties did not match the tendencies of production data. These scripts are not currently in use by the TTC team, but we wished to document them here for transparency around our processes.
+
 ### augmentation.py
 
-A collection of data modification utilities for terminology datasets, designed to support model training and tuning.
+A collection of data modification utilities for terminology datasets, designed to create synthetic data suitable for model training and tuning.
 
 This module provides functions to introduce controlled randomness into text data by:
 
-- Randomly scrambling words or characters
-- Randomly deleting characters
-- Randomly replacing words with related or synonymous terms
+- Randomly deleting characters within words
+- Randomly inserting "semantically related" words from a LOINC code's Related Names section
+- Randomly replacing words in a code string with synonymous or abbreviated terms (as determined by comparisons to the LOINC axes of the code)
 
-These transformations are useful for creating augmented datasets that improve model robustness and generalization, particularly when dealing with noisy or variant terminology (e.g., clinical terms, lab names, or LOINC entries).
+These transformations are useful for creating augmented datasets that improve model robustness and generalization, particularly when dealing with noisy or variant terminology (e.g., clinical terms, lab names, or LOINC entries). The general form of the synthetic data this script creates is that of a nonstandard code string in which semantically related, but imprecise, information has been added to the string (variant names for organisms or lab tests; alterations to the core Component axis; etc.), while other, more definitive "logistical" information has been corrupted or removed (test modality or administration method; measurement scale and properties; etc.). This should, in theory, expand the model's idea of each Component in the code, while paying less attention to logistic details that might interfere with building a knowledge ontology of the main clinical ideas. While this behavior worked somewhat in practice, at higher levels of granularity and perofrmance demands, the scrambling of logistic details was too difficult for the model to overcome.
 
 All randomization behaviors and transformation parameters are configurable via the `configs.py` module, allowing users to fine-tune augmentation intensity, probability distributions, and substitution rules.
 
@@ -62,30 +144,9 @@ We've identified several "starter" configurations, listed below:
 
 A script to house functions that can be used to generate data sets used to help train and tune the data models. ie. `Generate Positive Pairs` - Given the location of one or more files of LOINC codes and some corresponding augmented examples for those codes, this function compiles a list of positive pairs that can be read for model training. A positive pair is a tuple of the form (original_loinc_code, augmented_example_of_code).
 
-**TODO: Add more content here as we flesh out the generation script more**
+This script is predominantly a wrapper around the synthetic data generation functions contained in `augmentation.py`. It calls the example generation functions repeatedly, and then uses random sampling to select a set number of synthetic examples to write into a desired output file.
 
 ---
-
-### score_distributions.py
-
-This is a working, draft copy of a script that analyzes a "results file" for the purpose of measuring distributions of predicted vs actual scores. A results file is a JSON-structured file that captures the search results and output for a testing set of data. It is computed as part of a performance evaluation run in Azure. For each query nonstandard input in the validation set, an entry is logged in the results file capturing the query input, the top-10 search results, and the cosine similarities of eaech of those results. That file can then be downloaded and used with this score_distributions script. The script reads the JSON and computes a number of aggregation metrics on the score distribution. It can be used to explore cutoff patterns and margins, such as the "auto-classification threshold" above which a search result is compelling enough to return as the correct answer without resorting to a reranker.
-
----
-
----
-
-### synthetic_lab_results.py
-
-Generate a CSV of synthetic lab results with labeled values. Each row contains a randomized result word (e.g., "positive", "not detected")
-and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript can introduce randomized case changes and typos.
-
----
-
-### loinc (folder)
-
-Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files from said queries that are used to generate the end result data files used to create the TTC model(s).
-
-- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
 
 ## Data Files
 

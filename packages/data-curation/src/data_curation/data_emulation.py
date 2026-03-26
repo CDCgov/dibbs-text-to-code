@@ -47,7 +47,7 @@ import typing
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation.augmentation import enhance_loinc_str, scramble_word_order
+from data_curation.loinc_enhancement import enhance_loinc_str
 from data_curation.post_process import (
     apply_deletion_post_processing,
     apply_delimiter_post_processing,
@@ -61,6 +61,7 @@ from data_curation.post_process import (
 )
 from data_curation.schemas import loinc_struct as schemas
 from data_curation.loinc_utils import (
+    scramble_word_order,
     _axis_is_valid,
     _choose_from_loinc_axis,
     _clean_unpaired_parens,
