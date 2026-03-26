@@ -136,11 +136,7 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     """
     # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
     ttc_output = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
-    ttc_metadata_output = {
-        "persistence_id": "",
-        "eicr_metadata": {},
-        "schematron_errors": {},
-    }
+    ttc_metadata_output = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
     ttc_output["persistence_id"] = persistence_id
     ttc_metadata_output["persistence_id"] = persistence_id
     return ttc_output, ttc_metadata_output
@@ -180,17 +176,14 @@ def _load_original_eicr(bucket: str, persistence_id: str) -> str:
     ecr_bucket_name = EICR_INPUT_PREFIX.split("/")[0]
     logger.info("Loading eICR", s3_key=f"{ecr_bucket_name}/{persistence_id}")
     original_eicr_content = lambda_handler.get_file_content_from_s3(
-        bucket_name=bucket,
-        object_key=persistence_id,
+        bucket_name=bucket, object_key=persistence_id
     )
     logger.info("Retrieved eICR content for persistence_id %s", persistence_id)
     return original_eicr_content
 
 
 def _populate_eicr_metadata(
-    original_eicr_content: str,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
+    original_eicr_content: str, ttc_output: dict, ttc_metadata_output: dict
 ) -> None:
     """Populate eICR metadata on TTC outputs.
 
@@ -232,24 +225,22 @@ def _process_schematron_errors(
             ttc_metadata_output["schematron_errors"][data_field] = []
 
         text_candidates = eicr_processor.EicrProcessor(original_eicr_content).get_text_candidates(
-            error.error_context,
-            data_field,
+            error.error_context, data_field
         )
 
         logger.info(
-            "Evaluating candidates and selecting relevant text for each error in the eICR for persistence_id",
+            "Evaluating candidates and selecting relevant text for each error in the eICR for persistence_id"
         )
 
         selected_candidate = evaluator.select_relevant_text(
-            candidates=text_candidates,
-            criteria=criteria,
+            candidates=text_candidates, criteria=criteria
         )
 
         error.candidate = selected_candidate
         ttc_output["schematron_errors"][data_field].append(error.model_dump())
 
         logger.info(
-            "Embedding the relevant text strings for each error in the eICR for persistence_id",
+            "Embedding the relevant text strings for each error in the eICR for persistence_id"
         )
 
         if selected_candidate is None:
@@ -258,19 +249,16 @@ def _process_schematron_errors(
         vector_embedding = RETRIEVER.embed(selected_candidate.value)
 
         vector_parameters = query_models.VectorSearchParams(
-            vector=vector_embedding.tolist(),
-            data_field=data_field,
+            vector=vector_embedding.tolist(), data_field=data_field
         )
 
         logger.info(
-            "Querying OpenSearch with the relevant text strings and retrieving code suggestions for persistence_id",
+            "Querying OpenSearch with the relevant text strings and retrieving code suggestions for persistence_id"
         )
         query = QueryBuilder().with_vector_search(vector_parameters).build()
 
         opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-            query=query,
-            index=OPENSEARCH_INDEX,
-            opensearch_client=opensearch_client,
+            query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
         )
 
         # The OpenSearch results object has a couple levels of nesting,
@@ -313,10 +301,7 @@ def _save_ttc_outputs(persistence_id: str, ttc_output: dict, ttc_metadata_output
 
 
 def _process_record_pipeline(
-    bucket: str,
-    persistence_id: str,
-    s3_client: BaseClient,
-    opensearch_client: OpenSearch,
+    bucket: str, persistence_id: str, s3_client: BaseClient, opensearch_client: OpenSearch
 ) -> dict:
     """The main pipeline for processing each record.
 
