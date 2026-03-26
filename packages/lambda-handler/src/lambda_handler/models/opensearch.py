@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from pydantic import BaseModel
 from pydantic import Field
@@ -21,7 +19,7 @@ class S3Location(BaseModel):
             }
         )
 
-    @cached_property
+    @property
     def address(self) -> str:
         """Return the address string in the form: `'s3://{self.bucket}/{self.key}'`."""
         return f"s3://{self.bucket}/{self.key}"
