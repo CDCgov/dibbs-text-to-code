@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from lxml.etree import XMLSyntaxError
@@ -29,6 +30,29 @@ class TestEmptyEicrProcessor:
     def test_get_text_candidates_empty_xpath(self):
         result = EicrProcessor("<tag />").get_text_candidates("", DataField.LAB_TEST_NAME_RESULTED)
         assert len(result) == 0
+
+    def test_get_text_candidates_logs_when_xpath_lookup_fails(self):
+        processor = EicrProcessor("<tag />")
+
+        with (
+            patch.object(processor, "_get_by_xpath", side_effect=Exception("boom")),
+            patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
+        ):
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == []
+        mock_exception.assert_called_once_with(
+            "Failed to extract text candidates from eICR",
+            base_xpath=BASE_XPATH,
+            data_field=str(DataField.LAB_TEST_NAME_RESULTED),
+            sub_xpaths=[
+                LabXPaths.CODE_DISPLAY_NAME,
+                LabXPaths.CODE_ORIGINAL_TEXT,
+                LabXPaths.OBSERVATION_TEXT,
+                LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
+                LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT,
+            ],
+        )
 
 
 class TestBadEicr:
