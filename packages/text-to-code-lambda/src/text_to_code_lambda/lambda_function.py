@@ -55,7 +55,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """
     opensearch_client, s3_client = _initilize_clients()
 
-    logger.info("Received event with %d record(s)", len(event["Records"]))
+    logger.info(f"Received event with {len(event['Records'])} record(s)")
 
     failures = []
     successes = []
@@ -65,7 +65,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
             process_record(record, s3_client, opensearch_client)
             successes.append(record.message_id)
         except Exception as e:
-            logger.exception("Error processing record.")
+            logger.exception(f"Error processing record: {e}", message_id=record.message_id)
             failures.append({"message_id": record.message_id, "error": str(e)})
     # TODO: Update the return values to also include failures per schematron error, not just eicr docs
     # TODO: Update this output to whatever
@@ -170,7 +170,7 @@ def _load_original_eicr(bucket: str, persistence_id: str) -> str:
     :return: The original eICR content.
     """
     # Construct eICR path: s3://<bucket_name>/<EICR_Input_Prefix>/<persistance_id>
-    logger.info("Retrieving eICR from s3://%s%s", EICR_INPUT_PREFIX, persistence_id)
+    logger.info(f"Retrieving eICR from s3://{EICR_INPUT_PREFIX}{persistence_id}")
 
     # S3 GET eICR
     ecr_bucket_name = EICR_INPUT_PREFIX.split("/")[0]
@@ -178,7 +178,7 @@ def _load_original_eicr(bucket: str, persistence_id: str) -> str:
     original_eicr_content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket, object_key=persistence_id
     )
-    logger.info("Retrieved eICR content for persistence_id %s", persistence_id)
+    logger.info(f"Retrieved eICR content for persistence_id {persistence_id}")
     return original_eicr_content
 
 
@@ -282,7 +282,7 @@ def _save_ttc_outputs(persistence_id: str, ttc_output: dict, ttc_metadata_output
     :param ttc_metadata_output: The TTC metadata output dictionary.
     """
     # Save the TTC output to S3 for the Augmentation Lambda to consume
-    logger.info("Saving TTC output to S3 for persistence_id %s", persistence_id)
+    logger.info(f"Saving TTC output to S3 for persistence_id {persistence_id}")
     ttc_output_bucket_name = TTC_OUTPUT_PREFIX.split("/")[0]
     lambda_handler.put_file(
         file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
@@ -327,8 +327,7 @@ def _process_record_pipeline(
 
     if not schematron_data_fields:
         logger.warning(
-            "No data fields found from Schematron errors for TTC processing for persistence_id: %s",
-            persistence_id,
+            f"No data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}"
         )
         # TODO: update this output to save metadata about the lack of TTC processing due to no relevant data fields being identified to S3 for analysis
         ttc_output["message"] = (
