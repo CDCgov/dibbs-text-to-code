@@ -7,7 +7,7 @@ import typing
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import configs
+from data_curation.archived import configs
 from data_curation.loinc_enhancement import enhance_loinc_str
 from data_curation.loinc_utils import scramble_word_order
 from data_curation.schemas import augmentation as schemas
