@@ -291,7 +291,7 @@ def _save_ttc_outputs(persistence_id: str, ttc_output: dict, ttc_metadata_output
     )
 
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
-    logger.info("Saving TTC metadata output to S3 for persistence_id %s", persistence_id)
+    logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
     ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
     lambda_handler.put_file(
         file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
