@@ -11,7 +11,6 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from text_to_code.models import eicr as eicr_models
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
 from text_to_code.services import embedder
@@ -238,12 +237,6 @@ def _process_schematron_errors(
 
         selected_candidate = evaluator.select_relevant_text(
             candidates=text_candidates, criteria=criteria
-        )
-
-        selected_candidate = eicr_models.Candidate(
-            value="test test test",
-            xpath=eicr_models.LabXPaths.CODE_DISPLAY_NAME,
-            system="LOINC",
         )
 
         error.candidate = selected_candidate
