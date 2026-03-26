@@ -1,4 +1,5 @@
-from aws_lambda_powertools import Logger
+import logging
+
 from lxml import etree
 
 from shared_models import CdaInstanceIdentifier
@@ -6,7 +7,7 @@ from shared_models import DataField
 from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD
 from text_to_code.models.schematron import SchematronErrorDetail
 
-logger = Logger(service="ttc")
+logger = logging.getLogger(__name__)
 
 
 def get_data_element_from_schematron_error(schematron_error: str) -> DataField | None:
@@ -112,8 +113,10 @@ def get_data_fields_from_schematron_error(
             except Exception:
                 logger.exception(
                     "Failed to process a schematron error detail",
-                    error_message=message_elem.text if message_elem is not None else None,
-                    error_context=context_elem.text if context_elem is not None else None,
+                    extra={
+                        "error_message": message_elem.text if message_elem is not None else None,
+                        "error_context": context_elem.text if context_elem is not None else None,
+                    },
                 )
                 continue
 

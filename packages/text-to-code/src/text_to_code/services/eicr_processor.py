@@ -1,4 +1,5 @@
-from aws_lambda_powertools import Logger
+import logging
+
 from lxml import etree
 from lxml.etree import Element
 
@@ -8,7 +9,7 @@ from text_to_code.models import Candidate
 from text_to_code.models.eicr import Metadata
 from text_to_code.services.utils import get_config_for_data_field
 
-logger = Logger(service="ttc")
+logger = logging.getLogger(__name__)
 
 
 class EicrProcessor:
