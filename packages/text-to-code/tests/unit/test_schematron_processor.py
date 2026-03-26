@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from shared_models import DataField
 from text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
@@ -79,3 +80,36 @@ class TestSchematronProcessor:
         result = get_data_fields_from_schematron_error(schematron_errors)
 
         assert result == []
+
+    def test_get_schematron_error_logs_when_issue_processing_fails(self):
+        schematron_errors = """
+        <root>
+            <result>
+                <validationResult>
+                    <issue>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                        <test>not(cda:code) or cda:code/@code or cda:code/cda:translation/@code</test>
+                    </issue>
+                </validationResult>
+            </result>
+        </root>
+        """
+
+        with (
+            patch(
+                "text_to_code.services.schematron_processor.get_data_element_from_schematron_error",
+                side_effect=Exception("boom"),
+            ),
+            patch("text_to_code.services.schematron_processor.logger.exception") as mock_exception,
+        ):
+            result = get_data_fields_from_schematron_error(schematron_errors)
+
+        assert result == []
+        mock_exception.assert_called_once_with(
+            "Failed to process a schematron error detail",
+            extra={
+                "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
+            },
+        )
