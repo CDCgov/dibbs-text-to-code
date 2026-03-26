@@ -231,7 +231,7 @@ class EICRAugmenter(Augmenter):
         author = etree.Element("author")
         # TODO: Eventually we will not only separate by header vs. data_element
         # but will also separate out the various comments by the various data element
-        # type being modified. This can easily be stored in the model for the data elemnts
+        # type being modified. This can easily be stored in the model for the data element.
         # For now we are hard coding for code-text-to-code and observation in the comment
         if level != "header":
             function_code = etree.SubElement(author, "functionCode")

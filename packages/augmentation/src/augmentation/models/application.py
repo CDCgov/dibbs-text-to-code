@@ -9,17 +9,18 @@ from shared_models import NonstandardCodeInstance
 class ApplicationCode(StrEnum):
     """The list of applications that will leveraging Augmentation functionality."""
 
+    display: str
+
     # element 0 - Application Code
     # element 1 - Application Code Display Name (for human readability)
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
-    def __new__(cls, code: str, display: str) -> "ApplicationCode":
+    def __new__(cls, value: str, display: str) -> "ApplicationCode":
         """Create a new instance of the ApplicationCode enum with code and display attributes."""
         # use the base type's __new__ to create the enum instance
-        obj = str.__new__(cls, code)
-        obj._value_ = code
+        obj = object.__new__(cls, value, display)
+        obj._value_ = value
         obj.display = display
-        obj.code = code
         return obj
 
 
