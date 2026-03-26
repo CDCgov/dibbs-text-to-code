@@ -9,6 +9,7 @@ from shared_models import NonstandardCodeInstance
 class ApplicationCode(Enum):
     """The list of applications that will leveraging Augmentation functionality."""
 
+    code: str
     display: str
     TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
 
@@ -17,6 +18,7 @@ class ApplicationCode(Enum):
         obj = object.__new__(cls)
         obj._value_ = value
         obj.display = display
+        obj.code = value
         return obj
 
 
