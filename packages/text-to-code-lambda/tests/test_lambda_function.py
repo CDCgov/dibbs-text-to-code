@@ -68,6 +68,7 @@ class TestHandler:
         assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "eicr_metadata" in ttc_metadata_output
         assert "schematron_errors" in ttc_metadata_output
+        assert "processed_at" in ttc_metadata_output
         assert (
             len(ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"])
             == EXPECTED_RESULTED_ERRORS
@@ -151,7 +152,7 @@ class TestHandler:
             ttc_metadata_output["reason_for_skipping"]
             == "No relevant data fields identified from Schematron errors for TTC processing"
         )
-        assert "timestamp" in ttc_metadata_output
+        assert "processed_at" in ttc_metadata_output
         assert ttc_metadata_output["eicr_metadata"] == {}
         assert ttc_metadata_output["schematron_errors"] == {}
         assert mock_opensearch.search.call_count == 0
