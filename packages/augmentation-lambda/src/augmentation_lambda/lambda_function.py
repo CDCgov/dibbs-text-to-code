@@ -19,7 +19,7 @@ AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/"
 AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadata/")
 
 # Cache S3 client to reuse across Lambda invocations
-_cached_s3_client = None
+_cached_s3_client: BaseClient | None = None
 
 
 class HandlerResponse(TypedDict):

@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
+
 from augmentation.models import Metadata
 from augmentation_lambda import lambda_function
 from shared_models import TTCAugmenterInput
@@ -120,8 +121,9 @@ def test_handler_saves_outputs_to_s3(mocker, mock_s3_client) -> None:
 
     lambda_function.handler(event, None)
 
-    # Verify put_file was called twice: once for augmented eICR, once for metadata
-    assert mock_s3_client.put_file.call_count == 2
+    # Verify put_file was called once for augmented eICR and once for metadata
+    expected_put_file_calls = 2
+    assert mock_s3_client.put_file.call_count == expected_put_file_calls
 
     # First call: augmented eICR
     eicr_call = mock_s3_client.put_file.call_args_list[0]
