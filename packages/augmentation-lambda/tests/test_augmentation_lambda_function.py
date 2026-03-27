@@ -1,5 +1,8 @@
 import json
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
+import pytest
 from augmentation.models import Metadata
 from augmentation_lambda import lambda_function
 from shared_models import TTCAugmenterInput
@@ -30,7 +33,18 @@ class FakeAugmenter:
         )
 
 
-def test_handler_returns_success_result(mocker) -> None:
+@pytest.fixture(autouse=True)
+def mock_s3_client():
+    """Mock the S3 client and put_file for all tests."""
+    lambda_function._cached_s3_client = MagicMock()
+    with patch.object(lambda_function, "lambda_handler") as mock_handler:
+        mock_handler.create_s3_client.return_value = MagicMock()
+        mock_handler.put_file = MagicMock()
+        yield mock_handler
+    lambda_function._cached_s3_client = None
+
+
+def test_handler_returns_success_result(mocker, mock_s3_client) -> None:
     """Tests that the handler returns a successful result when the augmenter runs without errors.
 
     :param mocker: The pytest-mock fixture for mocking objects.
@@ -82,7 +96,48 @@ def test_handler_returns_success_result(mocker) -> None:
     }
 
 
-def test_handler_uses_provided_config(mocker) -> None:
+def test_handler_saves_outputs_to_s3(mocker, mock_s3_client) -> None:
+    """Tests that the handler writes augmented eICR and metadata to S3.
+
+    :param mocker: The pytest-mock fixture for mocking objects.
+    """
+    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
+
+    event = {
+        "Records": [
+            {
+                "messageId": "message-s3",
+                "body": json.dumps(
+                    {
+                        "eicr_id": "test-eicr-id",
+                        "eicr": "<ClinicalDocument />",
+                        "nonstandard_codes": [],
+                    }
+                ),
+            }
+        ]
+    }
+
+    lambda_function.handler(event, None)
+
+    # Verify put_file was called twice: once for augmented eICR, once for metadata
+    assert mock_s3_client.put_file.call_count == 2
+
+    # First call: augmented eICR
+    eicr_call = mock_s3_client.put_file.call_args_list[0]
+    assert eicr_call.kwargs["bucket_name"] == lambda_function.S3_BUCKET
+    assert eicr_call.kwargs["object_key"] == f"{lambda_function.AUGMENTED_EICR_PREFIX}test-eicr-id"
+
+    # Second call: metadata
+    metadata_call = mock_s3_client.put_file.call_args_list[1]
+    assert metadata_call.kwargs["bucket_name"] == lambda_function.S3_BUCKET
+    assert (
+        metadata_call.kwargs["object_key"]
+        == f"{lambda_function.AUGMENTATION_METADATA_PREFIX}test-eicr-id"
+    )
+
+
+def test_handler_uses_provided_config(mocker, mock_s3_client) -> None:
     """Tests that the handler uses the provided config when creating the augmenter.
 
     :param mocker: The pytest-mock fixture for mocking objects.

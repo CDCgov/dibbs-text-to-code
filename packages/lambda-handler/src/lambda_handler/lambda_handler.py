@@ -83,14 +83,17 @@ def create_opensearch_client(aws_auth: AWS4Auth) -> OpenSearch:
     )
 
 
-def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
+def get_file_content_from_s3(
+    bucket_name: str, object_key: str, s3_client: BaseClient | None = None
+) -> str:
     """Extracts the file content from an S3 bucket.
 
     :param bucket_name: The name of the S3 bucket.
     :param object_key: The key of the S3 object.
+    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     :return: The content of the file as a string.
     """
-    client = create_s3_client()
+    client = s3_client or create_s3_client()
 
     # Check if object exists
     if not check_s3_object_exists(client, bucket_name, object_key):
@@ -112,14 +115,20 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     return {"bucket_name": bucket_name, "object_key": object_key}
 
 
-def put_file(file_obj: typing.BinaryIO, bucket_name: str, object_key: str) -> None:
+def put_file(
+    file_obj: typing.BinaryIO,
+    bucket_name: str,
+    object_key: str,
+    s3_client: BaseClient | None = None,
+) -> None:
     """Uploads a file object to a S3 bucket.
 
     :param file_obj: The file object to upload.
     :param bucket_name: The name of the S3 bucket to upload to.
     :param object_key: The key to assign to the uploaded object in S3.
+    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
-    client = create_s3_client()
+    client = s3_client or create_s3_client()
     client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
 
 
