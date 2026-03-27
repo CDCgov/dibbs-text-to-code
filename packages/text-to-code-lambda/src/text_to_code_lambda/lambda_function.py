@@ -1,6 +1,8 @@
 import io
 import json
 import os
+from datetime import UTC
+from datetime import datetime
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
@@ -277,6 +279,21 @@ def _process_schematron_errors(
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
+def _save_ttc_metadata_output(persistence_id: str, ttc_metadata_output: dict) -> None:
+    """Save TTC metadata output to S3.
+
+    :param persistence_id: The persistence ID extracted from the S3 object key
+    :param ttc_metadata_output: The TTC metadata output dictionary.
+    """
+    logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
+    ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
+    lambda_handler.put_file(
+        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+        bucket_name=ttc_metadata_output_bucket_name,
+        object_key=persistence_id,
+    )
+
+
 def _save_ttc_outputs(persistence_id: str, ttc_output: dict, ttc_metadata_output: dict) -> None:
     """Save TTC output and metadata output to S3.
 
@@ -294,13 +311,7 @@ def _save_ttc_outputs(persistence_id: str, ttc_output: dict, ttc_metadata_output
     )
 
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
-    logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
-    ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
-    lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
-        bucket_name=ttc_metadata_output_bucket_name,
-        object_key=persistence_id,
-    )
+    _save_ttc_metadata_output(persistence_id, ttc_metadata_output)
 
 
 def _process_record_pipeline(
@@ -335,11 +346,11 @@ def _process_record_pipeline(
         logger.warning(
             f"No data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}"
         )
-        # TODO: update this output to save metadata about the lack of TTC processing due to no relevant data fields being identified to S3 for analysis
-        ttc_output["message"] = (
-            "No relevant data fields identified from Schematron errors for TTC processing"
-        )
-        # TODO: Is this enough information to return early?
+        skip_reason = "No relevant data fields identified from Schematron errors for TTC processing"
+        ttc_output["message"] = skip_reason
+        ttc_metadata_output["reason_for_skipping"] = skip_reason
+        ttc_metadata_output["timestamp"] = datetime.now(UTC).isoformat()
+        _save_ttc_metadata_output(persistence_id, ttc_metadata_output)
         return ttc_output
 
     original_eicr_content = _load_original_eicr(bucket, persistence_id)
