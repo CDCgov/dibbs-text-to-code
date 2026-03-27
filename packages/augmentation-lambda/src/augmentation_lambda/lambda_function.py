@@ -8,6 +8,7 @@ from aws_lambda_typing import events as lambda_events
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
+from botocore.client import BaseClient
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import TTCAugmenterInput
@@ -108,7 +109,7 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> H
 
 
 def _save_augmentation_outputs(
-    eicr_id: str, output: TTCAugmenterOutput, s3_client: object
+    eicr_id: str, output: TTCAugmenterOutput, s3_client: BaseClient
 ) -> None:
     """Save augmented eICR and metadata to S3.
 

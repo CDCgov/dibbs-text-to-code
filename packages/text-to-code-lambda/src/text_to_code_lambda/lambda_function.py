@@ -112,9 +112,8 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
 
     # Parse the EventBridge S3 event from the SQS message body
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-    bucket = eventbridge_data["bucket_name"]
     object_key = eventbridge_data["object_key"]
-    logger.info(f"Processing S3 Object: s3://{bucket}/{object_key}")
+    logger.info(f"Processing S3 Object: s3://{S3_BUCKET}/{object_key}")
 
     # Extract persistence_id from the RR object key
     persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
