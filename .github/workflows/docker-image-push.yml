@@ -85,6 +85,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            "huggingface_token=${{ secrets.HUGGINGFACE_ACCESS_TOKEN }}"
 
       - name: Configure APHL AWS credentials
         if: ${{ matrix.name != 'index' }}

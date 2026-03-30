@@ -11,7 +11,7 @@ EICR_REGISTRY: dict[DataField, type[BaseLabField]] = {
 
 # Text-to-Code Retrieval model, used for searching approximate neighborhoods
 # to find semantically similar candidates
-TTC_RETRIEVER: str = "intfloat/e5-large-v2"
+TTC_RETRIEVER: str = "NCHS/ttc-retriever-mvp"
 
 # Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
 # found by the approximate neighbor search
