@@ -117,12 +117,16 @@ class TestReferences:
         assert Candidate(value=expected, xpath=LabXPaths.CODE_ORIGINAL_TEXT) in results
 
     def test_additional_text_in_original(self, results: list[Candidate]):
-        expected = "This original text has additional text My reference Even more stuff here"
+        expected = "This original text has additional text Even more stuff here"
+        assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT) in results
+
+    def test_additional_text_reference(self, results: list[Candidate]):
+        expected = "My reference"
         assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT) in results
 
     def test_complicated_reference(self, results: list[Candidate]):
         expected = "A more complicated reference With extra nodes"
-        assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT)
+        assert Candidate(value=expected, xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT) in results
 
     def test_row_reference(self, results: list[Candidate]):
         expected = "My reference A more complicated reference With extra nodes"
