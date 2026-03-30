@@ -1,6 +1,8 @@
 import io
 import json
 import os
+from datetime import UTC
+from datetime import datetime
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
@@ -38,6 +40,11 @@ OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 # to re-use across invocations
 RETRIEVER = embedder.Embedder()
 RERANKER = reranker.Reranker()
+
+# Constants
+NO_DATA_FIELDS_MESSAGE = (
+    "No relevant data fields identified from Schematron errors for TTC processing"
+)
 
 # Cache clients and auth to reuse across Lambda invocations
 _cached_auth = None
@@ -137,9 +144,11 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
         "persistence_id": "",
         "eicr_metadata": {},
         "schematron_errors": {},
+        "processed_at": "",
     }
     ttc_output["persistence_id"] = persistence_id
     ttc_metadata_output["persistence_id"] = persistence_id
+    ttc_metadata_output["processed_at"] = datetime.now(UTC).isoformat()
     return ttc_output, ttc_metadata_output
 
 
@@ -334,11 +343,15 @@ def _process_record_pipeline(
         logger.warning(
             f"No data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}"
         )
-        # TODO: update this output to save metadata about the lack of TTC processing due to no relevant data fields being identified to S3 for analysis
-        ttc_output["message"] = (
-            "No relevant data fields identified from Schematron errors for TTC processing"
+        ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
+        ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
+        logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
+        ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
+        lambda_handler.put_file(
+            file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+            bucket_name=ttc_metadata_output_bucket_name,
+            object_key=persistence_id,
         )
-        # TODO: Is this enough information to return early?
         return ttc_output
 
     original_eicr_content = _load_original_eicr(persistence_id, s3_client)

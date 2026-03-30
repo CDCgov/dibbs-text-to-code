@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 import lambda_handler
 from conftest import S3_BUCKET
 from conftest import TTC_METADATA_PREFIX
@@ -69,6 +71,7 @@ class TestHandler:
         assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "eicr_metadata" in ttc_metadata_output
         assert "schematron_errors" in ttc_metadata_output
+        assert "processed_at" in ttc_metadata_output
         assert (
             len(ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"])
             == EXPECTED_RESULTED_ERRORS
@@ -116,3 +119,43 @@ class TestHandler:
             "num_success_eicrs": 1,
         }
         assert mock_opensearch.search.call_count == expected_num_errors
+
+    def test_handler_saves_metadata_when_no_relevant_schematron_fields(
+        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker
+    ):
+        """Test handler saves TTC metadata output when no relevant Schematron fields are found."""
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields", return_value=[]
+        )
+
+        resp = lambda_function.handler(example_sqs_event, {})
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        # Assert that the TTC output was not saved to S3
+        with pytest.raises(FileNotFoundError):
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=mock_aws_setup.ttc_output_bucket_name,
+                object_key=mock_aws_setup.persistence_id,
+            )
+
+        # Assert that the TTC metadata output was saved to S3 with the expected content
+        ttc_metadata_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=mock_aws_setup.ttc_metadata_bucket_name,
+                object_key=mock_aws_setup.persistence_id,
+            )
+        )
+        assert ttc_metadata_output is not None
+        assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert (
+            ttc_metadata_output["reason_for_skipping"]
+            == "No relevant data fields identified from Schematron errors for TTC processing"
+        )
+        assert "processed_at" in ttc_metadata_output
+        assert ttc_metadata_output["eicr_metadata"] == {}
+        assert ttc_metadata_output["schematron_errors"] == {}
+        assert mock_opensearch.search.call_count == 0
