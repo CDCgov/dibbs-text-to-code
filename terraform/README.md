@@ -42,10 +42,11 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 
 - **ECR Repository** (`aws_ecr_repository.ttc_lambda`): Stores the Docker container image for the main TTC Lambda. The image installs all workspace Python packages (`shared-models`, `lambda-handler`, `text-to-code`, `text-to-code-lambda`) and bakes in the SentenceTransformer model (`intfloat/e5-large-v2`) at build time. Images are built and pushed by CI/CD during `terraform apply`.
 - **ECR Repository** (`aws_ecr_repository.index_lambda`): Stores the Docker container image for the index bootstrap Lambda, built from `Dockerfile.index` at repo root.
+- **ECR Repository** (`aws_ecr_repository.augmentation_lambda`): Stores the Docker container image for the augmentation Lambda, built from `Dockerfile.augmentation` at repo root.
 
 ### IAM (`main.tf`)
 
-- **Lambda IAM Role** (`aws_iam_role.lambda_role`): Shared by both Lambda functions. Attached policies:
+- **Lambda IAM Role** (`aws_iam_role.lambda_role`): Shared by all Lambda functions (TTC, index, and augmentation). Attached policies:
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
   - `AmazonS3FullAccess` — S3 read/write (TODO: scope down to specific bucket/prefix)
@@ -74,6 +75,21 @@ At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handle
 
 Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `S3_BUCKET`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
 
+#### Augmentation Lambda (`ttc-augmentation-lambda`, `Dockerfile.augmentation`)
+
+Deployed as a **container image** from ECR (`package_type = "Image"`). The Docker image (`Dockerfile.augmentation` at repo root) installs the `augmentation-lambda` package along with its workspace dependencies (`shared-models`, `lambda-handler`, `augmentation`).
+
+At runtime, the Lambda processes augmentation requests containing eICR XML and nonstandard code mappings from the TTC Lambda. It:
+
+1. Parses incoming eICR XML and nonstandard code instances
+2. Inserts standardized LOINC/SNOMED `<translation>` elements into the eICR
+3. Updates document headers (ID, effectiveTime, setId, versionNumber) and adds author/provenance metadata
+4. Writes the augmented eICR XML and metadata JSON to S3
+
+The augmentation Lambda uses only the Lambda security group (not the OpenSearch security group) since it does not require OpenSearch access. It is configured with lower memory (512 MB) and timeout (300s) defaults compared to the TTC Lambda, as it does not load ML models.
+
+Environment variables injected at deploy time: `S3_BUCKET`, `AUGMENTED_EICR_PREFIX`, `AUGMENTATION_METADATA_PREFIX`, `REGION`.
+
 ### OpenSearch Ingestion Pipeline (`main.tf`)
 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
@@ -91,13 +107,14 @@ The pipeline **depends on** the index bootstrap invocation completing first, ens
 Terraform manages dependency ordering automatically, but conceptually the sequence is:
 
 1. VPC, subnets, security groups, S3 endpoint created
-2. ECR repositories created (TTC lambda + index lambda)
+2. ECR repositories created (TTC lambda, index lambda, augmentation lambda)
 3. Docker images built and pushed to ECR (in CI/CD, before full `terraform apply`)
 4. OpenSearch domain and VPC endpoint created
 5. Lambda IAM role created
 6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index in OpenSearch
 7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
 8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
+9. Augmentation Lambda deployed with container image from ECR — ready to process augmentation requests
 
 ## State Backend
 
@@ -134,7 +151,7 @@ Before running `terraform apply`:
 
 1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table.
 2. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/`. The OSIS pipeline will ingest these into OpenSearch.
-3. **Docker**: CI/CD builds both container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda) automatically. For local development, Docker must be available to build the images.
+3. **Docker**: CI/CD builds all container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda, `Dockerfile.augmentation` for augmentation lambda) automatically. For local development, Docker must be available to build the images.
 
 > **Note:** The SentenceTransformer model and heavy Python dependencies (sentence-transformers, torch) are baked into the Lambda container image at build time via the Dockerfile. The Dockerfile installs the real `text-to-code-lambda` package and all its workspace dependencies.
 
