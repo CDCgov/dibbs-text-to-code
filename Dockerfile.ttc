@@ -19,10 +19,12 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
 
-# Download models at build time (baked into image)
+# Download retriever at build time (private repo, needs token)
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
-  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'])" && \
-  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='cross-encoder/stsb-roberta-large', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'])"
+  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'])"
+
+# Download reranker at build time (public repo)
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='cross-encoder/stsb-roberta-large', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin'])"
 
 ENV RETRIEVER_MODEL_PATH="/opt/retriever_model"
 ENV RERANKER_MODEL_PATH="/opt/reranker_model"
