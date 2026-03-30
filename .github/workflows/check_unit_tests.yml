@@ -29,6 +29,8 @@ jobs:
 
       - name: Run unit tests
         shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           uv run pytest --cov
 
