@@ -138,15 +138,15 @@ class TestHandler:
         # Assert that the TTC output was not saved to S3
         with pytest.raises(FileNotFoundError):
             lambda_handler.get_file_content_from_s3(
-                bucket_name=mock_aws_setup.ttc_output_bucket_name,
-                object_key=mock_aws_setup.persistence_id,
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
             )
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
-                bucket_name=mock_aws_setup.ttc_metadata_bucket_name,
-                object_key=mock_aws_setup.persistence_id,
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
             )
         )
         assert ttc_metadata_output is not None

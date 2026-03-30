@@ -346,11 +346,11 @@ def _process_record_pipeline(
         ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
         ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
         logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
-        ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
         lambda_handler.put_file(
             file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
-            bucket_name=ttc_metadata_output_bucket_name,
-            object_key=persistence_id,
+            bucket_name=S3_BUCKET,
+            object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
+            s3_client=s3_client,
         )
         return ttc_output
 
