@@ -40,6 +40,11 @@ OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 RETRIEVER = embedder.Embedder()
 RERANKER = reranker.Reranker()
 
+# Constants
+NO_DATA_FIELDS_MESSAGE = (
+    "No relevant data fields identified from Schematron errors for TTC processing"
+)
+
 # Cache clients and auth to reuse across Lambda invocations
 _cached_auth = None
 _cached_opensearch_client = None
@@ -339,12 +344,8 @@ def _process_record_pipeline(
         logger.warning(
             f"No data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}"
         )
-        ttc_output["message"] = (
-            "No relevant data fields identified from Schematron errors for TTC processing"
-        )
-        ttc_metadata_output["reason_for_skipping"] = (
-            "No relevant data fields identified from Schematron errors for TTC processing"
-        )
+        ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
+        ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
         logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
         ttc_metadata_output_bucket_name = TTC_METADATA_PREFIX.split("/")[0]
         lambda_handler.put_file(
