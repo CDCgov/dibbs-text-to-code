@@ -31,7 +31,7 @@ class EicrProcessor:
         :param base_xpath: The base XPath to use to find text candidates
             within the eICR for the specified data field.
         :param data_field: The data field of interest for TTC processing.
-        :returns: A list of text candidates found within the eICR for
+        :returns: A list of individual Candidates found within the eICR for
             the specified data field for TTC processing.
         """
         candidates: list[Candidate] = []
@@ -59,8 +59,8 @@ class EicrProcessor:
                             if text:
                                 candidates.append(Candidate(value=text, xpath=key))
                         else:
-                            text = self._extract_text_from_element(sub_node)
-                            if text:
+                            texts = self._extract_text_candidates_from_element(sub_node)
+                            for text in texts:
                                 candidates.append(Candidate(value=text, xpath=key))
 
         except Exception:
@@ -88,13 +88,14 @@ class EicrProcessor:
 
         return None
 
-    def _extract_text_from_element(self, element: Element) -> str:
-        """Extract all text content from an element, including referenced content.
+    def _extract_text_candidates_from_element(self, element: Element) -> list[str]:
+        """Extract text candidates from an element.
 
         :param element: The XML element.
-        :returns: Concatenated text content from the element.
+        :returns: A list of text candidates extracted from the element.
         """
-        text_parts = []
+        candidates: list[str] = []
+        text_parts: list[str] = []
 
         if element.text:
             text_parts.append(element.text.strip())
@@ -104,7 +105,7 @@ class EicrProcessor:
             if child.tag == "reference":
                 ref_text = self.resolve_reference(child.get("value"))
                 if ref_text:
-                    text_parts.append(ref_text)
+                    candidates.append(ref_text)
             else:
                 # Recursively get text from child elements
                 text_parts.extend(_get_text_recursively(child))
@@ -112,7 +113,11 @@ class EicrProcessor:
             if child.tail:
                 text_parts.append(child.tail.strip())
 
-        return " ".join(filter(None, text_parts))
+        original_text = " ".join(filter(None, text_parts))
+        if original_text:
+            candidates.insert(0, original_text)
+
+        return candidates
 
     @property
     def eicr_metadata(self) -> Metadata:
