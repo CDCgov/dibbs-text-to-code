@@ -31,7 +31,7 @@ class EicrProcessor:
         :param base_xpath: The base XPath to use to find text candidates
             within the eICR for the specified data field.
         :param data_field: The data field of interest for TTC processing.
-        :returns: A list of text candidates found within the eICR for
+        :returns: A list of individual Candidates found within the eICR for
             the specified data field for TTC processing.
         """
         candidates: list[Candidate] = []
@@ -61,8 +61,7 @@ class EicrProcessor:
                         else:
                             texts = self._extract_text_candidates_from_element(sub_node)
                             for text in texts:
-                                if text:
-                                    candidates.append(Candidate(value=text, xpath=key))
+                                candidates.append(Candidate(value=text, xpath=key))
 
         except Exception:
             logger.exception(
@@ -90,10 +89,10 @@ class EicrProcessor:
         return None
 
     def _extract_text_candidates_from_element(self, element: Element) -> list[str]:
-        """Extract all text content from an element, including referenced content.
+        """Extract text candidates from an element.
 
         :param element: The XML element.
-        :returns: Concatenated text content from the element.
+        :returns: A list of text candidates extracted from the element.
         """
         candidates: list[str] = []
         text_parts: list[str] = []
