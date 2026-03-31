@@ -72,7 +72,7 @@ At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handle
 4. Generates embeddings and executes KNN queries against OpenSearch
 5. Returns standardized code mappings (LOINC/SNOMED)
 
-Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `BUCKET_NAME`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
+Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `S3_BUCKET`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
 
 ### OpenSearch Ingestion Pipeline (`main.tf`)
 

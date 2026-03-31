@@ -11,21 +11,22 @@ import pytest
 
 from text_to_code_lambda import lambda_function
 
+S3_BUCKET = "dibbs-text-to-code"
 EICR_INPUT_PREFIX = "eCRMessageV2/"
 SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
-TTC_INPUT_PREFIX = "TextToCodeSubmission/"
+TTC_INPUT_PREFIX = "TextToCodeValidateSubmissionV2/"
 TTC_OUTPUT_PREFIX = "TTCOutput/"
 TTC_METADATA_PREFIX = "TTCMetadata/"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
 AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
 OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
-TEST_BUCKET_NAME = "test-bucket"
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 
 
 def pytest_configure() -> None:
     """Configure env variables for pytest."""
+    os.environ["S3_BUCKET"] = S3_BUCKET
     os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
     os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
     os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
@@ -54,7 +55,7 @@ def example_s3_event_payload() -> dict:
         "resources": ["arn:aws:s3:::my-bucket-name"],
         "detail": {
             "version": "0",
-            "bucket": {"name": "eCRMessageV2"},
+            "bucket": {"name": S3_BUCKET},
             "object": {
                 "key": f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
                 "size": 1024,
@@ -112,25 +113,17 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
         monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
-        # Create the fake S3 bucket
+        # Create the single S3 bucket
         s3 = boto3.client(
             "s3",
-            region_name=os.environ["AWS_REGION"],
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         )
-        s3.create_bucket(Bucket=os.getenv("EICR_INPUT_PREFIX").split("/")[0])
-        s3.create_bucket(Bucket=os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0])
-        s3.create_bucket(Bucket=os.getenv("TTC_INPUT_PREFIX").split("/")[0])
-        s3.create_bucket(Bucket=os.getenv("TTC_OUTPUT_PREFIX").split("/")[0])
-        s3.create_bucket(Bucket=os.getenv("TTC_METADATA_PREFIX").split("/")[0])
+        s3.create_bucket(Bucket=S3_BUCKET)
 
-        # Add convenience attribute for tests
-        s3.ecr_bucket_name = os.getenv("EICR_INPUT_PREFIX").split("/")[0]
-        s3.schematron_bucket_name = os.getenv("SCHEMATRON_ERROR_PREFIX").split("/")[0]
-        s3.ttc_input_bucket_name = os.getenv("TTC_INPUT_PREFIX").split("/")[0]
-        s3.ttc_output_bucket_name = os.getenv("TTC_OUTPUT_PREFIX").split("/")[0]
-        s3.ttc_metadata_bucket_name = os.getenv("TTC_METADATA_PREFIX").split("/")[0]
+        # Add convenience attributes for tests
+        s3.bucket_name = S3_BUCKET
         s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put test Schematron error file in the mock S3 bucket
@@ -141,8 +134,8 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         with schematron_path.open() as f:
             schematron_output = f.read()
         s3.put_object(
-            Bucket=s3.schematron_bucket_name,
-            Key=TEST_PERSISTENCE_ID,
+            Bucket=S3_BUCKET,
+            Key=f"{SCHEMATRON_ERROR_PREFIX}{TEST_PERSISTENCE_ID}",
             Body=schematron_output,
         )
 
@@ -151,8 +144,8 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         with ecr_path.open() as f:
             ecr_message = f.read()
         s3.put_object(
-            Bucket=s3.ecr_bucket_name,
-            Key=TEST_PERSISTENCE_ID,
+            Bucket=S3_BUCKET,
+            Key=f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             Body=ecr_message,
         )
 

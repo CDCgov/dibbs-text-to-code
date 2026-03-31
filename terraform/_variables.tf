@@ -119,7 +119,7 @@ variable "schematron_error_prefix" {
 
 variable "ttc_input_prefix" {
   type        = string
-  default     = "TextToCodeSubmission/"
+  default     = "TextToCodeValidateSubmissionV2/"
   description = "S3 prefix for TTC input submission files"
 }
 
@@ -133,6 +133,18 @@ variable "ttc_metadata_prefix" {
   type        = string
   default     = "TTCMetadata/"
   description = "S3 prefix for TTC metadata files"
+}
+
+variable "augmented_eicr_prefix" {
+  type        = string
+  default     = "AugmentationEICRV2/"
+  description = "S3 prefix for augmented eICR output files"
+}
+
+variable "augmentation_metadata_prefix" {
+  type        = string
+  default     = "AugmentationMetadata/"
+  description = "S3 prefix for augmentation metadata files"
 }
 
 ### Container Image Variables

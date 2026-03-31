@@ -260,7 +260,7 @@ resource "aws_lambda_function" "lambda" {
       OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
       OPENSEARCH_INDEX        = var.index_name
       REGION                  = var.region
-      BUCKET_NAME             = var.s3_bucket
+      S3_BUCKET               = var.s3_bucket
       RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
       RERANKER_MODEL_PATH     = "/opt/reranker_model"
       EICR_INPUT_PREFIX       = var.eicr_input_prefix
@@ -473,7 +473,7 @@ resource "aws_lambda_function" "index_lambda" {
       OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
       REGION                  = var.region
       INDEX_NAME              = var.index_name
-      BUCKET_NAME             = var.s3_bucket
+      S3_BUCKET               = var.s3_bucket
     }
   }
 

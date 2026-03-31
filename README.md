@@ -161,6 +161,12 @@ git commit --no-verify
 
 ### Unit tests
 
+The unit tests require access to a private Hugging Face model. To run them locally, create a [Hugging Face access token](https://huggingface.co/settings/tokens) with `read` permissions and export it in your shell config (e.g., `~/.zshrc` or `~/.bashrc`):
+
+```sh
+export HF_TOKEN="hf_your_token_here"
+```
+
 To run all the unit tests, use the following command:
 
 ```sh
