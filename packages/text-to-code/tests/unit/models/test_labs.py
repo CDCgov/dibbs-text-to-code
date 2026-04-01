@@ -21,6 +21,19 @@ class TestLabSchemas:
                 schematron_errors=[],
             )
 
+    def test_base_lab_element_accepts_valid_xpaths(self):
+        """Tests returning xpaths when valid xpaths are provided."""
+        xpaths = next(iter(LabXPaths))
+
+        lab_field = BaseLabField(
+            data_field="Lab Test Name Resulted",
+            min_word_count=2,
+            xpaths=xpaths,
+            schematron_errors=[],
+        )
+
+        assert lab_field.xpaths == xpaths
+
     def test_lab_test_name_resulted_defaults(self):
         """Tests default values for LabTestNameResulted schema."""
         lab_test = LabTestNameResulted(
