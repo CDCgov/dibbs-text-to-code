@@ -14,6 +14,8 @@ COPY ./packages/lambda-handler ${LAMBDA_TASK_ROOT}/lambda-handler
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
 
 COPY ./packages/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code
+# Install CPU-only PyTorch to reduce image size (Lambda doesn't have GPUs)
+RUN pip install --no-cache-dir torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
