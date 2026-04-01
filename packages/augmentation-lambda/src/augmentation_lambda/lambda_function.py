@@ -16,7 +16,7 @@ from shared_models import TTCAugmenterInput
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
 AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/")
-AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadata/")
+AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadataV2/")
 
 # Cache S3 client to reuse across Lambda invocations
 _cached_s3_client: BaseClient | None = None
