@@ -214,3 +214,48 @@ class TestHandler:
             "num_success_eicrs": 0,
         }
         assert mock_opensearch.search.call_count == 0
+
+    def test_handler_continues_when_selected_candidate_is_none(
+        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker
+    ):
+        """Test handler skips embedding and OpenSearch when no candidate is selected."""
+        mocker.patch(
+            "text_to_code.services.evaluator.select_relevant_text",
+            return_value=None,
+        )
+
+        retriever_embed_mock = mocker.patch.object(lambda_function.RETRIEVER, "embed")
+        reranker_mock = mocker.patch.object(lambda_function.RERANKER, "rerank")
+
+        resp = lambda_function.handler(example_sqs_event, {})
+
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        retriever_embed_mock.assert_not_called()
+        reranker_mock.assert_not_called()
+        assert mock_opensearch.search.call_count == 0
+
+        ttc_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+            )
+        )
+        assert ttc_output is not None
+        assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"] is None
+
+        ttc_metadata_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+            )
+        )
+        assert ttc_metadata_output is not None
+        assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"] == []
+        assert ttc_metadata_output["schematron_errors"]["Lab Test Name Ordered"] == []
