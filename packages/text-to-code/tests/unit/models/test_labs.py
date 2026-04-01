@@ -23,7 +23,7 @@ class TestLabSchemas:
 
     def test_base_lab_element_accepts_valid_xpaths(self):
         """Tests returning xpaths when valid xpaths are provided."""
-        xpaths = next(iter(LabXPaths))
+        xpaths = [next(iter(LabXPaths))]
 
         lab_field = BaseLabField(
             data_field="Lab Test Name Resulted",
