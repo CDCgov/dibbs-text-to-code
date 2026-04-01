@@ -81,17 +81,21 @@ jobs:
         if: ${{ inputs.apply && !inputs.destroy }}
         run: |
           INDEX_ECR_URL="${{ steps.ecr-url.outputs.index_ecr_url }}"
-          docker build -f Dockerfile.index -t "$INDEX_ECR_URL:${{ github.sha }}" -t "$INDEX_ECR_URL:latest" .
+          docker build -f Dockerfile.index -t "$INDEX_ECR_URL:${{ github.sha }}" -t "$INDEX_ECR_URL:latest" --secret id=huggingface_token,env=HF_TOKEN .
           docker push "$INDEX_ECR_URL:${{ github.sha }}"
           docker push "$INDEX_ECR_URL:latest"
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Build and push TTC Docker image
         if: ${{ inputs.apply && !inputs.destroy }}
         run: |
           ECR_URL="${{ steps.ecr-url.outputs.ecr_url }}"
-          docker build -f Dockerfile.ttc -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" .
+          docker build -f Dockerfile.ttc -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" --secret id=huggingface_token,env=HF_TOKEN .
           docker push "$ECR_URL:${{ github.sha }}"
           docker push "$ECR_URL:latest"
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Terraform Plan
         if: ${{ !inputs.apply && !inputs.destroy }}
