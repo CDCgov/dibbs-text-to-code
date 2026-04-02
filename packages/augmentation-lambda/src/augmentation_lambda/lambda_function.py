@@ -5,10 +5,10 @@ from typing import TypedDict
 
 from aws_lambda_typing import context as lambda_context
 from aws_lambda_typing import events as lambda_events
+from botocore.client import BaseClient
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
-from botocore.client import BaseClient
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import TTCAugmenterInput
