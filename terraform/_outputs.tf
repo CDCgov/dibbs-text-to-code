@@ -33,3 +33,13 @@ output "index_ecr_repository_url" {
   value       = aws_ecr_repository.index_lambda.repository_url
   description = "The URL of the ECR repository for the index Lambda container image"
 }
+
+output "augmentation_ecr_repository_url" {
+  value       = aws_ecr_repository.augmentation_lambda.repository_url
+  description = "The URL of the ECR repository for the augmentation Lambda container image"
+}
+
+output "augmentation_lambda_function_name" {
+  value       = aws_lambda_function.augmentation_lambda.function_name
+  description = "The name of the augmentation lambda function"
+}

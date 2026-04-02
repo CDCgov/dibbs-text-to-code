@@ -5,10 +5,10 @@ from typing import TypedDict
 
 from aws_lambda_typing import context as lambda_context
 from aws_lambda_typing import events as lambda_events
+from botocore.client import BaseClient
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
-from botocore.client import BaseClient
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import TTCAugmenterInput
@@ -16,7 +16,7 @@ from shared_models import TTCAugmenterInput
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
 AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/")
-AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadata/")
+AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadataV2/")
 
 # Cache S3 client to reuse across Lambda invocations
 _cached_s3_client: BaseClient | None = None
