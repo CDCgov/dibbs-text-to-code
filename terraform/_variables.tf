@@ -113,26 +113,26 @@ variable "eicr_input_prefix" {
 
 variable "schematron_error_prefix" {
   type        = string
-  default     = "schematronErrors/"
-  description = "S3 prefix for schematron error files"
+  default     = "ValidationResponseV2/"
+  description = "S3 prefix for schematron validation response files"
 }
 
 variable "ttc_input_prefix" {
   type        = string
-  default     = "TextToCodeValidateSubmissionV2/"
+  default     = "TextToCodeSubmissionV2/"
   description = "S3 prefix for TTC input submission files"
 }
 
 variable "ttc_output_prefix" {
   type        = string
-  default     = "TTCOutput/"
-  description = "S3 prefix for TTC output files"
+  default     = "TTCAugmentationMetadataV2/"
+  description = "S3 prefix for TTC augmentation metadata output files"
 }
 
 variable "ttc_metadata_prefix" {
   type        = string
-  default     = "TTCMetadata/"
-  description = "S3 prefix for TTC metadata files"
+  default     = "TTCMetadataV2/"
+  description = "S3 prefix for TTC analysis metadata files"
 }
 
 variable "augmented_eicr_prefix" {
@@ -143,7 +143,7 @@ variable "augmented_eicr_prefix" {
 
 variable "augmentation_metadata_prefix" {
   type        = string
-  default     = "AugmentationMetadata/"
+  default     = "AugmentationMetadataV2/"
   description = "S3 prefix for augmentation metadata files"
 }
 
