@@ -12,6 +12,7 @@ from augmentation.models import NonstandardCodeInstanceMetadata
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
+from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import Code
 from shared_models import DataField
@@ -140,6 +141,22 @@ class TestEicrAugmenter:
             ],
         )
 
+    def test_get_old_document_id_sets_assigning_authority_name_when_missing_attribute(self):
+        """Tests old document id gets assigningAuthorityName when missing."""
+        eicr_without_assigning_authority_name = BASIC_ECR.replace(
+            ' assigningAuthorityName="original-document"',
+            "",
+        ).replace(
+            ' assigningAuthorityName="TEXT_TO_CODE"',
+            "",
+        )
+
+        augmenter = EICRAugmenter(eicr_without_assigning_authority_name, [])
+
+        parent_doc_id = augmenter._get_old_document_id()
+
+        assert parent_doc_id.get("assigningAuthorityName") == "original-document"
+
     def test_empty_eicr(self, mocker: MockerFixture):
         """Tests augmentor run method."""
         doc_id = UUID("12345678-1234-5678-1234-567812345678")
@@ -152,3 +169,56 @@ class TestEicrAugmenter:
             match=r"Unable to find tag in eICR document for XPath: /ClinicalDocument/id/@root",
         ):
             EICRAugmenter(EMPTY_ECR, [])
+
+    def test_get_old_document_id_sets_assigning_authority_name_when_missing(self):
+        """Tests old document id gets assigningAuthorityName when missing."""
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+
+        parent_doc_id = augmenter._get_old_document_id()
+
+        assert parent_doc_id.get("assigningAuthorityName") == "original-document"
+
+    def test_get_old_xrfm_related_document_returns_none_when_missing(self):
+        """Tests old XFRM relatedDocument returns None when missing."""
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+
+        related_document = augmenter._get_old_xrfm_related_document()
+
+        assert related_document is None
+
+    def test_get_old_xrfm_related_document_returns_element_when_present(self):
+        """Tests old XFRM relatedDocument is returned when present."""
+        augmenter = EICRAugmenter(BASIC_ECR_RELATED_DOC, [])
+
+        related_document = augmenter._get_old_xrfm_related_document()
+
+        assert related_document is not None
+        assert related_document.tag == "relatedDocument"
+        assert related_document.get("typeCode") == "XFRM"
+
+    def test_validate_config_raises_value_error_when_application_code_does_not_match(self):
+        """Tests config validation when application code does not match."""
+
+        class TestAugmenter(Augmenter):
+            def augment(self) -> Metadata:
+                return Metadata(
+                    original_eicr_id="original-doc-id",
+                    augmented_eicr_id="augmented-doc-id",
+                    nonstandard_codes=[],
+                )
+
+        class InvalidConfig:
+            application_code = "wrong-application-code"
+
+        with pytest.raises(
+            ValueError,
+            match=r"Config application code wrong-application-code does not match Augmenter application code ApplicationCode.TEXT_TO_CODE.",
+        ):
+            TestAugmenter(
+                BASIC_ECR,
+                InvalidConfig(),
+            )
+
+    def test_augment_base_method_returns_none(self):
+        """Tests abstract base augment method body."""
+        assert Augmenter.augment(object()) is None
