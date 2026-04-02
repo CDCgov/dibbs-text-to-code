@@ -56,10 +56,48 @@ class TestHandler:
             "opensearch_retrieved_scores"
             not in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
         )
-        assert "candidate" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert "error_context" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert "error_id" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"] is not None
+        assert (
+            "reranker_processed_results"
+            not in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        assert "schematron_error" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert (
+            "schematron_error_xpath" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        assert "field_type" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert "new_translation" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["field_type"]
+            == "Lab Test Name Resulted"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"]["code"]
+            == "109224-6"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "code_system"
+            ]
+            == "2.16.840.1.113883.6.1"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "code_system_name"
+            ]
+            == "LOINC"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "display_name"
+            ]
+            is not None
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "original_text"
+            ]
+            == "weed allergen mix 3"
+        )
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
         ttc_metadata_output = json.loads(

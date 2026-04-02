@@ -13,6 +13,10 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from shared_models import Code
+from shared_models import NonstandardCodeInstance
+from text_to_code.models import Candidate
+from text_to_code.models import SchematronErrorDetail
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
 from text_to_code.services import embedder
@@ -207,6 +211,32 @@ def _populate_eicr_metadata(
     ttc_metadata_output["eicr_metadata"] = eicr_metadata
 
 
+def _build_nonstandard_code_instance(
+    schematron_error: SchematronErrorDetail,
+    new_translation: Code,
+    selected_candidate: Candidate,
+) -> NonstandardCodeInstance:
+    """Build a NonstandardCodeInstance object for the TTC output.
+
+    :param schematron_error: The Schematron error being processed.
+    :param new_translation: The new translation retrieved from OpenSearch for the error.
+    :param selected_candidate: The text candidate that was selected as the most relevant for the error.
+    :return: A NonstandardCodeInstance object populated with the relevant information.
+    """
+    return NonstandardCodeInstance(
+        schematron_error=schematron_error.error_message,
+        schematron_error_xpath=schematron_error.error_context,
+        field_type=schematron_error.field,
+        new_translation=Code(
+            code=new_translation.loinc_code,
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name=new_translation.description,
+            original_text=selected_candidate.value,
+        ),
+    )
+
+
 def _process_schematron_errors(
     original_eicr_content: str,
     schematron_data_fields: list,
@@ -245,13 +275,13 @@ def _process_schematron_errors(
         )
 
         error.candidate = selected_candidate
-        ttc_output["schematron_errors"][data_field].append(error.model_dump())
 
         logger.info(
             "Embedding the relevant text strings for each error in the eICR for persistence_id"
         )
 
         if selected_candidate is None:
+            ttc_output["schematron_errors"][data_field].append(error.model_dump())
             continue
 
         vector_embedding = RETRIEVER.embed(selected_candidate.value)
@@ -275,6 +305,15 @@ def _process_schematron_errors(
         results_list = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
+
+        if results_list:
+            ttc_output["schematron_errors"][data_field].append(
+                _build_nonstandard_code_instance(
+                    schematron_error=error,
+                    new_translation=results_list[0].source,
+                    selected_candidate=selected_candidate,
+                ).model_dump()
+            )
 
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
