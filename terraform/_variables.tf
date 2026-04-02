@@ -147,6 +147,25 @@ variable "augmentation_metadata_prefix" {
   description = "S3 prefix for augmentation metadata files"
 }
 
+### Augmentation Lambda Variables
+variable "augmentation_lambda_function_name" {
+  type        = string
+  default     = "ttc-augmentation-lambda"
+  description = "The name of the augmentation lambda function"
+}
+
+variable "augmentation_lambda_memory_size" {
+  type        = number
+  default     = 512
+  description = "Memory allocation in MB for the augmentation lambda. Lower than the TTC lambda since no ML models are loaded."
+}
+
+variable "augmentation_lambda_timeout" {
+  type        = number
+  default     = 300
+  description = "Timeout in seconds for the augmentation lambda function"
+}
+
 ### Container Image Variables
 variable "ttc_lambda_image_tag" {
   type        = string
@@ -158,5 +177,11 @@ variable "index_lambda_image_tag" {
   type        = string
   default     = "latest"
   description = "The image tag for the index Lambda container image in ECR"
+}
+
+variable "augmentation_lambda_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The image tag for the augmentation Lambda container image in ECR"
 }
 
