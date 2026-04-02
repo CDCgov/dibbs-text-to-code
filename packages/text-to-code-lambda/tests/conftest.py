@@ -13,10 +13,10 @@ from text_to_code_lambda import lambda_function
 
 S3_BUCKET = "dibbs-text-to-code"
 EICR_INPUT_PREFIX = "eCRMessageV2/"
-SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
-TTC_INPUT_PREFIX = "TextToCodeValidateSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCOutput/"
-TTC_METADATA_PREFIX = "TTCMetadata/"
+SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
+TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
+TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
+TTC_METADATA_PREFIX = "TTCMetadataV2/"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
 AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
