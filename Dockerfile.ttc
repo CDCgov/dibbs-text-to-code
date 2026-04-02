@@ -28,8 +28,9 @@ RUN rpm -e --nodeps gcc-c++ gcc cpp make && microdnf clean all && rm -rf /var/ca
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
   python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])"
 
-# Download reranker at build time (public repo)
-RUN python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='cross-encoder/stsb-roberta-large', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
+# Download reranker at build time (private repo, needs token)
+RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
+    python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-reranker-mvp', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
   && rm -rf /root/.cache/huggingface
 
 # Clean up package source copies
