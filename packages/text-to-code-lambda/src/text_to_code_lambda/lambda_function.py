@@ -228,10 +228,12 @@ def _build_nonstandard_code_instance(
         schematron_error_xpath=schematron_error.error_context,
         field_type=schematron_error.field,
         new_translation=Code(
-            code=new_translation.loinc_code,
-            code_system="2.16.840.1.113883.6.1",
-            code_system_name="LOINC",
-            display_name=new_translation.description,
+            code=new_translation.code,
+            code_system=new_translation.code_system,
+            code_system_name=new_translation.code_system_name,
+            display_name=new_translation.display_name,
+            value_set=new_translation.value_set,
+            value_set_version=new_translation.value_set_version,
             original_text=selected_candidate.value,
         ),
     )
@@ -310,7 +312,12 @@ def _process_schematron_errors(
             ttc_output["schematron_errors"][data_field].append(
                 _build_nonstandard_code_instance(
                     schematron_error=error,
-                    new_translation=results_list[0].source,
+                    new_translation=Code(
+                        code=results_list[0].source.loinc_code,
+                        code_system="2.16.840.1.113883.6.1",
+                        code_system_name="LOINC",
+                        display_name=results_list[0].source.description,
+                    ),
                     selected_candidate=selected_candidate,
                 ).model_dump()
             )
