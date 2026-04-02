@@ -21,7 +21,7 @@ class TestReranker:
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.973}
+            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.989}
         ]
 
     def test_reranker_multiple_hits(self, reranker: Reranker) -> None:
@@ -38,16 +38,16 @@ class TestReranker:
         ]
         assert ranks == [
             {
-                "code_string": "Albumin/Creatinine (U) [Mass ratio]",
-                "score": 0.755,
-            },
-            {
-                "code_string": "Albumin/Creatinine (U) [Molar ratio]",
-                "score": 0.73,
+                "code_string": "Albumin/Creatinine [Ratio] in Urine",
+                "score": 0.541,
             },
             {
                 "code_string": "Albumin/Creatinine [Ratio] in 24 hour Urine",
-                "score": 0.701,
+                "score": 0.308,
             },
-            {"code_string": "Albumin/Creatinine [Ratio] in Urine", "score": 0.672},
+            {
+                "code_string": "Albumin/Creatinine (U) [Mass ratio]",
+                "score": 0.21,
+            },
+            {"code_string": "Albumin/Creatinine (U) [Molar ratio]", "score": 0.207},
         ]

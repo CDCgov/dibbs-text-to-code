@@ -33,6 +33,17 @@ resource "aws_ecr_repository" "index_lambda" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository" "augmentation_lambda" {
+  name         = "ttc-augmentation-lambda"
+  force_delete = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.tags
+}
+
 #############
 # VPC
 # Note: If APHL wants to use their own VPC without this module, they will need to provide
@@ -478,5 +489,34 @@ resource "aws_lambda_function" "index_lambda" {
   }
 
   tags = { Name = var.index_lambda_function_name }
+}
+
+#############
+# Augmentation Lambda
+#############
+
+resource "aws_lambda_function" "augmentation_lambda" {
+  function_name = var.augmentation_lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.augmentation_lambda.repository_url}:${var.augmentation_lambda_image_tag}"
+  timeout       = var.augmentation_lambda_timeout
+  memory_size   = var.augmentation_lambda_memory_size
+
+  vpc_config {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  environment {
+    variables = {
+      S3_BUCKET                    = var.s3_bucket
+      AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
+      AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix
+      REGION                       = var.region
+    }
+  }
+
+  tags = { Name = var.augmentation_lambda_function_name }
 }
 
