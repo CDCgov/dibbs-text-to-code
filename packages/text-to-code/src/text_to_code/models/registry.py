@@ -15,4 +15,4 @@ TTC_RETRIEVER: str = "NCHS/ttc-retriever-mvp"
 
 # Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
 # found by the approximate neighbor search
-TTC_RERANKER: str = "cross-encoder/stsb-roberta-large"
+TTC_RERANKER: str = "NCHS/ttc-reranker-mvp"
