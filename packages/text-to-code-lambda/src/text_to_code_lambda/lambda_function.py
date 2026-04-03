@@ -13,6 +13,10 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from shared_models import Code
+from shared_models import NonstandardCodeInstance
+from text_to_code.models import Candidate
+from text_to_code.models import SchematronErrorDetail
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
 from text_to_code.services import embedder
@@ -140,7 +144,12 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :return: The TTC output and TTC metadata output dictionaries.
     """
     # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
-    ttc_output: dict = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
+    ttc_output: dict = {
+        "persistence_id": "",
+        "eicr_metadata": {},
+        "schematron_errors": {},
+        "unmatched_schematron_errors": {},
+    }
     ttc_metadata_output: dict = {
         "persistence_id": "",
         "eicr_metadata": {},
@@ -212,6 +221,29 @@ def _populate_eicr_metadata(
     ttc_metadata_output["eicr_metadata"] = eicr_metadata
 
 
+def _build_nonstandard_code_instance(
+    schematron_error: SchematronErrorDetail,
+    new_translation: Code,
+    selected_candidate: Candidate,
+) -> NonstandardCodeInstance:
+    """Build a NonstandardCodeInstance object for the TTC output.
+
+    :param schematron_error: The Schematron error being processed.
+    :param new_translation: The new translation retrieved from OpenSearch for the error.
+    :param selected_candidate: The text candidate that was selected as the most relevant for the error.
+    :return: A NonstandardCodeInstance object populated with the relevant information.
+    """
+    new_translation_with_text = new_translation.model_copy(
+        update={"original_text": selected_candidate.value}
+    )
+    return NonstandardCodeInstance(
+        schematron_error=schematron_error.error_message,
+        schematron_error_xpath=schematron_error.error_context,
+        field_type=schematron_error.field,
+        new_translation=new_translation_with_text,
+    )
+
+
 def _process_schematron_errors(
     original_eicr_content: str,
     schematron_data_fields: list,
@@ -234,6 +266,8 @@ def _process_schematron_errors(
 
         if data_field not in ttc_output["schematron_errors"]:
             ttc_output["schematron_errors"][data_field] = []
+        if data_field not in ttc_output["unmatched_schematron_errors"]:
+            ttc_output["unmatched_schematron_errors"][data_field] = []
         if data_field not in ttc_metadata_output["schematron_errors"]:
             ttc_metadata_output["schematron_errors"][data_field] = []
 
@@ -250,13 +284,19 @@ def _process_schematron_errors(
         )
 
         error.candidate = selected_candidate
-        ttc_output["schematron_errors"][data_field].append(error.model_dump())
 
         logger.info(
             "Embedding the relevant text strings for each error in the eICR for persistence_id"
         )
 
         if selected_candidate is None:
+            unmatched_error = error.model_dump()
+            unmatched_error["reason"] = "No relevant text candidate was selected"
+            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
+
+            metadata_error = error.model_dump()
+            metadata_error["reason"] = "No relevant text candidate was selected"
+            ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
             continue
 
         vector_embedding = RETRIEVER.embed(selected_candidate.value)
@@ -281,9 +321,34 @@ def _process_schematron_errors(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
 
+        if results_list:
+            ttc_output["schematron_errors"][data_field].append(
+                _build_nonstandard_code_instance(
+                    schematron_error=error,
+                    new_translation=Code(
+                        code=results_list[0].source.loinc_code,
+                        code_system="2.16.840.1.113883.6.1",
+                        code_system_name="LOINC",
+                        display_name=results_list[0].source.description,
+                    ),
+                    selected_candidate=selected_candidate,
+                ).model_dump()
+            )
+        else:
+            # TODO: Shape of this output could change depending on needs of the Augmentation Lambda
+            unmatched_error = error.model_dump()
+            unmatched_error["reason"] = (
+                "Selected candidate found, but no OpenSearch code match was returned"
+            )
+            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
+
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
         metadata_error["reranker_processed_results"] = ranked_results
+        if not results_list:
+            metadata_error["reason"] = (
+                "Selected candidate found, but no OpenSearch code match was returned"
+            )
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
