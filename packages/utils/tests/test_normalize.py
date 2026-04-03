@@ -139,3 +139,28 @@ class TestMergeEnhancements:
         """Test merge enhancements."""
         merged = utils.merge_enhancements(dict1, dict2)
         assert merged == expected
+
+    def test_merge_enhancements_uses_later_code_when_first_seen_code_is_none(
+        self, dict1, dict2, expected
+    ):
+        """Test merge enhancements."""
+        merged = utils.merge_enhancements(
+            {
+                "EngRatFr": {"code": None, "abbrv": [], "synonyms": ["hello"]},
+            },
+            {
+                "EngRatFr": {
+                    "code": "LP101814-4",
+                    "abbrv": [],
+                    "synonyms": ["goodbye"],
+                },
+            },
+        )
+
+        assert merged == {
+            "engratfr": {
+                "code": "LP101814-4",
+                "abbrv": [],
+                "synonyms": ["hello", "goodbye"],
+            }
+        }
