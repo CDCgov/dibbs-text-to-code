@@ -144,7 +144,12 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :return: The TTC output and TTC metadata output dictionaries.
     """
     # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
-    ttc_output: dict = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
+    ttc_output: dict = {
+        "persistence_id": "",
+        "eicr_metadata": {},
+        "schematron_errors": {},
+        "unmatched_schematron_errors": {},
+    }
     ttc_metadata_output: dict = {
         "persistence_id": "",
         "eicr_metadata": {},
@@ -261,6 +266,8 @@ def _process_schematron_errors(
 
         if data_field not in ttc_output["schematron_errors"]:
             ttc_output["schematron_errors"][data_field] = []
+        if data_field not in ttc_output["unmatched_schematron_errors"]:
+            ttc_output["unmatched_schematron_errors"][data_field] = []
         if data_field not in ttc_metadata_output["schematron_errors"]:
             ttc_metadata_output["schematron_errors"][data_field] = []
 
@@ -283,7 +290,13 @@ def _process_schematron_errors(
         )
 
         if selected_candidate is None:
-            ttc_output["schematron_errors"][data_field].append(error.model_dump())
+            unmatched_error = error.model_dump()
+            unmatched_error["reason"] = "No relevant text candidate was selected"
+            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
+
+            metadata_error = error.model_dump()
+            metadata_error["reason"] = "No relevant text candidate was selected"
+            ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
             continue
 
         vector_embedding = RETRIEVER.embed(selected_candidate.value)
@@ -321,9 +334,20 @@ def _process_schematron_errors(
                     selected_candidate=selected_candidate,
                 ).model_dump()
             )
+        else:
+            unmatched_error = error.model_dump()
+            unmatched_error["reason"] = (
+                "Selected candidate found, but no OpenSearch code match was returned"
+            )
+            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
+
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
         metadata_error["reranker_processed_results"] = ranked_results
+        if not results_list:
+            metadata_error["reason"] = (
+                "Selected candidate found, but no OpenSearch code match was returned"
+            )
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
