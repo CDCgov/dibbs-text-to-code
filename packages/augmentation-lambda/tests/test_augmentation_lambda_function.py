@@ -1,408 +1,284 @@
 import json
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
-import pytest
-
-from augmentation.models import Metadata
+import lambda_handler
 from augmentation_lambda import lambda_function
-from shared_models import TTCAugmenterInput
+from shared_models import DataField
+from shared_models import NonstandardCodeInstance
+
+S3_BUCKET = "dibbs-text-to-code"
+TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
+AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
+AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
+TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+
+TEST_TTC_OUTPUT = {
+    "persistence_id": TEST_PERSISTENCE_ID,
+    "eicr_metadata": {},
+    "schematron_errors": {
+        "Lab Test Name Resulted": [
+            {
+                "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                "field_type": "Lab Test Name Resulted",
+                "new_translation": {
+                    "code": "109224-6",
+                    "code_system": "2.16.840.1.113883.6.1",
+                    "code_system_name": "LOINC",
+                    "display_name": "Weed Allergen Mix 3 IgE Ab",
+                    "value_set": None,
+                    "value_set_version": None,
+                    "original_text": "A custom code in original text.",
+                },
+            }
+        ]
+    },
+}
 
 
-class FakeAugmenter:
-    def __init__(self, document: str, nonstandard_codes: list[object], config: object) -> None:
-        """Fake augmenter for testing purposes.
+class TestParseNonstandardCodes:
+    """Tests for the _parse_nonstandard_codes helper."""
 
-        :param document: The input document to augment.
-        :param nonstandard_codes: The list of nonstandard codes to resolve.
-        :param config: The augmenter config to use for augmentation.
-        """
-        self.document = document
-        self.nonstandard_codes = nonstandard_codes
-        self.config = config
-        self.augmented_xml = '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>'
+    def test_parses_valid_ttc_output(self) -> None:
+        codes = lambda_function._parse_nonstandard_codes(TEST_TTC_OUTPUT)
 
-    def augment(self) -> Metadata:
-        """Fake augment method that returns a successful augmentation result.
+        assert len(codes) == 1
+        assert isinstance(codes[0], NonstandardCodeInstance)
+        assert codes[0].field_type == DataField.LAB_TEST_NAME_RESULTED
+        assert codes[0].new_translation.code == "109224-6"
+        assert codes[0].new_translation.code_system == "2.16.840.1.113883.6.1"
+        assert codes[0].new_translation.display_name == "Weed Allergen Mix 3 IgE Ab"
 
-        :return: A Metadata object representing the result of the augmentation.
-        """
-        return Metadata(
-            original_eicr_id="original-doc-id",
-            augmented_eicr_id="augmented-doc-id",
-            nonstandard_codes=[],
+    def test_skips_entries_without_new_translation(self) -> None:
+        ttc_output = {
+            "schematron_errors": {
+                "Lab Test Name Resulted": [
+                    {
+                        "field": "Lab Test Name Resulted",
+                        "error": "some error",
+                        "error_context": "/some/xpath",
+                    }
+                ]
+            }
+        }
+
+        codes = lambda_function._parse_nonstandard_codes(ttc_output)
+
+        assert len(codes) == 0
+
+    def test_handles_empty_schematron_errors(self) -> None:
+        codes = lambda_function._parse_nonstandard_codes({"schematron_errors": {}})
+        assert len(codes) == 0
+
+    def test_handles_missing_schematron_errors(self) -> None:
+        codes = lambda_function._parse_nonstandard_codes({})
+        assert len(codes) == 0
+
+
+class TestHandler:
+    """Tests for the augmentation Lambda handler."""
+
+    def test_handler_success(self, example_sqs_event, mock_aws_setup) -> None:
+        result = lambda_function.handler(example_sqs_event, None)
+
+        assert result["statusCode"] == 200  # noqa: PLR2004
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
+
+    def test_handler_writes_outputs_to_s3(self, example_sqs_event, mock_aws_setup) -> None:
+        lambda_function.handler(example_sqs_event, None)
+
+        # Verify augmented eICR was written
+        augmented_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+            s3_client=mock_aws_setup,
+        )
+        assert "ClinicalDocument" in augmented_eicr
+
+        # Verify metadata was written
+        metadata_raw = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+            s3_client=mock_aws_setup,
+        )
+        metadata = json.loads(metadata_raw)
+        assert "original_eicr_id" in metadata
+        assert "augmented_eicr_id" in metadata
+
+    def test_handler_source_bucket_routing(self, example_s3_event_payload, mock_aws_setup) -> None:
+        """Verify bucket name is extracted from the S3 event, not the env var."""
+        custom_bucket = "custom-bucket"
+
+        # Create the custom bucket and populate it with the same test data
+        mock_aws_setup.create_bucket(Bucket=custom_bucket)
+        # Copy eICR to custom bucket
+        eicr_obj = mock_aws_setup.get_object(
+            Bucket=S3_BUCKET,
+            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+        )
+        mock_aws_setup.put_object(
+            Bucket=custom_bucket,
+            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+            Body=eicr_obj["Body"].read(),
+        )
+        # Copy TTC output to custom bucket
+        ttc_obj = mock_aws_setup.get_object(
+            Bucket=S3_BUCKET,
+            Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        mock_aws_setup.put_object(
+            Bucket=custom_bucket,
+            Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            Body=ttc_obj["Body"].read(),
         )
 
-
-@pytest.fixture(autouse=True)
-def mock_s3_client():
-    """Mock the S3 client and put_file for all tests."""
-    lambda_function._cached_s3_client = MagicMock()
-    with patch.object(lambda_function, "lambda_handler") as mock_handler:
-        mock_handler.create_s3_client.return_value = MagicMock()
-        mock_handler.put_file = MagicMock()
-        yield mock_handler
-    lambda_function._cached_s3_client = None
-
-
-def test_handler_returns_success_result(mocker, mock_s3_client) -> None:
-    """Tests that the handler returns a successful result when the augmenter runs without errors.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
-
-    model_validate_spy = mocker.spy(TTCAugmenterInput, "model_validate")
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-1",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "source-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert model_validate_spy.call_count == 1
-    assert model_validate_spy.call_args.args[0] == {
-        "eicr_id": "source-eicr-id",
-        "nonstandard_codes": [],
-    }
-    assert result == {
-        "results": [
-            {
-                "messageId": "message-1",
-                "status": "success",
-                "result": {
-                    "eicr_id": "source-eicr-id",
-                    "augmented_eicr": '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>',
-                    "metadata": {
-                        "original_eicr_id": "original-doc-id",
-                        "augmented_eicr_id": "augmented-doc-id",
-                        "nonstandard_codes": [],
-                        "error": None,
+        # Modify the event to use custom bucket
+        example_s3_event_payload["detail"]["bucket"]["name"] = custom_bucket
+        event = {
+            "Records": [
+                {
+                    "messageId": "msg-routing",
+                    "receiptHandle": "test-receipt-handle",
+                    "body": json.dumps(example_s3_event_payload),
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
                     },
-                },
-            }
-        ],
-        "batchItemFailures": [],
-    }
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
+                }
+            ]
+        }
 
+        lambda_function.handler(event, None)
 
-def test_handler_creates_and_caches_s3_client_when_cache_is_empty(mocker) -> None:
-    """Tests that the handler creates the S3 client when the cache is empty and reuses it.
+        # Outputs should be in the custom bucket, not the default
+        augmented_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=custom_bucket,
+            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+            s3_client=mock_aws_setup,
+        )
+        assert "ClinicalDocument" in augmented_eicr
 
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    lambda_function._cached_s3_client = None
+    def test_handler_error_missing_eicr(self, example_s3_event_payload, mock_aws_setup) -> None:
+        """Test error when the original eICR is not found in S3."""
+        # Remove the eICR from S3
+        mock_aws_setup.delete_object(
+            Bucket=S3_BUCKET,
+            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+        )
 
-    created_s3_client = MagicMock()
-    create_s3_client_spy = mocker.patch.object(
-        lambda_function.lambda_handler,
-        "create_s3_client",
-        return_value=created_s3_client,
-    )
-    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-cache",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "cached-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert create_s3_client_spy.call_count == 1
-    assert lambda_function._cached_s3_client is created_s3_client
-    assert result["batchItemFailures"] == []
-    assert result["results"][0]["status"] == "success"
-
-
-def test_handler_saves_outputs_to_s3(mocker, mock_s3_client) -> None:
-    """Tests that the handler writes augmented eICR and metadata to S3.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-s3",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "test-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    lambda_function.handler(event, None)
-
-    # Verify put_file was called once for augmented eICR and once for metadata
-    expected_put_file_calls = 2
-    assert mock_s3_client.put_file.call_count == expected_put_file_calls
-
-    # First call: augmented eICR
-    eicr_call = mock_s3_client.put_file.call_args_list[0]
-    assert eicr_call.kwargs["bucket_name"] == lambda_function.S3_BUCKET
-    assert eicr_call.kwargs["object_key"] == f"{lambda_function.AUGMENTED_EICR_PREFIX}test-eicr-id"
-
-    # Second call: metadata
-    metadata_call = mock_s3_client.put_file.call_args_list[1]
-    assert metadata_call.kwargs["bucket_name"] == lambda_function.S3_BUCKET
-    assert (
-        metadata_call.kwargs["object_key"]
-        == f"{lambda_function.AUGMENTATION_METADATA_PREFIX}test-eicr-id"
-    )
-
-
-def test_handler_uses_provided_config(mocker, mock_s3_client) -> None:
-    """Tests that the handler uses the provided config when creating the augmenter.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    augmenter_mock = mocker.patch.object(lambda_function, "EICRAugmenter", autospec=True)
-    augmenter_instance = augmenter_mock.return_value
-    augmenter_instance.augment.return_value = Metadata(
-        original_eicr_id="original-doc-id",
-        augmented_eicr_id="augmented-doc-id",
-        nonstandard_codes=[],
-    )
-    augmenter_instance.augmented_xml = (
-        '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>'
-    )
-
-    config_validate_spy = mocker.spy(lambda_function.TTCAugmenterConfig, "model_validate")
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-2",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "source-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                        "config": {
-                            "rules": {
-                                "document": [
-                                    "document_id_header",
-                                    "author_header",
-                                ]
-                            }
-                        },
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert config_validate_spy.call_count == 1
-    augmenter_mock.assert_called_once()
-    assert augmenter_mock.call_args.kwargs["document"] == "<ClinicalDocument />"
-    assert augmenter_mock.call_args.kwargs["config"] == config_validate_spy.spy_return
-    assert result["batchItemFailures"] == []
-    assert result["results"][0]["status"] == "success"
-
-
-def test_handler_returns_error_for_invalid_payload(mocker) -> None:
-    """Tests that the handler returns an error result for an invalid payload.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-3",
-                "body": json.dumps(
-                    {
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert result["batchItemFailures"] == [{"itemIdentifier": "message-3"}]
-    assert result["results"][0]["messageId"] == "message-3"
-    assert result["results"][0]["status"] == "error"
-
-
-def test_handler_returns_error_when_augmenter_raises(mocker) -> None:
-    """Tests that the handler returns an error result when the augmenter raises an exception.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-
-    class RaisingAugmenter:
-        def __init__(self, document: str, nonstandard_codes: list[object], config: object):
-            self.document = document
-            self.nonstandard_codes = nonstandard_codes
-            self.config = config
-
-        def augment(self) -> Metadata:
-            raise ValueError("augmentation failed")
-
-    mocker.patch.object(lambda_function, "EICRAugmenter", RaisingAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-4",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "source-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert result == {
-        "results": [
-            {
-                "messageId": "message-4",
-                "status": "error",
-                "error": "augmentation failed",
-            }
-        ],
-        "batchItemFailures": [{"itemIdentifier": "message-4"}],
-    }
-
-
-def test_handler_returns_mixed_batch_results(mocker) -> None:
-    """Tests that the handler returns a mixed batch of success and error results.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-
-    class ConditionalAugmenter:
-        def __init__(self, document: str, nonstandard_codes: list[object], config: object):
-            self.document = document
-            self.nonstandard_codes = nonstandard_codes
-            self.config = config
-            self.augmented_xml = (
-                '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>'
-            )
-
-        def augment(self) -> Metadata:
-            if self.document == "<broken />":
-                raise ValueError("broken document")
-            return Metadata(
-                original_eicr_id="original-doc-id",
-                augmented_eicr_id="augmented-doc-id",
-                nonstandard_codes=[],
-            )
-
-    mocker.patch.object(lambda_function, "EICRAugmenter", ConditionalAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-5",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "source-eicr-id-1",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            },
-            {
-                "messageId": "message-6",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "source-eicr-id-2",
-                        "eicr": "<broken />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            },
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert result == {
-        "results": [
-            {
-                "messageId": "message-5",
-                "status": "success",
-                "result": {
-                    "eicr_id": "source-eicr-id-1",
-                    "augmented_eicr": '<ClinicalDocument><id root="augmented-doc-id" /></ClinicalDocument>',
-                    "metadata": {
-                        "original_eicr_id": "original-doc-id",
-                        "augmented_eicr_id": "augmented-doc-id",
-                        "nonstandard_codes": [],
-                        "error": None,
+        event = {
+            "Records": [
+                {
+                    "messageId": "msg-missing-eicr",
+                    "receiptHandle": "test-receipt-handle",
+                    "body": json.dumps(example_s3_event_payload),
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
                     },
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
+                }
+            ]
+        }
+
+        result = lambda_function.handler(event, None)
+
+        assert result["num_failure_eicrs"] == 1
+        assert len(result["failures"]) == 1
+
+    def test_handler_error_missing_ttc_output(
+        self, example_s3_event_payload, mock_aws_setup
+    ) -> None:
+        """Test error when the TTC output is not found in S3."""
+        mock_aws_setup.delete_object(
+            Bucket=S3_BUCKET,
+            Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+
+        event = {
+            "Records": [
+                {
+                    "messageId": "msg-missing-ttc",
+                    "receiptHandle": "test-receipt-handle",
+                    "body": json.dumps(example_s3_event_payload),
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
+                    },
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
+                }
+            ]
+        }
+
+        result = lambda_function.handler(event, None)
+
+        assert result["num_failure_eicrs"] == 1
+        assert len(result["failures"]) == 1
+
+    def test_handler_mixed_batch_results(self, example_s3_event_payload, mock_aws_setup) -> None:
+        """Test batch with both success and failure records."""
+        # Create a second event pointing to a non-existent persistence ID
+        bad_event_payload = example_s3_event_payload.copy()
+        bad_event_payload = json.loads(json.dumps(example_s3_event_payload))
+        bad_event_payload["detail"]["object"]["key"] = f"{TTC_OUTPUT_PREFIX}nonexistent/id"
+
+        event = {
+            "Records": [
+                {
+                    "messageId": "msg-success",
+                    "receiptHandle": "test-receipt-handle",
+                    "body": json.dumps(example_s3_event_payload),
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
+                    },
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
                 },
-            },
-            {
-                "messageId": "message-6",
-                "status": "error",
-                "error": "broken document",
-            },
-        ],
-        "batchItemFailures": [{"itemIdentifier": "message-6"}],
-    }
+                {
+                    "messageId": "msg-fail",
+                    "receiptHandle": "test-receipt-handle-2",
+                    "body": json.dumps(bad_event_payload),
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
+                    },
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
+                },
+            ]
+        }
 
+        result = lambda_function.handler(event, None)
 
-def test_handler_returns_input_eicr_id_in_output(mocker) -> None:
-    """Tests that the handler returns the input eicr_id in the success result.
-
-    :param mocker: The pytest-mock fixture for mocking objects.
-    """
-    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
-
-    event = {
-        "Records": [
-            {
-                "messageId": "message-7",
-                "body": json.dumps(
-                    {
-                        "eicr_id": "traceable-eicr-id",
-                        "eicr": "<ClinicalDocument />",
-                        "nonstandard_codes": [],
-                    }
-                ),
-            }
-        ]
-    }
-
-    result = lambda_function.handler(event, None)
-
-    assert result["results"][0]["result"]["eicr_id"] == "traceable-eicr-id"
+        assert result["num_success_eicrs"] == 1
+        assert result["num_failure_eicrs"] == 1
