@@ -218,7 +218,7 @@ def _populate_eicr_metadata(
 
 def _build_nonstandard_code_instance(
     schematron_error: SchematronErrorDetail,
-    new_translation: Code,
+    new_translation: Code | None,
     selected_candidate: Candidate,
 ) -> NonstandardCodeInstance:
     """Build a NonstandardCodeInstance object for the TTC output.
@@ -228,19 +228,16 @@ def _build_nonstandard_code_instance(
     :param selected_candidate: The text candidate that was selected as the most relevant for the error.
     :return: A NonstandardCodeInstance object populated with the relevant information.
     """
+    new_translation_with_text = (
+        new_translation.model_copy(update={"original_text": selected_candidate.value})
+        if new_translation is not None
+        else None
+    )
     return NonstandardCodeInstance(
         schematron_error=schematron_error.error_message,
         schematron_error_xpath=schematron_error.error_context,
         field_type=schematron_error.field,
-        new_translation=Code(
-            code=new_translation.code,
-            code_system=new_translation.code_system,
-            code_system_name=new_translation.code_system_name,
-            display_name=new_translation.display_name,
-            value_set=new_translation.value_set,
-            value_set_version=new_translation.value_set_version,
-            original_text=selected_candidate.value,
-        ),
+        new_translation=new_translation_with_text,
     )
 
 
@@ -323,6 +320,14 @@ def _process_schematron_errors(
                         code_system_name="LOINC",
                         display_name=results_list[0].source.description,
                     ),
+                    selected_candidate=selected_candidate,
+                ).model_dump()
+            )
+        else:
+            ttc_output["schematron_errors"][data_field].append(
+                _build_nonstandard_code_instance(
+                    schematron_error=error,
+                    new_translation=None,
                     selected_candidate=selected_candidate,
                 ).model_dump()
             )
