@@ -55,8 +55,8 @@ class NonstandardCodeInstance(BaseModel):
     """The XPath give by the Schematron error to the observation with a nonconforming code."""
     field_type: DataField
     """The `DataField` type of the nonconforming code."""
-    new_translation: Code | None
-    """The new translation, if available."""
+    new_translation: Code
+    """The new translation."""
 
 
 class TTCAugmenterInput(BaseModel):
