@@ -145,7 +145,7 @@ class TestEicrAugmenter:
         """Tests old document id preserves assigningAuthorityName when present."""
         eicr_with_assigning_authority_name = BASIC_ECR.replace(
             ' assigningAuthorityName="original-document"',
-            ' assigningAuthorityName="original-document"',
+            "",
         ).replace(
             ' assigningAuthorityName="TEXT_TO_CODE"',
             "",
