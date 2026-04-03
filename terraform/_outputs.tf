@@ -14,9 +14,19 @@ output "lambda_function_name" {
   description = "The name of the main TTC lambda function"
 }
 
-output "lambda_role_arn" {
-  value       = aws_iam_role.lambda_role.arn
-  description = "The ARN of the IAM role attached to the main and index TTC lambda functions"
+output "ttc_lambda_role_arn" {
+  value       = aws_iam_role.ttc_lambda_role.arn
+  description = "The ARN of the IAM role attached to the TTC lambda function"
+}
+
+output "index_lambda_role_arn" {
+  value       = aws_iam_role.index_lambda_role.arn
+  description = "The ARN of the IAM role attached to the index lambda function"
+}
+
+output "augmentation_lambda_role_arn" {
+  value       = aws_iam_role.augmentation_lambda_role.arn
+  description = "The ARN of the IAM role attached to the augmentation lambda function"
 }
 
 output "opensearch_vpc_endpoint" {
