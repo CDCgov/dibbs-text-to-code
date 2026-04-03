@@ -335,6 +335,7 @@ def _process_schematron_errors(
                 ).model_dump()
             )
         else:
+            # TODO: Shape of this output could change depending on needs of the Augmentation Lambda
             unmatched_error = error.model_dump()
             unmatched_error["reason"] = (
                 "Selected candidate found, but no OpenSearch code match was returned"
