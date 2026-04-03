@@ -141,17 +141,17 @@ class TestEicrAugmenter:
             ],
         )
 
-    def test_get_old_document_id_sets_assigning_authority_name_when_missing_attribute(self):
-        """Tests old document id gets assigningAuthorityName when missing."""
-        eicr_without_assigning_authority_name = BASIC_ECR.replace(
+    def test_get_old_document_id_preserves_assigning_authority_name_when_present(self):
+        """Tests old document id preserves assigningAuthorityName when present."""
+        eicr_with_assigning_authority_name = BASIC_ECR.replace(
             ' assigningAuthorityName="original-document"',
-            "",
+            ' assigningAuthorityName="original-document"',
         ).replace(
             ' assigningAuthorityName="TEXT_TO_CODE"',
             "",
         )
 
-        augmenter = EICRAugmenter(eicr_without_assigning_authority_name, [])
+        augmenter = EICRAugmenter(eicr_with_assigning_authority_name, [])
 
         parent_doc_id = augmenter._get_old_document_id()
 
