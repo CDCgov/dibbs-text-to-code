@@ -218,7 +218,7 @@ def _populate_eicr_metadata(
 
 def _build_nonstandard_code_instance(
     schematron_error: SchematronErrorDetail,
-    new_translation: Code | None,
+    new_translation: Code,
     selected_candidate: Candidate,
 ) -> NonstandardCodeInstance:
     """Build a NonstandardCodeInstance object for the TTC output.
@@ -228,10 +228,8 @@ def _build_nonstandard_code_instance(
     :param selected_candidate: The text candidate that was selected as the most relevant for the error.
     :return: A NonstandardCodeInstance object populated with the relevant information.
     """
-    new_translation_with_text = (
-        new_translation.model_copy(update={"original_text": selected_candidate.value})
-        if new_translation is not None
-        else None
+    new_translation_with_text = new_translation.model_copy(
+        update={"original_text": selected_candidate.value}
     )
     return NonstandardCodeInstance(
         schematron_error=schematron_error.error_message,
@@ -323,15 +321,6 @@ def _process_schematron_errors(
                     selected_candidate=selected_candidate,
                 ).model_dump()
             )
-        else:
-            ttc_output["schematron_errors"][data_field].append(
-                _build_nonstandard_code_instance(
-                    schematron_error=error,
-                    new_translation=None,
-                    selected_candidate=selected_candidate,
-                ).model_dump()
-            )
-
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
         metadata_error["reranker_processed_results"] = ranked_results
