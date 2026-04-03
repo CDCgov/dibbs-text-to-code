@@ -97,6 +97,44 @@ def test_handler_returns_success_result(mocker, mock_s3_client) -> None:
     }
 
 
+def test_handler_creates_and_caches_s3_client_when_cache_is_empty(mocker) -> None:
+    """Tests that the handler creates the S3 client when the cache is empty and reuses it.
+
+    :param mocker: The pytest-mock fixture for mocking objects.
+    """
+    lambda_function._cached_s3_client = None
+
+    created_s3_client = MagicMock()
+    create_s3_client_spy = mocker.patch.object(
+        lambda_function.lambda_handler,
+        "create_s3_client",
+        return_value=created_s3_client,
+    )
+    mocker.patch.object(lambda_function, "EICRAugmenter", FakeAugmenter)
+
+    event = {
+        "Records": [
+            {
+                "messageId": "message-cache",
+                "body": json.dumps(
+                    {
+                        "eicr_id": "cached-eicr-id",
+                        "eicr": "<ClinicalDocument />",
+                        "nonstandard_codes": [],
+                    }
+                ),
+            }
+        ]
+    }
+
+    result = lambda_function.handler(event, None)
+
+    assert create_s3_client_spy.call_count == 1
+    assert lambda_function._cached_s3_client is created_s3_client
+    assert result["batchItemFailures"] == []
+    assert result["results"][0]["status"] == "success"
+
+
 def test_handler_saves_outputs_to_s3(mocker, mock_s3_client) -> None:
     """Tests that the handler writes augmented eICR and metadata to S3.
 
