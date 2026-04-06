@@ -2,10 +2,14 @@
 name = "augmentation-lambda"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["aws-lambda-typing>=2.20.0"]
+dependencies = []
 
 [dependency-groups]
-dev = []
+dev = [
+  "aws-lambda-typing>=2.20.0",
+  "pytest-mock>=3.15.1",
+  "pytest-snapshot>=0.9.0",
+]
 
 [build-system]
 requires = ["hatchling"]

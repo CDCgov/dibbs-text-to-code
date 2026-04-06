@@ -20,7 +20,7 @@ class TestSchematronProcessor:
     def test_get_schematron_error_data_fields(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(
-            self.SCHEMATRON_ERROR_FILE,
+            self.SCHEMATRON_ERROR_FILE,  # ty:ignore[invalid-argument-type]
         )
 
         expected_lab_test_name_resulted = 2
@@ -39,7 +39,7 @@ class TestSchematronProcessor:
     def test_get_schematron_error_detail_fields(self):
         self.file_setup()
         error_result = get_data_fields_from_schematron_error(
-            self.SCHEMATRON_ERROR_FILE,
+            self.SCHEMATRON_ERROR_FILE,  # ty:ignore[invalid-argument-type]
         )
 
         expected_total_errors = 4
@@ -54,7 +54,6 @@ class TestSchematronProcessor:
             == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
         )
 
-        assert lab_test_name_resulted_error.eicr_id is None
         assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
         assert (
             lab_test_name_resulted_error.error

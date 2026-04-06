@@ -1,0 +1,337 @@
+"""Tests for the S3 → EventBridge → SQS → Lambda pipeline using moto."""
+
+import io
+import json
+import os
+import textwrap
+import zipfile
+from datetime import datetime
+from pathlib import Path
+from uuid import UUID
+from zoneinfo import ZoneInfo
+
+import boto3
+import pytest
+import time_machine
+from moto import mock_aws
+from pytest_mock import MockerFixture
+from pytest_snapshot.plugin import Snapshot
+
+from augmentation_lambda.lambda_function import handler as augmentation_lambda
+from text_to_code_lambda.lambda_function import handler as ttc_handler
+
+REGION = os.getenv("AWS_REGION")
+BUCKET_NAME = os.getenv("S3_BUCKET")
+RULE_NAME = "s3-object-created-rule"
+ACCOUNT_ID = "123456789012"
+
+QUEUE_1_NAME = "stage1-queue"
+QUEUE_2_NAME = "stage2-queue"
+RULE_1_NAME = "input-prefix-rule"
+RULE_2_NAME = "results-prefix-rule"
+FUNCTION_1_NAME = "stage1-processor"
+FUNCTION_2_NAME = "stage2-processor"
+
+TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_lambda_zip() -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(
+            "handler.py",
+            textwrap.dedent("""\
+            def handler(event, context):
+                return {"statusCode": 200}
+        """),
+        )
+    buf.seek(0)
+    return buf.read()
+
+
+def _create_iam_role(iam_client) -> str:
+    role = iam_client.create_role(
+        RoleName="lambda-execution-role",
+        AssumeRolePolicyDocument=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"Service": "lambda.amazonaws.com"},
+                        "Action": "sts:AssumeRole",
+                    }
+                ],
+            }
+        ),
+        Path="/",
+    )
+    return role["Role"]["Arn"]
+
+
+def _build_sqs_event(messages: list[dict], queue_name: str) -> dict:
+    return {
+        "Records": [
+            {
+                "messageId": f"msg-{i}",
+                "receiptHandle": f"handle-{i}",
+                "body": json.dumps(msg),
+                "attributes": {},
+                "messageAttributes": {},
+                "md5OfBody": "",
+                "eventSource": "aws:sqs",
+                "eventSourceARN": f"arn:aws:sqs:{REGION}:{ACCOUNT_ID}:{queue_name}",
+                "awsRegion": REGION,
+            }
+            for i, msg in enumerate(messages)
+        ]
+    }
+
+
+def _drain_sqs(sqs_client, queue_url, max_messages=10) -> list[dict]:
+    resp = sqs_client.receive_message(
+        QueueUrl=queue_url,
+        MaxNumberOfMessages=max_messages,
+        WaitTimeSeconds=0,
+    )
+    return resp.get("Messages", [])
+
+
+def _drain_sqs_for_prefix(sqs_client, queue_url, prefix, max_messages=10) -> list[dict]:
+    """Drain a queue but only return messages whose object key starts with prefix."""
+    all_msgs = _drain_sqs(sqs_client, queue_url, max_messages)
+    return [
+        m for m in all_msgs if json.loads(m["Body"])["detail"]["object"]["key"].startswith(prefix)
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def aws(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", REGION)
+    monkeypatch.setenv("PIPELINE_BUCKET", BUCKET_NAME)
+
+    # monkeypatch.setattr(handler_module, "BUCKET", BUCKET_NAME)
+
+    with mock_aws():
+        clients = {
+            "s3": boto3.client("s3", region_name=REGION),
+            "sqs": boto3.client("sqs", region_name=REGION),
+            "events": boto3.client("events", region_name=REGION),
+            "lambda": boto3.client("lambda", region_name=REGION),
+            "iam": boto3.client("iam", region_name=REGION),
+        }
+        yield clients
+
+
+@pytest.fixture
+def infra(aws):
+    s3, sqs, events, lam, iam = (
+        aws["s3"],
+        aws["sqs"],
+        aws["events"],
+        aws["lambda"],
+        aws["iam"],
+    )
+
+    # --- Single bucket with EventBridge enabled ---
+    s3.create_bucket(Bucket=BUCKET_NAME)
+    s3.put_bucket_notification_configuration(
+        Bucket=BUCKET_NAME,
+        NotificationConfiguration={"EventBridgeConfiguration": {}},
+    )
+
+    # --- SQS queues ---
+    q1_url = sqs.create_queue(QueueName=QUEUE_1_NAME)["QueueUrl"]
+    q1_arn = sqs.get_queue_attributes(
+        QueueUrl=q1_url,
+        AttributeNames=["QueueArn"],
+    )["Attributes"]["QueueArn"]
+
+    q2_url = sqs.create_queue(QueueName=QUEUE_2_NAME)["QueueUrl"]
+    q2_arn = sqs.get_queue_attributes(
+        QueueUrl=q2_url,
+        AttributeNames=["QueueArn"],
+    )["Attributes"]["QueueArn"]
+
+    # --- EventBridge rule 1: input/ prefix → queue 1 ---
+    events.put_rule(
+        Name=RULE_1_NAME,
+        EventPattern=json.dumps(
+            {
+                "source": ["aws.s3"],
+                "detail-type": ["Object Created"],
+                "detail": {
+                    "bucket": {"name": [BUCKET_NAME]},
+                    "object": {"key": [{"prefix": "TextToCodeValidateSubmissionV2/"}]},
+                },
+            }
+        ),
+        State="ENABLED",
+    )
+    events.put_targets(
+        Rule=RULE_1_NAME,
+        Targets=[{"Id": "stage1-target", "Arn": q1_arn}],
+    )
+
+    # --- EventBridge rule 2: results/ prefix → queue 2 ---
+    events.put_rule(
+        Name=RULE_2_NAME,
+        EventPattern=json.dumps(
+            {
+                "source": ["aws.s3"],
+                "detail-type": ["Object Created"],
+                "detail": {
+                    "bucket": {"name": [BUCKET_NAME]},
+                    "object": {"key": [{"prefix": "TTCOutput/"}]},
+                },
+            }
+        ),
+        State="ENABLED",
+    )
+    events.put_targets(
+        Rule=RULE_2_NAME,
+        Targets=[{"Id": "stage2-target", "Arn": q2_arn}],
+    )
+
+    # --- Lambda functions ---
+    role_arn = _create_iam_role(iam)
+    zip_bytes = _make_lambda_zip()
+
+    func1 = lam.create_function(
+        FunctionName=FUNCTION_1_NAME,
+        Runtime="python3.12",
+        Role=role_arn,
+        Handler="handler.stage1_handler",
+        Code={"ZipFile": zip_bytes},
+    )
+    func2 = lam.create_function(
+        FunctionName=FUNCTION_2_NAME,
+        Runtime="python3.12",
+        Role=role_arn,
+        Handler="handler.stage2_handler",
+        Code={"ZipFile": zip_bytes},
+    )
+
+    # --- Event source mappings ---
+    lam.create_event_source_mapping(
+        EventSourceArn=q1_arn,
+        FunctionName=FUNCTION_1_NAME,
+        BatchSize=10,
+        Enabled=True,
+    )
+    lam.create_event_source_mapping(
+        EventSourceArn=q2_arn,
+        FunctionName=FUNCTION_2_NAME,
+        BatchSize=10,
+        Enabled=True,
+    )
+
+    return {
+        "queue1_url": q1_url,
+        "queue1_arn": q1_arn,
+        "queue2_url": q2_url,
+        "queue2_arn": q2_arn,
+        "function1_arn": func1["FunctionArn"],
+        "function2_arn": func2["FunctionArn"],
+    }
+
+
+class TestEndToEndSimulated:
+    """Test the full flow: upload to S3 and verify moto automatically routes the event through EventBridge into SQS, then feed it to the handler."""
+
+    def test_upload_and_process(
+        self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
+    ):
+        """Full pipeline: upload → auto SQS message → handler reads file."""
+        # Upload Schematron errors to S3
+        with open(
+            Path(
+                "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_schematron_errors.xml"
+            ),
+            "rb",
+        ) as schematron_errors_file:
+            aws["s3"].upload_fileobj(
+                schematron_errors_file,
+                BUCKET_NAME,
+                f"schematronErrors/{TEST_PERSISTENCE_ID}",
+            )
+
+        # Upload eICR to S3
+        with open(
+            Path("/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"),
+            "rb",
+        ) as schematron_errors_file:
+            aws["s3"].upload_fileobj(
+                schematron_errors_file,
+                BUCKET_NAME,
+                f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+            )
+        # Upload eICR to S3
+        with open(
+            Path("/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"),
+            "rb",
+        ) as schematron_errors_file:
+            aws["s3"].upload_fileobj(
+                schematron_errors_file,
+                BUCKET_NAME,
+                f"TextToCodeValidateSubmissionV2/{TEST_PERSISTENCE_ID}",
+            )
+
+        # Read the auto-generated SQS message
+        q1 = _drain_sqs_for_prefix(
+            aws["sqs"], infra["queue1_url"], "TextToCodeValidateSubmissionV2/"
+        )
+
+        # Feed it to the handler as Lambda would receive it
+        sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
+
+        _ = ttc_handler(sqs_event, None)
+
+        ##########################################################
+        # Augmenter
+        doc_id = UUID("12345678-1234-5678-1234-567812345678")
+        set_id = UUID("87654321-4321-8765-4321-876543218765")
+
+        mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
+
+        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], "TTCOutput/")
+        sqs_event = _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME)
+
+        with time_machine.travel(
+            datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
+        ):
+            _ = augmentation_lambda(sqs_event, None)
+
+        augmented_eicr = (
+            aws["s3"]
+            .get_object(Bucket=BUCKET_NAME, Key=f"AugmentationEICRV2/{TEST_PERSISTENCE_ID}")["Body"]
+            .read()
+            .decode("utf-8")
+        )
+        snapshot.assert_match(augmented_eicr, "augmented_eicr.xml")
+
+        # Assert that the augmentated eICR  was saved to S3
+        augmentation_metadata = (
+            aws["s3"]
+            .get_object(Bucket=BUCKET_NAME, Key=f"AugmentationMetadata/{TEST_PERSISTENCE_ID}")[
+                "Body"
+            ]
+            .read()
+            .decode("utf-8")
+        )
+
+        snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")

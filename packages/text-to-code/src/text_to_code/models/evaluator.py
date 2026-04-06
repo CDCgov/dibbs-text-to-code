@@ -5,8 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from shared_models import DataField
-
-from ..models.eicr import LabXPaths
+from shared_models import LabXPaths
 
 
 class CodeTranslation(StrEnum):

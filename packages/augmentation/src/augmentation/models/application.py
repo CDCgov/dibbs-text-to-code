@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from shared_models import NonstandardCodeInstance
+from shared_models import NonstandardCodeReplacement
 
 
 class ApplicationCode(Enum):
@@ -22,10 +22,10 @@ class ApplicationCode(Enum):
         return obj
 
 
-class NonstandardCodeInstanceMetadata(NonstandardCodeInstance):
+class NonstandardCodeReplacementMetadata(NonstandardCodeReplacement):
     """Model for the metadata for each instance of a nonstandard code.
 
-    This is the same as the `NonstandardCodeInstance` model, but includes the path to the new translation.
+    This is the same as the `NonstandardCodeReplacement` model, but includes the path to the new translation.
     """
 
     new_translation_xpath: str
@@ -37,7 +37,7 @@ class Metadata(BaseModel):
 
     original_eicr_id: str
     augmented_eicr_id: str
-    nonstandard_codes: list[NonstandardCodeInstanceMetadata]
+    nonstandard_codes: list[NonstandardCodeReplacementMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None
 

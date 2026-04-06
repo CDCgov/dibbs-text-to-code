@@ -3,15 +3,16 @@ import json
 import os
 from typing import TypedDict
 
-from aws_lambda_typing import context as lambda_context
-from aws_lambda_typing import events as lambda_events
+from aws_lambda_powertools.utilities.data_classes import SQSEvent
+from aws_lambda_powertools.utilities.data_classes import event_source
+from aws_lambda_powertools.utilities.typing import LambdaContext
+from botocore.client import BaseClient
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
-from botocore.client import BaseClient
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import TTCAugmenterInput
+from shared_models import TTCOutput
 
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
@@ -29,7 +30,8 @@ class HandlerResponse(TypedDict):
     batchItemFailures: list[dict[str, str]]
 
 
-def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> HandlerResponse:
+@event_source(data_class=SQSEvent)
+def handler(event: SQSEvent, context: LambdaContext) -> HandlerResponse:
     """AWS Lambda handler for augmenting eICRs with nonstandard codes.
 
     :param event: The SQS event containing messages with eICRs to augment.
@@ -45,31 +47,35 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> H
     results: list[dict[str, object]] = []
     batch_item_failures: list[dict[str, str]] = []
 
-    for record in event["Records"]:
+    for record in event.records:
         message_id = record["messageId"]
 
         try:
-            payload = json.loads(record["body"])
-            augmenter_input = TTCAugmenterInput.model_validate(
-                {
-                    "eicr_id": payload["eicr_id"],
-                    "nonstandard_codes": payload["nonstandard_codes"],
-                }
+            s3_event = json.loads(record.body)
+
+            eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
+            object_key = eventbridge_data["object_key"]
+            persistence_id = lambda_handler.get_persistence_id(object_key, "TTCOutput/")
+
+            config = TTCAugmenterConfig()
+
+            object_key = f"eCRMessageV2/{persistence_id}"
+            original_eicr_content = lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
             )
 
-            eicr = payload["eicr"]
-
-            # TODO: will need to determine config based on application code when there are multiple applications using the augmentation service. For now, since TTC is the only application, we can directly initialize the config as a TTC config.
-            config = (
-                TTCAugmenterConfig.model_validate(payload["config"])
-                if "config" in payload
-                else TTCAugmenterConfig()
+            object_key = f"TTCOutput/{persistence_id}"
+            ttc_output = json.loads(
+                lambda_handler.get_file_content_from_s3_to_json(
+                    bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
+                )
             )
+            ttc_output = TTCOutput(**ttc_output)
 
             # TODO: in the future, when there are multiple applications using the augmentation service, we will need to determine which augmenter to use based on the application code in the config. For now, since TTC is the only application, we can directly initialize the EICRAugmenter.
             augmenter = EICRAugmenter(
-                document=eicr,
-                nonstandard_codes=augmenter_input.nonstandard_codes,
+                document=original_eicr_content,
+                nonstandard_codes=ttc_output.nonstandard_codes,
                 config=config,
             )
 
@@ -77,13 +83,13 @@ def handler(event: lambda_events.SQSEvent, context: lambda_context.Context) -> H
 
             # TODO: the output of the augmenter will likely need to be modified when there are multiple applications and augmenters, but for now we can directly create a TTC augmenter output.
             output = TTCAugmenterOutput(
-                eicr_id=augmenter_input.eicr_id,
+                eicr_id=persistence_id,
                 augmented_eicr=augmenter.augmented_xml,
                 metadata=metadata,
             )
 
             # Save augmented eICR and metadata to S3
-            _save_augmentation_outputs(augmenter_input.eicr_id, output, s3_client)
+            _save_augmentation_outputs(persistence_id, output, s3_client)
 
             results.append(
                 {

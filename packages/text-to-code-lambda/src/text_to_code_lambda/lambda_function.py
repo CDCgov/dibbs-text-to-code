@@ -13,12 +13,17 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from shared_models import Code
+from shared_models import SchematronErrorDetail
+from shared_models import TTCOutput
 from text_to_code.models import query as query_models
+from text_to_code.models.eicr import TTCMetadata
 from text_to_code.services import eicr_processor
 from text_to_code.services import embedder
 from text_to_code.services import evaluator
 from text_to_code.services import reranker
 from text_to_code.services import schematron_processor
+from text_to_code.services.eicr_processor import EicrProcessor
 from text_to_code.services.query import QueryBuilder
 
 # Initialize the logger
@@ -132,26 +137,6 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
         _process_record_pipeline(persistence_id, s3_client, opensearch_client)
 
 
-def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
-    """Initialize TTC output and metadata output dictionaries.
-
-    :param persistence_id: The persistence ID extracted from the S3 object key
-    :return: The TTC output and TTC metadata output dictionaries.
-    """
-    # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
-    ttc_output: dict = {"persistence_id": "", "eicr_metadata": {}, "schematron_errors": {}}
-    ttc_metadata_output: dict = {
-        "persistence_id": "",
-        "eicr_metadata": {},
-        "schematron_errors": {},
-        "processed_at": "",
-    }
-    ttc_output["persistence_id"] = persistence_id
-    ttc_metadata_output["persistence_id"] = persistence_id
-    ttc_metadata_output["processed_at"] = datetime.now(UTC).isoformat()
-    return ttc_output, ttc_metadata_output
-
-
 def _load_schematron_data_fields(persistence_id: str, s3_client: BaseClient) -> list:
     """Load Schematron errors from S3 and extract relevant fields.
 
@@ -188,32 +173,11 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient) -> str:
     return original_eicr_content
 
 
-def _populate_eicr_metadata(
-    original_eicr_content: str,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
-) -> None:
-    """Populate eICR metadata on TTC outputs.
-
-    :param original_eicr_content: The original eICR content.
-    :param ttc_output: The TTC output dictionary.
-    :param ttc_metadata_output: The TTC metadata output dictionary.
-    """
-    # # Process the eICR for TTC
-    # Retrieve eICR Metadata
-    eicr_metadata = eicr_processor.EicrProcessor(original_eicr_content).eicr_metadata
-
-    ttc_output["eicr_metadata"] = eicr_metadata
-    ttc_metadata_output["eicr_metadata"] = eicr_metadata
-
-
 def _process_schematron_errors(
     original_eicr_content: str,
-    schematron_data_fields: list,
+    schematron_errors: list[SchematronErrorDetail],
     opensearch_client: OpenSearch,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
-) -> None:
+) -> list[SchematronErrorDetail]:
     """Process Schematron errors for TTC.
 
     :param original_eicr_content: The original eICR content.
@@ -223,17 +187,12 @@ def _process_schematron_errors(
     :param ttc_metadata_output: The TTC metadata output dictionary.
     """
     # Evaluate candidates and select relevant text for each error in the eICR
-    for error in schematron_data_fields:
-        data_field = error.field
+    for schematron_error_instance in schematron_errors:
+        data_field = schematron_error_instance.field
         criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
 
-        if data_field not in ttc_output["schematron_errors"]:
-            ttc_output["schematron_errors"][data_field] = []
-        if data_field not in ttc_metadata_output["schematron_errors"]:
-            ttc_metadata_output["schematron_errors"][data_field] = []
-
         text_candidates = eicr_processor.EicrProcessor(original_eicr_content).get_text_candidates(
-            error.error_context, data_field
+            schematron_error_instance.error_context, data_field
         )
 
         logger.info(
@@ -244,8 +203,7 @@ def _process_schematron_errors(
             candidates=text_candidates, criteria=criteria
         )
 
-        error.candidate = selected_candidate
-        ttc_output["schematron_errors"][data_field].append(error.model_dump())
+        schematron_error_instance.candidate = selected_candidate
 
         logger.info(
             "Embedding the relevant text strings for each error in the eICR for persistence_id"
@@ -274,16 +232,31 @@ def _process_schematron_errors(
         # text strings of the ANN LOINC codes
         results_list = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
 
-        metadata_error = error.model_dump()
-        metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
-        metadata_error["reranker_processed_results"] = ranked_results
-        ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
+        ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
+        best_result = {r.source.description: r.source for r in results_list}[
+            ranked_results[0]["code_string"]
+        ]
+        new_code = Code(
+            code=best_result.loinc_code,
+            code_system="http://loinc.org",
+            code_system_name="LOINC",
+            display_name=best_result.description,
+            original_text=selected_candidate.value,
+        )
+
+        schematron_error_instance.opensearch_retrieved_scores = opensearch_retrieved_scores
+        schematron_error_instance.reranker_processed_results = ranked_results
+        schematron_error_instance.new_translation = new_code
+
+    return schematron_errors
 
 
 def _save_ttc_outputs(
-    persistence_id: str, ttc_output: dict, ttc_metadata_output: dict, s3_client: BaseClient
+    persistence_id: str,
+    ttc_output: TTCOutput,
+    ttc_metadata_output: TTCMetadata,
+    s3_client: BaseClient,
 ) -> None:
     """Save TTC output and metadata output to S3.
 
@@ -295,7 +268,7 @@ def _save_ttc_outputs(
     # Save the TTC output to S3 for the Augmentation Lambda to consume
     logger.info(f"Saving TTC output to S3 for persistence_id {persistence_id}")
     lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
+        file_obj=ttc_output.model_dump_json(),
         bucket_name=S3_BUCKET,
         object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
         s3_client=s3_client,
@@ -304,7 +277,7 @@ def _save_ttc_outputs(
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
     logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
     lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+        file_obj=ttc_metadata_output.model_dump_json(),
         bucket_name=S3_BUCKET,
         object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
         s3_client=s3_client,
@@ -334,35 +307,59 @@ def _process_record_pipeline(
     :param s3_client: The S3 client to use for S3 operations.
     :param opensearch_client: The OpenSearch client.
     """
-    ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
-
     logger.info("Starting TTC processing")
     schematron_data_fields = _load_schematron_data_fields(persistence_id, s3_client)
+
+    message = None
 
     if not schematron_data_fields:
         logger.warning(
             f"No data fields found from Schematron errors for TTC processing for persistence_id: {persistence_id}"
         )
-        ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
-        ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
+        message = NO_DATA_FIELDS_MESSAGE
         logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
         lambda_handler.put_file(
-            file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+            file_obj=io.BytesIO(
+                json.dumps(
+                    TTCMetadata(
+                        persistance_id=persistence_id,
+                        message=message,
+                        eicr_metadata=None,
+                        schematron_errors=[],
+                        processed_at=datetime.now(UTC),
+                    ),
+                    default=str,
+                ).encode("utf-8")
+            ),
             bucket_name=S3_BUCKET,
             object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
             s3_client=s3_client,
         )
-        return ttc_output
+        return {
+            "statusCode": 400,
+            "message": "No data fields found from Schematron errors for TTC processing",
+        }
 
     original_eicr_content = _load_original_eicr(persistence_id, s3_client)
-    _populate_eicr_metadata(original_eicr_content, ttc_output, ttc_metadata_output)
-    _process_schematron_errors(
+    schematron_errors = _process_schematron_errors(
         original_eicr_content,
         schematron_data_fields,
         opensearch_client,
-        ttc_output,
-        ttc_metadata_output,
     )
-    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, s3_client)
+    ttc_output = TTCOutput(
+        message=None,
+        persistance_id=persistence_id,
+        nonstandard_codes=[x.to_nonstandard_code_replacement() for x in schematron_errors],
+    )
+
+    ttc_metadata = TTCMetadata(
+        persistance_id=persistence_id,
+        message=None,
+        eicr_metadata=EicrProcessor(original_eicr_content).eicr_metadata,
+        schematron_errors=schematron_errors,
+        processed_at=datetime.now(UTC),
+    )
+
+    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata, s3_client)
 
     return {"statusCode": 200, "message": "TTC processed successfully!"}
