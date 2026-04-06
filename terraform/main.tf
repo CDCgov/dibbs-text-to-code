@@ -382,6 +382,15 @@ resource "aws_iam_role_policy" "augmentation_lambda_s3_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowS3Read"
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:HeadObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_output_prefix}*"
+        ]
+      },
+      {
         Sid    = "AllowS3Write"
         Effect = "Allow"
         Action = ["s3:PutObject"]
