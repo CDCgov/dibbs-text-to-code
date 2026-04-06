@@ -12,6 +12,7 @@ from .schematron import _SCHEMATRON_ENUM_TO_FIELD
 from .schematron import LabTestNameOrderedSchematronErrors
 from .schematron import LabTestNameResultedSchematronErrors
 from .schematron import SchematronConfig
+from .schematron import SchematronErrorDetail
 from .schematron import SchematronErrors
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "LabTestNameResultedSchematronErrors",
     "LabXPaths",
     "SchematronConfig",
+    "SchematronErrorDetail",
     "SchematronErrors",
     "VectorSearchParams",
 ]

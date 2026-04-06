@@ -11,7 +11,7 @@ from text_to_code_lambda import lambda_function
 EXPECTED_RESULTED_ERRORS = 2
 EXPECTED_ORDERED_ERRORS = 2
 EXPECTED_EXCEPTION_RESULTS = 2
-EXPECTED_RERANKER_SCORE = 0.83
+EXPECTED_RERANKER_SCORE = 0.944
 
 
 class TestHandler:
@@ -44,6 +44,7 @@ class TestHandler:
         assert ttc_output is not None
         assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
         assert "schematron_errors" in ttc_output
+        assert "unmatched_schematron_errors" in ttc_output
         assert "eicr_metadata" in ttc_output
         assert (
             len(ttc_output["schematron_errors"]["Lab Test Name Resulted"])
@@ -52,14 +53,54 @@ class TestHandler:
         assert (
             len(ttc_output["schematron_errors"]["Lab Test Name Ordered"]) == EXPECTED_ORDERED_ERRORS
         )
+        assert ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"] == []
+        assert ttc_output["unmatched_schematron_errors"]["Lab Test Name Ordered"] == []
         assert (
             "opensearch_retrieved_scores"
             not in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
         )
-        assert "candidate" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert "error_context" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert "error_id" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
-        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"] is not None
+        assert (
+            "reranker_processed_results"
+            not in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        assert "schematron_error" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert (
+            "schematron_error_xpath" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        )
+        assert "field_type" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert "new_translation" in ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["field_type"]
+            == "Lab Test Name Resulted"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"]["code"]
+            == "109224-6"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "code_system"
+            ]
+            == "2.16.840.1.113883.6.1"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "code_system_name"
+            ]
+            == "LOINC"
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "display_name"
+            ]
+            is not None
+        )
+        assert (
+            ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["new_translation"][
+                "original_text"
+            ]
+            == "weed allergen mix 3"
+        )
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
         ttc_metadata_output = json.loads(
@@ -247,7 +288,24 @@ class TestHandler:
         )
         assert ttc_output is not None
         assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
-        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"] is None
+        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"] == []
+        assert ttc_output["schematron_errors"]["Lab Test Name Ordered"] == []
+        assert (
+            len(ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_output["unmatched_schematron_errors"]["Lab Test Name Ordered"])
+            == EXPECTED_ORDERED_ERRORS
+        )
+        assert (
+            ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"][0]["candidate"]
+            is None
+        )
+        assert (
+            ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"][0]["reason"]
+            == "No relevant text candidate was selected"
+        )
 
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
@@ -257,5 +315,121 @@ class TestHandler:
         )
         assert ttc_metadata_output is not None
         assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
-        assert ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"] == []
-        assert ttc_metadata_output["schematron_errors"]["Lab Test Name Ordered"] == []
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Ordered"])
+            == EXPECTED_ORDERED_ERRORS
+        )
+        assert (
+            ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]["candidate"]
+            is None
+        )
+        assert (
+            ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]["reason"]
+            == "No relevant text candidate was selected"
+        )
+
+    def test_handler_adds_unmatched_error_when_selected_candidate_has_no_opensearch_hits(
+        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker
+    ):
+        """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
+        selected_candidate = {
+            "value": "weed allergen mix 3",
+            "confidence": 1.0,
+        }
+
+        mocker.patch(
+            "text_to_code.services.evaluator.select_relevant_text",
+            return_value=type("SelectedCandidate", (), selected_candidate)(),
+        )
+
+        empty_opensearch_scores = type(
+            "OpenSearchScores",
+            (),
+            {"hits": type("Hits", (), {"hits": []})()},
+        )()
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
+            return_value=empty_opensearch_scores,
+        )
+
+        reranker_mock = mocker.patch.object(
+            lambda_function.RERANKER,
+            "rerank",
+            return_value=[],
+        )
+
+        resp = lambda_function.handler(example_sqs_event, {})
+
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        assert mock_opensearch.search.call_count == 0
+        assert reranker_mock.call_count == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
+
+        ttc_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+            )
+        )
+        assert ttc_output is not None
+        assert ttc_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert ttc_output["schematron_errors"]["Lab Test Name Resulted"] == []
+        assert ttc_output["schematron_errors"]["Lab Test Name Ordered"] == []
+        assert (
+            len(ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_output["unmatched_schematron_errors"]["Lab Test Name Ordered"])
+            == EXPECTED_ORDERED_ERRORS
+        )
+        assert (
+            ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"][0]["candidate"]
+            is not None
+        )
+        assert (
+            ttc_output["unmatched_schematron_errors"]["Lab Test Name Resulted"][0]["reason"]
+            == "Selected candidate found, but no OpenSearch code match was returned"
+        )
+
+        ttc_metadata_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+            )
+        )
+        assert ttc_metadata_output is not None
+        assert ttc_metadata_output["persistence_id"] == mock_aws_setup.persistence_id
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"])
+            == EXPECTED_RESULTED_ERRORS
+        )
+        assert (
+            len(ttc_metadata_output["schematron_errors"]["Lab Test Name Ordered"])
+            == EXPECTED_ORDERED_ERRORS
+        )
+        assert (
+            ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0][
+                "opensearch_retrieved_scores"
+            ]
+            is not None
+        )
+        assert (
+            ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0][
+                "reranker_processed_results"
+            ]
+            == []
+        )
+        assert (
+            ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]["reason"]
+            == "Selected candidate found, but no OpenSearch code match was returned"
+        )
