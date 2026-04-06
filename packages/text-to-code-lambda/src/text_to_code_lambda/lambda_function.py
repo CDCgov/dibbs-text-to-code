@@ -144,7 +144,6 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :param persistence_id: The persistence ID extracted from the S3 object key
     :return: The TTC output and TTC metadata output dictionaries.
     """
-    # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
     ttc_output: dict = {
         "persistence_id": "",
         "eicr_metadata": {},
