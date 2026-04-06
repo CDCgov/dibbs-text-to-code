@@ -91,6 +91,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         except Exception as e:
             logger.exception(f"Error processing record: {e}", message_id=record.message_id)
             failures.append({"message_id": record.message_id, "error": str(e)})
+    #####################Are these TODOs (see below) now handled with the lastest merged PRs?###############
     # TODO: Update the return values to also include failures per schematron error, not just eicr docs
     # TODO: Update this output to whatever
     return (
