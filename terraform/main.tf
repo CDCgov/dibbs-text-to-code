@@ -136,7 +136,7 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_role.lambda_role.arn, aws_iam_role.os_ingestion_pipeline_role.arn, data.aws_caller_identity.current.arn]
+      identifiers = [aws_iam_role.ttc_lambda_role.arn, aws_iam_role.index_lambda_role.arn, aws_iam_role.os_ingestion_pipeline_role.arn, data.aws_caller_identity.current.arn]
     }
     actions   = var.lambda_os_actions
     resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
@@ -249,7 +249,7 @@ resource "aws_cloudwatch_log_resource_policy" "opensearch_log_publishing" {
 }
 
 #############
-# IAM Role for Lambda
+# IAM Roles for Lambda Functions
 #############
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
@@ -262,31 +262,55 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-resource "aws_iam_role" "lambda_role" {
+# TTC Lambda Role
+resource "aws_iam_role" "ttc_lambda_role" {
   name               = "ttc-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
   tags               = { Name = "ttc-lambda-role" }
 }
 
-resource "aws_iam_role_policy_attachment" "vpc_access" {
-  role       = aws_iam_role.lambda_role.name
+resource "aws_iam_role_policy_attachment" "ttc_vpc_access" {
+  role       = aws_iam_role.ttc_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
-#TODO: Limit S3 access to specific bucket and prefix
-resource "aws_iam_role_policy_attachment" "s3_access" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
-  role       = aws_iam_role.lambda_role.name
+resource "aws_iam_role_policy_attachment" "ttc_cloudwatch_logs" {
+  role       = aws_iam_role.ttc_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy" "lambda_opensearch_policy" {
-  name = "lambda-opensearch-inline-policy"
-  role = aws_iam_role.lambda_role.id
+resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
+  name = "ttc-lambda-s3-inline-policy"
+  role = aws_iam_role.ttc_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowS3Read"
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:HeadObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.schematron_error_prefix}*"
+        ]
+      },
+      {
+        Sid    = "AllowS3Write"
+        Effect = "Allow"
+        Action = ["s3:PutObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_output_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_metadata_prefix}*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ttc_lambda_opensearch_policy" {
+  name = "ttc-lambda-opensearch-inline-policy"
+  role = aws_iam_role.ttc_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -300,13 +324,83 @@ resource "aws_iam_role_policy" "lambda_opensearch_policy" {
   })
 }
 
+# Index Lambda Role
+resource "aws_iam_role" "index_lambda_role" {
+  name               = "ttc-index-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  tags               = { Name = "ttc-index-lambda-role" }
+}
+
+resource "aws_iam_role_policy_attachment" "index_vpc_access" {
+  role       = aws_iam_role.index_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "index_cloudwatch_logs" {
+  role       = aws_iam_role.index_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "index_lambda_opensearch_policy" {
+  name = "index-lambda-opensearch-inline-policy"
+  role = aws_iam_role.index_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = var.lambda_os_actions
+        Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"
+      }
+    ]
+  })
+}
+
+# Augmentation Lambda Role
+resource "aws_iam_role" "augmentation_lambda_role" {
+  name               = "ttc-augmentation-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  tags               = { Name = "ttc-augmentation-lambda-role" }
+}
+
+resource "aws_iam_role_policy_attachment" "augmentation_vpc_access" {
+  role       = aws_iam_role.augmentation_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "augmentation_cloudwatch_logs" {
+  role       = aws_iam_role.augmentation_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "augmentation_lambda_s3_policy" {
+  name = "augmentation-lambda-s3-inline-policy"
+  role = aws_iam_role.augmentation_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowS3Write"
+        Effect = "Allow"
+        Action = ["s3:PutObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/${var.augmented_eicr_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.augmentation_metadata_prefix}*"
+        ]
+      }
+    ]
+  })
+}
+
 #############
 # Lambda Function
 #############
 
 resource "aws_lambda_function" "lambda" {
   function_name = var.lambda_function_name
-  role          = aws_iam_role.lambda_role.arn
+  role          = aws_iam_role.ttc_lambda_role.arn
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.ttc_lambda.repository_url}:${var.ttc_lambda_image_tag}"
   timeout       = var.lambda_timeout
@@ -520,7 +614,7 @@ resource "aws_lambda_invocation" "index_bootstrap" {
 
 resource "aws_lambda_function" "index_lambda" {
   function_name = var.index_lambda_function_name
-  role          = aws_iam_role.lambda_role.arn
+  role          = aws_iam_role.index_lambda_role.arn
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.index_lambda.repository_url}:${var.index_lambda_image_tag}"
   timeout       = var.lambda_timeout
@@ -548,7 +642,7 @@ resource "aws_lambda_function" "index_lambda" {
 
 resource "aws_lambda_function" "augmentation_lambda" {
   function_name = var.augmentation_lambda_function_name
-  role          = aws_iam_role.lambda_role.arn
+  role          = aws_iam_role.augmentation_lambda_role.arn
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.augmentation_lambda.repository_url}:${var.augmentation_lambda_image_tag}"
   timeout       = var.augmentation_lambda_timeout
@@ -562,12 +656,107 @@ resource "aws_lambda_function" "augmentation_lambda" {
   environment {
     variables = {
       S3_BUCKET                    = var.s3_bucket
+      EICR_INPUT_PREFIX            = var.eicr_input_prefix
+      TTC_OUTPUT_PREFIX            = var.ttc_output_prefix
       AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
       AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix
-      REGION                       = var.region
+      AWS_REGION                   = var.region
     }
   }
 
   tags = { Name = var.augmentation_lambda_function_name }
+}
+
+#############
+# Augmentation Lambda SQS Queue
+#############
+
+resource "aws_sqs_queue" "augmentation_dlq" {
+  name = "${var.augmentation_lambda_function_name}-dlq"
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "augmentation_queue" {
+  name                       = "${var.augmentation_lambda_function_name}-queue"
+  visibility_timeout_seconds = var.augmentation_lambda_timeout * 6
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.augmentation_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "augmentation_queue_policy" {
+  queue_url = aws_sqs_queue.augmentation_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.augmentation_queue.arn
+      }
+    ]
+  })
+}
+
+#############
+# Augmentation Lambda EventBridge Rule
+#############
+
+resource "aws_cloudwatch_event_rule" "augmentation_s3_trigger" {
+  name        = "${var.augmentation_lambda_function_name}-s3-trigger"
+  description = "Trigger augmentation Lambda when TTC output is created in S3"
+
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = { name = [var.s3_bucket] }
+      object = { key = [{ prefix = var.ttc_output_prefix }] }
+    }
+  })
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "augmentation_sqs_target" {
+  rule      = aws_cloudwatch_event_rule.augmentation_s3_trigger.name
+  target_id = "${var.augmentation_lambda_function_name}-sqs"
+  arn       = aws_sqs_queue.augmentation_queue.arn
+}
+
+#############
+# Augmentation Lambda Event Source Mapping
+#############
+
+resource "aws_lambda_event_source_mapping" "augmentation_sqs" {
+  event_source_arn = aws_sqs_queue.augmentation_queue.arn
+  function_name    = aws_lambda_function.augmentation_lambda.arn
+  batch_size       = 1
+}
+
+resource "aws_iam_role_policy" "augmentation_sqs_policy" {
+  name = "augmentation-sqs-inline-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+        ]
+        Resource = aws_sqs_queue.augmentation_queue.arn
+      }
+    ]
+  })
 }
 
