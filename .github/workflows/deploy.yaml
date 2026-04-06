@@ -60,7 +60,19 @@ jobs:
       - name: Create ECR repositories
         if: ${{ inputs.apply && !inputs.destroy }}
         working-directory: terraform
-        run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda -target=aws_ecr_repository.augmentation_lambda
+        run: >-
+          terraform apply -auto-approve
+          -target=aws_ecr_repository.index_lambda
+          -target=aws_ecr_repository.ttc_lambda
+          -target=aws_ecr_repository.augmentation_lambda
+          -target=aws_iam_role.lambda_role
+          -target=aws_iam_role.ttc_lambda_role
+          -target=aws_iam_role_policy_attachment.vpc_access
+          -target=aws_iam_role_policy_attachment.ttc_vpc_access
+          -target=aws_iam_role_policy_attachment.cloudwatch_logs
+          -target=aws_iam_role_policy_attachment.ttc_cloudwatch_logs
+          -target=aws_iam_role_policy.lambda_opensearch_policy
+          -target=aws_iam_role_policy.ttc_lambda_opensearch_policy
 
       - name: Login to Amazon ECR
         if: ${{ inputs.apply && !inputs.destroy }}
