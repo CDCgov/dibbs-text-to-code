@@ -429,7 +429,11 @@ def _process_record_pipeline(
             object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
             s3_client=s3_client,
         )
-        return ttc_output
+        return {
+            "statusCode": 200,
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
 
     original_eicr_content = _load_original_eicr(persistence_id, s3_client, bucket_name)
     _populate_eicr_metadata(original_eicr_content, ttc_output, ttc_metadata_output)
@@ -442,4 +446,17 @@ def _process_record_pipeline(
     )
     _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, s3_client, bucket_name)
 
-    return {"statusCode": 200, "message": "TTC processed successfully!"}
+    has_matches = any(len(matches) > 0 for matches in ttc_output["schematron_errors"].values())
+
+    if not has_matches:
+        return {
+            "statusCode": 200,  # could give a different code for no matches found vs matches found if we want to easily filter in monitoring
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
+
+    return {
+        "statusCode": 200,
+        "message": "TTC processed successfully with matches.",
+        "result": "matched",
+    }
