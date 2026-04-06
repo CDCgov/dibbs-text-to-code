@@ -61,7 +61,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     return (
         {
-            "statusCode": 200,
+            "statusCode": 207,
             "message": "Augmentation processed with some failures!",
             "failures": failures,
             "num_failure_eicrs": len(failures),
@@ -105,6 +105,8 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         nonstandard_codes=nonstandard_codes,
     )
 
+    # Currently only supports eICR augmentation. Other document types (e.g. from
+    # ecr-refiner or other services) may need different augmentation strategies.
     config = TTCAugmenterConfig()
     augmenter = EICRAugmenter(
         document=original_eicr,
