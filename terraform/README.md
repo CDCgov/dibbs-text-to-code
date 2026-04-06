@@ -46,11 +46,21 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 
 ### IAM (`main.tf`)
 
-- **Lambda IAM Role** (`aws_iam_role.lambda_role`): Shared by all Lambda functions (TTC, index, and augmentation). Attached policies:
+Each Lambda function has its own IAM role scoped to least-privilege S3 permissions:
+
+- **TTC Lambda IAM Role** (`aws_iam_role.ttc_lambda_role`): Attached policies:
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
-  - `AmazonS3FullAccess` — S3 read/write (TODO: scope down to specific bucket/prefix)
-  - Inline policy — grants OpenSearch HTTP actions (`ESHttpGet/Post/Put/Delete/Head/Patch/Options`)
+  - Inline S3 policy — `s3:GetObject`/`s3:HeadObject` on `eCRMessageV2/` and `ValidationResponseV2/` prefixes; `s3:PutObject` on `TTCAugmentationMetadataV2/` and `TTCMetadataV2/` prefixes
+  - Inline OpenSearch policy — grants OpenSearch HTTP actions (`ESHttpGet/Post/Put/Delete/Head/Patch/Options`)
+- **Index Lambda IAM Role** (`aws_iam_role.index_lambda_role`): Attached policies:
+  - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
+  - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
+  - Inline OpenSearch policy — grants OpenSearch HTTP actions (no S3 access needed)
+- **Augmentation Lambda IAM Role** (`aws_iam_role.augmentation_lambda_role`): Attached policies:
+  - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
+  - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
+  - Inline S3 policy — `s3:PutObject` on `AugmentationEICRV2/` and `AugmentationMetadataV2/` prefixes (no OpenSearch access needed)
 - **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetObject` on the data bucket and full OpenSearch HTTP access on the domain.
 
 ### Lambda Functions (`main.tf`, `lambda/`)
@@ -110,7 +120,7 @@ Terraform manages dependency ordering automatically, but conceptually the sequen
 2. ECR repositories created (TTC lambda, index lambda, augmentation lambda)
 3. Docker images built and pushed to ECR (in CI/CD, before full `terraform apply`)
 4. OpenSearch domain and VPC endpoint created
-5. Lambda IAM role created
+5. Lambda IAM roles created (one per Lambda function)
 6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index in OpenSearch
 7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
 8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
@@ -158,6 +168,5 @@ Before running `terraform apply`:
 ## Known TODOs
 
 - OpenSearch error logs should be sent to CloudWatch Logs (noted in `main.tf`)
-- S3 IAM policy should be scoped down to the specific bucket and prefix instead of `AmazonS3FullAccess`
 - Polling frequency for the OSIS pipeline is set to monthly since LOINC updates infrequently, but can be adjusted as needed
 - The `/ingestion/` prefix in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually
