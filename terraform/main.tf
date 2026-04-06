@@ -656,12 +656,107 @@ resource "aws_lambda_function" "augmentation_lambda" {
   environment {
     variables = {
       S3_BUCKET                    = var.s3_bucket
+      EICR_INPUT_PREFIX            = var.eicr_input_prefix
+      TTC_OUTPUT_PREFIX            = var.ttc_output_prefix
       AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
       AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix
-      REGION                       = var.region
+      AWS_REGION                   = var.region
     }
   }
 
   tags = { Name = var.augmentation_lambda_function_name }
+}
+
+#############
+# Augmentation Lambda SQS Queue
+#############
+
+resource "aws_sqs_queue" "augmentation_dlq" {
+  name = "${var.augmentation_lambda_function_name}-dlq"
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "augmentation_queue" {
+  name                       = "${var.augmentation_lambda_function_name}-queue"
+  visibility_timeout_seconds = var.augmentation_lambda_timeout * 6
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.augmentation_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "augmentation_queue_policy" {
+  queue_url = aws_sqs_queue.augmentation_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.augmentation_queue.arn
+      }
+    ]
+  })
+}
+
+#############
+# Augmentation Lambda EventBridge Rule
+#############
+
+resource "aws_cloudwatch_event_rule" "augmentation_s3_trigger" {
+  name        = "${var.augmentation_lambda_function_name}-s3-trigger"
+  description = "Trigger augmentation Lambda when TTC output is created in S3"
+
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = { name = [var.s3_bucket] }
+      object = { key = [{ prefix = var.ttc_output_prefix }] }
+    }
+  })
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "augmentation_sqs_target" {
+  rule      = aws_cloudwatch_event_rule.augmentation_s3_trigger.name
+  target_id = "${var.augmentation_lambda_function_name}-sqs"
+  arn       = aws_sqs_queue.augmentation_queue.arn
+}
+
+#############
+# Augmentation Lambda Event Source Mapping
+#############
+
+resource "aws_lambda_event_source_mapping" "augmentation_sqs" {
+  event_source_arn = aws_sqs_queue.augmentation_queue.arn
+  function_name    = aws_lambda_function.augmentation_lambda.arn
+  batch_size       = 1
+}
+
+resource "aws_iam_role_policy" "augmentation_sqs_policy" {
+  name = "augmentation-sqs-inline-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+        ]
+        Resource = aws_sqs_queue.augmentation_queue.arn
+      }
+    ]
+  })
 }
 

@@ -9,19 +9,19 @@ import boto3
 import moto
 import pytest
 
+from lambda_handler.test_constants import AWS_ACCESS_KEY_ID
+from lambda_handler.test_constants import AWS_REGION
+from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
+from lambda_handler.test_constants import S3_BUCKET
+from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 from text_to_code_lambda import lambda_function
 
-S3_BUCKET = "dibbs-text-to-code"
 EICR_INPUT_PREFIX = "eCRMessageV2/"
 SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
 TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
 TTC_METADATA_PREFIX = "TTCMetadataV2/"
-AWS_REGION = "us-east-1"
-AWS_ACCESS_KEY_ID = "test_access_key_id"
-AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
 OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
-TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 
 
 def pytest_configure() -> None:
