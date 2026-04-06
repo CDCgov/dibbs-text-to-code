@@ -143,7 +143,6 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
   }
 }
 
-# TODO: Ensure that OpenSearch error logs (at a minimum) are sent to CloudWatch Logs
 resource "aws_opensearch_domain" "os" {
   domain_name    = var.opensearch_domain_name
   engine_version = var.opensearch_engine_version
@@ -186,6 +185,21 @@ resource "aws_opensearch_domain" "os" {
   }
   access_policies = data.aws_iam_policy_document.opensearch_access_policy.json
 
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_app_logs.arn
+    log_type                 = "ES_APPLICATION_LOGS"
+  }
+
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_index_slow_logs.arn
+    log_type                 = "INDEX_SLOW_LOGS"
+  }
+
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_search_slow_logs.arn
+    log_type                 = "SEARCH_SLOW_LOGS"
+  }
+
   tags = { Name = var.opensearch_domain_name }
 }
 
@@ -195,6 +209,43 @@ resource "aws_opensearch_vpc_endpoint" "os_vpc_endpoint" {
     security_group_ids = [aws_security_group.opensearch_sg.id]
     subnet_ids         = module.vpc.private_subnets
   }
+}
+
+#############
+# OpenSearch CloudWatch Logging
+#############
+resource "aws_cloudwatch_log_group" "opensearch_app_logs" {
+  name              = "/aws/opensearch/domains/${var.opensearch_domain_name}/application-logs"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_group" "opensearch_index_slow_logs" {
+  name              = "/aws/opensearch/domains/${var.opensearch_domain_name}/index-slow-logs"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_group" "opensearch_search_slow_logs" {
+  name              = "/aws/opensearch/domains/${var.opensearch_domain_name}/search-slow-logs"
+  retention_in_days = 14
+}
+
+data "aws_iam_policy_document" "opensearch_log_publishing" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = ["arn:aws:logs:*:*:log-group:/aws/opensearch/domains/${var.opensearch_domain_name}/*"]
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "opensearch_log_publishing" {
+  policy_document = data.aws_iam_policy_document.opensearch_log_publishing.json
+  policy_name     = "opensearch-${var.opensearch_domain_name}-log-publishing"
 }
 
 #############
