@@ -269,29 +269,14 @@ resource "aws_iam_role" "ttc_lambda_role" {
   tags               = { Name = "ttc-lambda-role" }
 }
 
-moved {
-  from = aws_iam_role.lambda_role
-  to   = aws_iam_role.ttc_lambda_role
-}
-
 resource "aws_iam_role_policy_attachment" "ttc_vpc_access" {
   role       = aws_iam_role.ttc_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
-moved {
-  from = aws_iam_role_policy_attachment.vpc_access
-  to   = aws_iam_role_policy_attachment.ttc_vpc_access
-}
-
 resource "aws_iam_role_policy_attachment" "ttc_cloudwatch_logs" {
   role       = aws_iam_role.ttc_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.cloudwatch_logs
-  to   = aws_iam_role_policy_attachment.ttc_cloudwatch_logs
 }
 
 resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
@@ -337,11 +322,6 @@ resource "aws_iam_role_policy" "ttc_lambda_opensearch_policy" {
       }
     ]
   })
-}
-
-moved {
-  from = aws_iam_role_policy.lambda_opensearch_policy
-  to   = aws_iam_role_policy.ttc_lambda_opensearch_policy
 }
 
 # Index Lambda Role
