@@ -433,3 +433,27 @@ class TestHandler:
             ttc_metadata_output["schematron_errors"]["Lab Test Name Resulted"][0]["reason"]
             == "Selected candidate found, but no OpenSearch code match was returned"
         )
+
+    def test_process_record_pipeline_returns_no_matches_found_when_no_candidates_are_selected(
+        self, mock_aws_setup, mock_opensearch, mocker
+    ):
+        """Test pipeline returns no_matches_found when no relevant candidates are selected."""
+        mocker.patch(
+            "text_to_code.services.evaluator.select_relevant_text",
+            return_value=None,
+        )
+
+        s3_client = lambda_handler.create_s3_client()
+
+        resp = lambda_function._process_record_pipeline(
+            persistence_id=mock_aws_setup.persistence_id,
+            s3_client=s3_client,
+            opensearch_client=mock_opensearch,
+            bucket_name=S3_BUCKET,
+        )
+
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
