@@ -250,8 +250,9 @@ def infra(aws):
     }
 
 
+@pytest.mark.e2e
 class TestEndToEndSimulated:
-    """Test the full flow: upload to S3 and verify moto automatically routes the event through EventBridge into SQS, then feed it to the handler."""
+    """e2e test."""
 
     def test_upload_and_process(
         self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
@@ -280,7 +281,7 @@ class TestEndToEndSimulated:
                 BUCKET_NAME,
                 f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
             )
-        # Upload eICR to S3
+        # Upload message to S3
         with open(
             Path("/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"),
             "rb",
@@ -324,7 +325,6 @@ class TestEndToEndSimulated:
         )
         snapshot.assert_match(augmented_eicr, "augmented_eicr.xml")
 
-        # Assert that the augmentated eICR  was saved to S3
         augmentation_metadata = (
             aws["s3"]
             .get_object(Bucket=BUCKET_NAME, Key=f"AugmentationMetadata/{TEST_PERSISTENCE_ID}")[

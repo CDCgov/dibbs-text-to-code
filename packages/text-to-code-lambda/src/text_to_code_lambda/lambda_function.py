@@ -268,7 +268,7 @@ def _save_ttc_outputs(
     # Save the TTC output to S3 for the Augmentation Lambda to consume
     logger.info(f"Saving TTC output to S3 for persistence_id {persistence_id}")
     lambda_handler.put_file(
-        file_obj=ttc_output.model_dump_json(),
+        file_obj=io.BytesIO(ttc_output.model_dump_json().encode("utf-8")),
         bucket_name=S3_BUCKET,
         object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
         s3_client=s3_client,
@@ -277,7 +277,7 @@ def _save_ttc_outputs(
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
     logger.info(f"Saving TTC metadata output to S3 for persistence_id {persistence_id}")
     lambda_handler.put_file(
-        file_obj=ttc_metadata_output.model_dump_json(),
+        file_obj=io.BytesIO(ttc_metadata_output.model_dump_json().encode("utf-8")),
         bucket_name=S3_BUCKET,
         object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
         s3_client=s3_client,

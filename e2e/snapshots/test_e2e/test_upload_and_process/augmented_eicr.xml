@@ -9,18 +9,19 @@
     <!--DATA AUGMENTATION: new-document-setId -->
     <setId root="87654321-4321-8765-4321-876543218765"/>
     <!--DATA AUGMENTATION: new-document-versionNumber -->
-    <versionNumber value="1"/>
+    <versionNumber value="2"/>
     <component>
         <structuredBody>
             <component>
                 <section>
                     <entry>
-                        <observation>
+                        <observation classCode="OBS" moodCode="INT">
+                            <templateId root="2.16.840.1.113883.10.20.22.4.44" extension="2014-06-09"/>
                             <!--DATA AUGMENTATION: This data has been augmented with a standard LOINC code -->
                             <!--DATA AUGMENTATION: The data in the code and code/originalText data elements is the original data -->
                             <code displayName=" A custom code in display name. ">
                                 <originalText>
-                A custom code in original text.
+                  A custom code in original text.
                 </originalText>
                                 <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
                                 <translation code="109224-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum" originalText="A custom code in display name."/>
