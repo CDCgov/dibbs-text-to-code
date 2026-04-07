@@ -16,6 +16,7 @@ from lambda_handler.test_constants import S3_BUCKET
 from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 from text_to_code_lambda import lambda_function
 
+EICR_INPUT_PREFIX = "eCRMessageV2/"
 SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
 TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
@@ -25,7 +26,7 @@ OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
 
 def pytest_configure() -> None:
     """Configure env variables for pytest."""
-    os.environ["S3_BUCKET"] = S3_BUCKET
+    os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
     os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
     os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
     os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
