@@ -1,10 +1,7 @@
 """Tests for the S3 → EventBridge → SQS → Lambda pipeline using moto."""
 
-import io
 import json
 import os
-import textwrap
-import zipfile
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -22,7 +19,6 @@ from text_to_code_lambda.lambda_function import handler as ttc_handler
 
 REGION = os.getenv("AWS_REGION")
 BUCKET_NAME = os.getenv("S3_BUCKET")
-RULE_NAME = "s3-object-created-rule"
 ACCOUNT_ID = "123456789012"
 
 QUEUE_1_NAME = "stage1-queue"
@@ -38,20 +34,6 @@ TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_lambda_zip() -> bytes:
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w") as zf:
-        zf.writestr(
-            "handler.py",
-            textwrap.dedent("""\
-            def handler(event, context):
-                return {"statusCode": 200}
-        """),
-        )
-    buf.seek(0)
-    return buf.read()
 
 
 def _create_iam_role(iam_client) -> str:
@@ -122,16 +104,12 @@ def aws(monkeypatch):
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
     monkeypatch.setenv("AWS_DEFAULT_REGION", REGION)
-    monkeypatch.setenv("PIPELINE_BUCKET", BUCKET_NAME)
-
-    # monkeypatch.setattr(handler_module, "BUCKET", BUCKET_NAME)
 
     with mock_aws():
         clients = {
             "s3": boto3.client("s3", region_name=REGION),
             "sqs": boto3.client("sqs", region_name=REGION),
             "events": boto3.client("events", region_name=REGION),
-            "lambda": boto3.client("lambda", region_name=REGION),
             "iam": boto3.client("iam", region_name=REGION),
         }
         yield clients
@@ -139,13 +117,9 @@ def aws(monkeypatch):
 
 @pytest.fixture
 def infra(aws):
-    s3, sqs, events, lam, iam = (
-        aws["s3"],
-        aws["sqs"],
-        aws["events"],
-        aws["lambda"],
-        aws["iam"],
-    )
+    s3 = aws["s3"]
+    sqs = aws["sqs"]
+    events = aws["events"]
 
     # --- Single bucket with EventBridge enabled ---
     s3.create_bucket(Bucket=BUCKET_NAME)
@@ -207,46 +181,11 @@ def infra(aws):
         Targets=[{"Id": "stage2-target", "Arn": q2_arn}],
     )
 
-    # --- Lambda functions ---
-    role_arn = _create_iam_role(iam)
-    zip_bytes = _make_lambda_zip()
-
-    func1 = lam.create_function(
-        FunctionName=FUNCTION_1_NAME,
-        Runtime="python3.12",
-        Role=role_arn,
-        Handler="handler.stage1_handler",
-        Code={"ZipFile": zip_bytes},
-    )
-    func2 = lam.create_function(
-        FunctionName=FUNCTION_2_NAME,
-        Runtime="python3.12",
-        Role=role_arn,
-        Handler="handler.stage2_handler",
-        Code={"ZipFile": zip_bytes},
-    )
-
-    # --- Event source mappings ---
-    lam.create_event_source_mapping(
-        EventSourceArn=q1_arn,
-        FunctionName=FUNCTION_1_NAME,
-        BatchSize=10,
-        Enabled=True,
-    )
-    lam.create_event_source_mapping(
-        EventSourceArn=q2_arn,
-        FunctionName=FUNCTION_2_NAME,
-        BatchSize=10,
-        Enabled=True,
-    )
-
     return {
         "queue1_url": q1_url,
         "queue1_arn": q1_arn,
         "queue2_url": q2_url,
         "queue2_arn": q2_arn,
-        "function1_arn": func1["FunctionArn"],
-        "function2_arn": func2["FunctionArn"],
     }
 
 
