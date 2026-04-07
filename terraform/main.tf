@@ -742,7 +742,7 @@ resource "aws_lambda_event_source_mapping" "augmentation_sqs" {
 
 resource "aws_iam_role_policy" "augmentation_sqs_policy" {
   name = "augmentation-sqs-inline-policy"
-  role = aws_iam_role.lambda_role.id
+  role = aws_iam_role.augmentation_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
