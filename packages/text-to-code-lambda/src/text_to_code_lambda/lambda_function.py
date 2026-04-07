@@ -203,19 +203,19 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
 
 
 def _populate_eicr_metadata(
-    original_eicr_content: str,
+    processor: eicr_processor.EicrProcessor,
     ttc_output: dict,
     ttc_metadata_output: dict,
 ) -> None:
     """Populate eICR metadata on TTC outputs.
 
-    :param original_eicr_content: The original eICR content.
+    :param processor: The initialized EICR processor.
     :param ttc_output: The TTC output dictionary.
     :param ttc_metadata_output: The TTC metadata output dictionary.
     """
     # # Process the eICR for TTC
     # Retrieve eICR Metadata
-    eicr_metadata = eicr_processor.EicrProcessor(original_eicr_content).eicr_metadata
+    eicr_metadata = processor.eicr_metadata
 
     ttc_output["eicr_metadata"] = eicr_metadata
     ttc_metadata_output["eicr_metadata"] = eicr_metadata
@@ -245,7 +245,7 @@ def _build_nonstandard_code_instance(
 
 
 def _process_schematron_errors(
-    original_eicr_content: str,
+    processor: eicr_processor.EicrProcessor,
     schematron_data_fields: list,
     opensearch_client: OpenSearch,
     ttc_output: dict,
@@ -253,7 +253,7 @@ def _process_schematron_errors(
 ) -> None:
     """Process Schematron errors for TTC.
 
-    :param original_eicr_content: The original eICR content.
+    :param processor: The initialized EICR processor.
     :param schematron_data_fields: The relevant Schematron data fields for TTC processing.
     :param opensearch_client: The OpenSearch client.
     :param ttc_output: The TTC output dictionary.
@@ -271,9 +271,7 @@ def _process_schematron_errors(
         if data_field not in ttc_metadata_output["schematron_errors"]:
             ttc_metadata_output["schematron_errors"][data_field] = []
 
-        text_candidates = eicr_processor.EicrProcessor(original_eicr_content).get_text_candidates(
-            error.error_context, data_field
-        )
+        text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
         logger.info(
             "Evaluating candidates and selecting relevant text for each error in the eICR for persistence_id"
@@ -436,9 +434,10 @@ def _process_record_pipeline(
         }
 
     original_eicr_content = _load_original_eicr(persistence_id, s3_client, bucket_name)
-    _populate_eicr_metadata(original_eicr_content, ttc_output, ttc_metadata_output)
+    processor = eicr_processor.EicrProcessor(original_eicr_content)
+    _populate_eicr_metadata(processor, ttc_output, ttc_metadata_output)
     _process_schematron_errors(
-        original_eicr_content,
+        processor,
         schematron_data_fields,
         opensearch_client,
         ttc_output,
