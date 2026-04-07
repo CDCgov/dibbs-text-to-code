@@ -12,6 +12,10 @@ from requests_aws4auth import AWS4Auth
 
 from .models import OpenSearchResult
 
+_cached_aws_auth: AWS4Auth | None = None
+_cached_s3_client: BaseClient | None = None
+_cached_opensearch_client: OpenSearch | None = None
+
 
 def require_env(name: str) -> str:
     """Fetch a required environment variable or raise a clear error.
@@ -46,14 +50,19 @@ def create_aws_auth() -> AWS4Auth:
 
     :return: AWS4Auth object
     """
-    credentials = get_s3_credentials()
-    return AWS4Auth(
-        credentials.access_key,
-        credentials.secret_key,
-        require_env("AWS_REGION"),
-        "es",
-        session_token=credentials.token,
-    )
+    global _cached_aws_auth  # noqa: PLW0603
+
+    if _cached_aws_auth is None:
+        credentials = get_s3_credentials()
+        _cached_aws_auth = AWS4Auth(
+            credentials.access_key,
+            credentials.secret_key,
+            require_env("AWS_REGION"),
+            "es",
+            session_token=credentials.token,
+        )
+
+    return _cached_aws_auth
 
 
 def create_s3_client() -> BaseClient:
@@ -61,26 +70,40 @@ def create_s3_client() -> BaseClient:
 
     :return: S3 client
     """
-    endpoint_url = os.getenv("S3_ENDPOINT_URL")
-    region_name = require_env("AWS_REGION")
+    global _cached_s3_client  # noqa: PLW0603
 
-    return boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
+    if _cached_s3_client is None:
+        endpoint_url = os.getenv("S3_ENDPOINT_URL")
+        region_name = require_env("AWS_REGION")
+        _cached_s3_client = boto3.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            region_name=region_name,
+        )
+
+    return _cached_s3_client
 
 
-def create_opensearch_client(aws_auth: AWS4Auth) -> OpenSearch:
+def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
     """Creates an OpenSearch client.
 
     :param aws_auth: AWS4Auth object for authentication
     :return: OpenSearch client
     """
-    endpoint_url = require_env("OPENSEARCH_ENDPOINT_URL")
-    return OpenSearch(
-        hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
-        http_auth=aws_auth,
-        use_ssl=True,
-        verify_certs=True,
-        connection_class=RequestsHttpConnection,
-    )
+    global _cached_opensearch_client  # noqa: PLW0603
+
+    if _cached_opensearch_client is None:
+        endpoint_url = require_env("OPENSEARCH_ENDPOINT_URL")
+        auth = aws_auth or create_aws_auth()
+        _cached_opensearch_client = OpenSearch(
+            hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
+            http_auth=auth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+        )
+
+    return _cached_opensearch_client
 
 
 def get_file_content_from_s3(
