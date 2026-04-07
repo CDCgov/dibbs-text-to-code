@@ -1,5 +1,3 @@
-"""Tests for the S3 → EventBridge → SQS → Lambda pipeline using moto."""
-
 import json
 import os
 from datetime import datetime
@@ -191,8 +189,6 @@ def infra(aws):
 
 @pytest.mark.e2e
 class TestEndToEndSimulated:
-    """e2e test."""
-
     def test_upload_and_process(
         self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
     ):
