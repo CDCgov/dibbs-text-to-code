@@ -35,7 +35,7 @@ FUNCTION_2_NAME = "stage2-processor"
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 
 SCHEMATRON_PATH = "e2e/assets/test_schematron_errors.xml"
-EICR_PATH = "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"
+EICR_PATH = "e2e/assets/test_eicr.xml"
 
 
 # ---------------------------------------------------------------------------

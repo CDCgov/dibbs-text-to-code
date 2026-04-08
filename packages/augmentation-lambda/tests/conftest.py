@@ -124,9 +124,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put TTC Output file in the mock S3 bucket
-        schematron_path = Path(
-            "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/packages/augmentation-lambda/tests/assets/test_ttc_output.json"
-        )
+        schematron_path = Path("packages/augmentation-lambda/tests/assets/test_ttc_output.json")
         with schematron_path.open() as f:
             schematron_output = f.read()
         s3.put_object(
@@ -136,9 +134,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         )
 
         # Put test eCR message file in the mock S3 bucket
-        ecr_path = Path(
-            "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"
-        )
+        ecr_path = Path("packages/augmentation-lambda/tests/assets/test_eicr.xml")
         with ecr_path.open() as f:
             ecr_message = f.read()
         s3.put_object(
