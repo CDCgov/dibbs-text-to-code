@@ -115,7 +115,7 @@ else:
     # Updating ty cause it to be upset with this. However, this is probably just a limitation of
     # ty's ability to interpret some of the funky things that FastAPI does, and not a real issue.
     app.add_middleware(
-        CORSMiddleware,  # ty:ignore[invalid-argument-type]
+        CORSMiddleware,
         allow_origins=["http://localhost:8081"],  # Client dev server
         allow_credentials=True,  # Allow sending session cookies
         allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
