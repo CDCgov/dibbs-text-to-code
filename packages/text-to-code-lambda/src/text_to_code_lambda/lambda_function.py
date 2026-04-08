@@ -91,8 +91,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         except Exception as e:
             logger.exception(f"Error processing record: {e}", message_id=record.message_id)
             failures.append({"message_id": record.message_id, "error": str(e)})
-    # TODO: Update the return values to also include failures per schematron error, not just eicr docs
-    # TODO: Update this output to whatever
     return (
         {
             "statusCode": 200,
@@ -143,7 +141,6 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :param persistence_id: The persistence ID extracted from the S3 object key
     :return: The TTC output and TTC metadata output dictionaries.
     """
-    # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
     ttc_output: dict = {
         "persistence_id": "",
         "eicr_metadata": {},
