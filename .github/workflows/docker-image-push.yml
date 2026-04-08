@@ -107,4 +107,6 @@ jobs:
         run: |
           GHCR_IMAGE="ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.name }}:latest"
           ECR_IMAGE="${{ secrets.APHL_ECR_REPOSITORY_URL }}/${{ matrix.name }}:latest"
-          docker buildx imagetools create --tag "$ECR_IMAGE" "$GHCR_IMAGE"
+          docker pull "$GHCR_IMAGE"
+          docker tag "$GHCR_IMAGE" "$ECR_IMAGE"
+          docker push "$ECR_IMAGE"
