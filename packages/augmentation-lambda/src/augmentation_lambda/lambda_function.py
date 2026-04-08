@@ -12,12 +12,18 @@ import lambda_handler
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
+from shared_models import AUGMENTATION_METADATA_PREFIX
+from shared_models import AUGMENTED_EICR_PREFIX
+from shared_models import EICR_INPUT_PREFIX
+from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import TTCOutput
 
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
-AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/")
-AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadata/")
+_AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", AUGMENTED_EICR_PREFIX)
+_AUGMENTATION_METADATA_PREFIX = os.getenv(
+    "AUGMENTATION_METADATA_PREFIX", AUGMENTATION_METADATA_PREFIX
+)
 
 # Cache S3 client to reuse across Lambda invocations
 _cached_s3_client: BaseClient | None = None
@@ -55,16 +61,16 @@ def handler(event: SQSEvent, context: LambdaContext) -> HandlerResponse:
 
             eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
             object_key = eventbridge_data["object_key"]
-            persistence_id = lambda_handler.get_persistence_id(object_key, "TTCOutput/")
+            persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
 
             config = TTCAugmenterConfig()
 
-            object_key = f"eCRMessageV2/{persistence_id}"
+            object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
             original_eicr_content = lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
             )
 
-            object_key = f"TTCOutput/{persistence_id}"
+            object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
             ttc_output = json.loads(
                 lambda_handler.get_file_content_from_s3_to_json(
                     bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
@@ -126,12 +132,12 @@ def _save_augmentation_outputs(
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
         bucket_name=S3_BUCKET,
-        object_key=f"{AUGMENTED_EICR_PREFIX}{eicr_id}",
+        object_key=f"{_AUGMENTED_EICR_PREFIX}{eicr_id}",
         s3_client=s3_client,
     )
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=S3_BUCKET,
-        object_key=f"{AUGMENTATION_METADATA_PREFIX}{eicr_id}",
+        object_key=f"{_AUGMENTATION_METADATA_PREFIX}{eicr_id}",
         s3_client=s3_client,
     )

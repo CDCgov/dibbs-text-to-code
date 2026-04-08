@@ -8,6 +8,8 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
+from shared_models import AUGMENTATION_METADATA_PREFIX
+from shared_models import AUGMENTED_EICR_PREFIX
 
 S3_BUCKET = "dibbs-text-to-code"
 
@@ -31,7 +33,7 @@ def test_handler_returns_success_result(
     # Assert that the augmentated eICR  was saved to S3
     augmented_eicr = lambda_handler.get_file_content_from_s3(
         bucket_name=S3_BUCKET,
-        object_key=f"AugmentationEICRV2/{mock_aws_setup.persistence_id}",
+        object_key=f"{AUGMENTED_EICR_PREFIX}{mock_aws_setup.persistence_id}",
     )
 
     snapshot.assert_match(augmented_eicr, "augmented_eicr.xml")
@@ -39,7 +41,7 @@ def test_handler_returns_success_result(
     # Assert that the augmentated eICR  was saved to S3
     augmentation_metadata = lambda_handler.get_file_content_from_s3(
         bucket_name=S3_BUCKET,
-        object_key=f"AugmentationMetadata/{mock_aws_setup.persistence_id}",
+        object_key=f"{AUGMENTATION_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
     )
 
     snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")

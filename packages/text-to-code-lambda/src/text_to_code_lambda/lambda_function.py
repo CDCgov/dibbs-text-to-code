@@ -13,6 +13,10 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from shared_models import EICR_INPUT_PREFIX
+from shared_models import SCHEMATRON_ERROR_PREFIX
+from shared_models import TTC_INPUT_PREFIX
+from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import Code
 from shared_models import SchematronErrorDetail
 from shared_models import TTCOutput
@@ -31,10 +35,10 @@ logger = Logger(service="ttc")
 
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
-EICR_INPUT_PREFIX = os.getenv("EICR_INPUT_PREFIX", "eCRMessageV2/")
-SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", "schematronErrors/")
-TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", "TextToCodeValidateSubmissionV2/")
-TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", "TTCOutput/")
+_EICR_INPUT_PREFIX = os.getenv("EICR_INPUT_PREFIX", EICR_INPUT_PREFIX)
+_SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", SCHEMATRON_ERROR_PREFIX)
+_TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", TTC_INPUT_PREFIX)
+_TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", TTC_OUTPUT_PREFIX)
 TTC_METADATA_PREFIX = os.getenv("TTC_METADATA_PREFIX", "TTCMetadata/")
 AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
@@ -128,7 +132,7 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
     logger.info(f"Processing S3 Object: s3://{S3_BUCKET}/{object_key}")
 
     # Extract persistence_id from the RR object key
-    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+    persistence_id = lambda_handler.get_persistence_id(object_key, _TTC_INPUT_PREFIX)
     logger.info(f"Extracted persistence_id: {persistence_id}")
 
     with logger.append_context_keys(
@@ -144,7 +148,7 @@ def _load_schematron_data_fields(persistence_id: str, s3_client: BaseClient) -> 
     :param s3_client: The S3 client to use for fetching files.
     :return: The relevant Schematron data fields for TTC processing.
     """
-    object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
+    object_key = f"{_SCHEMATRON_ERROR_PREFIX}{persistence_id}"
     logger.info("Loading Schematron errors", s3_key=f"s3://{S3_BUCKET}/{object_key}")
     schematron_errors = lambda_handler.get_file_content_from_s3(
         bucket_name=S3_BUCKET,
@@ -164,7 +168,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient) -> str:
     :param s3_client: The S3 client to use for fetching files.
     :return: The original eICR content.
     """
-    object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+    object_key = f"{_EICR_INPUT_PREFIX}{persistence_id}"
     logger.info(f"Retrieving eICR from s3://{S3_BUCKET}/{object_key}")
     original_eicr_content = lambda_handler.get_file_content_from_s3(
         bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
@@ -270,7 +274,7 @@ def _save_ttc_outputs(
     lambda_handler.put_file(
         file_obj=io.BytesIO(ttc_output.model_dump_json().encode("utf-8")),
         bucket_name=S3_BUCKET,
-        object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
+        object_key=f"{_TTC_OUTPUT_PREFIX}{persistence_id}",
         s3_client=s3_client,
     )
 

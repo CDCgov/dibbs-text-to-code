@@ -4,13 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
+from shared_models import EICR_INPUT_PREFIX
+from shared_models import SCHEMATRON_ERROR_PREFIX
+from shared_models import TTC_INPUT_PREFIX
+from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
 
 S3_BUCKET = "dibbs-text-to-code"
-EICR_INPUT_PREFIX = "eCRMessageV2/"
-SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
-TTC_INPUT_PREFIX = "TextToCodeValidateSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCOutput/"
 TTC_METADATA_PREFIX = "TTCMetadata/"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"

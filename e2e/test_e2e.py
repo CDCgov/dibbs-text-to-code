@@ -13,6 +13,12 @@ from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
+from shared_models import AUGMENTATION_METADATA_PREFIX
+from shared_models import AUGMENTED_EICR_PREFIX
+from shared_models import EICR_INPUT_PREFIX
+from shared_models import SCHEMATRON_ERROR_PREFIX
+from shared_models import TTC_INPUT_PREFIX
+from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 
 REGION = os.getenv("AWS_REGION")
@@ -27,6 +33,9 @@ FUNCTION_1_NAME = "stage1-processor"
 FUNCTION_2_NAME = "stage2-processor"
 
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+
+SCHEMATRON_PATH = "e2e/assets/test_schematron_errors.xml"
+EICR_PATH = "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +157,7 @@ def infra(aws):
                 "detail-type": ["Object Created"],
                 "detail": {
                     "bucket": {"name": [BUCKET_NAME]},
-                    "object": {"key": [{"prefix": "TextToCodeValidateSubmissionV2/"}]},
+                    "object": {"key": [{"prefix": TTC_INPUT_PREFIX}]},
                 },
             }
         ),
@@ -168,7 +177,7 @@ def infra(aws):
                 "detail-type": ["Object Created"],
                 "detail": {
                     "bucket": {"name": [BUCKET_NAME]},
-                    "object": {"key": [{"prefix": "TTCOutput/"}]},
+                    "object": {"key": [{"prefix": TTC_OUTPUT_PREFIX}]},
                 },
             }
         ),
@@ -192,45 +201,40 @@ class TestEndToEndSimulated:
     def test_upload_and_process(
         self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
     ):
-        """Full pipeline: upload → auto SQS message → handler reads file."""
         # Upload Schematron errors to S3
         with open(
-            Path(
-                "/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_schematron_errors.xml"
-            ),
+            Path(SCHEMATRON_PATH),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
                 BUCKET_NAME,
-                f"schematronErrors/{TEST_PERSISTENCE_ID}",
+                f"{SCHEMATRON_ERROR_PREFIX}{TEST_PERSISTENCE_ID}",
             )
 
         # Upload eICR to S3
         with open(
-            Path("/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"),
+            Path(EICR_PATH),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
                 BUCKET_NAME,
-                f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+                f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
         # Upload message to S3
         with open(
-            Path("/Users/jnygaard/Dev/Skylight/Dibbs/dibbs-text-to-code/e2e/assets/test_eicr.xml"),
+            Path(EICR_PATH),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
                 BUCKET_NAME,
-                f"TextToCodeValidateSubmissionV2/{TEST_PERSISTENCE_ID}",
+                f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
 
         # Read the auto-generated SQS message
-        q1 = _drain_sqs_for_prefix(
-            aws["sqs"], infra["queue1_url"], "TextToCodeValidateSubmissionV2/"
-        )
+        q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
 
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
@@ -244,7 +248,7 @@ class TestEndToEndSimulated:
 
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
-        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], "TTCOutput/")
+        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         sqs_event = _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME)
 
         with time_machine.travel(
@@ -254,7 +258,9 @@ class TestEndToEndSimulated:
 
         augmented_eicr = (
             aws["s3"]
-            .get_object(Bucket=BUCKET_NAME, Key=f"AugmentationEICRV2/{TEST_PERSISTENCE_ID}")["Body"]
+            .get_object(Bucket=BUCKET_NAME, Key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}")[
+                "Body"
+            ]
             .read()
             .decode("utf-8")
         )
@@ -262,9 +268,9 @@ class TestEndToEndSimulated:
 
         augmentation_metadata = (
             aws["s3"]
-            .get_object(Bucket=BUCKET_NAME, Key=f"AugmentationMetadata/{TEST_PERSISTENCE_ID}")[
-                "Body"
-            ]
+            .get_object(
+                Bucket=BUCKET_NAME, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
+            )["Body"]
             .read()
             .decode("utf-8")
         )
