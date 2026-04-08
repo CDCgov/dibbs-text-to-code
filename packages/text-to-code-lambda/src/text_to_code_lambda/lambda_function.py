@@ -50,11 +50,6 @@ NO_DATA_FIELDS_MESSAGE = (
     "No relevant data fields identified from Schematron errors for TTC processing"
 )
 
-# Cache clients and auth to reuse across Lambda invocations
-_cached_auth = None
-_cached_opensearch_client = None
-_cached_s3_client = None
-
 
 @event_source(data_class=SQSEvent)
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
@@ -64,20 +59,9 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     :param context: The Lambda context object.
     :return: A dictionary containing the status code, message, and any relevant data about the processing results.
     """
-    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
-
-    # Initialize cached clients if they don't exist
-    if _cached_auth is None:
-        _cached_auth = lambda_handler.create_aws_auth()
-    auth = _cached_auth
-
-    if _cached_opensearch_client is None:
-        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
-    opensearch_client = _cached_opensearch_client
-
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    auth = lambda_handler.create_aws_auth()
+    opensearch_client = lambda_handler.create_opensearch_client(auth)
+    s3_client = lambda_handler.create_s3_client()
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
@@ -446,7 +430,7 @@ def _process_record_pipeline(
 
     if not has_matches:
         return {
-            "statusCode": 200,  # could give a different code for no matches found vs matches found if we want to easily filter in monitoring
+            "statusCode": 200,
             "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
             "result": "no_matches_found",
         }

@@ -10,6 +10,7 @@ TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
 AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
 AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+SUCCESS_CODE = 200
 
 TEST_TTC_OUTPUT = {
     "persistence_id": TEST_PERSISTENCE_ID,
@@ -80,7 +81,7 @@ class TestHandler:
     def test_handler_success(self, example_sqs_event, mock_aws_setup) -> None:
         result = lambda_function.handler(example_sqs_event, None)
 
-        assert result["statusCode"] == 200  # noqa: PLR2004
+        assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
 
@@ -282,3 +283,31 @@ class TestHandler:
 
         assert result["num_success_eicrs"] == 1
         assert result["num_failure_eicrs"] == 1
+
+    def test_handler_skips_empty_sqs_body(self, mock_aws_setup) -> None:
+        event = {
+            "Records": [
+                {
+                    "messageId": "msg-empty-body",
+                    "receiptHandle": "test-receipt-handle",
+                    "body": "",
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1752691260451",
+                        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                        "ApproximateFirstReceiveTimestamp": "1752691260458",
+                    },
+                    "messageAttributes": {},
+                    "md5OfBody": "dummy-md5",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+                    "awsRegion": "us-east-1",
+                }
+            ]
+        }
+
+        result = lambda_function.handler(event, None)
+
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1

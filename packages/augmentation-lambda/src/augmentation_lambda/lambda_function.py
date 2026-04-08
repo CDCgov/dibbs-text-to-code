@@ -25,9 +25,6 @@ TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", "TTCAugmentationMetadataV2/")
 AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/")
 AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadataV2/")
 
-# Cache S3 client to reuse across Lambda invocations
-_cached_s3_client: BaseClient | None = None
-
 
 @event_source(data_class=SQSEvent)
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
@@ -40,11 +37,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     :param context: The AWS Lambda context object.
     :return: A dictionary containing processing results and any batch item failures.
     """
-    global _cached_s3_client  # noqa: PLW0603
-
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    s3_client = lambda_handler.create_s3_client()
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
