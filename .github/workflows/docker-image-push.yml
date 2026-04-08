@@ -90,7 +90,7 @@ jobs:
             "huggingface_token=${{ secrets.HF_TOKEN }}"
 
       - name: Configure APHL AWS credentials
-        if: ${{ matrix.name != 'index' }}
+        if: ${{ matrix.name != 'index' || steps.changes.outputs.index == 'true'}}
         uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
@@ -98,12 +98,12 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to APHL ECR
-        if: ${{ matrix.name != 'index' }}
+        if: ${{ matrix.name != 'index' || steps.changes.outputs.index == 'true' }}
         id: aphl-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push to APHL ECR
-        if: ${{ matrix.name != 'index' }}
+        if: ${{ matrix.name != 'index' || steps.changes.outputs.index == 'true' }}
         run: |
           GHCR_IMAGE="ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.name }}:latest"
           ECR_IMAGE="${{ secrets.APHL_ECR_REPOSITORY_URL }}/${{ matrix.name }}:latest"
