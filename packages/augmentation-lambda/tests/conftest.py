@@ -8,12 +8,12 @@ import moto
 import pytest
 
 from shared_models import EICR_INPUT_PREFIX
+from shared_models import S3_BUCKET
 from shared_models import SCHEMATRON_ERROR_PREFIX
 from shared_models import TTC_INPUT_PREFIX
+from shared_models import TTC_METADATA_PREFIX
 from shared_models import TTC_OUTPUT_PREFIX
 
-S3_BUCKET = "dibbs-text-to-code"
-TTC_METADATA_PREFIX = "TTCMetadata/"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
 AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105

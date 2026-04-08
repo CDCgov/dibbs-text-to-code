@@ -15,11 +15,12 @@ from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import AUGMENTATION_METADATA_PREFIX
 from shared_models import AUGMENTED_EICR_PREFIX
 from shared_models import EICR_INPUT_PREFIX
+from shared_models import S3_BUCKET
 from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import TTCOutput
 
 # Environment variables
-S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
+_S3_BUCKET = os.getenv("S3_BUCKET", S3_BUCKET)
 _AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", AUGMENTED_EICR_PREFIX)
 _AUGMENTATION_METADATA_PREFIX = os.getenv(
     "AUGMENTATION_METADATA_PREFIX", AUGMENTATION_METADATA_PREFIX
@@ -67,13 +68,13 @@ def handler(event: SQSEvent, context: LambdaContext) -> HandlerResponse:
 
             object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
             original_eicr_content = lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
+                bucket_name=_S3_BUCKET, object_key=object_key, s3_client=s3_client
             )
 
             object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
             ttc_output = json.loads(
                 lambda_handler.get_file_content_from_s3_to_json(
-                    bucket_name=S3_BUCKET, object_key=object_key, s3_client=s3_client
+                    bucket_name=_S3_BUCKET, object_key=object_key, s3_client=s3_client
                 )
             )
             ttc_output = TTCOutput(**ttc_output)
@@ -131,13 +132,13 @@ def _save_augmentation_outputs(
     """
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
-        bucket_name=S3_BUCKET,
+        bucket_name=_S3_BUCKET,
         object_key=f"{_AUGMENTED_EICR_PREFIX}{eicr_id}",
         s3_client=s3_client,
     )
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
-        bucket_name=S3_BUCKET,
+        bucket_name=_S3_BUCKET,
         object_key=f"{_AUGMENTATION_METADATA_PREFIX}{eicr_id}",
         s3_client=s3_client,
     )

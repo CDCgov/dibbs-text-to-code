@@ -8,6 +8,7 @@ from pydantic import Field
 AUGMENTATION_METADATA_PREFIX = "AugmentationMetadata/"
 AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
 EICR_INPUT_PREFIX = "eCRMessageV2/"
+S3_BUCKET = "dibbs-text-to-code"
 SCHEMATRON_ERROR_PREFIX = "schematronErrors/"
 TTC_INPUT_PREFIX = "TextToCodeValidateSubmissionV2/"
 TTC_METADATA_PREFIX = "TTCMetadata/"

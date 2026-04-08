@@ -1,3 +1,4 @@
+from shared_models import S3_BUCKET
 import csv
 import os
 import pathlib
@@ -121,7 +122,7 @@ class TestBuildAugmentedLoincFiles:
         working_dir = pathlib.Path.cwd()
         if working_dir.name == "unit":
             input_path = pathlib.Path("assets") / "loinc_lab_names_20250930.csv"
-        elif working_dir.name == "dibbs-text-to-code":
+        elif working_dir.name == S3_BUCKET:
             input_path = "packages/data-curation/tests/assets/loinc_lab_names_20250930.csv"
         else:
             raise RuntimeError(f"Unexpected working directory: {working_dir}")

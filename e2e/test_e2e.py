@@ -22,7 +22,7 @@ from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 
 REGION = os.getenv("AWS_REGION")
-BUCKET_NAME = os.getenv("S3_BUCKET")
+S3_BUCKET = os.getenv("S3_BUCKET")
 ACCOUNT_ID = "123456789012"
 
 QUEUE_1_NAME = "stage1-queue"
@@ -129,9 +129,9 @@ def infra(aws):
     events = aws["events"]
 
     # --- Single bucket with EventBridge enabled ---
-    s3.create_bucket(Bucket=BUCKET_NAME)
+    s3.create_bucket(Bucket=S3_BUCKET)
     s3.put_bucket_notification_configuration(
-        Bucket=BUCKET_NAME,
+        Bucket=S3_BUCKET,
         NotificationConfiguration={"EventBridgeConfiguration": {}},
     )
 
@@ -156,7 +156,7 @@ def infra(aws):
                 "source": ["aws.s3"],
                 "detail-type": ["Object Created"],
                 "detail": {
-                    "bucket": {"name": [BUCKET_NAME]},
+                    "bucket": {"name": [S3_BUCKET]},
                     "object": {"key": [{"prefix": TTC_INPUT_PREFIX}]},
                 },
             }
@@ -176,7 +176,7 @@ def infra(aws):
                 "source": ["aws.s3"],
                 "detail-type": ["Object Created"],
                 "detail": {
-                    "bucket": {"name": [BUCKET_NAME]},
+                    "bucket": {"name": [S3_BUCKET]},
                     "object": {"key": [{"prefix": TTC_OUTPUT_PREFIX}]},
                 },
             }
@@ -208,7 +208,7 @@ class TestEndToEndSimulated:
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
-                BUCKET_NAME,
+                S3_BUCKET,
                 f"{SCHEMATRON_ERROR_PREFIX}{TEST_PERSISTENCE_ID}",
             )
 
@@ -219,7 +219,7 @@ class TestEndToEndSimulated:
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
-                BUCKET_NAME,
+                S3_BUCKET,
                 f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
         # Upload message to S3
@@ -229,7 +229,7 @@ class TestEndToEndSimulated:
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
                 schematron_errors_file,
-                BUCKET_NAME,
+                S3_BUCKET,
                 f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
 
@@ -258,7 +258,7 @@ class TestEndToEndSimulated:
 
         augmented_eicr = (
             aws["s3"]
-            .get_object(Bucket=BUCKET_NAME, Key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}")[
+            .get_object(Bucket=S3_BUCKET, Key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}")[
                 "Body"
             ]
             .read()
@@ -269,7 +269,7 @@ class TestEndToEndSimulated:
         augmentation_metadata = (
             aws["s3"]
             .get_object(
-                Bucket=BUCKET_NAME, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
+                Bucket=S3_BUCKET, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
             )["Body"]
             .read()
             .decode("utf-8")
