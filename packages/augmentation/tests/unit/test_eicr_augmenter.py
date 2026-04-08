@@ -178,24 +178,6 @@ class TestEicrAugmenter:
 
         assert parent_doc_id.get("assigningAuthorityName") == "original-document"
 
-    def test_get_old_xrfm_related_document_returns_none_when_missing(self):
-        """Tests old XFRM relatedDocument returns None when missing."""
-        augmenter = EICRAugmenter(BASIC_ECR, [])
-
-        related_document = augmenter._get_old_xrfm_related_document()
-
-        assert related_document is None
-
-    def test_get_old_xrfm_related_document_returns_element_when_present(self):
-        """Tests old XFRM relatedDocument is returned when present."""
-        augmenter = EICRAugmenter(BASIC_ECR_RELATED_DOC, [])
-
-        related_document = augmenter._get_old_xrfm_related_document()
-
-        assert related_document is not None
-        assert related_document.tag == "relatedDocument"
-        assert related_document.get("typeCode") == "XFRM"
-
     def test_validate_config_raises_value_error_when_application_code_does_not_match(self):
         """Tests config validation when application code does not match."""
 

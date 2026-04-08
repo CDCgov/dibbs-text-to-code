@@ -50,11 +50,6 @@ NO_DATA_FIELDS_MESSAGE = (
     "No relevant data fields identified from Schematron errors for TTC processing"
 )
 
-# Cache clients and auth to reuse across Lambda invocations
-_cached_auth = None
-_cached_opensearch_client = None
-_cached_s3_client = None
-
 
 @event_source(data_class=SQSEvent)
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
@@ -64,20 +59,9 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     :param context: The Lambda context object.
     :return: A dictionary containing the status code, message, and any relevant data about the processing results.
     """
-    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
-
-    # Initialize cached clients if they don't exist
-    if _cached_auth is None:
-        _cached_auth = lambda_handler.create_aws_auth()
-    auth = _cached_auth
-
-    if _cached_opensearch_client is None:
-        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
-    opensearch_client = _cached_opensearch_client
-
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    auth = lambda_handler.create_aws_auth()
+    opensearch_client = lambda_handler.create_opensearch_client(auth)
+    s3_client = lambda_handler.create_s3_client()
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
@@ -91,8 +75,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         except Exception as e:
             logger.exception(f"Error processing record: {e}", message_id=record.message_id)
             failures.append({"message_id": record.message_id, "error": str(e)})
-    # TODO: Update the return values to also include failures per schematron error, not just eicr docs
-    # TODO: Update this output to whatever
     return (
         {
             "statusCode": 200,
@@ -143,7 +125,6 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     :param persistence_id: The persistence ID extracted from the S3 object key
     :return: The TTC output and TTC metadata output dictionaries.
     """
-    # TODO: Update the ttc_output to ensure it matches and uses the expected model once ticket #263 is completed
     ttc_output: dict = {
         "persistence_id": "",
         "eicr_metadata": {},
@@ -203,19 +184,19 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
 
 
 def _populate_eicr_metadata(
-    original_eicr_content: str,
+    processor: eicr_processor.EicrProcessor,
     ttc_output: dict,
     ttc_metadata_output: dict,
 ) -> None:
     """Populate eICR metadata on TTC outputs.
 
-    :param original_eicr_content: The original eICR content.
+    :param processor: The initialized EICR processor.
     :param ttc_output: The TTC output dictionary.
     :param ttc_metadata_output: The TTC metadata output dictionary.
     """
     # # Process the eICR for TTC
     # Retrieve eICR Metadata
-    eicr_metadata = eicr_processor.EicrProcessor(original_eicr_content).eicr_metadata
+    eicr_metadata = processor.eicr_metadata
 
     ttc_output["eicr_metadata"] = eicr_metadata
     ttc_metadata_output["eicr_metadata"] = eicr_metadata
@@ -245,7 +226,7 @@ def _build_nonstandard_code_instance(
 
 
 def _process_schematron_errors(
-    original_eicr_content: str,
+    processor: eicr_processor.EicrProcessor,
     schematron_data_fields: list,
     opensearch_client: OpenSearch,
     ttc_output: dict,
@@ -253,7 +234,7 @@ def _process_schematron_errors(
 ) -> None:
     """Process Schematron errors for TTC.
 
-    :param original_eicr_content: The original eICR content.
+    :param processor: The initialized EICR processor.
     :param schematron_data_fields: The relevant Schematron data fields for TTC processing.
     :param opensearch_client: The OpenSearch client.
     :param ttc_output: The TTC output dictionary.
@@ -271,9 +252,7 @@ def _process_schematron_errors(
         if data_field not in ttc_metadata_output["schematron_errors"]:
             ttc_metadata_output["schematron_errors"][data_field] = []
 
-        text_candidates = eicr_processor.EicrProcessor(original_eicr_content).get_text_candidates(
-            error.error_context, data_field
-        )
+        text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
         logger.info(
             "Evaluating candidates and selecting relevant text for each error in the eICR for persistence_id"
@@ -436,9 +415,10 @@ def _process_record_pipeline(
         }
 
     original_eicr_content = _load_original_eicr(persistence_id, s3_client, bucket_name)
-    _populate_eicr_metadata(original_eicr_content, ttc_output, ttc_metadata_output)
+    processor = eicr_processor.EicrProcessor(original_eicr_content)
+    _populate_eicr_metadata(processor, ttc_output, ttc_metadata_output)
     _process_schematron_errors(
-        original_eicr_content,
+        processor,
         schematron_data_fields,
         opensearch_client,
         ttc_output,
@@ -450,7 +430,7 @@ def _process_record_pipeline(
 
     if not has_matches:
         return {
-            "statusCode": 200,  # could give a different code for no matches found vs matches found if we want to easily filter in monitoring
+            "statusCode": 200,
             "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
             "result": "no_matches_found",
         }
