@@ -112,6 +112,14 @@ An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_
 
 The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index exists before any data is loaded.
 
+Third-party deployers should ensure the following:
+
+- Private VPC networking with private subnets, an S3 Gateway VPC endpoint, and an OpenSearch VPC endpoint
+- An OpenSearch domain compatible with this stack’s engine version, node layout, encryption, and TLS settings
+- IAM permissions for the deployer, Lambda, and ingestion pipeline to create and access OpenSearch resources
+- The index bootstrap step that runs before ingestion begins
+- Valid NDJSON files available in the configured S3 ingestion prefix for pipeline loading
+
 ## Deployment Order
 
 Terraform manages dependency ordering automatically, but conceptually the sequence is:
