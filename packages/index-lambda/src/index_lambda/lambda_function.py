@@ -1,4 +1,5 @@
 import lambda_handler
+from opensearchpy import OpenSearch
 
 INDEX_MAPPING = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
@@ -53,7 +54,7 @@ def handler(event: dict, context: dict) -> dict:
     return _create_index(os_client, index_name)
 
 
-def _clear_index(os_client: object, index_name: str) -> dict:
+def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
     """Delete the index if it exists, then recreate it with correct mappings."""
     deleted = False
     if os_client.indices.exists(index=index_name):
@@ -70,7 +71,7 @@ def _clear_index(os_client: object, index_name: str) -> dict:
     }
 
 
-def _create_index(os_client: object, index_name: str) -> dict:
+def _create_index(os_client: OpenSearch, index_name: str) -> dict:
     """Create the index if it doesn't exist, self-healing incorrect mappings."""
     if not os_client.indices.exists(index=index_name):
         os_client.indices.create(index=index_name, body=INDEX_MAPPING)
