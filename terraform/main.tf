@@ -769,3 +769,95 @@ resource "aws_iam_role_policy" "augmentation_sqs_policy" {
   })
 }
 
+#############
+# TTC Lambda SQS Queue
+#############
+
+resource "aws_sqs_queue" "ttc_input_dlq" {
+  name = "${var.lambda_function_name}-dlq"
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "ttc_input_queue" {
+  name                       = "${var.lambda_function_name}-queue"
+  visibility_timeout_seconds = var.lambda_timeout * 6
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.ttc_input_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "ttc_input_queue_policy" {
+  queue_url = aws_sqs_queue.ttc_input_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.ttc_input_queue.arn
+      }
+    ]
+  })
+}
+
+#############
+# TTC Lambda EventBridge Rule
+#############
+
+resource "aws_cloudwatch_event_rule" "ttc_input_s3_trigger" {
+  name        = "${var.lambda_function_name}-s3-trigger"
+  description = "Trigger the main TTC Lambda when submission data is loaded in S3"
+
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = { name = [var.s3_bucket] }
+      object = { key = [{ prefix = var.ttc_input_prefix }] }
+    }
+  })
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "ttc_input_sqs_target" {
+  rule      = aws_cloudwatch_event_rule.ttc_input_s3_trigger.name
+  target_id = "${var.lambda_function_name}-sqs"
+  arn       = aws_sqs_queue.ttc_input_queue.arn
+}
+
+#############
+# TTC Lambda Event Source Mapping
+#############
+
+resource "aws_lambda_event_source_mapping" "ttc_input_sqs" {
+  event_source_arn = aws_sqs_queue.ttc_input_queue.arn
+  function_name    = aws_lambda_function.lambda.arn
+  batch_size       = 1
+}
+
+resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
+  name = "ttc-input-sqs-inline-policy"
+  role = aws_iam_role.ttc_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+        ]
+        Resource = aws_sqs_queue.ttc_input_queue.arn
+      }
+    ]
+  })
+}
