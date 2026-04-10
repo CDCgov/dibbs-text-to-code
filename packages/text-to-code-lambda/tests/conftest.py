@@ -17,8 +17,8 @@ from shared_models import TTC_METADATA_PREFIX
 from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
 
-AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
+AWS_REGION = "us-east-1"
 AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
 OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"

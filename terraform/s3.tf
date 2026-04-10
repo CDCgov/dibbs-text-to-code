@@ -12,3 +12,8 @@ resource "aws_s3_bucket" "ttc" {
 
   tags = local.tags
 }
+
+resource "aws_s3_bucket_notification" "ttc_eventbridge" {
+  bucket      = aws_s3_bucket.ttc.id
+  eventbridge = true
+}

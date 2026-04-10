@@ -13,7 +13,7 @@ from text_to_code_lambda import lambda_function
 
 EXPECTED_ORDERED_ERRORS = 1
 EXPECTED_EXCEPTION_RESULTS = 2
-EXPECTED_RERANKER_SCORE = 0.83
+EXPECTED_RERANKER_SCORE = 0.944
 
 
 @pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)

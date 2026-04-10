@@ -209,13 +209,3 @@ class SchematronErrorDetail(BaseModel):
             field_type=self.field,
             new_translation=self.new_translation,
         )
-
-
-class TTCAugmenterInput(BaseModel):
-    """Input for the augmentation service."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-    eicr_id: str

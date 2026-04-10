@@ -57,34 +57,18 @@ NO_DATA_FIELDS_MESSAGE = (
     "No relevant data fields identified from Schematron errors for TTC processing"
 )
 
-# Cache clients and auth to reuse across Lambda invocations
-_cached_auth = None
-_cached_opensearch_client = None
-_cached_s3_client = None
-
 
 @event_source(data_class=SQSEvent)
-def handler(event: SQSEvent, context: LambdaContext) -> dict:
+def handler(event: SQSEvent, _: LambdaContext) -> dict:
     """Text to Code lambda entry point.
 
     :param event: The SQS event containing the S3 event data for processing.
-    :param context: The Lambda context object.
+    :param _: The Lambda context object.
     :return: A dictionary containing the status code, message, and any relevant data about the processing results.
     """
-    global _cached_auth, _cached_opensearch_client, _cached_s3_client  # noqa: PLW0603
-
-    # Initialize cached clients if they don't exist
-    if _cached_auth is None:
-        _cached_auth = lambda_handler.create_aws_auth()
-    auth = _cached_auth
-
-    if _cached_opensearch_client is None:
-        _cached_opensearch_client = lambda_handler.create_opensearch_client(auth)
-    opensearch_client = _cached_opensearch_client
-
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    auth = lambda_handler.create_aws_auth()
+    opensearch_client = lambda_handler.create_opensearch_client(auth)
+    s3_client = lambda_handler.create_s3_client()
 
     logger.info(f"Received event with {len(event['Records'])} record(s)")
 
@@ -98,8 +82,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         except Exception as e:
             logger.exception(f"Error processing record: {e}", message_id=record.message_id)
             failures.append({"message_id": record.message_id, "error": str(e)})
-    # TODO: Update the return values to also include failures per schematron error, not just eicr docs
-    # TODO: Update this output to whatever
     return (
         {
             "statusCode": 200,
@@ -131,7 +113,8 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
     # Parse the EventBridge S3 event from the SQS message body
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     object_key = eventbridge_data["object_key"]
-    logger.info(f"Processing S3 Object: s3://{_S3_BUCKET}/{object_key}")
+    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
+    logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
 
     # Extract persistence_id from the RR object key
     persistence_id = lambda_handler.get_persistence_id(object_key, _TTC_INPUT_PREFIX)
@@ -148,6 +131,7 @@ def _load_schematron_data_fields(persistence_id: str, s3_client: BaseClient) -> 
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param s3_client: The S3 client to use for fetching files.
+    :param bucket_name: The S3 bucket name to read from.
     :return: The relevant Schematron data fields for TTC processing.
     """
     object_key = f"{_SCHEMATRON_ERROR_PREFIX}{persistence_id}"
@@ -168,6 +152,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient) -> str:
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param s3_client: The S3 client to use for fetching files.
+    :param bucket_name: The S3 bucket name to read from.
     :return: The original eICR content.
     """
     object_key = f"{_EICR_INPUT_PREFIX}{persistence_id}"
@@ -270,6 +255,7 @@ def _save_ttc_outputs(
     :param ttc_output: The TTC output dictionary.
     :param ttc_metadata_output: The TTC metadata output dictionary.
     :param s3_client: The S3 client to use for uploading files.
+    :param bucket_name: The S3 bucket name to write to.
     """
     # Save the TTC output to S3 for the Augmentation Lambda to consume
     logger.info(f"Saving TTC output to S3 for persistence_id {persistence_id}")
@@ -312,6 +298,7 @@ def _process_record_pipeline(
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param s3_client: The S3 client to use for S3 operations.
     :param opensearch_client: The OpenSearch client.
+    :param bucket_name: The S3 bucket name extracted from the event, or the default.
     """
     logger.info("Starting TTC processing")
     schematron_data_fields = _load_schematron_data_fields(persistence_id, s3_client)
@@ -368,4 +355,17 @@ def _process_record_pipeline(
 
     _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata, s3_client)
 
-    return {"statusCode": 200, "message": "TTC processed successfully!"}
+    has_matches = len(ttc_output.nonstandard_codes)
+
+    if not has_matches:
+        return {
+            "statusCode": 200,
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
+
+    return {
+        "statusCode": 200,
+        "message": "TTC processed successfully with matches.",
+        "result": "matched",
+    }

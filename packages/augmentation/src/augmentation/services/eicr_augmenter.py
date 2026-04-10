@@ -215,16 +215,6 @@ class EICRAugmenter(Augmenter):
         comment_element = etree.Comment(f"DATA AUGMENTATION: {comment.strip()} ")
         element.addprevious(comment_element)
 
-    def _get_old_xrfm_related_document(self) -> Element | None:
-        """Extract the relatedDocument tag with typeCode "XFRM" from original eICR document."""
-        try:
-            return self._get_augmented_tag_by_xpath(
-                "/ClinicalDocument/relatedDocument[@typeCode='XFRM']"
-            )
-        except ValueError:
-            # if the relatedDocument with typeCode "XFRM" doesn't exist then return None
-            return None
-
     def _generate_author(self, level: str = "header") -> Element:
         null_flavor_comment = " set to nullFlavor 'NA' "
         author = etree.Element("author")

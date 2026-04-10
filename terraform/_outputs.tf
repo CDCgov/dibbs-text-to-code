@@ -14,9 +14,19 @@ output "lambda_function_name" {
   description = "The name of the main TTC lambda function"
 }
 
-output "lambda_role_arn" {
-  value       = aws_iam_role.lambda_role.arn
-  description = "The ARN of the IAM role attached to the main and index TTC lambda functions"
+output "ttc_lambda_role_arn" {
+  value       = aws_iam_role.ttc_lambda_role.arn
+  description = "The ARN of the IAM role attached to the TTC lambda function"
+}
+
+output "index_lambda_role_arn" {
+  value       = aws_iam_role.index_lambda_role.arn
+  description = "The ARN of the IAM role attached to the index lambda function"
+}
+
+output "augmentation_lambda_role_arn" {
+  value       = aws_iam_role.augmentation_lambda_role.arn
+  description = "The ARN of the IAM role attached to the augmentation lambda function"
 }
 
 output "opensearch_vpc_endpoint" {
@@ -32,4 +42,14 @@ output "ecr_repository_url" {
 output "index_ecr_repository_url" {
   value       = aws_ecr_repository.index_lambda.repository_url
   description = "The URL of the ECR repository for the index Lambda container image"
+}
+
+output "augmentation_ecr_repository_url" {
+  value       = aws_ecr_repository.augmentation_lambda.repository_url
+  description = "The URL of the ECR repository for the augmentation Lambda container image"
+}
+
+output "augmentation_lambda_function_name" {
+  value       = aws_lambda_function.augmentation_lambda.function_name
+  description = "The name of the augmentation lambda function"
 }

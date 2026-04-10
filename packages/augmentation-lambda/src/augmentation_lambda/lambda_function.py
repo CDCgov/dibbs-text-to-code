@@ -1,10 +1,10 @@
 import io
 import json
-import os
-from typing import TypedDict
 
+import structlog
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import event_source
+from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.client import BaseClient
 
@@ -19,126 +19,149 @@ from shared_models import S3_BUCKET
 from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import TTCOutput
 
-# Environment variables
-_S3_BUCKET = os.getenv("S3_BUCKET", S3_BUCKET)
-_AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", AUGMENTED_EICR_PREFIX)
-_AUGMENTATION_METADATA_PREFIX = os.getenv(
-    "AUGMENTATION_METADATA_PREFIX", AUGMENTATION_METADATA_PREFIX
-)
-
-# Cache S3 client to reuse across Lambda invocations
-_cached_s3_client: BaseClient | None = None
-
-
-class HandlerResponse(TypedDict):
-    """Response from the AWS Lambda handler."""
-
-    results: list[dict[str, object]]
-    batchItemFailures: list[dict[str, str]]
+logger = structlog.get_logger()
 
 
 @event_source(data_class=SQSEvent)
-def handler(event: SQSEvent, context: LambdaContext) -> HandlerResponse:
+def handler(event: SQSEvent, _: LambdaContext) -> dict:
     """AWS Lambda handler for augmenting eICRs with nonstandard codes.
 
-    :param event: The SQS event containing messages with eICRs to augment.
+    Triggered by S3 events when TTC output objects are created in TTCAugmentationMetadataV2/.
+    Reads TTC output and original eICR from S3, performs augmentation, and writes results to S3.
+
+    :param event: The SQS event containing S3 event data.
     :param context: The AWS Lambda context object.
-    :return: A dictionary containing the results of the augmentation and any batch item failures.
+    :return: A dictionary containing processing results and any batch item failures.
     """
-    global _cached_s3_client  # noqa: PLW0603
+    s3_client = lambda_handler.create_s3_client()
 
-    if _cached_s3_client is None:
-        _cached_s3_client = lambda_handler.create_s3_client()
-    s3_client = _cached_s3_client
+    logger.info(f"Received event with {len(event['Records'])} record(s)")
 
-    results: list[dict[str, object]] = []
-    batch_item_failures: list[dict[str, str]] = []
+    failures = []
+    successes = []
 
     for record in event.records:
-        message_id = record["messageId"]
-
         try:
-            s3_event = json.loads(record.body)
+            _process_record(record, s3_client)
+            successes.append(record.message_id)
+        except Exception as e:
+            logger.exception(f"Error processing record: {e}", message_id=record.message_id)
+            failures.append({"message_id": record.message_id, "error": str(e)})
 
-            eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-            object_key = eventbridge_data["object_key"]
-            persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
+    return (
+        {
+            "statusCode": 207,
+            "message": "Augmentation processed with some failures!",
+            "failures": failures,
+            "num_failure_eicrs": len(failures),
+            "num_success_eicrs": len(successes),
+        }
+        if failures
+        else {
+            "statusCode": 200,
+            "message": "Augmentation processed successfully!",
+            "num_success_eicrs": len(successes),
+        }
+    )
 
-            config = TTCAugmenterConfig()
 
-            object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
-            original_eicr_content = lambda_handler.get_file_content_from_s3(
-                bucket_name=_S3_BUCKET, object_key=object_key, s3_client=s3_client
-            )
+def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
+    """Process a single SQS record containing an S3 event.
 
-            object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
-            ttc_output = json.loads(
-                lambda_handler.get_file_content_from_s3_to_json(
-                    bucket_name=_S3_BUCKET, object_key=object_key, s3_client=s3_client
-                )
-            )
-            ttc_output = TTCOutput(**ttc_output)
+    :param record: The SQS record with an EventBridge S3 event in the body.
+    :param s3_client: The S3 client to use for reading and writing files.
+    """
+    if not record.body:
+        logger.warning("Empty SQS body", message_id=record.message_id)
+        return
 
-            # TODO: in the future, when there are multiple applications using the augmentation service, we will need to determine which augmenter to use based on the application code in the config. For now, since TTC is the only application, we can directly initialize the EICRAugmenter.
-            augmenter = EICRAugmenter(
-                document=original_eicr_content,
-                nonstandard_codes=ttc_output.nonstandard_codes,
-                config=config,
-            )
+    s3_event = json.loads(record.body)
 
-            metadata = augmenter.augment()
+    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
+    object_key = eventbridge_data["object_key"]
+    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
+    logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
 
-            # TODO: the output of the augmenter will likely need to be modified when there are multiple applications and augmenters, but for now we can directly create a TTC augmenter output.
-            output = TTCAugmenterOutput(
-                eicr_id=persistence_id,
-                augmented_eicr=augmenter.augmented_xml,
-                metadata=metadata,
-            )
+    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
+    logger.info(f"Extracted persistence_id: {persistence_id}")
 
-            # Save augmented eICR and metadata to S3
-            _save_augmentation_outputs(persistence_id, output, s3_client)
+    ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
+    original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
 
-            results.append(
-                {
-                    "messageId": message_id,
-                    "status": "success",
-                    "result": output.model_dump(),
-                }
-            )
-        except Exception as exc:
-            batch_item_failures.append({"itemIdentifier": message_id})
-            results.append(
-                {
-                    "messageId": message_id,
-                    "status": "error",
-                    "error": str(exc),
-                }
-            )
+    # Currently only supports eICR augmentation. Other document types (e.g. from
+    # ecr-refiner or other services) may need different augmentation strategies.
+    config = TTCAugmenterConfig()
+    augmenter = EICRAugmenter(
+        document=original_eicr,
+        nonstandard_codes=ttc_output.nonstandard_codes,
+        config=config,
+    )
 
-    return {
-        "results": results,
-        "batchItemFailures": batch_item_failures,
-    }
+    metadata = augmenter.augment()
+
+    output = TTCAugmenterOutput(
+        eicr_id=persistence_id,
+        augmented_eicr=augmenter.augmented_xml,
+        metadata=metadata,
+    )
+
+    _save_augmentation_outputs(persistence_id, output, s3_client, bucket_name)
+
+
+def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> TTCOutput:
+    """Load TTC output from S3.
+
+    :param persistence_id: The persistence ID for the S3 object key.
+    :param s3_client: The S3 client.
+    :param bucket_name: The S3 bucket name.
+    :return: The parsed TTC output dictionary.
+    """
+    object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
+    logger.info(f"Retrieving TTC output from s3://{bucket_name}/{object_key}")
+    content = lambda_handler.get_file_content_from_s3(
+        bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
+    )
+
+    return TTCOutput(**json.loads(content))
+
+
+def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> str:
+    """Load original eICR XML from S3.
+
+    :param persistence_id: The persistence ID for the S3 object key.
+    :param s3_client: The S3 client.
+    :param bucket_name: The S3 bucket name.
+    :return: The raw eICR XML string.
+    """
+    object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+    logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
+    return lambda_handler.get_file_content_from_s3(
+        bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
+    )
 
 
 def _save_augmentation_outputs(
-    eicr_id: str, output: TTCAugmenterOutput, s3_client: BaseClient
+    persistence_id: str,
+    output: TTCAugmenterOutput,
+    s3_client: BaseClient,
+    bucket_name: str,
 ) -> None:
     """Save augmented eICR and metadata to S3.
 
-    :param eicr_id: The eICR identifier.
+    :param persistence_id: The persistence ID for the S3 object key.
     :param output: The augmentation output containing the augmented eICR and metadata.
     :param s3_client: The S3 client to use for uploading files.
+    :param bucket_name: The S3 bucket name to write to.
     """
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
-        bucket_name=_S3_BUCKET,
-        object_key=f"{_AUGMENTED_EICR_PREFIX}{eicr_id}",
+        bucket_name=bucket_name,
+        object_key=f"{AUGMENTED_EICR_PREFIX}{persistence_id}",
         s3_client=s3_client,
     )
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
-        bucket_name=_S3_BUCKET,
-        object_key=f"{_AUGMENTATION_METADATA_PREFIX}{eicr_id}",
+        bucket_name=bucket_name,
+        object_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
         s3_client=s3_client,
     )

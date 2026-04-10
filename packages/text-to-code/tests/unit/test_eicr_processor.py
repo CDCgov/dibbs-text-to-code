@@ -18,6 +18,8 @@ BASE_XPATH = (
     "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
 )
 
+NO_MATCH_FOUND_ERROR_MESSAGE = "No ID element found in eICR XML."
+
 
 class TestEmptyEicrProcessor:
     def test_init(self):
@@ -51,6 +53,40 @@ class TestEmptyEicrProcessor:
                 "sub_xpaths": expected_sub_xpaths,
             },
         )
+
+    def test_resolve_reference_returns_none_for_empty_reference_value(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+
+        assert processor.resolve_reference(None) is None
+        assert processor.resolve_reference("") is None
+        assert processor.resolve_reference("   ") is None
+
+    def test_resolve_reference_returns_none_when_reference_is_missing(self):
+        processor = EicrProcessor(
+            "<ClinicalDocument><section><text>ID exists</text></section></ClinicalDocument>"
+        )
+
+        assert processor.resolve_reference("#missing-id") is None
+
+    def test_extract_text_candidates_from_element_includes_child_tail_text(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <section>
+                    <text>
+                        <target>first<inner>second</inner>third</target>
+                    </text>
+                </section>
+            </ClinicalDocument>
+            """
+        )
+
+        element = processor._xml_root.find(".//target")
+        assert element is not None
+
+        result = processor._extract_text_candidates_from_element(element)
+
+        assert result == ["first second third third"]
 
 
 class TestBadEicr:
@@ -97,6 +133,139 @@ class TestBasicEicrProcessor:
     def test_metadata(self, eicr_metadata: EICRMetadata):
         assert eicr_metadata == EICRMetadata(
             eicr_id=CdaInstanceIdentifier(root="c8516bdc-8bb2-40aa-8dae-20a77546488f"),
+            eicr_vendor="Test eCR Vendor Name",
+        )
+
+    def test_metadata_raises_when_id_is_missing(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <author>
+                    <assignedAuthor>
+                        <assignedAuthoringDevice>
+                            <softwareName>Test eCR Vendor Name</softwareName>
+                        </assignedAuthoringDevice>
+                    </assignedAuthor>
+                </author>
+            </ClinicalDocument>
+            """
+        )
+
+        with pytest.raises(ValueError, match=NO_MATCH_FOUND_ERROR_MESSAGE):
+            _ = processor.eicr_metadata
+
+    def test_metadata_raises_when_id_has_null_flavor(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <id nullFlavor="UNK" />
+                <author>
+                    <assignedAuthor>
+                        <assignedAuthoringDevice>
+                            <softwareName>Test eCR Vendor Name</softwareName>
+                        </assignedAuthoringDevice>
+                    </assignedAuthor>
+                </author>
+            </ClinicalDocument>
+            """
+        )
+
+        with pytest.raises(ValueError, match=NO_MATCH_FOUND_ERROR_MESSAGE):
+            _ = processor.eicr_metadata
+
+    def test_metadata_parses_false_displayable(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <id
+                    root="test-root"
+                    extension="test-extension"
+                    assigningAuthorityName="test-authority"
+                    displayable="false"
+                />
+                <author>
+                    <assignedAuthor>
+                        <assignedAuthoringDevice>
+                            <softwareName>Test eCR Vendor Name</softwareName>
+                        </assignedAuthoringDevice>
+                    </assignedAuthor>
+                </author>
+            </ClinicalDocument>
+            """
+        )
+
+        assert processor.eicr_metadata == EICRMetadata(
+            eicr_id=CdaInstanceIdentifier(
+                root="test-root",
+                extension="test-extension",
+                assigning_authority_name="test-authority",
+                displayable=False,
+                null_flavor=None,
+            ),
+            eicr_vendor="Test eCR Vendor Name",
+        )
+
+    def test_metadata_parses_unknown_displayable_as_none(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <id
+                    root="test-root"
+                    extension="test-extension"
+                    assigningAuthorityName="test-authority"
+                    displayable="not-a-bool"
+                />
+                <author>
+                    <assignedAuthor>
+                        <assignedAuthoringDevice>
+                            <softwareName>Test eCR Vendor Name</softwareName>
+                        </assignedAuthoringDevice>
+                    </assignedAuthor>
+                </author>
+            </ClinicalDocument>
+            """
+        )
+
+        assert processor.eicr_metadata == EICRMetadata(
+            eicr_id=CdaInstanceIdentifier(
+                root="test-root",
+                extension="test-extension",
+                assigning_authority_name="test-authority",
+                displayable=None,
+                null_flavor=None,
+            ),
+            eicr_vendor="Test eCR Vendor Name",
+        )
+
+    def test_metadata_parses_true_displayable(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <id
+                    root="test-root"
+                    extension="test-extension"
+                    assigningAuthorityName="test-authority"
+                    displayable="true"
+                />
+                <author>
+                    <assignedAuthor>
+                        <assignedAuthoringDevice>
+                            <softwareName>Test eCR Vendor Name</softwareName>
+                        </assignedAuthoringDevice>
+                    </assignedAuthor>
+                </author>
+            </ClinicalDocument>
+            """
+        )
+
+        assert processor.eicr_metadata == EICRMetadata(
+            eicr_id=CdaInstanceIdentifier(
+                root="test-root",
+                extension="test-extension",
+                assigning_authority_name="test-authority",
+                displayable=True,
+                null_flavor=None,
+            ),
             eicr_vendor="Test eCR Vendor Name",
         )
 

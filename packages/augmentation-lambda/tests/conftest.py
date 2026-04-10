@@ -49,7 +49,7 @@ def example_s3_event_payload() -> dict:
         "account": "111122223333",
         "time": "2025-09-03T12:34:56Z",
         "region": "us-east-1",
-        "resources": ["arn:aws:s3:::my-bucket-name"],
+        "resources": [f"arn:aws:s3:::{S3_BUCKET}"],
         "detail": {
             "version": "0",
             "bucket": {"name": S3_BUCKET},
