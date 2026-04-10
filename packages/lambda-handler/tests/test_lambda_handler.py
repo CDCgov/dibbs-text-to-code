@@ -11,8 +11,8 @@ class TestCreateS3Client:
         s3_client = lambda_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
         assert s3_client.meta.region_name == "us-east-1"
-        assert s3_client._get_credentials().secret_key == "test_secret_access_key"  # noqa: S105
-        assert s3_client._get_credentials().access_key == "test_access_key_id"
+        assert s3_client._get_credentials().secret_key == "FOOBARSECRET"  # noqa: S105
+        assert s3_client._get_credentials().access_key == "FOOBARKEY"
 
 
 class TestGetEventBridgeDataFromS3Event:
@@ -95,7 +95,7 @@ class TestCreateAWSAuth:
         """Test create AWS auth."""
         auth = lambda_handler.create_aws_auth()
 
-        assert auth.access_id == "test_access_key_id"
+        assert auth.access_id == "FOOBARKEY"
         assert auth.region == "us-east-1"
 
 
