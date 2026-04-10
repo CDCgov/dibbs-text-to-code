@@ -63,10 +63,12 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
-# File settings
+# File & Directories 
 SNOINC_DIRECTORY = "./data/snoinc_extracts"
+SNOINC_ENHANCEMENTS_DIRECTORY = "./data/snoinc_extracts/enhancements"
 TMP_DIRECTORY = "./tmp"
-LOINC_CS_NAMES = "./packages/data-curation/loinc/ConsumerName.csv"
+LOINC_CS_NAMES = "./data/snoinc_extracts/loinc_other/consumer_names.csv"
+LOINC_PARTS_ABBRV_SYNONYMS = "./data/snoinc_extracts/loinc_other/loinc_parts_abbrv_synonyms.txt"
 
 # Data Filter Criteria
 LOINC_TEXT_TO_FILTER = [
@@ -604,8 +606,7 @@ def create_loinc_part_abbrv_syn_dicts():
     LOINC parts, which contains each LOINC Part Code, Name
     and Abbreviations and Synonyms
     """
-    file_path = "./packages/data-curation/loinc/LOINC_PARTS_ABBRV_SYNONYMS.txt"
-
+    
     # Separate LOINC Part Dictionaries
     component_dict = {}
     method_dict = {}
@@ -622,7 +623,7 @@ def create_loinc_part_abbrv_syn_dicts():
 
     row_count = 1
 
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(LOINC_PARTS_ABBRV_SYNONYMS, "r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
             # NOTE: the below print statement can be used
@@ -688,12 +689,12 @@ def create_loinc_part_abbrv_syn_dicts():
                 )
     print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
-    save_json_file(SNOINC_DIRECTORY, component_file, component_dict)
-    save_json_file(SNOINC_DIRECTORY, method_file, method_dict)
-    save_json_file(SNOINC_DIRECTORY, property_file, property_dict)
-    save_json_file(SNOINC_DIRECTORY, system_file, system_dict)
-    save_json_file(SNOINC_DIRECTORY, time_file, time_dict)
-    save_json_file(SNOINC_DIRECTORY, scale_file, scale_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, component_file, component_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, method_file, method_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, property_file, property_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, system_file, system_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, time_file, time_dict)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
 
 
 def _filter_loinc_term(text: str) -> bool:

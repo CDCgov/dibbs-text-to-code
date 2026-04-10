@@ -102,11 +102,11 @@ This script contains the code needed to generate training data specifically for 
 
 ---
 
-### loinc (folder)
+### sql (folder)
 
-Contains .sql queries/files that are used to gather data from LOINC's RELMA database (MS-Access), as well as the resulting data files from said queries that are used to generate the end result data files used to create the TTC model(s).
+Contains .sql queries/files that are used to gather data from various databases. Currently the only sql scripts are specfic to retrieving data from LOINC's RELMA database (MS-Access). The resulting files are stored in the `data\snoinc_extracts\loinc_other` folder.
 
-- Note: the ConsumerName.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
+- Note: the consumer_name.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
 
 ## Deprecated Scripts
 
@@ -193,7 +193,7 @@ code|lab_type|property|time_aspect|system|scale_type|method_type|class_type|shor
 
 ### LOINC Part Synonyms & Abbreviations
 
-These data files are organizing all the possible abbreviations and synonyms for all the particular LOINC Part codes/concepts into a single JSON/Dictionary file.
+These data files contain all the possible abbreviations and synonyms for all the particular LOINC Part codes/concepts into a single JSON/Dictionary file. These files are used in the [`loinc_enhancement.py`](#loinc_enhancementpy) script.
 
 LOINC terms are comprised of six parts, defining a specific clinical observation or measurement: Component (the analyte), Property (the characteristic being measured), Time Aspect (when it was measured), System (the specimen or source), Scale (how the result is expressed), and Method (how it was measured). These parts, joined by colons, create a fully specified name that provides clarity and standardization for clinical data exchange.
 
@@ -400,7 +400,7 @@ code|text
 - [Download LOINC ConsumerNames](https://loinc.org/downloads/)
   - Download LOINC and unzip and extract downloaded file
   - In the `Loinc_#.##\AccessoryFiles\ConsumerName` folder, that you extracted, find the ConsumerNames.csv file
-  - Save this in the `.\packages\data-curation\loinc` folder in this project
+  - Save the file as `consumer_names.csv` in the `.\data\snoinc_extracts\loinc_other` folder in this project
 
 - [UMLS Terminology Service Account](https://uts.nlm.nih.gov/uts/signup-login) - Sign up and to get a UMLS Metathesaurus License
   - Once you get your UMLS API Key store in it an environment variable: `UMLS_API_KEY`
@@ -471,16 +471,16 @@ There are a handful of CLI commands you can use to generate the extract files. H
     ![RELMA](./assets/RELMADB.jpg)
   - Select the `Create` Option in the Menu and then select `SQL Query`
     ![CREATE QUERY](./assets/create_query.jpg)
-  - Open the SQL query provided for [loinc parts abbreviations & synonyms](./loinc/get_loinc_parts_abbrv_synonyms.sql) and copy the contents of that file into the newly created query.
+  - Open the SQL query provided for [loinc parts abbreviations & synonyms](./sql/get_loinc_parts_abbrv_synonyms.sql) and copy the contents of that file into the newly created query.
     ![SAVE QUERY ABBRV](./assets/query_loinc_abbrv_syn.jpg)
-  - Before saving the query, select the `Make Table` option for the `Query Type` and enter the "Table Name" as `LOINC_PARTS_ABBRV_SYNONYMS` and then click `OK`
+  - Before saving the query, select the `Make Table` option for the `Query Type` and enter the "Table Name" as `loinc_parts_abbrv_synonyms` and then click `OK`
     ![MAKE TABLE QUERY](./assets/make_table_query.jpg)
   - Click on Save in the top right corner and name the query: `GET_LOINC_PARTS_ABBRV_SYNONYMS`
   - With the query still open in "Design" mode click on the `Run` Button at the top of the menu. This will create the table using the data from the query.
     ![RUN QUERY](./assets/run_abbrv_query.jpg)
-  - Find the newly created table by expanding the '^' option next to `Tables` in the right hand menu. Select the `LOINC_PARTS_ABBRV_SYNONYMS` table from the list and then select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option.
+  - Find the newly created table by expanding the '^' option next to `Tables` in the right hand menu. Select the `loinc_parts_abbrv_synonyms` table from the list and then select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option.
     ![EXPORT TEXT](./assets/find_table_export_text.jpg)
-  - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `C:\<your repo location>\data_curation\loinc` and then click `OK`.
+  - Ensure to save the file, with the same table name `loinc_parts_abbrv_synonyms.txt`, to the following location: `C:\<your repo location>\data\snoinc_extracts\loinc_other` and then click `OK`.
     ![SAVE EXPORT TO REPO](./assets/save_export_to_repo.jpg)
   - When the "Export Text Wizard" appears select `Delimited` and click `Next`
     ![DELIM](./assets/delimited.jpg)
@@ -562,8 +562,8 @@ There are a handful of CLI commands you can use to generate the extract files. H
     ![SAVE QUERY](./assets/save_query.jpg)
   - With the newly created query still open, select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:\<your repo location>\data\` and then click `OK`.
     ![SAVE CSV](./assets/export_csv_to_repo.jpg)
-  - Ensure to save the file, with the same table name `LOINC_PARTS_ABBRV_SYNONYMS.txt`, to the following location: `<your repo location>\data_curation\loinc` and then click `OK`.
+  - Ensure to save the file, with the same table name `loinc_parts_abbrv_synonyms.txt`, to the following location: `<your repo location>\data\snoinc_extracts\loinc_other` and then click `OK`.
   - When the "Export Text Wizard" appears select `Finish`.
-  - This will save the query results in the [data folder](../../data/)
+  - This will save the query results in the [data folder](../../data/snoinc_extracts/loinc_other/)
 
 ---
