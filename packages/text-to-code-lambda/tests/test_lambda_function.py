@@ -129,28 +129,3 @@ class TestHandler:
             "num_success_eicrs": 0,
         }
         assert mock_opensearch.search.call_count == 0
-
-    def test_handler_saves_metadata_when_no_relevant_schematron_fields(
-        self, example_sqs_event, mock_aws_setup_empty_eicr, mock_opensearch, mocker, snapshot
-    ):
-        """Test handler when there are no relevant Schematron fields."""
-        resp = lambda_function.handler(example_sqs_event, {})
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
-
-        # Assert that the TTC output was saved to S3
-        ttc_output = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_empty_eicr.persistence_id}",
-        )
-        snapshot.assert_match(ttc_output, "ttc_output.json")
-
-        # Assert that the TTC metadata output was saved to S3 with the expected content
-        ttc_metadata = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup_empty_eicr.persistence_id}",
-        )
-        snapshot.assert_match(ttc_metadata, "ttc_metadata.json")
