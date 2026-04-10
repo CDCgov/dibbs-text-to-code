@@ -115,26 +115,6 @@ def get_file_content_from_s3(
     return response["Body"].read().decode("utf-8")
 
 
-def get_file_content_from_s3_to_json(
-    bucket_name: str, object_key: str, s3_client: BaseClient | None = None
-) -> dict:
-    """Extracts the file content from an S3 bucket.
-
-    :param bucket_name: The name of the S3 bucket.
-    :param object_key: The key of the S3 object.
-    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
-    :return: The content of the file as a string.
-    """
-    client = s3_client or create_s3_client()
-
-    # Check if object exists
-    if not check_s3_object_exists(client, bucket_name, object_key):
-        raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}")
-
-    response = client.get_object(Bucket=bucket_name, Key=object_key)
-    return response["Body"].read()
-
-
 def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) -> dict:
     """Extracts the file metadata from an S3 event triggered by a Lambda function.
 
