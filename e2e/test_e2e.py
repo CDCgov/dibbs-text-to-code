@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -13,16 +12,21 @@ from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
-from shared_models import AUGMENTATION_METADATA_PREFIX
-from shared_models import AUGMENTED_EICR_PREFIX
-from shared_models import EICR_INPUT_PREFIX
-from shared_models import SCHEMATRON_ERROR_PREFIX
-from shared_models import TTC_INPUT_PREFIX
-from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda.lambda_function import handler as ttc_handler
+from utils import get_env_var
 
-REGION = os.getenv("AWS_REGION")
-S3_BUCKET = os.getenv("S3_BUCKET")
+AUGMENTATION_METADATA_PREFIX = get_env_var("AUGMENTATION_METADATA_PREFIX")
+AUGMENTED_EICR_PREFIX = get_env_var("AUGMENTED_EICR_PREFIX")
+AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
+AWS_ACCESS_KEY_ID = "test_access_key_id"
+EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
+REGION = get_env_var("AWS_REGION")
+S3_BUCKET = get_env_var("S3_BUCKET")
+SCHEMATRON_ERROR_PREFIX = get_env_var("SCHEMATRON_ERROR_PREFIX")
+TTC_INPUT_PREFIX = get_env_var("TTC_INPUT_PREFIX")
+TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
+
 ACCOUNT_ID = "123456789012"
 
 QUEUE_1_NAME = "stage1-queue"
@@ -106,8 +110,8 @@ def _drain_sqs_for_prefix(sqs_client, queue_url, prefix, max_messages=10) -> lis
 
 @pytest.fixture
 def aws(monkeypatch):
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
     monkeypatch.setenv("AWS_DEFAULT_REGION", REGION)

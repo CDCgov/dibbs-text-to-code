@@ -1,6 +1,5 @@
 import io
 import json
-import os
 from datetime import UTC
 from datetime import datetime
 
@@ -13,12 +12,6 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import EICR_INPUT_PREFIX
-from shared_models import S3_BUCKET
-from shared_models import SCHEMATRON_ERROR_PREFIX
-from shared_models import TTC_INPUT_PREFIX
-from shared_models import TTC_METADATA_PREFIX
-from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import Code
 from shared_models import SchematronErrorDetail
 from shared_models import TTCOutput
@@ -31,21 +24,21 @@ from text_to_code.services import reranker
 from text_to_code.services import schematron_processor
 from text_to_code.services.eicr_processor import EicrProcessor
 from text_to_code.services.query import QueryBuilder
+from utils import get_env_var
 
 # Initialize the logger
 logger = Logger(service="ttc")
 
 # Environment variables
-_EICR_INPUT_PREFIX = os.getenv("EICR_INPUT_PREFIX", EICR_INPUT_PREFIX)
-_S3_BUCKET = os.getenv("S3_BUCKET", S3_BUCKET)
-_SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", SCHEMATRON_ERROR_PREFIX)
-_TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", TTC_INPUT_PREFIX)
-_TTC_METADATA_PREFIX = os.getenv("TTC_METADATA_PREFIX", TTC_METADATA_PREFIX)
-_TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", TTC_OUTPUT_PREFIX)
-AWS_REGION = os.getenv("AWS_REGION")
-OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
-OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
-S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
+_AWS_REGION = get_env_var("AWS_REGION")
+_EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
+_OPENSEARCH_ENDPOINT_URL = get_env_var("OPENSEARCH_ENDPOINT_URL")
+_OPENSEARCH_INDEX = get_env_var("OPENSEARCH_INDEX")
+_S3_BUCKET = get_env_var("S3_BUCKET")
+_SCHEMATRON_ERROR_PREFIX = get_env_var("SCHEMATRON_ERROR_PREFIX")
+_TTC_INPUT_PREFIX = get_env_var("TTC_INPUT_PREFIX")
+_TTC_METADATA_PREFIX = get_env_var("TTC_METADATA_PREFIX")
+_TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
 
 # Instantiate wrapper objects for the sentence-transformers models
 # to re-use across invocations
@@ -113,7 +106,7 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
     # Parse the EventBridge S3 event from the SQS message body
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
+    bucket_name = eventbridge_data.get("bucket_name") or _S3_BUCKET
     logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
 
     # Extract persistence_id from the RR object key
@@ -215,7 +208,7 @@ def _process_schematron_errors(
         query = QueryBuilder().with_vector_search(vector_parameters).build()
 
         opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-            query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
+            query=query, index=_OPENSEARCH_INDEX, opensearch_client=opensearch_client
         )
 
         # The OpenSearch results object has a couple levels of nesting,

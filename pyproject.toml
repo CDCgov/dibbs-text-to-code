@@ -24,6 +24,7 @@ dev = [
   "pre-commit>=4.5.1",
   "pyinstrument>=5.1.2",
   "pytest-cov>=7.0.0",
+  "pytest-env>=1.6.0",
   "pytest>=8.4.2",
   "requests>=2.32.5",
   "ruff>=0.14.10",
@@ -40,6 +41,9 @@ markers = ["e2e"]
 testpaths = ["e2e", "packages"]
 pythonpath = ["."]
 
+[tool.pytest_env]
+env_files = [".env.test"]
+env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
@@ -66,7 +70,6 @@ exclude = [
   "docs",
   "model-tuning",
   "packages/api",
-  "packages/utils",
 ]
 line-length = 100
 indent-width = 4
@@ -117,6 +120,7 @@ known-first-party = [
   "shared_models",
   "text_to_code",
   "text_to_code_lambda",
+  "utils",
 ]
 
 [tool.ruff.lint.per-file-ignores]

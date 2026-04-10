@@ -8,9 +8,11 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
-from shared_models import AUGMENTATION_METADATA_PREFIX
-from shared_models import AUGMENTED_EICR_PREFIX
-from shared_models import S3_BUCKET
+from utils import get_env_var
+
+AUGMENTATION_METADATA_PREFIX = get_env_var("AUGMENTATION_METADATA_PREFIX")
+AUGMENTED_EICR_PREFIX = get_env_var("AUGMENTED_EICR_PREFIX")
+S3_BUCKET = get_env_var("S3_BUCKET")
 
 
 @pytest.mark.time_machine(

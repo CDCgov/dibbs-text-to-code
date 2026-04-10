@@ -1,4 +1,3 @@
-from shared_models import S3_BUCKET
 import csv
 import os
 import pathlib
@@ -10,8 +9,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation.archived.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 from data_curation.archived import augmentation
-from utils import normalize
+from utils import normalize, get_env_var
 from utils import path
+
+S3_BUCKET = get_env_var("S3_BUCKET")
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

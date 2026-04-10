@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -9,33 +8,20 @@ import boto3
 import moto
 import pytest
 
-from shared_models import EICR_INPUT_PREFIX
-from shared_models import S3_BUCKET
-from shared_models import SCHEMATRON_ERROR_PREFIX
-from shared_models import TTC_INPUT_PREFIX
-from shared_models import TTC_METADATA_PREFIX
-from shared_models import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
+from utils import get_env_var
 
-AWS_ACCESS_KEY_ID = "test_access_key_id"
-AWS_REGION = "us-east-1"
-AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
-OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
+AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
+AWS_REGION = get_env_var("AWS_REGION")
+AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
+EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
+OPENSEARCH_ENDPOINT_URL = get_env_var("OPENSEARCH_ENDPOINT_URL")
+S3_BUCKET = get_env_var("S3_BUCKET")
+SCHEMATRON_ERROR_PREFIX = get_env_var("SCHEMATRON_ERROR_PREFIX")
+TTC_INPUT_PREFIX = get_env_var("TTC_INPUT_PREFIX")
+
+
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
-
-
-def pytest_configure() -> None:
-    """Configure env variables for pytest."""
-    os.environ["S3_BUCKET"] = S3_BUCKET
-    os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
-    os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
-    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
-    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
-    os.environ["TTC_METADATA_PREFIX"] = TTC_METADATA_PREFIX
-    os.environ["AWS_REGION"] = AWS_REGION
-    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
-    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
-    os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
 
 
 @pytest.fixture

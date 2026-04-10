@@ -3,6 +3,11 @@ import io
 import pytest
 
 import lambda_handler
+from utils import get_env_var
+
+AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
+AWS_REGION = get_env_var("AWS_REGION")
+AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
 
 
 class TestCreateS3Client:
@@ -10,7 +15,7 @@ class TestCreateS3Client:
         """Test create S3 client."""
         s3_client = lambda_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
-        assert s3_client.meta.region_name == "us-east-1"
+        assert s3_client.meta.region_name == AWS_REGION
         assert s3_client._get_credentials().secret_key == "FOOBARSECRET"  # noqa: S105
         assert s3_client._get_credentials().access_key == "FOOBARKEY"
 
@@ -132,22 +137,6 @@ class TestCreateOpenSearchClient:
 
         assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
         assert client.transport.hosts[0]["port"] == expected_port
-
-
-class TestRequireEnv:
-    def test_require_env(self, monkeypatch):
-        """Test require env."""
-        monkeypatch.setenv("TEST_ENV_VAR", "test_value")
-        value = lambda_handler.require_env("TEST_ENV_VAR")
-        assert value == "test_value"
-
-    def test_require_env_not_set(self, monkeypatch):
-        """Test require env not set."""
-        with pytest.raises(
-            ValueError,
-            match=r"NONEXISTENT_ENV_VAR not set as an environment variable\.",
-        ):
-            lambda_handler.require_env("NONEXISTENT_ENV_VAR")
 
 
 class TestGetPersistenceId:

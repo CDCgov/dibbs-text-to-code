@@ -1,4 +1,5 @@
 import lambda_handler
+from utils import get_env_var
 
 
 def handler(event: dict, context: dict) -> dict:
@@ -40,7 +41,7 @@ def handler(event: dict, context: dict) -> dict:
     # Configure OpenSearch client
     aws_auth = lambda_handler.create_aws_auth()
     os_client = lambda_handler.create_opensearch_client(aws_auth)
-    index_name = lambda_handler.require_env("INDEX_NAME")
+    index_name = get_env_var("INDEX_NAME")
 
     # Create index if it doesn't already exist
     if not os_client.indices.exists(index=index_name):

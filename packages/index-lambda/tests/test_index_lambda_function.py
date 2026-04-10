@@ -52,8 +52,8 @@ def patch_lambda_handler(monkeypatch, description_vector_type: str) -> None:
         """Mock create_opensearch_client function that returns a MockOpenSearchClient."""
         return MockOpenSearchClient(description_vector_type)
 
-    def mock_require_env(name: str) -> str:
-        """Mock require_env function that returns the INDEX_NAME for the INDEX_NAME variable."""
+    def mock_get_env_var(name: str) -> str:
+        """Mock get_env_var function that returns the INDEX_NAME for the INDEX_NAME variable."""
         if name == "INDEX_NAME":
             return INDEX_NAME
         raise ValueError(f"Unexpected env var requested: {name}")
@@ -64,7 +64,7 @@ def patch_lambda_handler(monkeypatch, description_vector_type: str) -> None:
         "create_opensearch_client",
         mock_create_opensearch_client,
     )
-    monkeypatch.setattr(lambda_function.lambda_handler, "require_env", mock_require_env)
+    monkeypatch.setattr(lambda_function, "get_env_var", mock_get_env_var)
 
 
 class TestHandler:

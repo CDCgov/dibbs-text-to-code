@@ -6,10 +6,12 @@ import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from conftest import S3_BUCKET
-from conftest import TTC_METADATA_PREFIX
-from conftest import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
+from utils import get_env_var
+
+S3_BUCKET = get_env_var("S3_BUCKET")
+TTC_METADATA_PREFIX = get_env_var("TTC_METADATA_PREFIX")
+TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
 
 EXPECTED_ORDERED_ERRORS = 1
 EXPECTED_EXCEPTION_RESULTS = 2

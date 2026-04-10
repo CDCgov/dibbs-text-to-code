@@ -12,12 +12,15 @@ import lambda_handler
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import AUGMENTATION_METADATA_PREFIX
-from shared_models import AUGMENTED_EICR_PREFIX
-from shared_models import EICR_INPUT_PREFIX
-from shared_models import S3_BUCKET
-from shared_models import TTC_OUTPUT_PREFIX
 from shared_models import TTCOutput
+from utils import get_env_var
+
+_AUGMENTATION_METADATA_PREFIX = get_env_var("AUGMENTATION_METADATA_PREFIX")
+_AUGMENTED_EICR_PREFIX = get_env_var("AUGMENTED_EICR_PREFIX")
+_EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
+_S3_BUCKET = get_env_var("S3_BUCKET")
+_TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
+
 
 logger = structlog.get_logger()
 
@@ -79,14 +82,14 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
 
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
-    logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
+    bucket_name = eventbridge_data.get("bucket_name") or _S3_BUCKET
+    logger.info(f"Processing S3 Object: s3://{_S3_BUCKET}/{object_key}")
 
-    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
+    persistence_id = lambda_handler.get_persistence_id(object_key, _TTC_OUTPUT_PREFIX)
     logger.info(f"Extracted persistence_id: {persistence_id}")
 
-    ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
-    original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
+    ttc_output = _load_ttc_output(persistence_id, s3_client, _S3_BUCKET)
+    original_eicr = _load_original_eicr(persistence_id, s3_client, _S3_BUCKET)
 
     # Currently only supports eICR augmentation. Other document types (e.g. from
     # ecr-refiner or other services) may need different augmentation strategies.
@@ -116,7 +119,7 @@ def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: st
     :param bucket_name: The S3 bucket name.
     :return: The parsed TTC output dictionary.
     """
-    object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
+    object_key = f"{_TTC_OUTPUT_PREFIX}{persistence_id}"
     logger.info(f"Retrieving TTC output from s3://{bucket_name}/{object_key}")
     content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
@@ -133,7 +136,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :param bucket_name: The S3 bucket name.
     :return: The raw eICR XML string.
     """
-    object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+    object_key = f"{_EICR_INPUT_PREFIX}{persistence_id}"
     logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
     return lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
@@ -156,12 +159,12 @@ def _save_augmentation_outputs(
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{AUGMENTED_EICR_PREFIX}{persistence_id}",
+        object_key=f"{_AUGMENTED_EICR_PREFIX}{persistence_id}",
         s3_client=s3_client,
     )
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
+        object_key=f"{_AUGMENTATION_METADATA_PREFIX}{persistence_id}",
         s3_client=s3_client,
     )
