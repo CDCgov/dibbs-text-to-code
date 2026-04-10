@@ -18,6 +18,11 @@ EXPECTED_RERANKER_SCORE = 0.944
 
 @pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 class TestHandler:
+    """Test the text to lambda handler.
+
+    TODO: Comparing the output JSONs are problematic because they contain floating point numbers that can be different accross systems. Either the test needs to be updated to handle that, or the output models need to be update to handle comparisons.
+    """
+
     def test_handler_success(
         self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker, snapshot: Snapshot
     ):
