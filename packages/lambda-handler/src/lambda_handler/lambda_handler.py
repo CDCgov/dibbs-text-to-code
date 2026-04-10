@@ -1,4 +1,5 @@
 import os
+from typing import BinaryIO
 
 import boto3
 from aws_lambda_typing import events as lambda_events
@@ -147,7 +148,7 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
 
 
 def put_file(
-    file_obj: any,  # ty:ignore[invalid-type-form]
+    file_obj: BinaryIO,
     bucket_name: str,
     object_key: str,
     s3_client: BaseClient | None = None,
