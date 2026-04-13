@@ -844,6 +844,7 @@ name = "lambda-handler"
 version = "0.1.0"
 source = { editable = "packages/lambda-handler" }
 dependencies = [
+    { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "pydantic" },
 ]
@@ -855,6 +856,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "pydantic", specifier = ">=2.12.5" },
 ]
@@ -2036,7 +2038,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "aws-lambda-typing" },
     { name = "moto" },
 ]
 
@@ -2049,10 +2050,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "aws-lambda-typing", specifier = ">=2.20.0" },
-    { name = "moto" },
-]
+dev = [{ name = "moto" }]
 
 [[package]]
 name = "thinc"
