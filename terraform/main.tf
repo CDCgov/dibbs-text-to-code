@@ -669,7 +669,6 @@ resource "aws_lambda_function" "augmentation_lambda" {
       TTC_OUTPUT_PREFIX            = var.ttc_output_prefix
       AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
       AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix
-      AWS_REGION                   = var.region
     }
   }
 
