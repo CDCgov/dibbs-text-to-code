@@ -291,7 +291,7 @@ resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
         Effect = "Allow"
         Action = ["s3:GetObject", "s3:HeadObject"]
         Resource = [
-          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_input_prefix}*",
           "arn:aws:s3:::${var.s3_bucket}/${var.schematron_error_prefix}*"
         ]
       },
@@ -386,7 +386,7 @@ resource "aws_iam_role_policy" "augmentation_lambda_s3_policy" {
         Effect = "Allow"
         Action = ["s3:GetObject", "s3:HeadObject"]
         Resource = [
-          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_input_prefix}*",
           "arn:aws:s3:::${var.s3_bucket}/${var.ttc_output_prefix}*"
         ]
       },
@@ -428,7 +428,6 @@ resource "aws_lambda_function" "lambda" {
       S3_BUCKET               = var.s3_bucket
       RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
       RERANKER_MODEL_PATH     = "/opt/reranker_model"
-      EICR_INPUT_PREFIX       = var.eicr_input_prefix
       SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
       TTC_INPUT_PREFIX        = var.ttc_input_prefix
       TTC_OUTPUT_PREFIX       = var.ttc_output_prefix
@@ -665,7 +664,7 @@ resource "aws_lambda_function" "augmentation_lambda" {
   environment {
     variables = {
       S3_BUCKET                    = var.s3_bucket
-      EICR_INPUT_PREFIX            = var.eicr_input_prefix
+      TTC_INPUT_PREFIX             = var.ttc_input_prefix
       TTC_OUTPUT_PREFIX            = var.ttc_output_prefix
       AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
       AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix

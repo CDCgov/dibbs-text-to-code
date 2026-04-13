@@ -51,7 +51,7 @@ Each Lambda function has its own IAM role scoped to least-privilege S3 permissio
 - **TTC Lambda IAM Role** (`aws_iam_role.ttc_lambda_role`): Attached policies:
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
-  - Inline S3 policy — `s3:GetObject`/`s3:HeadObject` on `eCRMessageV2/` and `ValidationResponseV2/` prefixes; `s3:PutObject` on `TTCAugmentationMetadataV2/` and `TTCMetadataV2/` prefixes
+  - Inline S3 policy — `s3:GetObject`/`s3:HeadObject` on `TextToCodeSubmissionV2/` and `ValidationResponseV2/` prefixes; `s3:PutObject` on `TTCAugmentationMetadataV2/` and `TTCMetadataV2/` prefixes
   - Inline OpenSearch policy — grants OpenSearch HTTP actions (`ESHttpGet/Post/Put/Delete/Head/Patch/Options`)
 - **Index Lambda IAM Role** (`aws_iam_role.index_lambda_role`): Attached policies:
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
@@ -83,7 +83,7 @@ At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handle
 4. Generates embeddings and executes KNN queries against OpenSearch
 5. Returns standardized code mappings (LOINC/SNOMED)
 
-Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `S3_BUCKET`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `EICR_INPUT_PREFIX`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
+Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `S3_BUCKET`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
 
 #### Augmentation Lambda (`ttc-augmentation-lambda`, `Dockerfile.augmentation`)
 
