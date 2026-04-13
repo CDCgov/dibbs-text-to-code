@@ -63,7 +63,7 @@ jobs:
         run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda -target=aws_ecr_repository.augmentation_lambda
 
       - name: Login to Amazon ECR
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
