@@ -32,6 +32,6 @@ Every TTC invocation logs the **event bucket** and **object key** as structured 
 | `TTC_INPUT_PREFIX` | No | `TextToCodeSubmissionV2/` | S3 key prefix for TTC submission triggers |
 | `TTC_OUTPUT_PREFIX` | No | `TTCAugmentationMetadataV2/` | S3 key prefix for TTC augmentation output |
 | `TTC_METADATA_PREFIX` | No | `TTCMetadataV2/` | S3 key prefix for TTC analysis metadata |
-| `AWS_REGION` | Yes | — | AWS region |
+| `AWS_REGION` | No | Auto-provided by Lambda | AWS region (automatically set by the Lambda execution environment) |
 | `OPENSEARCH_ENDPOINT_URL` | Yes | — | OpenSearch cluster endpoint |
 | `OPENSEARCH_INDEX` | No | `ttc-index` | OpenSearch index name for vector search |

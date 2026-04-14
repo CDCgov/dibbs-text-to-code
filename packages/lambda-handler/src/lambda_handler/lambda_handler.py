@@ -132,7 +132,7 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     :param event: The S3 event containing the bucket and object key information.
     :return: A dictionary containing the bucket name and object key.
     """
-    bucket_name = event["detail"]["bucket"]["name"]
+    bucket_name = event.get("detail", {}).get("bucket", {}).get("name")
     object_key = event["detail"]["object"]["key"]
 
     return {"bucket_name": bucket_name, "object_key": object_key}
