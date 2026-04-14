@@ -58,17 +58,17 @@ jobs:
         run: terraform validate
 
       - name: Create ECR repositories
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
         run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda -target=aws_ecr_repository.augmentation_lambda
 
       - name: Login to Amazon ECR
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Get ECR repository URLs
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         id: ecr-url
         working-directory: terraform
         run: |
@@ -80,7 +80,7 @@ jobs:
           echo "aug_ecr_url=$AUG_ECR_URL" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Index Docker image
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         run: |
           INDEX_ECR_URL="${{ steps.ecr-url.outputs.index_ecr_url }}"
           docker build -f Dockerfile.index -t "$INDEX_ECR_URL:${{ github.sha }}" -t "$INDEX_ECR_URL:latest" --secret id=huggingface_token,env=HF_TOKEN .
@@ -90,7 +90,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Build and push TTC Docker image
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         run: |
           ECR_URL="${{ steps.ecr-url.outputs.ecr_url }}"
           docker build -f Dockerfile.ttc -t "$ECR_URL:${{ github.sha }}" -t "$ECR_URL:latest" --secret id=huggingface_token,env=HF_TOKEN .
@@ -100,7 +100,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Build and push Augmentation Docker image
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         run: |
           AUG_ECR_URL="${{ steps.ecr-url.outputs.aug_ecr_url }}"
           docker build -f Dockerfile.augmentation -t "$AUG_ECR_URL:${{ github.sha }}" -t "$AUG_ECR_URL:latest" .
@@ -108,12 +108,12 @@ jobs:
           docker push "$AUG_ECR_URL:latest"
 
       - name: Terraform Plan
-        if: ${{ !inputs.apply && !inputs.destroy }}
+        if: ${{ !inputs.apply && !inputs.destroy || !(github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
         run: terraform plan
 
       - name: Terraform Apply
-        if: ${{ inputs.apply && !inputs.destroy }}
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
         run: terraform apply -auto-approve -var="index_lambda_image_tag=${{ github.sha }}" -var="ttc_lambda_image_tag=${{ github.sha }}" -var="augmentation_lambda_image_tag=${{ github.sha }}"
 

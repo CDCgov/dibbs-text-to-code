@@ -115,11 +115,11 @@ class TestHandler:
         # Copy eICR to custom bucket
         eicr_obj = mock_aws_setup.get_object(
             Bucket=S3_BUCKET,
-            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+            Key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
         mock_aws_setup.put_object(
             Bucket=custom_bucket,
-            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+            Key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
             Body=eicr_obj["Body"].read(),
         )
         # Copy TTC output to custom bucket
@@ -171,7 +171,7 @@ class TestHandler:
         # Remove the eICR from S3
         mock_aws_setup.delete_object(
             Bucket=S3_BUCKET,
-            Key=f"eCRMessageV2/{TEST_PERSISTENCE_ID}",
+            Key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
 
         event = {
