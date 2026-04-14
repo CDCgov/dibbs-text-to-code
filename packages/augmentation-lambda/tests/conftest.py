@@ -13,7 +13,7 @@ from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
 from lambda_handler.test_constants import S3_BUCKET
 from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 
-EICR_INPUT_PREFIX = "eCRMessageV2/"
+TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
 AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
 AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
@@ -53,7 +53,7 @@ TEST_TTC_OUTPUT = {
 def pytest_configure() -> None:
     """Configure env variables for pytest."""
     os.environ["S3_BUCKET"] = S3_BUCKET
-    os.environ["EICR_INPUT_PREFIX"] = EICR_INPUT_PREFIX
+    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
     os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
     os.environ["AUGMENTED_EICR_PREFIX"] = AUGMENTED_EICR_PREFIX
     os.environ["AUGMENTATION_METADATA_PREFIX"] = AUGMENTATION_METADATA_PREFIX
@@ -139,7 +139,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
             eicr_content = f.read()
         s3.put_object(
             Bucket=S3_BUCKET,
-            Key=f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            Key=f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             Body=eicr_content,
         )
 

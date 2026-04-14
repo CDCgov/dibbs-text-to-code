@@ -105,12 +105,6 @@ variable "index_name" {
 }
 
 ### S3 Prefix Variables (for TTC Lambda)
-variable "eicr_input_prefix" {
-  type        = string
-  default     = "eCRMessageV2/"
-  description = "S3 prefix for eICR input files"
-}
-
 variable "schematron_error_prefix" {
   type        = string
   default     = "ValidationResponseV2/"
