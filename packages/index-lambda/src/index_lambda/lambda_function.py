@@ -55,7 +55,11 @@ def handler(event: dict, context: dict) -> dict:
 
 
 def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
-    """Delete the index if it exists, then recreate it with correct mappings."""
+    """Delete the index if it exists, then recreate it with correct mappings.
+
+    :param os_client: The OpenSearch client
+    :param index_name: The name of the index
+    """
     deleted = False
     if os_client.indices.exists(index=index_name):
         os_client.indices.delete(index=index_name)
@@ -72,7 +76,11 @@ def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
 
 
 def _create_index(os_client: OpenSearch, index_name: str) -> dict:
-    """Create the index if it doesn't exist, self-healing incorrect mappings."""
+    """Create the index if it doesn't exist, self-healing incorrect mappings.
+
+    :param os_client: The OpenSearch client
+    :param index_name: The name of the index
+    """
     if not os_client.indices.exists(index=index_name):
         os_client.indices.create(index=index_name, body=INDEX_MAPPING)
 
