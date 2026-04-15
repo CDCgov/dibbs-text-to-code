@@ -168,7 +168,7 @@ resource "aws_opensearch_domain" "os" {
   }
 
   advanced_security_options {
-    enabled = false
+    enabled = true
   }
 
   encrypt_at_rest {
