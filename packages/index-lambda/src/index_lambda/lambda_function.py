@@ -1,5 +1,6 @@
-import lambda_handler
 from opensearchpy import OpenSearch
+
+import lambda_handler
 
 INDEX_MAPPING = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
