@@ -38,7 +38,7 @@ class OpenSearchHit(BaseModel):
 class OpenSearchHits(BaseModel):
     """Represents all of the search result hits returned from OpenSearch."""
 
-    total_hits: dict[str, int] = Field(
+    total_hits: dict[str, str | int] = Field(
         alias="total", description="The total number of hits returned from OpenSearch."
     )
     hits: list[OpenSearchHit] = Field(
