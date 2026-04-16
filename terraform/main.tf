@@ -425,7 +425,6 @@ resource "aws_lambda_function" "lambda" {
       OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
       OPENSEARCH_INDEX        = var.index_name
       REGION                  = var.region
-      S3_BUCKET               = var.s3_bucket
       RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
       RERANKER_MODEL_PATH     = "/opt/reranker_model"
       SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
