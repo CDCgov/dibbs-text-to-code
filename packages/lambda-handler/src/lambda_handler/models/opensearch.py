@@ -2,13 +2,6 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-class S3Location(BaseModel):
-    """Represents the location of a file in S3, indicating which file contained the relevant data."""
-
-    bucket: str = Field(description="The S3 bucket where the file is located.")
-    key: str = Field(description="The S3 key (path) where the file is located.")
-
-
 class OpenSearchHitSource(BaseModel):
     """Represents a single search result _source returned from OpenSearch."""
 
@@ -17,7 +10,6 @@ class OpenSearchHitSource(BaseModel):
     loinc_name_type: str = Field(description="The LOINC name type of the search result hit.")
     description: str = Field(description="The description of the search result hit.")
     loinc_type: str = Field(description="The LOINC type of the search result hit.")
-    s3: S3Location = Field(description="The S3 location of the search result hit.")
 
 
 class OpenSearchHit(BaseModel):
