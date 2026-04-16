@@ -52,7 +52,7 @@ def handler(event: dict, context: dict) -> dict:
 
     if action == "clear_index":
         return _clear_index(os_client, index_name)
-    elif action == "set_slowlog":
+    if action == "set_slowlog":
         return _set_slowlog(os_client, index_name, event.get("threshold_ms", 0))
     return _create_index(os_client, index_name)
 
