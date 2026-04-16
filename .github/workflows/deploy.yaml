@@ -28,6 +28,12 @@ jobs:
   deploy_text_to_code:
     name: Terraform
     runs-on: ubuntu-latest
+    env:
+      # Temporary debug access to the public OpenSearch endpoint.
+      # Secrets should contain HCL list literals, e.g. ["203.0.113.42/32"].
+      # Unset/empty secrets fall back to the [] default in _variables.tf.
+      TF_VAR_debug_allowed_ips: ${{ secrets.DEBUG_ALLOWED_IPS }}
+      TF_VAR_debug_iam_principals: ${{ secrets.DEBUG_IAM_PRINCIPALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
