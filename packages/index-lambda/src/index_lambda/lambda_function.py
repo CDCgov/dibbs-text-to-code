@@ -1,5 +1,6 @@
-import lambda_handler
 from opensearchpy import OpenSearch
+
+import lambda_handler
 
 INDEX_MAPPING = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
@@ -51,6 +52,8 @@ def handler(event: dict, context: dict) -> dict:
 
     if action == "clear_index":
         return _clear_index(os_client, index_name)
+    elif action == "set_slowlog":
+        return _set_slowlog(os_client, index_name, event.get("threshold_ms", 0))
     return _create_index(os_client, index_name)
 
 
@@ -72,6 +75,33 @@ def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
         "action": "clear_index",
         "index_deleted": deleted,
         "index_recreated": True,
+    }
+
+
+def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> dict:
+    index = os_client.indices.get(index=index_name)
+    settings = os_client.indices.get_settings(index=index_name)
+    mappings = os_client.indices.get_mapping(index=index_name)
+
+    print(index)
+    print(settings)
+    print(mappings)
+
+    threshold = f"{threshold_ms}ms" if threshold_ms > 0 else "-1"
+    body = {
+        "index.search.slowlog.threshold.query.warn": threshold,
+        "index.search.slowlog.threshold.query.info": threshold,
+        "index.search.slowlog.threshold.fetch.warn": threshold,
+        "index.search.slowlog.threshold.fetch.info": threshold,
+    }
+    os_client.indices.put_settings(index=index_name, body=body)
+    return {
+        "statusCode": 200,
+        "action": "set_slowlog",
+        "threshold_ms": threshold_ms,
+        "index": index,
+        "settings": settings,
+        "mappings": mappings,
     }
 
 
