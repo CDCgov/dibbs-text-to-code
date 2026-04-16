@@ -25,7 +25,6 @@ OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
 
 def pytest_configure() -> None:
     """Configure env variables for pytest."""
-    os.environ["S3_BUCKET"] = S3_BUCKET
     os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
     os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
     os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX

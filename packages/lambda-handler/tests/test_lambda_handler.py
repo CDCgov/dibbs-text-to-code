@@ -29,6 +29,13 @@ class TestGetEventBridgeDataFromS3Event:
         content = lambda_handler.get_eventbridge_data_from_s3_event(event)
         assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
 
+    def test_get_eventbridge_data_missing_bucket(self):
+        """Test that a missing bucket name returns None instead of raising."""
+        event = {"detail": {"object": {"key": "test.txt"}}}
+
+        result = lambda_handler.get_eventbridge_data_from_s3_event(event)
+        assert result == {"bucket_name": None, "object_key": "test.txt"}
+
 
 class TestGetFileContentFromS3:
     def test_get_file_content_from_s3(self, moto_setup):
