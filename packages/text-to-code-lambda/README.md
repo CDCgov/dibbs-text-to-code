@@ -27,7 +27,6 @@ Every TTC invocation logs the **event bucket** and **object key** as structured 
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `EICR_INPUT_PREFIX` | No | `eCRMessageV2/` | S3 key prefix for original eICR documents |
 | `SCHEMATRON_ERROR_PREFIX` | No | `ValidationResponseV2/` | S3 key prefix for schematron validation responses |
 | `TTC_INPUT_PREFIX` | No | `TextToCodeSubmissionV2/` | S3 key prefix for TTC submission triggers |
 | `TTC_OUTPUT_PREFIX` | No | `TTCAugmentationMetadataV2/` | S3 key prefix for TTC augmentation output |
