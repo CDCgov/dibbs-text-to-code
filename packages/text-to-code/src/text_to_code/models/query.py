@@ -29,9 +29,11 @@ class VectorSearchParams(BaseModel):
 
     vector: list[float] = Field(description="The vector to search for.")
     vector_field: str = Field(
-        default="descriptionVector", description="The field to perform the vector search on."
+        default="description_vector", description="The field to perform the vector search on."
     )
-    filter_field: str = Field(default="type", description="The field to filter on, e.g., 'type'.")
+    filter_field: str = Field(
+        default="loinc_type", description="The field to filter on, e.g., 'loinc_type'."
+    )
     data_field: DataField = Field(
         description="The value of the field to filter on, e.g., 'Lab Test Name Ordered' or 'Lab Test Name Resulted'."
     )

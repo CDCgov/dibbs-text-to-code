@@ -7,7 +7,7 @@ class KNNQuery(pydantic.BaseModel):
     """Builds a KNN query."""
 
     field: str = pydantic.Field(
-        default="descriptionVector", description="The field to perform the vector search on."
+        default="description_vector", description="The field to perform the vector search on."
     )
     vector: list[float] = pydantic.Field(description="The vector to search for.")
     k: int = pydantic.Field(default=10, description="The number of nearest neighbors to retrieve.")
@@ -34,7 +34,9 @@ class TermsFilter(pydantic.BaseModel):
     codes of type "Observation" or "Both" for the lab test result data field.
     """
 
-    field: str = pydantic.Field(default="type", description="The field to filter on, e.g., 'type'.")
+    field: str = pydantic.Field(
+        default="loinc_type", description="The field to filter on, e.g., 'loinc_type'."
+    )
     value: list[str] = pydantic.Field(
         description="The value(s) to filter the specified field by, e.g., ['order','both'] or ['observation', 'both']."
     )

@@ -47,8 +47,8 @@ class TestVectorSearchParams:
         data_field = DataField.LAB_TEST_NAME_ORDERED
         size = 5
         k = 3
-        custom_vector_field = "customVectorField"
-        custom_filter_field = "type"
+        custom_vector_field = "custom_vector_field"
+        custom_filter_field = "loinc_type"
         params = VectorSearchParams(
             vector=vector,
             data_field=data_field,
