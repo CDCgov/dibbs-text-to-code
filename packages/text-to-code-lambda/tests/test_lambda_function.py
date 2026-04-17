@@ -106,7 +106,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -200,7 +200,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -322,7 +322,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -416,7 +416,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
