@@ -1,18 +1,19 @@
 from index_lambda import lambda_function
 
 INDEX_NAME = "test-index"
+SUCCESS_CODE = 200
+THRESHOLD_MS = 250
 
 
 class MockIndices:
-    def __init__(
-        self, description_vector_type: str, *, initially_exists: bool = False
-    ) -> None:
+    def __init__(self, description_vector_type: str, *, initially_exists: bool = False) -> None:
         """Mock class for OpenSearch client's indices property."""
         self._exists_calls = 0
         self._initially_exists = initially_exists
         self.description_vector_type = description_vector_type
         self.delete_calls: list[str] = []
         self.create_calls: list[str] = []
+        self.put_settings_calls: list[tuple[str, dict]] = []
 
     def exists(self, index: str) -> bool:
         """Mock exists method that returns False on the first call and True on subsequent calls to simulate index creation."""
@@ -28,6 +29,10 @@ class MockIndices:
     def delete(self, index: str) -> None:
         """Mock delete method that tracks calls."""
         self.delete_calls.append(index)
+
+    def get(self, index: str) -> dict:
+        """Mock get method that returns basic index metadata."""
+        return {INDEX_NAME: {"aliases": {}, "mappings": {}, "settings": {}}}
 
     def get_settings(self, index: str) -> dict:
         """Mock get_settings method that returns a fixed settings dictionary."""
@@ -45,15 +50,15 @@ class MockIndices:
             }
         }
 
+    def put_settings(self, index: str, body: dict) -> None:
+        """Mock put_settings method that tracks settings updates."""
+        self.put_settings_calls.append((index, body))
+
 
 class MockOpenSearchClient:
-    def __init__(
-        self, description_vector_type: str, *, initially_exists: bool = False
-    ) -> None:
+    def __init__(self, description_vector_type: str, *, initially_exists: bool = False) -> None:
         """Mock class for OpenSearch client."""
-        self.indices = MockIndices(
-            description_vector_type, initially_exists=initially_exists
-        )
+        self.indices = MockIndices(description_vector_type, initially_exists=initially_exists)
 
 
 def patch_lambda_handler(
@@ -62,9 +67,7 @@ def patch_lambda_handler(
     *,
     initially_exists: bool = False,
 ) -> MockOpenSearchClient:
-    mock_client = MockOpenSearchClient(
-        description_vector_type, initially_exists=initially_exists
-    )
+    mock_client = MockOpenSearchClient(description_vector_type, initially_exists=initially_exists)
 
     def mock_create_aws_auth() -> object:
         """Mock create_aws_auth function that returns a dummy AWS auth object."""
@@ -97,7 +100,7 @@ class TestHandler:
 
         resp = lambda_function.handler({}, {})
 
-        assert resp["statusCode"] == 200  # noqa: PLR2004
+        assert resp["statusCode"] == SUCCESS_CODE
         assert resp["index_exists"] is True
         assert resp["index_recreated"] is False
         assert resp["index_settings"] == {INDEX_NAME: {"settings": {"index": {"knn": "true"}}}}
@@ -115,7 +118,7 @@ class TestHandler:
 
         resp = lambda_function.handler({}, {})
 
-        assert resp["statusCode"] == 200  # noqa: PLR2004
+        assert resp["statusCode"] == SUCCESS_CODE
         assert resp["index_exists"] is True
         assert resp["index_recreated"] is True
         assert resp["index_settings"] == {INDEX_NAME: {"settings": {"index": {"knn": "true"}}}}
@@ -129,13 +132,11 @@ class TestHandler:
 
     def test_handler_clear_index_deletes_and_recreates(self, monkeypatch):
         """Test clear_index action deletes existing index and recreates it."""
-        mock_client = patch_lambda_handler(
-            monkeypatch, "knn_vector", initially_exists=True
-        )
+        mock_client = patch_lambda_handler(monkeypatch, "knn_vector", initially_exists=True)
 
         resp = lambda_function.handler({"action": "clear_index"}, {})
 
-        assert resp["statusCode"] == 200  # noqa: PLR2004
+        assert resp["statusCode"] == SUCCESS_CODE
         assert resp["action"] == "clear_index"
         assert resp["index_deleted"] is True
         assert resp["index_recreated"] is True
@@ -148,9 +149,42 @@ class TestHandler:
 
         resp = lambda_function.handler({"action": "clear_index"}, {})
 
-        assert resp["statusCode"] == 200  # noqa: PLR2004
+        assert resp["statusCode"] == SUCCESS_CODE
         assert resp["action"] == "clear_index"
         assert resp["index_deleted"] is False
         assert resp["index_recreated"] is True
         assert mock_client.indices.delete_calls == []
         assert mock_client.indices.create_calls == [INDEX_NAME]
+
+    def test_handler_set_slowlog_updates_index_settings(self, monkeypatch):
+        """Test set_slowlog action updates slowlog thresholds and returns index metadata."""
+        mock_client = patch_lambda_handler(monkeypatch, "knn_vector", initially_exists=True)
+
+        resp = lambda_function.handler(
+            {"action": "set_slowlog", "threshold_ms": THRESHOLD_MS},
+            {},
+        )
+
+        assert resp["statusCode"] == SUCCESS_CODE
+        assert resp["action"] == "set_slowlog"
+        assert resp["threshold_ms"] == THRESHOLD_MS
+        assert resp["index"] == {INDEX_NAME: {"aliases": {}, "mappings": {}, "settings": {}}}
+        assert resp["settings"] == {INDEX_NAME: {"settings": {"index": {"knn": "true"}}}}
+        assert resp["mappings"] == {
+            INDEX_NAME: {
+                "mappings": {
+                    "properties": {"description_vector": {"type": "knn_vector"}},
+                }
+            }
+        }
+        assert mock_client.indices.put_settings_calls == [
+            (
+                INDEX_NAME,
+                {
+                    "index.search.slowlog.threshold.query.warn": f"{THRESHOLD_MS}ms",
+                    "index.search.slowlog.threshold.query.info": f"{THRESHOLD_MS}ms",
+                    "index.search.slowlog.threshold.fetch.warn": f"{THRESHOLD_MS}ms",
+                    "index.search.slowlog.threshold.fetch.info": f"{THRESHOLD_MS}ms",
+                },
+            )
+        ]
