@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUCKET="dibbs-text-to-code"
-SOURCE_EICR="$HOME/Downloads/test_eicr.xml"
-SOURCE_SCHEMATRON="$HOME/Downloads/test_schematron_errors.xml"
+SOURCE_EICR="$SCRIPT_DIR/test_eicr.xml"
+SOURCE_SCHEMATRON="$SCRIPT_DIR/test_schematron_errors.xml"
 TTC_LOG="/aws/lambda/ttc-lambda"
 AUG_LOG="/aws/lambda/ttc-augmentation-lambda"
 AWS_REGION="us-east-2"
