@@ -372,7 +372,7 @@ def _save_ttc_outputs(
     lambda_handler.put_file(
         file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
+        object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
         s3_client=s3_client,
     )
 
@@ -417,7 +417,7 @@ def _process_record_pipeline(
         lambda_handler.put_file(
             file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
             bucket_name=bucket_name,
-            object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
+            object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
             s3_client=s3_client,
         )
         return {
