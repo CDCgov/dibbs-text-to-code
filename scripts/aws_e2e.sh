@@ -147,8 +147,7 @@ follow_until_report() {
     draw_spinner
 
     while :; do
-        if IFS= read -r -t 0.1 -u 3 line; then
-            # Got a log line: erase the spinner, print the line, redraw below.
+        if IFS= read -r -t 1 -u 3 line; then
             clear_spinner
             pretty_log_line "$line"
             [[ "$line" == *"REPORT RequestId:"* ]] && break
@@ -167,6 +166,21 @@ follow_until_report() {
     rm -f "$fifo"
 
     gum log -l info "$label complete in $(( $(date +%s) - start ))s"
+}
+
+wait_for_s3_object() {
+    local key="$1" label="$2" timeout="${3:-120}" interval=2 elapsed=0
+
+    while ! aws s3api head-object --bucket "$BUCKET" --key "$key" >/dev/null 2>&1; do
+        if (( elapsed >= timeout )); then
+            gum log -l error "Timed out waiting for $label at s3://$BUCKET/$key"
+            return 1
+        fi
+
+        printf '\r\033[K'
+        gum spin --spinner=dot --title "Waiting for $label (${elapsed}s/${timeout}s)..." -- sleep "$interval"
+        elapsed=$((elapsed + interval))
+    done
 }
 
 # ── Result fetching ───────────────────────────────────────────────────────────
@@ -255,6 +269,8 @@ follow_until_report "$AUG_LOG" "Augmentation"
 
 # ── Show the outputs ──────────────────────────────────────────────────────────
 section "Fetching results"
+wait_for_s3_object "TTCMetadataV2/${FILENAME%.xml}.json" "TTC metadata"
+wait_for_s3_object "AugmentationEICRV2/$FILENAME" "augmented eICR"
 dump_s3 "TTCMetadataV2/${FILENAME%.xml}.json" json
 dump_s3 "AugmentationEICRV2/$FILENAME" xml
 
