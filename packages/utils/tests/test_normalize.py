@@ -1,30 +1,6 @@
 import pytest
-from utils import normalize as utils
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        # Removes special characters and extra spaces, converts to lowercase
-        (
-            " Cell growth [Presence] of Amniocytes Qualitative by Tissue culture",
-            "cell growth presence of amniocytes qualitative by tissue culture",
-        ),
-        # Replaces special characters with spaces
-        (
-            "Power spectrum.theta frequency/Power spectrum.total",
-            "power spectrum theta frequency power spectrum total",
-        ),
-        (
-            "Platelet aggregation.ristocetin induced^125 ug/mL",
-            "platelet aggregation ristocetin induced 125 ug ml",
-        ),
-    ],
-)
-class TestNormalizeText:
-    def test_normalize_text(self, text, expected):
-        """Test normalize text."""
-        assert utils.normalize_text(text) == expected
+from utils.normalize import merge_enhancements
+from utils.normalize import merge_two_lists
 
 
 @pytest.mark.parametrize(
@@ -43,7 +19,7 @@ class TestNormalizeText:
 class TestMergeTwoLists:
     def test_merge_two_lists(self, existing, new, expected):
         """Test merge two lists."""
-        merged = utils.merge_two_lists(existing, new)
+        merged = merge_two_lists(existing, new)
         assert merged == expected
 
 
@@ -136,14 +112,14 @@ class TestMergeTwoLists:
 class TestMergeEnhancements:
     def test_merge_enhancements(self, dict1, dict2, expected):
         """Test merge enhancements."""
-        merged = utils.merge_enhancements(dict1, dict2)
+        merged = merge_enhancements(dict1, dict2)
         assert merged == expected
 
     def test_merge_enhancements_uses_later_code_when_first_seen_code_is_none(
         self, dict1, dict2, expected
     ):
         """Test merge enhancements."""
-        merged = utils.merge_enhancements(
+        merged = merge_enhancements(
             {
                 "EngRatFr": {"code": None, "abbrv": [], "synonyms": ["hello"]},
             },

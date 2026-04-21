@@ -22,20 +22,6 @@ def test_code_root_not_found():
             utils.code_root()
 
 
-def test_repo_root():
-    """Test repo root."""
-    root = utils.repo_root()
-    assert root is not None
-
-
-def test_repo_root_not_found():
-    """Test repo root, when not found."""
-    with unittest.mock.patch("pathlib.Path.resolve") as mock_resolve:
-        mock_resolve.return_value = pathlib.Path("/")
-        root = utils.repo_root()
-        assert root is None
-
-
 def test_read_json_relative():
     """Test read JSON with relative path."""
     tmp = utils.code_root() / "test.json"

@@ -13,15 +13,6 @@ def code_root() -> Path:
     return root
 
 
-def repo_root(start: Path | None = None) -> Path | None:
-    """Returns the root directory of the aws_lambda repository, or None if not found."""
-    start = start or Path(__file__).resolve()
-    for directory in [start, *list(start.parents)]:
-        if (directory / "pyproject.toml").is_file():
-            return directory
-    return None
-
-
 def read_json(path: str | Path) -> dict:
     """Loads a JSON file."""
     if not Path(path).is_absolute():
