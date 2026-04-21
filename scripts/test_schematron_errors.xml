@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report>
+    <ReportHeader>
+        <ValidationStatus>Complete</ValidationStatus>
+        <DateOfTest>20251205</DateOfTest>
+        <TimeOfTest>201228.0317 +0000</TimeOfTest>
+    </ReportHeader>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                <context>
+                    /ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]</context>
+                <test> not(cda:code) or cda:code/@code or cda:code/cda:translation/@code</test>
+                <specification />
+            </issue>
+        </validationResult>
+    </Results>
+</Report>

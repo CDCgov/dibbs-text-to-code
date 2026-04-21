@@ -1,15 +1,15 @@
 import os
 import pathlib
+import re
 import tempfile
 import unittest.mock
 
 import pytest
-
 from utils import path as utils
 
 
 def test_code_root():
-    "Test code root."
+    """Test code root."""
     root = utils.code_root()
     assert root.name == "dibbs-text-to-code"
 
@@ -20,20 +20,6 @@ def test_code_root_not_found():
         mock_resolve.return_value = pathlib.Path("/")
         with pytest.raises(FileNotFoundError):
             utils.code_root()
-
-
-def test_repo_root():
-    """Test repo root."""
-    root = utils.repo_root()
-    assert root is not None
-
-
-def test_repo_root_not_found():
-    """Test repo root, when not found."""
-    with unittest.mock.patch("pathlib.Path.resolve") as mock_resolve:
-        mock_resolve.return_value = pathlib.Path("/")
-        root = utils.repo_root()
-        assert root is None
 
 
 def test_read_json_relative():
@@ -60,9 +46,9 @@ def test_load_loinc_enhancements_raises_when_project_root_missing():
     """Test load LOINC enhancements when project root is missing from cwd."""
     with pytest.raises(
         ValueError,
-        match="Could not find 'dibbs-text-to-code' in current working directory path.",
+        match=re.escape("Could not find 'dibbs-text-to-code' in current working directory path."),
     ):
-        utils.load_loinc_enhancements("/tmp/not-the-project-root/tests")
+        utils.load_loinc_enhancements("/tmp/not-the-project-root/tests")  # noqa: S108
 
 
 def test_load_loinc_enhancements():

@@ -106,7 +106,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -162,6 +162,18 @@ class TestHandler:
         }
         assert mock_opensearch.search.call_count == expected_num_errors
 
+    def test_handler_fails_when_event_has_no_bucket(self, example_sqs_event, mock_opensearch):
+        """Test handler reports failure when S3 event payload is missing a bucket name."""
+        payload = json.loads(example_sqs_event["Records"][0]["body"])
+        del payload["detail"]["bucket"]["name"]
+        example_sqs_event["Records"][0]["body"] = json.dumps(payload)
+
+        resp = lambda_function.handler(example_sqs_event, {})
+
+        assert resp["num_failure_eicrs"] == 1
+        assert resp["num_success_eicrs"] == 0
+        assert "No bucket name found" in resp["failures"][0]["error"]
+
     def test_handler_saves_metadata_when_no_relevant_schematron_fields(
         self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker
     ):
@@ -188,7 +200,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -310,7 +322,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None
@@ -404,7 +416,7 @@ class TestHandler:
         ttc_metadata_output = json.loads(
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
             )
         )
         assert ttc_metadata_output is not None

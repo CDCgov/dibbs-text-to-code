@@ -1,3 +1,5 @@
+# Exclude all snapshots from pre-commit hooks
+exclude: '(^|/)snapshot(s)?/'
 repos:
   # core formatting and check hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks

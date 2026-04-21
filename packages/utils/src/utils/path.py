@@ -2,10 +2,9 @@ import glob
 import json
 from pathlib import Path
 
+
 def code_root() -> Path:
-    """
-    Returns the root directory of the aws_lambda source code.
-    """
+    """Returns the root directory of the aws_lambda source code."""
     root = Path(__file__).resolve()
     while root.name != "dibbs-text-to-code":
         if root.parent == root:
@@ -14,29 +13,17 @@ def code_root() -> Path:
     return root
 
 
-def repo_root(start: Path | None = None) -> Path | None:
-    """
-    Returns the root directory of the aws_lambda repository, or None if not found.
-    """
-    start = start or Path(__file__).resolve()
-    for directory in [start] + list(start.parents):
-        if (directory / "pyproject.toml").is_file():
-            return directory
-    return None
-
-
 def read_json(path: str | Path) -> dict:
     """Loads a JSON file."""
     if not Path(path).is_absolute():
         # if path is relative, append to the project root
         path = str(Path(code_root(), path))
-    with open(path, "r") as fobj:
+    with open(path) as fobj:
         return json.load(fobj)
 
 
-def load_loinc_enhancements(cwd: str):
-    """
-    Loads LOINC enhancements from JSON files.
+def load_loinc_enhancements(cwd: str) -> dict:
+    """Loads LOINC enhancements from JSON files.
 
     :param cwd: The current working file directory.
     :return: A dictionary of LOINC enhancements.

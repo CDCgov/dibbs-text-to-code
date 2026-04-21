@@ -20,7 +20,7 @@ logger = structlog.get_logger()
 
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
-EICR_INPUT_PREFIX = os.getenv("EICR_INPUT_PREFIX", "eCRMessageV2/")
+TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", "TextToCodeSubmissionV2/")
 TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", "TTCAugmentationMetadataV2/")
 AUGMENTED_EICR_PREFIX = os.getenv("AUGMENTED_EICR_PREFIX", "AugmentationEICRV2/")
 AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "AugmentationMetadataV2/")
@@ -142,7 +142,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :param bucket_name: The S3 bucket name.
     :return: The raw eICR XML string.
     """
-    object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+    object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
     logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
     return lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client

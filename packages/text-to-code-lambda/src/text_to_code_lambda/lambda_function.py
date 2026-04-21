@@ -29,8 +29,6 @@ from text_to_code.services.query import QueryBuilder
 logger = Logger(service="ttc")
 
 # Environment variables
-S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
-EICR_INPUT_PREFIX = os.getenv("EICR_INPUT_PREFIX", "eCRMessageV2/")
 SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", "ValidationResponseV2/")
 TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", "TextToCodeSubmissionV2/")
 TTC_OUTPUT_PREFIX = os.getenv("TTC_OUTPUT_PREFIX", "TTCAugmentationMetadataV2/")
@@ -106,16 +104,30 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
     # Parse the EventBridge S3 event from the SQS message body
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
-    logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
+    bucket_name = eventbridge_data.get("bucket_name")
+
+    if not bucket_name:
+        raise ValueError(
+            "No bucket name found in S3 event payload. "
+            "The TTC lambda derives its target bucket from the event and does not use a "
+            "static bucket configuration. Ensure the EventBridge/S3 event includes "
+            "detail.bucket.name."
+        )
+
+    logger.info(
+        "Processing TTC event",
+        event_bucket=bucket_name,
+        event_object_key=object_key,
+    )
 
     # Extract persistence_id from the RR object key
     persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
-    logger.info(f"Extracted persistence_id: {persistence_id}")
 
     with logger.append_context_keys(
         persistence_id=persistence_id,
+        bucket_name=bucket_name,
     ):
+        logger.info(f"Extracted persistence_id: {persistence_id}")
         _process_record_pipeline(persistence_id, s3_client, opensearch_client, bucket_name)
 
 
@@ -174,7 +186,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :param bucket_name: The S3 bucket name to read from.
     :return: The original eICR content.
     """
-    object_key = f"{EICR_INPUT_PREFIX}{persistence_id}"
+    object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
     logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
     original_eicr_content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
@@ -360,7 +372,7 @@ def _save_ttc_outputs(
     lambda_handler.put_file(
         file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
+        object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
         s3_client=s3_client,
     )
 
@@ -388,7 +400,7 @@ def _process_record_pipeline(
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param s3_client: The S3 client to use for S3 operations.
     :param opensearch_client: The OpenSearch client.
-    :param bucket_name: The S3 bucket name extracted from the event, or the default.
+    :param bucket_name: The S3 bucket name extracted from the triggering event.
     """
     ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
 
@@ -405,7 +417,7 @@ def _process_record_pipeline(
         lambda_handler.put_file(
             file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
             bucket_name=bucket_name,
-            object_key=f"{TTC_METADATA_PREFIX}{persistence_id}",
+            object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
             s3_client=s3_client,
         )
         return {

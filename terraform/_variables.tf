@@ -105,12 +105,6 @@ variable "index_name" {
 }
 
 ### S3 Prefix Variables (for TTC Lambda)
-variable "eicr_input_prefix" {
-  type        = string
-  default     = "eCRMessageV2/"
-  description = "S3 prefix for eICR input files"
-}
-
 variable "schematron_error_prefix" {
   type        = string
   default     = "ValidationResponseV2/"
@@ -183,5 +177,18 @@ variable "augmentation_lambda_image_tag" {
   type        = string
   default     = "latest"
   description = "The image tag for the augmentation Lambda container image in ECR"
+}
+
+### Debug Access Variables (temporary — revert when done)
+variable "debug_allowed_ips" {
+  description = "CIDR blocks permitted to hit the public OpenSearch endpoint with the debug IAM principals. Used only while vpc_options is stripped from aws_opensearch_domain.os."
+  type        = list(string)
+  default     = []
+}
+
+variable "debug_iam_principals" {
+  description = "Additional IAM user/role ARNs granted ES HTTP access to the public domain (e.g. a developer's SSO role). Paired with debug_allowed_ips."
+  type        = list(string)
+  default     = []
 }
 

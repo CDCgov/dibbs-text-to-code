@@ -19,10 +19,11 @@ dependencies = []
 dev = [
   "pre-commit>=4.5.1",
   "pytest-cov>=7.0.0",
-  "pytest>=8.4.2",
+  "pytest-env>=1.5.1",
+  "pytest>=9.0.3",
   "requests>=2.32.5",
-  "ruff>=0.14.10",
-  "ty>=0.0.10",
+  "ruff>=0.15.10",
+  "ty>=0.0.30",
 ]
 
 
@@ -31,9 +32,13 @@ source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages"]
+markers = ["e2e"]
+testpaths = ["e2e", "packages"]
 pythonpath = ["."]
 
+[tool.pytest_env]
+env_files = [".env.test"]
+env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
@@ -44,6 +49,7 @@ include = [
   "packages/lambda-handler/src",
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
+  "packages/utils/srcs",
 ]
 
 [tool.ruff]
@@ -60,7 +66,6 @@ exclude = [
   "docs",
   "model-tuning",
   "packages/api",
-  "packages/utils",
 ]
 line-length = 100
 indent-width = 4
