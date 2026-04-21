@@ -27,16 +27,16 @@ You must have AWS credentials available in the environment (e.g. via `aws sso lo
 
 ## Dependencies
 
-| Tool                       | Why                                                                                                                                                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bash`                     | Script interpreter (uses `[[`, arrays, `BASH_REMATCH`).                                                                                                                                                       |
-| `aws` (CLI v2)             | S3 uploads, `s3api head-object` polling, `logs tail`.                                                                                                                                                         |
-| `gum`                      | Styled banners, spinners, log levels (Charm TUI library).                                                                                                                                                     |
+| Tool | Why |
+|---|---|
+| `bash` | Script interpreter (uses `[[`, arrays, `BASH_REMATCH`). |
+| `aws` (CLI v2) | S3 uploads, `s3api head-object` polling, `logs tail`. |
+| `gum` | Styled banners, spinners, log levels (Charm TUI library). |
 | `unbuffer` (from `expect`) | Wraps `aws logs tail` in a PTY so its output line-buffers when piped. The AWS CLI v2 is a PyInstaller bundle that ignores `PYTHONUNBUFFERED`, so without `unbuffer` log lines arrive in one burst at the end. |
-| `jq`                       | Pretty-prints JSON log payloads and the TTC metadata output.                                                                                                                                                  |
-| `python3`                  | Templates the eICR (regex substitutions for displayName, originalText, and UUIDs). Standard library only.                                                                                                     |
-| `xmllint` (from `libxml2`) | Pretty-formats the augmented eICR XML output.                                                                                                                                                                 |
-| `bat` _(optional)_         | Syntax-highlights the formatted XML. Falls back to plain output if missing.                                                                                                                                   |
+| `jq` | Pretty-prints JSON log payloads and the TTC metadata output. |
+| `python3` | Templates the eICR (regex substitutions for displayName, originalText, and UUIDs). Standard library only. |
+| `xmllint` (from `libxml2`) | Pretty-formats the augmented eICR XML output. |
+| `bat` *(optional)* | Syntax-highlights the formatted XML. Falls back to plain output if missing. |
 
 ### Install — macOS
 
