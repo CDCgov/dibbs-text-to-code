@@ -1,10 +1,10 @@
-import typing
+from typing import Any
 
 
 # TODO: Add pydantic models for type checking
 def merge_enhancements(
-    *dicts: dict[str, dict[str, typing.Any]],
-) -> dict[str, dict[str, typing.Any]]:
+    *dicts: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     """Merge multiple dictionaries of LOINC enhancements into a single dictionary.
 
     Merges 'abbrv' and 'synonyms' lists, preserves order and uniqueness,
@@ -12,7 +12,7 @@ def merge_enhancements(
     :param Dicts: Variable number of dictionaries to merge.
     :return: A single dictionary with merged enhancements.
     """
-    merged: dict[str, dict[str, typing.Any]] = {}
+    merged: dict[str, dict[str, Any]] = {}
 
     for d in dicts:
         for _key, value in d.items():
@@ -43,7 +43,7 @@ def merge_enhancements(
     return merged
 
 
-def merge_two_lists(existing: list[typing.Any], new: list[typing.Any]) -> list[typing.Any]:
+def merge_two_lists(existing: list[Any], new: list[Any]) -> list[Any]:
     """Merge two lists while preserving order and uniqueness.
 
     :param list1: The first list.
