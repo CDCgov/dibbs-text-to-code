@@ -3,11 +3,6 @@ import io
 import pytest
 
 import lambda_handler
-from utils import get_env_var
-
-AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
-AWS_REGION = get_env_var("AWS_REGION")
-AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
 
 
 class TestCreateS3Client:
@@ -15,9 +10,9 @@ class TestCreateS3Client:
         """Test create S3 client."""
         s3_client = lambda_handler.create_s3_client()
         assert s3_client.meta.endpoint_url == "https://s3.amazonaws.com"
-        assert s3_client.meta.region_name == AWS_REGION
-        assert s3_client._get_credentials().secret_key == "FOOBARSECRET"  # noqa: S105
-        assert s3_client._get_credentials().access_key == "FOOBARKEY"
+        assert s3_client.meta.region_name == "us-east-1"
+        assert s3_client._get_credentials().secret_key == "test_secret_access_key"  # noqa: S105
+        assert s3_client._get_credentials().access_key == "test_access_key_id"
 
 
 class TestGetEventBridgeDataFromS3Event:
@@ -33,6 +28,13 @@ class TestGetEventBridgeDataFromS3Event:
 
         content = lambda_handler.get_eventbridge_data_from_s3_event(event)
         assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
+
+    def test_get_eventbridge_data_missing_bucket(self):
+        """Test that a missing bucket name returns None instead of raising."""
+        event = {"detail": {"object": {"key": "test.txt"}}}
+
+        result = lambda_handler.get_eventbridge_data_from_s3_event(event)
+        assert result == {"bucket_name": None, "object_key": "test.txt"}
 
 
 class TestGetFileContentFromS3:
@@ -100,7 +102,7 @@ class TestCreateAWSAuth:
         """Test create AWS auth."""
         auth = lambda_handler.create_aws_auth()
 
-        assert auth.access_id == "FOOBARKEY"
+        assert auth.access_id == "test_access_key_id"
         assert auth.region == "us-east-1"
 
 
@@ -137,6 +139,22 @@ class TestCreateOpenSearchClient:
 
         assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
         assert client.transport.hosts[0]["port"] == expected_port
+
+
+class TestRequireEnv:
+    def test_require_env(self, monkeypatch):
+        """Test require env."""
+        monkeypatch.setenv("TEST_ENV_VAR", "test_value")
+        value = lambda_handler.require_env("TEST_ENV_VAR")
+        assert value == "test_value"
+
+    def test_require_env_not_set(self, monkeypatch):
+        """Test require env not set."""
+        with pytest.raises(
+            ValueError,
+            match=r"NONEXISTENT_ENV_VAR not set as an environment variable\.",
+        ):
+            lambda_handler.require_env("NONEXISTENT_ENV_VAR")
 
 
 class TestGetPersistenceId:

@@ -9,7 +9,7 @@
     <!--DATA AUGMENTATION: new-document-setId -->
     <setId root="87654321-4321-8765-4321-876543218765"/>
     <!--DATA AUGMENTATION: new-document-versionNumber -->
-    <versionNumber value="2"/>
+    <versionNumber value="1"/>
     <component>
         <structuredBody>
             <component>
@@ -21,10 +21,10 @@
                             <!--DATA AUGMENTATION: The data in the code and code/originalText data elements is the original data -->
                             <code displayName=" A custom code in display name. ">
                                 <originalText>
-                  A custom code in original text.
-                </originalText>
+                                    A custom code in original text.
+                                </originalText>
                                 <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="A custom code in display name."/>
+                                <translation code="109224-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum" originalText="A custom code in display name."/>
                             </code>
                             <author>
                                 <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->

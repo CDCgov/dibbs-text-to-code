@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata
-from augmentation.models import NonstandardCodeReplacementMetadata
+from augmentation.models import NonstandardCodeInstanceMetadata
 from augmentation.models.config import ApplicationCode
 from augmentation.models.config import AugmenterConfig
 from augmentation.models.config import TTCAugmenterConfig
@@ -16,7 +16,7 @@ from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import Code
 from shared_models import DataField
-from shared_models import NonstandardCodeReplacement
+from shared_models import NonstandardCodeInstance
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
@@ -35,9 +35,7 @@ with eicr_path.open() as f:
     EMPTY_ECR = f.read()
 
 
-@pytest.mark.time_machine(
-    datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
-)
+@pytest.mark.time_machine(datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")))
 class TestEicrAugmenter:
     def test_no_document_data(self):
         """Tests raising error when no document data is provided."""
@@ -61,7 +59,8 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(
             BASIC_ECR,
             [
-                NonstandardCodeReplacement(
+                NonstandardCodeInstance(
+                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -82,7 +81,8 @@ class TestEicrAugmenter:
             original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
             augmented_eicr_id="12345678-1234-5678-1234-567812345678",
             nonstandard_codes=[
-                NonstandardCodeReplacementMetadata(
+                NonstandardCodeInstanceMetadata(
+                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -103,7 +103,8 @@ class TestEicrAugmenter:
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         nonstandard_codes = [
-            NonstandardCodeReplacement(
+            NonstandardCodeInstance(
+                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -126,7 +127,8 @@ class TestEicrAugmenter:
             original_eicr_id="c8516bdc-8bb2-40aa-8dae-20a77546488f",
             augmented_eicr_id="12345678-1234-5678-1234-567812345678",
             nonstandard_codes=[
-                NonstandardCodeReplacementMetadata(
+                NonstandardCodeInstanceMetadata(
+                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(

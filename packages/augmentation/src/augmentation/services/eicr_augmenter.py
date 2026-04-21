@@ -7,9 +7,9 @@ from lxml.etree import Element
 from augmentation.models import ApplicationCode
 from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
-from augmentation.models.application import NonstandardCodeReplacementMetadata
+from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
-from shared_models import NonstandardCodeReplacement
+from shared_models import NonstandardCodeInstance
 
 
 class EICRAugmenter(Augmenter):
@@ -25,7 +25,7 @@ class EICRAugmenter(Augmenter):
     def __init__(
         self,
         document: str,
-        nonstandard_codes: list[NonstandardCodeReplacement],
+        nonstandard_codes: list[NonstandardCodeInstance],
         config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
     ):
@@ -39,7 +39,7 @@ class EICRAugmenter(Augmenter):
 
         super().__init__(document, config, ApplicationCode.TEXT_TO_CODE, augmentation_date)
 
-        self.original_eicr_id = str(self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root"))
+        self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.new_doc_id: str = str(uuid4())
         self.new_set_id: str = str(uuid4())
         self.nonstandard_codes = nonstandard_codes
@@ -53,7 +53,7 @@ class EICRAugmenter(Augmenter):
         if "author_header" in self.config.rules["document"]:
             self._handle_author_header()
 
-        nonstandard_code_metadata: list[NonstandardCodeReplacementMetadata] = []
+        nonstandard_code_metadata: list[NonstandardCodeInstanceMetadata] = []
 
         for nonstandard_code_instance in self.nonstandard_codes:
             data_type_rules = self.config.rules[nonstandard_code_instance.field_type]
@@ -63,7 +63,8 @@ class EICRAugmenter(Augmenter):
                 new_translation_path = self._handle_translation(nonstandard_code_instance)
 
             nonstandard_code_metadata.append(
-                NonstandardCodeReplacementMetadata(
+                NonstandardCodeInstanceMetadata(
+                    schematron_error=nonstandard_code_instance.schematron_error,
                     schematron_error_xpath=nonstandard_code_instance.schematron_error_xpath,
                     field_type=nonstandard_code_instance.field_type,
                     new_translation=nonstandard_code_instance.new_translation,
@@ -72,7 +73,7 @@ class EICRAugmenter(Augmenter):
             )
 
         metadata = Metadata(
-            original_eicr_id=self.original_eicr_id,
+            original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
             augmented_eicr_id=self.new_doc_id,
             nonstandard_codes=nonstandard_code_metadata,
         )
@@ -197,9 +198,9 @@ class EICRAugmenter(Augmenter):
     def _get_new_version_number(self) -> Element:
         """Generate a versionNumber element for the augmented eICR document."""
         version_number_tag = etree.Element("versionNumber")
-        old_version_number = self._get_old_version_number().get("value")
-        new_version_number = int(old_version_number) + 1 if old_version_number is not None else 1
-        version_number_tag.set("value", str(new_version_number))
+        # hard code to 1 for now
+        # TODO: we may need to have some way to increment this later
+        version_number_tag.set("value", "1")
         return version_number_tag
 
     def _get_augmented_template_id(self) -> Element:
@@ -279,14 +280,14 @@ class EICRAugmenter(Augmenter):
         author = self._generate_author(level="header")
         self._augmented_element.append(author)
 
-    def _handle_author_entry(self, augmentation: NonstandardCodeReplacement) -> None:
+    def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
         entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
         author = self._generate_author(level="data_element")
         entry.append(author)
 
     # TODO: this will need to be modified in the future when we have
     # other data elements, other than observation.codes that are being augmented
-    def _handle_translation(self, augmentation: NonstandardCodeReplacement) -> str:
+    def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
         entry_code = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath + "/code")
         self._add_previous_element_comment(
             "This data has been augmented with a standard LOINC code", entry_code

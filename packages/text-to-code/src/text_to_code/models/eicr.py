@@ -1,22 +1,30 @@
-from datetime import UTC
-from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel
-from pydantic import ConfigDict
 
-from shared_models import EICRMetadata
-from shared_models import SchematronErrorDetail
+from shared_models import CdaInstanceIdentifier
 
 
-class TTCMetadata(BaseModel):
-    """Model to hold metadata about the TTC process."""
+class LabXPaths(StrEnum):
+    """The list of Sub XPath expressions to extract text in various locations from lab elements."""
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-    persistance_id: str
-    message: str | None
-    eicr_metadata: EICRMetadata | None
-    schematron_errors: list[SchematronErrorDetail]
-    processed_at: datetime = datetime.now(UTC)
+    CODE_DISPLAY_NAME = "code/@displayName"
+    CODE_ORIGINAL_TEXT = "code/originalText"
+    OBSERVATION_TEXT = "text"
+    CODE_TRANSLATION_DISPLAY_NAME = "code/translation/@displayName"
+    CODE_TRANSLATION_ORIGINAL_TEXT = "code/translation/originalText"
+
+
+class Candidate(BaseModel):
+    """Model representing a piece of text to be considered for encoding."""
+
+    value: str
+    xpath: LabXPaths
+    system: str | None = None
+
+
+class Metadata(BaseModel):
+    """Model representing metadata about the eICR."""
+
+    eicr_id: CdaInstanceIdentifier
+    eicr_vendor: str | None = None

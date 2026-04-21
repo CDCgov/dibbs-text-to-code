@@ -1,6 +1,6 @@
 from .application import ApplicationCode
 from .application import Metadata
-from .application import NonstandardCodeReplacementMetadata
+from .application import NonstandardCodeInstanceMetadata
 from .application import TTCAugmenterOutput
 from .config import AugmenterConfig
 from .config import TTCAugmenterConfig
@@ -11,7 +11,7 @@ __all__ = [
     "AugmenterConfig",
     "DocumentType",
     "Metadata",
-    "NonstandardCodeReplacementMetadata",
+    "NonstandardCodeInstanceMetadata",
     "TTCAugmenterConfig",
     "TTCAugmenterOutput",
 ]

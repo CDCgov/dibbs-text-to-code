@@ -1,3 +1,5 @@
+from .eicr import Candidate
+from .eicr import LabXPaths
 from .labs import BaseLabField
 from .labs import LabTestNameOrdered
 from .labs import LabTestNameResulted
@@ -10,6 +12,7 @@ from .schematron import _SCHEMATRON_ENUM_TO_FIELD
 from .schematron import LabTestNameOrderedSchematronErrors
 from .schematron import LabTestNameResultedSchematronErrors
 from .schematron import SchematronConfig
+from .schematron import SchematronErrorDetail
 from .schematron import SchematronErrors
 
 __all__ = [
@@ -18,12 +21,15 @@ __all__ = [
     "TTC_RETRIEVER",
     "_SCHEMATRON_ENUM_TO_FIELD",
     "BaseLabField",
+    "Candidate",
     "DataFieldTypeMapping",
     "LabTestNameOrdered",
     "LabTestNameOrderedSchematronErrors",
     "LabTestNameResulted",
     "LabTestNameResultedSchematronErrors",
+    "LabXPaths",
     "SchematronConfig",
+    "SchematronErrorDetail",
     "SchematronErrors",
     "VectorSearchParams",
 ]

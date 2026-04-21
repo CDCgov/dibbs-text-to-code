@@ -141,16 +141,30 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
     actions   = var.lambda_os_actions
     resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
   }
+
+  dynamic "statement" {
+    for_each = length(var.debug_allowed_ips) > 0 && length(var.debug_iam_principals) > 0 ? [1] : []
+    content {
+      sid    = "AllowDebugFromAllowlist"
+      effect = "Allow"
+      principals {
+        type        = "AWS"
+        identifiers = var.debug_iam_principals
+      }
+      actions   = var.lambda_os_actions
+      resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
+      condition {
+        test     = "IpAddress"
+        variable = "aws:SourceIp"
+        values   = var.debug_allowed_ips
+      }
+    }
+  }
 }
 
 resource "aws_opensearch_domain" "os" {
   domain_name    = var.opensearch_domain_name
   engine_version = var.opensearch_engine_version
-
-  vpc_options {
-    subnet_ids         = module.vpc.private_subnets
-    security_group_ids = [aws_security_group.opensearch_sg.id]
-  }
 
   cluster_config {
     instance_type          = "r5.large.search"
@@ -201,14 +215,6 @@ resource "aws_opensearch_domain" "os" {
   }
 
   tags = { Name = var.opensearch_domain_name }
-}
-
-resource "aws_opensearch_vpc_endpoint" "os_vpc_endpoint" {
-  domain_arn = aws_opensearch_domain.os.arn
-  vpc_options {
-    security_group_ids = [aws_security_group.opensearch_sg.id]
-    subnet_ids         = module.vpc.private_subnets
-  }
 }
 
 #############
@@ -291,7 +297,7 @@ resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
         Effect = "Allow"
         Action = ["s3:GetObject", "s3:HeadObject"]
         Resource = [
-          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_input_prefix}*",
           "arn:aws:s3:::${var.s3_bucket}/${var.schematron_error_prefix}*"
         ]
       },
@@ -386,7 +392,7 @@ resource "aws_iam_role_policy" "augmentation_lambda_s3_policy" {
         Effect = "Allow"
         Action = ["s3:GetObject", "s3:HeadObject"]
         Resource = [
-          "arn:aws:s3:::${var.s3_bucket}/${var.eicr_input_prefix}*",
+          "arn:aws:s3:::${var.s3_bucket}/${var.ttc_input_prefix}*",
           "arn:aws:s3:::${var.s3_bucket}/${var.ttc_output_prefix}*"
         ]
       },
@@ -415,20 +421,13 @@ resource "aws_lambda_function" "lambda" {
   timeout       = var.lambda_timeout
   memory_size   = 3008
 
-  vpc_config {
-    subnet_ids         = module.vpc.private_subnets
-    security_group_ids = [aws_security_group.lambda_sg.id, aws_security_group.opensearch_sg.id]
-  }
-
   environment {
     variables = {
-      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
+      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
       OPENSEARCH_INDEX        = var.index_name
       REGION                  = var.region
-      S3_BUCKET               = var.s3_bucket
       RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
       RERANKER_MODEL_PATH     = "/opt/reranker_model"
-      EICR_INPUT_PREFIX       = var.eicr_input_prefix
       SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
       TTC_INPUT_PREFIX        = var.ttc_input_prefix
       TTC_OUTPUT_PREFIX       = var.ttc_output_prefix
@@ -536,14 +535,6 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
   min_units = 1
   max_units = 4
 
-  vpc_options {
-    subnet_ids = module.vpc.private_subnets
-    security_group_ids = [
-      aws_security_group.opensearch_sg.id,
-      aws_security_group.lambda_sg.id
-    ]
-  }
-
   # Publishing to CloudWatch Logs
   log_publishing_options {
     is_logging_enabled = true
@@ -628,14 +619,9 @@ resource "aws_lambda_function" "index_lambda" {
   image_uri     = "${aws_ecr_repository.index_lambda.repository_url}:${var.index_lambda_image_tag}"
   timeout       = var.lambda_timeout
 
-  vpc_config {
-    subnet_ids         = module.vpc.private_subnets
-    security_group_ids = [aws_security_group.lambda_sg.id, aws_security_group.opensearch_sg.id]
-  }
-
   environment {
     variables = {
-      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_vpc_endpoint.os_vpc_endpoint.endpoint}"
+      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
       REGION                  = var.region
       INDEX_NAME              = var.index_name
       S3_BUCKET               = var.s3_bucket
@@ -657,19 +643,13 @@ resource "aws_lambda_function" "augmentation_lambda" {
   timeout       = var.augmentation_lambda_timeout
   memory_size   = var.augmentation_lambda_memory_size
 
-  vpc_config {
-    subnet_ids         = module.vpc.private_subnets
-    security_group_ids = [aws_security_group.lambda_sg.id]
-  }
-
   environment {
     variables = {
       S3_BUCKET                    = var.s3_bucket
-      EICR_INPUT_PREFIX            = var.eicr_input_prefix
+      TTC_INPUT_PREFIX             = var.ttc_input_prefix
       TTC_OUTPUT_PREFIX            = var.ttc_output_prefix
       AUGMENTED_EICR_PREFIX        = var.augmented_eicr_prefix
       AUGMENTATION_METADATA_PREFIX = var.augmentation_metadata_prefix
-      AWS_REGION                   = var.region
     }
   }
 

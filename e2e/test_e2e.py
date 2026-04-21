@@ -13,19 +13,17 @@ from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from text_to_code_lambda.lambda_function import handler as ttc_handler
-from utils import get_env_var
 
-AUGMENTATION_METADATA_PREFIX = get_env_var("AUGMENTATION_METADATA_PREFIX")
-AUGMENTED_EICR_PREFIX = get_env_var("AUGMENTED_EICR_PREFIX")
-AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
+AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
+AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
 AWS_ACCESS_KEY_ID = "test_access_key_id"
-EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
-REGION = get_env_var("AWS_REGION")
-S3_BUCKET = get_env_var("S3_BUCKET")
-SCHEMATRON_ERROR_PREFIX = get_env_var("SCHEMATRON_ERROR_PREFIX")
-TTC_INPUT_PREFIX = get_env_var("TTC_INPUT_PREFIX")
-TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
+AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
+EICR_INPUT_PREFIX = "eCRMessageV2/"
+REGION = "us-east-1"
+S3_BUCKET = "dibbs-text-to-code"
+SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
+TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
+TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
 
 ACCOUNT_ID = "123456789012"
 

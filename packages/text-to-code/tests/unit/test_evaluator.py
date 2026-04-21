@@ -1,8 +1,8 @@
 import pytest
 
-from shared_models import Candidate
 from shared_models import DataField
-from shared_models import LabXPaths
+from text_to_code.models.eicr import Candidate
+from text_to_code.models.eicr import LabXPaths
 from text_to_code.models.evaluator import TranslationPreference
 from text_to_code.models.evaluator import TranslationSelectionStrategy
 from text_to_code.services import evaluator

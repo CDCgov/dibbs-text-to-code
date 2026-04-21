@@ -3,10 +3,10 @@ import logging
 from lxml import etree
 from lxml.etree import Element
 
-from shared_models import Candidate
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
-from shared_models import EICRMetadata
+from text_to_code.models import Candidate
+from text_to_code.models.eicr import Metadata
 from text_to_code.services.utils import get_config_for_data_field
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class EicrProcessor:
         return candidates
 
     @property
-    def eicr_metadata(self) -> EICRMetadata:
+    def eicr_metadata(self) -> Metadata:
         """Get the eICR ID from the XML."""
         id_element = self._xml_root.find(".//id")
         if id_element is None or id_element.get("nullFlavor") is not None:
@@ -128,11 +128,14 @@ class EicrProcessor:
         instance_identifer = CdaInstanceIdentifier(
             root=id_element.get("root"),
             extension=id_element.get("extension"),
+            assigning_authority_name=id_element.get("assigningAuthorityName"),
+            displayable=_to_bool(id_element.get("displayable")),
+            null_flavor=id_element.get("nullFlavor"),
         )
         vendor = self._xml_root.find(
             ".//author/assignedAuthor/assignedAuthoringDevice/softwareName"
         )
-        return EICRMetadata(
+        return Metadata(
             eicr_id=instance_identifer, eicr_vendor=vendor.text if vendor is not None else None
         )
 
@@ -152,13 +155,8 @@ def _create_xml_tree(xml: str) -> Element:
     tree = etree.fromstring(xml.encode("utf-8"))
     for elem in tree.iter():
         # Remove namespace from tag
-        try:
-            elem.tag = etree.QName(elem).localname
-        except Exception:
-            print(elem.tag)
-            continue
+        elem.tag = etree.QName(elem).localname
     # Remove namespace declarations
-
     etree.cleanup_namespaces(tree)
     return tree
 

@@ -3,8 +3,8 @@ from pydantic import Field
 from pydantic import field_validator
 
 from shared_models import DataField
-from shared_models import LabXPaths
 
+from .eicr import LabXPaths
 from .schematron import LabTestNameOrderedSchematronErrors
 from .schematron import LabTestNameResultedSchematronErrors
 from .schematron import SchematronErrors

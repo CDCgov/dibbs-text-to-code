@@ -2,7 +2,9 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
+from text_to_code.models.eicr import Candidate
 
 
 class LabTestNameOrderedSchematronErrors(Enum):
@@ -36,3 +38,31 @@ class SchematronConfig(BaseModel):
 
     schematron_errors: list[SchematronErrors]
     """The list of Schematron error messages relevant to the data field."""
+
+
+class SchematronErrorDetail(BaseModel):
+    """Structured details for a Schematron validation error."""
+
+    eicr_id: CdaInstanceIdentifier | None = None
+    """The eICR identifier associated with the error, if present."""
+
+    field: DataField
+    """The data field associated with the error."""
+
+    error: str
+    """The normalized Schematron error value."""
+
+    error_message: str
+    """The Schematron error message."""
+
+    error_context: str
+    """The XPath context associated with the error."""
+
+    error_test: str | None = None
+    """The Schematron test expression associated with the error."""
+
+    error_id: str | None = None
+    """The Schematron identifier associated with the error, if present."""
+
+    candidate: Candidate | None = None
+    """The selected candidate associated with the error, if present."""

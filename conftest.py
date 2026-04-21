@@ -1,8 +1,8 @@
-"""Shared conftest.py for all packages."""
-
 import random
 
 import pytest
+
+# Shared conftest.py for all packages.
 
 
 @pytest.fixture(autouse=True)

@@ -9,10 +9,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation.archived.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 from data_curation.archived import augmentation
-from utils import normalize, get_env_var
+from utils import normalize
 from utils import path
-
-S3_BUCKET = get_env_var("S3_BUCKET")
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
@@ -123,7 +121,7 @@ class TestBuildAugmentedLoincFiles:
         working_dir = pathlib.Path.cwd()
         if working_dir.name == "unit":
             input_path = pathlib.Path("assets") / "loinc_lab_names_20250930.csv"
-        elif working_dir.name == S3_BUCKET:
+        elif working_dir.name == "dibbs-text-to-code":
             input_path = "packages/data-curation/tests/assets/loinc_lab_names_20250930.csv"
         else:
             raise RuntimeError(f"Unexpected working directory: {working_dir}")

@@ -1,5 +1,5 @@
 import os
-from typing import BinaryIO
+import typing
 
 import boto3
 from aws_lambda_typing import events as lambda_events
@@ -10,12 +10,23 @@ from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
-from shared_models import OpenSearchResult
-from utils import get_env_var
+from .models import OpenSearchResult
 
 _cached_aws_auth: AWS4Auth | None = None
 _cached_s3_client: BaseClient | None = None
 _cached_opensearch_client: OpenSearch | None = None
+
+
+def require_env(name: str) -> str:
+    """Fetch a required environment variable or raise a clear error.
+
+    :param name: The name of the environment variable to fetch.
+    :return: The value of the environment variable.
+    """
+    value = os.getenv(name)
+    if not value:
+        raise ValueError(f"{name} not set as an environment variable.")
+    return value
 
 
 def strip_protocol(url: str) -> str:
@@ -46,7 +57,7 @@ def create_aws_auth() -> AWS4Auth:
         _cached_aws_auth = AWS4Auth(
             credentials.access_key,
             credentials.secret_key,
-            get_env_var("AWS_REGION"),
+            require_env("AWS_REGION"),
             "es",
             session_token=credentials.token,
         )
@@ -63,7 +74,7 @@ def create_s3_client() -> BaseClient:
 
     if _cached_s3_client is None:
         endpoint_url = os.getenv("S3_ENDPOINT_URL")
-        region_name = get_env_var("AWS_REGION")
+        region_name = require_env("AWS_REGION")
         _cached_s3_client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
@@ -82,7 +93,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
     global _cached_opensearch_client  # noqa: PLW0603
 
     if _cached_opensearch_client is None:
-        endpoint_url = get_env_var("OPENSEARCH_ENDPOINT_URL")
+        endpoint_url = require_env("OPENSEARCH_ENDPOINT_URL")
         auth = aws_auth or create_aws_auth()
         _cached_opensearch_client = OpenSearch(
             hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
@@ -121,14 +132,14 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     :param event: The S3 event containing the bucket and object key information.
     :return: A dictionary containing the bucket name and object key.
     """
-    bucket_name = event["detail"]["bucket"]["name"]
+    bucket_name = event.get("detail", {}).get("bucket", {}).get("name")
     object_key = event["detail"]["object"]["key"]
 
     return {"bucket_name": bucket_name, "object_key": object_key}
 
 
 def put_file(
-    file_obj: BinaryIO,
+    file_obj: typing.BinaryIO,
     bucket_name: str,
     object_key: str,
     s3_client: BaseClient | None = None,
@@ -141,9 +152,7 @@ def put_file(
     :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
     client = s3_client or create_s3_client()
-    client.put_object(
-        Body=file_obj, Bucket=bucket_name, Key=object_key, ContentType="application/json"
-    )
+    client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
 
 
 def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool:

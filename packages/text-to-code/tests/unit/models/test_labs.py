@@ -1,11 +1,11 @@
 import pytest
 
-from shared_models import LabXPaths
 from text_to_code.models import BaseLabField
 from text_to_code.models import LabTestNameOrdered
 from text_to_code.models import LabTestNameOrderedSchematronErrors
 from text_to_code.models import LabTestNameResulted
 from text_to_code.models import LabTestNameResultedSchematronErrors
+from text_to_code.models import LabXPaths
 
 
 class TestLabSchemas:

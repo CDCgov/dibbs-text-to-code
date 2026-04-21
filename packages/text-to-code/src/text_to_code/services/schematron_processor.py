@@ -4,8 +4,8 @@ from lxml import etree
 
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
-from shared_models import SchematronErrorDetail
 from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD
+from text_to_code.models.schematron import SchematronErrorDetail
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ def get_data_fields_from_schematron_error(
         return []
 
     xml_root = etree.fromstring(schematron_output.encode("utf-8"))
+    eicr_id = _get_eicr_id(xml_root)
     schematron_errors: list[SchematronErrorDetail] = []
 
     # Loop through schematron validation results
@@ -94,6 +95,7 @@ def get_data_fields_from_schematron_error(
                 if error_value is None:
                     continue
                 error_detail = SchematronErrorDetail(
+                    eicr_id=eicr_id,
                     field=err_data_field,
                     error=error_value,
                     error_message=message_elem.text,

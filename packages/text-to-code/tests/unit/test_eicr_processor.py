@@ -4,11 +4,11 @@ from unittest.mock import patch
 import pytest
 from lxml.etree import XMLSyntaxError
 
-from shared_models import Candidate
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
-from shared_models import EICRMetadata
-from shared_models import LabXPaths
+from text_to_code.models import Candidate
+from text_to_code.models import LabXPaths
+from text_to_code.models.eicr import Metadata
 from text_to_code.services.eicr_processor import EicrProcessor
 from text_to_code.services.utils import get_config_for_data_field
 
@@ -109,7 +109,7 @@ class TestBasicEicrProcessor:
         return EicrProcessor(eicr_output)
 
     @pytest.fixture(scope="class")
-    def eicr_metadata(self, eicr_processor: EicrProcessor) -> EICRMetadata:
+    def eicr_metadata(self, eicr_processor: EicrProcessor) -> Metadata:
         return eicr_processor.eicr_metadata
 
     @pytest.fixture(scope="class")
@@ -130,8 +130,8 @@ class TestBasicEicrProcessor:
         expected = 2
         assert len(candidates) == expected
 
-    def test_metadata(self, eicr_metadata: EICRMetadata):
-        assert eicr_metadata == EICRMetadata(
+    def test_metadata(self, eicr_metadata: Metadata):
+        assert eicr_metadata == Metadata(
             eicr_id=CdaInstanceIdentifier(root="c8516bdc-8bb2-40aa-8dae-20a77546488f"),
             eicr_vendor="Test eCR Vendor Name",
         )
@@ -194,7 +194,7 @@ class TestBasicEicrProcessor:
             """
         )
 
-        assert processor.eicr_metadata == EICRMetadata(
+        assert processor.eicr_metadata == Metadata(
             eicr_id=CdaInstanceIdentifier(
                 root="test-root",
                 extension="test-extension",
@@ -226,7 +226,7 @@ class TestBasicEicrProcessor:
             """
         )
 
-        assert processor.eicr_metadata == EICRMetadata(
+        assert processor.eicr_metadata == Metadata(
             eicr_id=CdaInstanceIdentifier(
                 root="test-root",
                 extension="test-extension",
@@ -258,7 +258,7 @@ class TestBasicEicrProcessor:
             """
         )
 
-        assert processor.eicr_metadata == EICRMetadata(
+        assert processor.eicr_metadata == Metadata(
             eicr_id=CdaInstanceIdentifier(
                 root="test-root",
                 extension="test-extension",

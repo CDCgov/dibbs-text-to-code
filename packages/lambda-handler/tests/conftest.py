@@ -1,38 +1,33 @@
 import json
 import logging
+import os
 
 import boto3
 import moto
 import pytest
-
-from utils import get_env_var
-
-AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
-AWS_REGION = get_env_var("AWS_REGION")
-AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
-S3_BUCKET = get_env_var("S3_BUCKET")
 
 
 @pytest.fixture(scope="function")
 def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS."""
     with moto.mock_aws():
-        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
-        monkeypatch.setenv("AWS_REGION", AWS_REGION)
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+        monkeypatch.setenv("AWS_REGION", "us-east-1")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
+        bucket_name = "test-bucket"
         monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", "https://test-opensearch-endpoint.com")
 
         # Create the fake S3 bucket
         s3 = boto3.client(
             "s3",
-            region_name=AWS_REGION,
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=os.environ["AWS_REGION"],
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         )
-        s3.create_bucket(Bucket=S3_BUCKET)
+        s3.create_bucket(Bucket=bucket_name)
 
         # Add convenience attribute for tests
-        s3.bucket_name = S3_BUCKET
+        s3.bucket_name = bucket_name
 
         yield s3
 

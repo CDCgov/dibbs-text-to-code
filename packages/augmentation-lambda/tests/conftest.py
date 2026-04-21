@@ -1,31 +1,70 @@
 import json
-import logging
+import os
 from pathlib import Path
 
 import boto3
 import moto
 import pytest
 
-from utils import get_env_var
+from augmentation_lambda import lambda_function
+from lambda_handler.test_constants import AWS_ACCESS_KEY_ID
+from lambda_handler.test_constants import AWS_REGION
+from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
+from lambda_handler.test_constants import S3_BUCKET
+from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 
-AWS_ACCESS_KEY_ID = get_env_var("AWS_ACCESS_KEY_ID")
-AWS_REGION = get_env_var("AWS_REGION")
-AWS_SECRET_ACCESS_KEY = get_env_var("AWS_SECRET_ACCESS_KEY")
-EICR_INPUT_PREFIX = get_env_var("EICR_INPUT_PREFIX")
-OPENSEARCH_ENDPOINT_URL = get_env_var("OPENSEARCH_ENDPOINT_URL")
-S3_BUCKET = get_env_var("S3_BUCKET")
-TTC_OUTPUT_PREFIX = get_env_var("TTC_OUTPUT_PREFIX")
+TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
+TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
+AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
+AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
+
+TEST_EICR_PATH = (
+    Path(__file__).parent.parent.parent
+    / "augmentation"
+    / "tests"
+    / "assets"
+    / "basic_test_eicr.xml"
+)
+
+TEST_TTC_OUTPUT = {
+    "persistence_id": TEST_PERSISTENCE_ID,
+    "eicr_metadata": {},
+    "schematron_errors": {
+        "Lab Test Name Resulted": [
+            {
+                "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                "field_type": "Lab Test Name Resulted",
+                "new_translation": {
+                    "code": "109224-6",
+                    "code_system": "2.16.840.1.113883.6.1",
+                    "code_system_name": "LOINC",
+                    "display_name": "Weed Allergen Mix 3 IgE Ab",
+                    "value_set": None,
+                    "value_set_version": None,
+                    "original_text": "A custom code in original text.",
+                },
+            }
+        ]
+    },
+}
 
 
-TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+def pytest_configure() -> None:
+    """Configure env variables for pytest."""
+    os.environ["S3_BUCKET"] = S3_BUCKET
+    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
+    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
+    os.environ["AUGMENTED_EICR_PREFIX"] = AUGMENTED_EICR_PREFIX
+    os.environ["AUGMENTATION_METADATA_PREFIX"] = AUGMENTATION_METADATA_PREFIX
+    os.environ["AWS_REGION"] = AWS_REGION
+    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
+    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
 
 
 @pytest.fixture
 def example_s3_event_payload() -> dict:
-    """Inner S3 event payload (what SQS body contains as JSON string).
-
-    This example content comes from APHL
-    """
+    """EventBridge S3 event payload (what SQS body contains as JSON string)."""
     return {
         "version": "0",
         "id": "12345678-1234-5678-9012-123456789012",
@@ -76,22 +115,14 @@ def example_sqs_event(example_s3_event_payload: dict) -> dict:
     }
 
 
-@pytest.fixture
-def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
-    """Capture log warnings for tests.
-
-    :param caplog: Pytest fixture for capturing log output
-    :return: Caplog instance with warning level set
-    """
-    caplog.set_level(logging.WARNING)
-    return caplog
-
-
 @pytest.fixture(scope="function")
-def mock_aws_setup() -> boto3.client:
-    """Setup test AWS environment."""
+def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+    """Setup test AWS environment with moto mock S3."""
     with moto.mock_aws():
-        # Create the single S3 bucket
+        monkeypatch.setenv("AWS_REGION", AWS_REGION)
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+
         s3 = boto3.client(
             "s3",
             region_name=AWS_REGION,
@@ -100,28 +131,28 @@ def mock_aws_setup() -> boto3.client:
         )
         s3.create_bucket(Bucket=S3_BUCKET)
 
-        # Add convenience attributes for tests
         s3.bucket_name = S3_BUCKET
         s3.persistence_id = TEST_PERSISTENCE_ID
 
-        # Put TTC Output file in the mock S3 bucket
-        schematron_path = Path("packages/augmentation-lambda/tests/assets/test_ttc_output.json")
-        with schematron_path.open() as f:
-            schematron_output = f.read()
+        # Put test eICR in mock S3
+        with TEST_EICR_PATH.open() as f:
+            eicr_content = f.read()
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            Body=eicr_content,
+        )
+
+        # Put test TTC output in mock S3
         s3.put_object(
             Bucket=S3_BUCKET,
             Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=schematron_output,
+            Body=json.dumps(TEST_TTC_OUTPUT),
         )
 
-        # Put test eCR message file in the mock S3 bucket
-        ecr_path = Path("packages/augmentation-lambda/tests/assets/test_eicr.xml")
-        with ecr_path.open() as f:
-            ecr_message = f.read()
-        s3.put_object(
-            Bucket=S3_BUCKET,
-            Key=f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=ecr_message,
-        )
+        # Reset cached S3 client so Lambda creates a new one inside moto context
+        lambda_function._cached_s3_client = None
 
         yield s3
+
+        lambda_function._cached_s3_client = None
