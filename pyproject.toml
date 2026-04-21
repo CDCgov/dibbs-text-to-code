@@ -31,7 +31,7 @@ dev = [
 source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 markers = ["e2e"]
 testpaths = ["e2e", "packages"]
 pythonpath = ["."]
