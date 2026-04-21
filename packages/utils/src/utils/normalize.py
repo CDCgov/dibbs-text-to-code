@@ -5,12 +5,12 @@ import typing
 def merge_enhancements(
     *dicts: dict[str, dict[str, typing.Any]],
 ) -> dict[str, dict[str, typing.Any]]:
-    """Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
+    """Merge multiple Dictionaries of LOINC enhancements into a single Dictionary.
 
     Merges 'abbrv' and 'synonyms' lists, preserves order and uniqueness,
     keeps the first-seen 'code' for each key.
-    :param typing.Dicts: Variable number of typing.Dictionaries to merge.
-    :return: A single typing.Dictionary with merged enhancements.
+    :param Dicts: Variable number of Dictionaries to merge.
+    :return: A single Dictionary with merged enhancements.
     """
     merged: dict[str, dict[str, typing.Any]] = {}
 
