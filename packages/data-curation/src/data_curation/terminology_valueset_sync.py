@@ -223,9 +223,14 @@ def get_loinc_umls_related_results():  # noqa: D103
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
+    
+    # now use the UMLS URLS to call the UMLS and get the related names 
+    # and store them in a file - first just a tmp file as the process takes a long time
+    # but if hte process fails, pick up the process from the last loinc code 
+    # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
-    save_json_file(SNOINC_DIRECTORY, umls_filename, umls_rows, False)
+    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
@@ -298,12 +303,16 @@ def get_loinc_umls_urls(loinc_results, loinc_rows_list):
 
 
 def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
+    # ensure UMLS creds are available
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
+    # ensure the tmp directory exists for both the UMLS URLS
+    # as well as the temp file to store progress
     if not os.path.exists(TMP_DIRECTORY):
         raise KeyError("Directory where file is expected is missing!")
 
+    # load UMLS URLS
     try:
         with open(file_path, "r") as file:
             umls_urls = json.load(file)
@@ -320,28 +329,30 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
     process_loinc_code = True
     starting_loinc_code = ""
-    umls_filename_err = "loinc_umls_related_names_PARTIAL.json"
-    full_partial_file_path = os.path.join(TMP_DIRECTORY, umls_filename_err)
+    umls_filename_tmp = "loinc_umls_related_names_PARTIAL.json"
+    full_partial_file_path = os.path.join(TMP_DIRECTORY, umls_filename_tmp)
+    print("TEMP FILE PATH: " + full_partial_file_path)
 
     if os.path.exists(full_partial_file_path):
         try:
             with open(full_partial_file_path, "r", newline="", encoding="utf-8") as file:
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
+                print("STARTING LOINC CODE: " + starting_loinc_code)
                 process_loinc_code = False
         except FileNotFoundError:
             print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
-        except csv.Error:
-            print(f"Error: Invalid CSV format in {full_partial_file_path}.")
+        except json.JSONDecodeError:
+            print(f"Error: Invalid JSON format in {full_partial_file_path}.")
 
     try:
         # loop through all the LOINC codes in dict along
         # with all the correlated umls urls
         for loinc_code, urls_dict in umls_urls.items():
+            long_name = urls_dict["long_name"]
             if process_loinc_code:
                 umls_atom_url = urls_dict["atom"]
                 umls_crs_url = urls_dict["crs"]
-                long_name = urls_dict["long_name"]
                 related_names = []
                 loinc_code_count += 1
 
@@ -349,7 +360,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 # in a temp file to ensure progress is not lost
                 # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
-                    save_json_file(TMP_DIRECTORY, umls_filename_err, umls_loinc_rows, True)
+                    save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
                     print(
                         f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
                     )
@@ -441,14 +452,14 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 # add the record for the specific loinc code
                 related_names_row = {"code": loinc_code, "names": related_names}
                 umls_loinc_rows[long_name] = related_names_row
-            if starting_loinc_code != "" and loinc_code == starting_loinc_code:
+            if starting_loinc_code != "" and long_name == starting_loinc_code:
                 process_loinc_code = True
     except:
         print("Unexpected error:", sys.exc_info()[0])
         print(f"Saving {len(umls_loinc_rows)} records in file!")
         # if exception occurs use all the rows in the existing list
         # to overwrite the entire partial file
-        save_json_file(TMP_DIRECTORY, umls_filename_err, umls_loinc_rows, False)
+        save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
         raise
     return umls_loinc_rows
 

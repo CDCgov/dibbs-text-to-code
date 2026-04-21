@@ -244,7 +244,7 @@ Each part provides unique information about the test or observation:
 
 ### LOINC Part Descriptions
 
-This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept. Not all LOINC codes/concepts will have a result in this data file. A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API.
+This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept. Not all LOINC codes/concepts will have a result in this data file. A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API. This additional data was possibly used during the 'enhancement' phase of the creation of synthetic lab data to test the model out.
 
 #### Data Structure:
 
@@ -560,9 +560,8 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Open the SQL query provided for [loinc codes with part descriptions](./loinc/loinc_codes_with_part_descriptions.sql) and copy the contents of that file into the newly created query. Then select the save button at the top left.
   - Enter a name for the query and click on `OK`\
     ![SAVE QUERY](./assets/save_query.jpg)
-  - With the newly created query still open, select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:\<your repo location>\data\` and then click `OK`.
+  - With the newly created query still open, select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:\<your repo location>\data\snoinc_extracts\loinc_other\` and then click `OK`.
     ![SAVE CSV](./assets/export_csv_to_repo.jpg)
-  - Ensure to save the file, with the same table name `loinc_parts_abbrv_synonyms.txt`, to the following location: `<your repo location>\data\snoinc_extracts\loinc_other` and then click `OK`.
   - When the "Export Text Wizard" appears select `Finish`.
   - This will save the query results in the [data folder](../../data/snoinc_extracts/loinc_other/)
 
