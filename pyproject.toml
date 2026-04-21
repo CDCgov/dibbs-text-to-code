@@ -49,6 +49,7 @@ include = [
   "packages/lambda-handler/src",
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
+  "packages/utils/srcs",
 ]
 
 [tool.ruff]
@@ -65,7 +66,6 @@ exclude = [
   "docs",
   "model-tuning",
   "packages/api",
-  "packages/utils",
 ]
 line-length = 100
 indent-width = 4

@@ -4,9 +4,8 @@ import utils.regex_patterns as rp
 
 
 def normalize_text(text: str) -> str:
-    """
-    Normalize text for comparison by removing non-alphanumeric characters,
-    converting to lowercase, and removing all trailing, leading, and excess whitespace.
+    """Normalize text for comparison by removing non-alphanumeric characters, converting to lowercase, and removing all trailing, leading, and excess whitespace.
+
     :param text: The input text to normalize.
     :return: The normalized text.
     """
@@ -17,27 +16,26 @@ def normalize_text(text: str) -> str:
 
 # TODO: Add pydantic models for type checking
 def merge_enhancements(
-    *dicts: typing.Dict[str, typing.Dict[str, typing.Any]],
-) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
-    """
-    Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
+    *dicts: dict[str, dict[str, typing.Any]],
+) -> dict[str, dict[str, typing.Any]]:
+    """Merge multiple typing.Dictionaries of LOINC enhancements into a single typing.Dictionary.
+
     Merges 'abbrv' and 'synonyms' lists, preserves order and uniqueness,
     keeps the first-seen 'code' for each key.
     :param typing.Dicts: Variable number of typing.Dictionaries to merge.
     :return: A single typing.Dictionary with merged enhancements.
     """
-
-    merged: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
+    merged: dict[str, dict[str, typing.Any]] = {}
 
     for d in dicts:
-        for key, value in d.items():
-            key = key.lower()
+        for _key, value in d.items():
+            key = _key.lower()
             code = value["code"]
             # We want the key to be lowercase, but not the values--this way, we
             # can always search regardless of the input formatting, but we'll
             # get back something already LOINC-capitalization expected
-            abbrvs = [a for a in value.get("abbrv", [])]
-            synonyms = [s for s in value.get("synonyms", [])]
+            abbrvs = list(value.get("abbrv", []))
+            synonyms = list(value.get("synonyms", []))
 
             if key not in merged:
                 merged[key] = {
@@ -58,14 +56,11 @@ def merge_enhancements(
     return merged
 
 
-def merge_two_lists(
-    existing: typing.List[typing.Any], new: typing.List[typing.Any]
-) -> typing.List[typing.Any]:
-    """
-    Merge two lists while preserving order and uniqueness.
+def merge_two_lists(existing: list[typing.Any], new: list[typing.Any]) -> list[typing.Any]:
+    """Merge two lists while preserving order and uniqueness.
+
     :param list1: The first list.
     :param list2: The second list.
     :return: A merged list with unique elements in order of first appearance.
     """
-
     return existing + [v for v in new if v not in existing]

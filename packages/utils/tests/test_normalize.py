@@ -1,10 +1,9 @@
 import pytest
-
 from utils import normalize as utils
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [
         # Removes special characters and extra spaces, converts to lowercase
         (
@@ -29,7 +28,7 @@ class TestNormalizeText:
 
 
 @pytest.mark.parametrize(
-    "existing, new, expected",
+    ("existing", "new", "expected"),
     [
         # Merges two lists with some overlap, preserving order and uniqueness
         (["a", "b", "c"], ["b", "c", "d"], ["a", "b", "c", "d"]),
@@ -49,7 +48,7 @@ class TestMergeTwoLists:
 
 
 @pytest.mark.parametrize(
-    "dict1, dict2, expected",
+    ("dict1", "dict2", "expected"),
     [
         # Merges two dicts with some overlap, preserving order and uniqueness
         (

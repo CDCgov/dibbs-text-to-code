@@ -7,13 +7,8 @@ def parse_snoinc_extracts(
     long_name_col: int = 2,
     display_name_col: int = 3,
     skip_first: bool = True,
-):
-    """
-    Given a path to an extract file of information on various LOINC codes,
-    parse the rows of that file in to three discrete lists corresponding to
-    the long common names, short names, and display names of those codes.
-    The file is expected to be a pipe-delimited text file in which each
-    LOINC code is expected to represent a single line.
+) -> tuple[list[str], list[str], list[str]]:
+    """Given a path to an extract file of information on various LOINC codes, parse the rows of that file in to three discrete lists corresponding to the long common names, short names, and display names of those codes. The file is expected to be a pipe-delimited text file in which each LOINC code is expected to represent a single line.
 
     :param extract_path: The path to the extract file to parse.
     :param short_name_col: The column of the pipe file containing the
@@ -30,7 +25,7 @@ def parse_snoinc_extracts(
     short_names = []
     display_names = []
 
-    with open(extract_path, "r", encoding="utf-8") as fp:
+    with open(extract_path, encoding="utf-8") as fp:
         lines_seen = 0
         for line in fp:
             if lines_seen == 0:
@@ -40,12 +35,10 @@ def parse_snoinc_extracts(
             if line.strip() != "":
                 names = line.strip().split("|")
                 # Skip lines that aren't real entries (formatting artifacts)
-                if len(names) >= 4:
+                real_entries_num = 4
+                if len(names) >= real_entries_num:
                     long_common_names.append(names[long_name_col].strip())
                     short_names.append(names[short_name_col].strip())
                     display_names.append(names[display_name_col].strip())
-
-    for name_list in [long_common_names, short_names, display_names]:
-        name_list = [x for x in name_list if not x == ""]
 
     return long_common_names, short_names, display_names
