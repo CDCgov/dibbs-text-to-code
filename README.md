@@ -34,6 +34,7 @@ TTC has two sequential workflows:
 **1. Text-to-Code (TTC)**
 
 Given an eICR XML document and a corresponding [Schematron](https://www.schematron.com/) validation report identifying relevant errors, TTC:
+
 1. Reads the Schematron report to identify which sections of the eICR contain errors that need standardized codes
 2. Parses the XML and extracts text candidates for each configured data field (e.g., lab test names) using XPath expressions
 3. Selects the best candidate text using priority-based evaluation criteria (e.g., prefers LOINC-sourced text over free text)
@@ -44,6 +45,7 @@ Given an eICR XML document and a corresponding [Schematron](https://www.schematr
 **2. Augmentation**
 
 Given TTC results, the augmenter:
+
 1. Updates [clinical document](http://hl7.org/cda/us/ccda/StructureDefinition/USRealmHeader) headers (ID, effective time, version number) to create a new derived document
 2. Preserves the original eICR as a [`relatedDocument`](http://hl7.org/cda/stds/core/StructureDefinition/RelatedDocument) reference
 3. Inserts an author entry identifying the TTC system at the clinical document level and for every updated observation
@@ -53,19 +55,18 @@ Given TTC results, the augmenter:
 
 This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScript/React frontend). All Python packages live under `packages/`; the frontend lives under `frontend/`.
 
-| Package | Role |
-|---|---|
-| [`shared-models`](packages/shared-models/) | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput` |
-| [`text-to-code`](packages/text-to-code/) | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building |
-| [`augmentation`](packages/augmentation/) | Writes TTC results back into eICR XML as `<translation>` elements |
-| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow, triggered by S3 → SQS events |
-| [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events |
-| [`utils`](packages/utils/) | Path, regex, and LOINC name parsing utilities |
-| [`data-curation`](packages/data-curation/) | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
-| [`model-tuning`](packages/model-tuning/) | Fine-tunes SentenceTransformer models and builds HNSW indexes for OpenSearch |
-| [`api`](packages/api/) | FastAPI service exposing `/api` endpoints; serves the built frontend in non-local environments |
-| [`frontend`](frontend/) | React 19 + TypeScript + Vite demo application for interacting with the API |
-
+| Package                                                | Role                                                                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| [`shared-models`](packages/shared-models/)             | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput`          |
+| [`text-to-code`](packages/text-to-code/)               | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building          |
+| [`augmentation`](packages/augmentation/)               | Writes TTC results back into eICR XML as `<translation>` elements                                    |
+| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow, triggered by S3 → SQS events                                |
+| [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events                            |
+| [`utils`](packages/utils/)                             | Path, regex, and LOINC name parsing utilities                                                        |
+| [`data-curation`](packages/data-curation/)             | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
+| [`model-tuning`](packages/model-tuning/)               | Fine-tunes SentenceTransformer models and builds HNSW indexes for OpenSearch                         |
+| [`api`](packages/api/)                                 | FastAPI service exposing `/api` endpoints; serves the built frontend in non-local environments       |
+| [`frontend`](frontend/)                                | React 19 + TypeScript + Vite demo application for interacting with the API                           |
 
 ### Architecture Diagram
 
@@ -116,23 +117,29 @@ A **demo site** (FastAPI + React frontend) is available for local testing of the
 - [Docker Compose](https://docs.docker.com/compose/install/) [optional]
 
 ### Setup
+
 #### Requirements
+
 - [just](https://just.systems) - command runner
 - [uv](https://docs.astral.sh/uv/) - to manage Python
 - [pre-commit](https://pre-commit.com/) - Pre-commit hooks
 
 After installing the above requirements run `just bootstrap` to initiate the Python environment and install pre-commit:
+
 ```sh
 just bootstrap
 ```
 
 To start the demo site and API:
+
 ```sh
 just dev up
 ```
+
 The demo site can be accessed at http:localhost:8081
 
 To run tests:
+
 ```sh
 just test
 ```
@@ -170,7 +177,7 @@ export HF_TOKEN="hf_your_token_here"
 To run all the unit tests, use the following command:
 
 ```sh
-pytest
+pytest -m \"not e2e\"
 ```
 
 To run a single unit test, use the following command:
@@ -180,9 +187,20 @@ pytest tests/unit/test_utils.py::test_function
 ```
 
 To update snapshots:
+
 ```sh
 pytest --snapshot-update
 ```
+
+### e2e Tests:
+
+To run e2e tests, use the following command:
+
+```sh
+pytest -m e2e
+```
+
+e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS sytems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
 
 ### Type checks
 
