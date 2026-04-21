@@ -14,10 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: "Set up Python"
+      - name: 'Set up Python'
         uses: actions/setup-python@v6
         with:
-          python-version-file: "pyproject.toml"
+          python-version-file: 'pyproject.toml'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -32,7 +32,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          uv run pytest --cov
+          uv run pytest -m "not e2e" --cov
 
       - name: Generate coverage report
         run: |
@@ -44,3 +44,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
           verbose: true
+
+      - name: Run e2e tests
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          uv run pytest -m e2e
