@@ -49,7 +49,7 @@ include = [
   "packages/lambda-handler/src",
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
-  "packages/utils/srcs",
+  "packages/utils/src",
 ]
 
 [tool.ruff]
