@@ -63,7 +63,7 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
-# File & Directories 
+# File & Directories
 SNOINC_DIRECTORY = "./data/snoinc_extracts"
 SNOINC_ENHANCEMENTS_DIRECTORY = "./data/snoinc_extracts/enhancements"
 TMP_DIRECTORY = "./tmp"
@@ -223,7 +223,6 @@ def get_loinc_umls_related_results():  # noqa: D103
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
-    
     # now use the UMLS URLS to call the UMLS and get the related names 
     # and store them in a file - first just a tmp file as the process takes a long time
     # but if hte process fails, pick up the process from the last loinc code 

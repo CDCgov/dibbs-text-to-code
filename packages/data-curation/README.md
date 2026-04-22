@@ -104,7 +104,7 @@ This script contains the code needed to generate training data specifically for 
 
 ### sql (folder)
 
-Contains .sql queries/files that are used to gather data from various databases. Currently the only sql scripts are specfic to retrieving data from LOINC's RELMA database (MS-Access). The resulting files are stored in the `data/snoinc_extracts/loinc_other` folder.
+Contains .sql queries/files that are used to gather data from various databases. Currently the only SQL scripts are specific to retrieving data from LOINC's RELMA database (MS-Access). The resulting files are stored in the `data/snoinc_extracts/loinc_other` folder.
 
 - Note: the consumer_name.csv should be updated whenever other updates are being made to the various LOINC extract files to ensure we have all the latest information for the Consumer Name field for the various LOINC codes. To get or update this file from LOINC follow the instructions in [dependencies (see below)](#dependencies)
 
