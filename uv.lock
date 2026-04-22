@@ -531,7 +531,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.6.0" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "pytest-env", specifier = ">=1.5.1" },
+    { name = "pytest-env", specifier = ">=1.6.0" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "ruff", specifier = ">=0.15.10" },
     { name = "ty", specifier = ">=0.0.30" },
@@ -1423,15 +1423,15 @@ wheels = [
 
 [[package]]
 name = "pytest-env"
-version = "1.5.1"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
     { name = "python-dotenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7b/95/84ce040c3a57088e54f8eccef3b849d79a65e3cda681c641ae809761727b/pytest_env-1.5.1.tar.gz", hash = "sha256:712866d23819096711f249e2befc1e665fc8137446a8f42945f569abda528586", size = 15782, upload-time = "2026-03-12T21:22:45.461Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/69/4db1c30625af0621df8dbe73797b38b6d1b04e15d021dd5d26a6d297f78c/pytest_env-1.6.0.tar.gz", hash = "sha256:ac02d6fba16af54d61e311dd70a3c61024a4e966881ea844affc3c8f0bf207d3", size = 16163, upload-time = "2026-03-12T22:39:43.78Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/7d/95e656c676bcb22213dcc2eb56d4f06250a9eb484a8441bede4e0c6ca685/pytest_env-1.5.1-py3-none-any.whl", hash = "sha256:295bdffa5494261888df3a3f38b38d1e7ebfe2917ced4a16e1913382792b3446", size = 10132, upload-time = "2026-03-12T21:22:44.347Z" },
+    { url = "https://files.pythonhosted.org/packages/27/16/ad52f56b96d851a2bcfdc1e754c3531341885bd7177a128c13ff2ca72ab4/pytest_env-1.6.0-py3-none-any.whl", hash = "sha256:1e7f8a62215e5885835daaed694de8657c908505b964ec8097a7ce77b403d9a3", size = 10400, upload-time = "2026-03-12T22:39:41.887Z" },
 ]
 
 [[package]]
