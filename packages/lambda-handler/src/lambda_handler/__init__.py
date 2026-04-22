@@ -7,5 +7,6 @@ from .lambda_handler import get_file_content_from_s3 as get_file_content_from_s3
 from .lambda_handler import get_persistence_id as get_persistence_id
 from .lambda_handler import get_s3_credentials as get_s3_credentials
 from .lambda_handler import put_file as put_file
+from .lambda_handler import reset_cached_clients as reset_cached_clients
 from .lambda_handler import retrieve_opensearch_results as retrieve_opensearch_results
 from .lambda_handler import strip_protocol as strip_protocol

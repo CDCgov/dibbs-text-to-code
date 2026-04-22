@@ -15,10 +15,19 @@ from utils import get_env_variable
 from .models import OpenSearchResult
 
 _cached_aws_auth: AWS4Auth | None = None
-_cached_aws_auth_key: tuple[str | None, str | None, str | None] | None = None
 _cached_s3_client: BaseClient | None = None
-_cached_s3_client_key: tuple[str | None, str | None, str | None, str | None] | None = None
 _cached_opensearch_client: OpenSearch | None = None
+
+
+def reset_cached_clients() -> None:
+    """Reset cached AWS clients and auth. This is useful for testing to ensure that environment variable changes are picked up."""
+    global _cached_aws_auth  # noqa: PLW0603
+    global _cached_s3_client  # noqa: PLW0603
+    global _cached_opensearch_client  # noqa: PLW0603
+
+    _cached_aws_auth = None
+    _cached_s3_client = None
+    _cached_opensearch_client = None
 
 
 def strip_protocol(url: str) -> str:
@@ -43,16 +52,9 @@ def create_aws_auth() -> AWS4Auth:
     :return: AWS4Auth object
     """
     global _cached_aws_auth  # noqa: PLW0603
-    global _cached_aws_auth_key  # noqa: PLW0603
 
-    credentials = get_s3_credentials()
-    cache_key = (
-        credentials.access_key,
-        credentials.secret_key,
-        credentials.token,
-    )
-
-    if _cached_aws_auth is None or _cached_aws_auth_key != cache_key:
+    if _cached_aws_auth is None:
+        credentials = get_s3_credentials()
         _cached_aws_auth = AWS4Auth(
             credentials.access_key,
             credentials.secret_key,
@@ -60,7 +62,6 @@ def create_aws_auth() -> AWS4Auth:
             "es",
             session_token=credentials.token,
         )
-        _cached_aws_auth_key = cache_key
 
     return _cached_aws_auth
 
@@ -71,28 +72,15 @@ def create_s3_client() -> BaseClient:
     :return: S3 client
     """
     global _cached_s3_client  # noqa: PLW0603
-    global _cached_s3_client_key  # noqa: PLW0603
 
-    endpoint_url = os.getenv("S3_ENDPOINT_URL")
-    region_name = get_env_variable("AWS_REGION")
-    credentials = get_s3_credentials()
-    cache_key = (
-        endpoint_url,
-        region_name,
-        credentials.access_key,
-        credentials.secret_key,
-    )
-
-    if _cached_s3_client is None or _cached_s3_client_key != cache_key:
+    if _cached_s3_client is None:
+        endpoint_url = os.getenv("S3_ENDPOINT_URL")
+        region_name = get_env_variable("AWS_REGION")
         _cached_s3_client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             region_name=region_name,
-            aws_access_key_id=credentials.access_key,
-            aws_secret_access_key=credentials.secret_key,
-            aws_session_token=credentials.token,
         )
-        _cached_s3_client_key = cache_key
 
     return _cached_s3_client
 
