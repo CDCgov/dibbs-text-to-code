@@ -1,6 +1,7 @@
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from utils import get_env_variable
 
 INDEX_MAPPING = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
@@ -46,7 +47,7 @@ def handler(event: dict, context: dict) -> dict:
     """
     aws_auth = lambda_handler.create_aws_auth()
     os_client = lambda_handler.create_opensearch_client(aws_auth)
-    index_name = lambda_handler.require_env("INDEX_NAME")
+    index_name = get_env_variable("INDEX_NAME")
 
     action = event.get("action", "create_index") if event else "create_index"
 
