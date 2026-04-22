@@ -5,11 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: "Apply changes (if false, only runs plan)"
+        description: 'Apply changes (if false, only runs plan)'
         type: boolean
         default: false
       destroy:
-        description: "Destroy all resources (WARNING: irreversible)"
+        description: 'Destroy all resources (WARNING: irreversible)'
         type: boolean
         default: false
   push:
