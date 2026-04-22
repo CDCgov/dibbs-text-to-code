@@ -374,21 +374,21 @@ class TestChooseAndApplyPostProcessing:
             FENTANYL_STRUCT.fully_specified_name,
             FENTANYL_STRUCT.system,
             LOINC_ENHANCEMENTS,
-            data_emulation.BASE_POST_PROCESSING_OPTIOINS
+            data_emulation.BASE_POST_PROCESSING_OPTIONS
         )
         assert post_processed == "POC fentaNYL [Presence] Urine Screen method"
     def test_code_with_pounds_and_delimiters(self):
         input = "Neutrophils+Leukocytes [Entitic #/volume] in Blood by Automated count"
         fsn = "Neutrophils+Leukocytes:MCnc:Pt:Bld:"
         post_processed = data_emulation._choose_and_apply_post_processing(
-            input, fsn, "Bld", LOINC_ENHANCEMENTS, data_emulation.BASE_POST_PROCESSING_OPTIOINS
+            input, fsn, "Bld", LOINC_ENHANCEMENTS, data_emulation.BASE_POST_PROCESSING_OPTIONS
         )
         assert post_processed == "Neutrophils/Leukocytes [Entitic #/volume] by Automated count"
     def test_code_with_dots_and_truncation(self):
         input = "Myelin associated glycoprotein/Sulfated glucuronic paragloboside protein.total IgM Ab [Titer] in Serum by Immunoassay"  # noqa
         fsn = "Myelin associated glycoprotein:CCnc:Pt:Ser/Plas:Ord:"
         post_processed = data_emulation._choose_and_apply_post_processing(
-            input, fsn, "Ser/Plas", LOINC_ENHANCEMENTS, data_emulation.BASE_POST_PROCESSING_OPTIOINS
+            input, fsn, "Ser/Plas", LOINC_ENHANCEMENTS, data_emulation.BASE_POST_PROCESSING_OPTIONS
         )
         assert post_processed == "Myelin associated glycoprotein/Sulfated glucuronic paragloboside protein.total IgM Ab"  # noqa
 
