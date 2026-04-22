@@ -110,7 +110,7 @@ SINGLE_WORD_METHOD_MAPPINGS = {
     "by screen method": "Screening",
     "by automated count": "Automated"
 }
-BASE_POST_PROCESSING_OPTIOINS = [
+BASE_POST_PROCESSING_OPTIONS = [
     "poc", "modality", "delimiter", "truncation", "syntax", "pound", "deletion", "dot"
 ]
 BASE_HEURISTIC_OPTIONS = ["measurement", "q group", "modality", "parens", "brackets"]
@@ -144,7 +144,7 @@ def build_and_process_ttc_and_heuristics(
             fsn,
             system_axis,
             LOINC_ENHANCEMENTS,
-            BASE_POST_PROCESSING_OPTIOINS
+            BASE_POST_PROCESSING_OPTIONS
         )
         if _codestring_is_valid_candidate(ttc_processed, code_str):
             variations.append(ttc_processed)
@@ -154,7 +154,7 @@ def build_and_process_ttc_and_heuristics(
     )
     if _codestring_is_valid_candidate(rule_based_example, code_str):
         variations.append(rule_based_example)
-    # Make a different set of random chocies for variety
+    # Make a different set of random choices for variety
     heuristic_ex_to_process = _choose_and_apply_heuristics(
         code_str, property_axis, system_axis
     )
@@ -163,7 +163,7 @@ def build_and_process_ttc_and_heuristics(
         fsn,
         system_axis,
         LOINC_ENHANCEMENTS,
-        BASE_POST_PROCESSING_OPTIOINS
+        BASE_POST_PROCESSING_OPTIONS
     )
     if _codestring_is_valid_candidate(heuristic_ex_to_process, code_str):
         variations.append(heuristic_ex_to_process)
@@ -179,7 +179,7 @@ def build_loinc_axis_example(
     """
     Given a LOINC code structure, directly construct a "LOINC-like" variant
     for that code by repeatedly choosing a valid enhancement word for
-    that axis directly from our dictionary of axis-synonymoms and 
+    that axis directly from our dictionary of axis-synonyms and 
     abbreviations. This build pattern represents getting a sample of data in
     which everything is "close to" the correct code, but nothing is outright
     the same.
@@ -190,7 +190,7 @@ def build_loinc_axis_example(
       building up the variant. Production samples tend to be mixed on
       this axis, with some having it, others not.
     :param skip_scale: Optionally, whether to skip the "scale" axis when
-      building up the variant. Productiono samples tend to be mixed on
+      building up the variant. Production samples tend to be mixed on
       this axis, with some having it, others not.
     :returns: A synthetic variant built directly out of synonym-searching the
       LOINC code's various axes.
@@ -312,7 +312,7 @@ def build_vendor_formula_style_example(
     # turn them into parens
     bracketed_text = BRACKETED_TEXT.search(result)
     if bracketed_text is not None:
-        # Presence is specifically exlcuded here and gets dropped
+        # Presence is specifically excluded here and gets dropped
         if "presence" in bracketed_text.group(0).lower():
             result = result[:bracketed_text.span()[0]].strip()
         else:
@@ -400,7 +400,7 @@ def create_synthetic_examples_for_code(
                         fsn,
                         getattr(loinc_code, "system"),
                         LOINC_ENHANCEMENTS,
-                        BASE_POST_PROCESSING_OPTIOINS
+                        BASE_POST_PROCESSING_OPTIONS
                     )
                     if _codestring_is_valid_candidate(processed_vendor, name):
                         variations.append(processed_vendor)
@@ -679,13 +679,13 @@ def _allocate_generated_loincs_to_training_arrays(
       we started with, before any synthetic modification.
     :param generated_loincs: A list of all the synthetically generated 
       variants associated with this particular original code text.
-    :param search_training_array: The incremenetally-built list in which
+    :param search_training_array: The incrementally-built list in which
       we're storing the synthetic examples that will be used to fine-
       tune the model's nearest neighbor search.
-    :param reranker_training_array: The incremenetally-built list in which
+    :param reranker_training_array: The incrementally-built list in which
       we're storing the synthetic examples that will be used to fine-
       tune the model's reranker.
-    :param validation_array: The incremenetally-built list in which we're
+    :param validation_array: The incrementally-built list in which we're
       storing the synthetic examples that will be used to evaluate the
       model's overall standardization performance.
     :returns: A tuple with the three lists and their new appended elements.
