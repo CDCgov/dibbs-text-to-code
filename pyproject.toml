@@ -49,7 +49,7 @@ include = [
   "packages/lambda-handler/src",
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
-  "packages/utils/srcs",
+  "packages/utils/src",
 ]
 
 [tool.ruff]
@@ -116,6 +116,7 @@ known-first-party = [
   "shared_models",
   "text_to_code",
   "text_to_code_lambda",
+  "utils",
 ]
 
 [tool.ruff.lint.per-file-ignores]

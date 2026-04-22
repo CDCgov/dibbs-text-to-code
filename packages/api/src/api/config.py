@@ -1,5 +1,7 @@
 import os
 
+from utils import get_env_variable
+
 # create a class with the DIBBs default Creative Commons Zero v1.0 and
 # MIT license to be used by the BaseService class
 LICENSES = {
@@ -17,25 +19,6 @@ DIBBS_CONTACT = {
 }
 
 
-def _get_env_variable(name: str) -> str:
-    """
-    Grabs a variable by name from the environment. Throws an error if the variable is not present.
-
-    Args:
-        name (str): Name of the environment variable
-
-    Raises:
-        OSError: raised if environment variable is not present
-
-    Returns:
-        str: Name of the environment variable
-    """
-    value = os.getenv(name)
-    if value is None:
-        raise OSError(f"Missing environment variable: {name}")
-    return value
-
-
 ENVIRONMENT: dict[str, str] = {
-    "ENV": _get_env_variable("ENV"),
+    "ENV": get_env_variable("ENV"),
 }
