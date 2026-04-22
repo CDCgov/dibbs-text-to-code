@@ -74,7 +74,7 @@ def create_s3_client() -> BaseClient:
     global _cached_s3_client_key  # noqa: PLW0603
 
     endpoint_url = os.getenv("S3_ENDPOINT_URL")
-    region_name = require_env("AWS_REGION")
+    region_name = get_env_variable("AWS_REGION")
     credentials = get_s3_credentials()
     cache_key = (
         endpoint_url,
@@ -84,8 +84,6 @@ def create_s3_client() -> BaseClient:
     )
 
     if _cached_s3_client is None or _cached_s3_client_key != cache_key:
-        endpoint_url = os.getenv("S3_ENDPOINT_URL")
-        region_name = get_env_variable("AWS_REGION")
         _cached_s3_client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
