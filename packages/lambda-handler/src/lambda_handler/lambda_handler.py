@@ -13,7 +13,9 @@ from requests_aws4auth import AWS4Auth
 from .models import OpenSearchResult
 
 _cached_aws_auth: AWS4Auth | None = None
+_cached_aws_auth_key: tuple[str | None, str | None, str | None] | None = None
 _cached_s3_client: BaseClient | None = None
+_cached_s3_client_key: tuple[str | None, str | None, str | None, str | None] | None = None
 _cached_opensearch_client: OpenSearch | None = None
 
 
@@ -51,9 +53,16 @@ def create_aws_auth() -> AWS4Auth:
     :return: AWS4Auth object
     """
     global _cached_aws_auth  # noqa: PLW0603
+    global _cached_aws_auth_key  # noqa: PLW0603
 
-    if _cached_aws_auth is None:
-        credentials = get_s3_credentials()
+    credentials = get_s3_credentials()
+    cache_key = (
+        credentials.access_key,
+        credentials.secret_key,
+        credentials.token,
+    )
+
+    if _cached_aws_auth is None or _cached_aws_auth_key != cache_key:
         _cached_aws_auth = AWS4Auth(
             credentials.access_key,
             credentials.secret_key,
@@ -61,6 +70,7 @@ def create_aws_auth() -> AWS4Auth:
             "es",
             session_token=credentials.token,
         )
+        _cached_aws_auth_key = cache_key
 
     return _cached_aws_auth
 
@@ -71,15 +81,28 @@ def create_s3_client() -> BaseClient:
     :return: S3 client
     """
     global _cached_s3_client  # noqa: PLW0603
+    global _cached_s3_client_key  # noqa: PLW0603
 
-    if _cached_s3_client is None:
-        endpoint_url = os.getenv("S3_ENDPOINT_URL")
-        region_name = require_env("AWS_REGION")
+    endpoint_url = os.getenv("S3_ENDPOINT_URL")
+    region_name = require_env("AWS_REGION")
+    credentials = get_s3_credentials()
+    cache_key = (
+        endpoint_url,
+        region_name,
+        credentials.access_key,
+        credentials.secret_key,
+    )
+
+    if _cached_s3_client is None or _cached_s3_client_key != cache_key:
         _cached_s3_client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             region_name=region_name,
+            aws_access_key_id=credentials.access_key,
+            aws_secret_access_key=credentials.secret_key,
+            aws_session_token=credentials.token,
         )
+        _cached_s3_client_key = cache_key
 
     return _cached_s3_client
 
