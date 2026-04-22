@@ -141,22 +141,6 @@ class TestCreateOpenSearchClient:
         assert client.transport.hosts[0]["port"] == expected_port
 
 
-class TestRequireEnv:
-    def test_require_env(self, monkeypatch):
-        """Test require env."""
-        monkeypatch.setenv("TEST_ENV_VAR", "test_value")
-        value = lambda_handler.require_env("TEST_ENV_VAR")
-        assert value == "test_value"
-
-    def test_require_env_not_set(self, monkeypatch):
-        """Test require env not set."""
-        with pytest.raises(
-            ValueError,
-            match=r"NONEXISTENT_ENV_VAR not set as an environment variable\.",
-        ):
-            lambda_handler.require_env("NONEXISTENT_ENV_VAR")
-
-
 class TestGetPersistenceId:
     def test_get_persistence_id(self):
         """Test get persistence id."""

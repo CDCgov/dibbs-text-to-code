@@ -10,6 +10,8 @@ from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
+from utils import get_env_variable
+
 from .models import OpenSearchResult
 
 _cached_aws_auth: AWS4Auth | None = None
@@ -17,18 +19,6 @@ _cached_aws_auth_key: tuple[str | None, str | None, str | None] | None = None
 _cached_s3_client: BaseClient | None = None
 _cached_s3_client_key: tuple[str | None, str | None, str | None, str | None] | None = None
 _cached_opensearch_client: OpenSearch | None = None
-
-
-def require_env(name: str) -> str:
-    """Fetch a required environment variable or raise a clear error.
-
-    :param name: The name of the environment variable to fetch.
-    :return: The value of the environment variable.
-    """
-    value = os.getenv(name)
-    if not value:
-        raise ValueError(f"{name} not set as an environment variable.")
-    return value
 
 
 def strip_protocol(url: str) -> str:
@@ -66,7 +56,7 @@ def create_aws_auth() -> AWS4Auth:
         _cached_aws_auth = AWS4Auth(
             credentials.access_key,
             credentials.secret_key,
-            require_env("AWS_REGION"),
+            get_env_variable("AWS_REGION"),
             "es",
             session_token=credentials.token,
         )
@@ -94,6 +84,8 @@ def create_s3_client() -> BaseClient:
     )
 
     if _cached_s3_client is None or _cached_s3_client_key != cache_key:
+        endpoint_url = os.getenv("S3_ENDPOINT_URL")
+        region_name = get_env_variable("AWS_REGION")
         _cached_s3_client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
@@ -116,7 +108,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
     global _cached_opensearch_client  # noqa: PLW0603
 
     if _cached_opensearch_client is None:
-        endpoint_url = require_env("OPENSEARCH_ENDPOINT_URL")
+        endpoint_url = get_env_variable("OPENSEARCH_ENDPOINT_URL")
         auth = aws_auth or create_aws_auth()
         _cached_opensearch_client = OpenSearch(
             hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
