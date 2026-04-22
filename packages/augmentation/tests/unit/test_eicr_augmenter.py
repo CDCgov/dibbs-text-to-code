@@ -50,7 +50,7 @@ class TestEicrAugmenter:
         assert augmenter.original_xml == BASIC_ECR
 
     def test_basic_eicr(self, mocker: MockerFixture, snapshot: Snapshot):
-        """Tests augmentor run method."""
+        """Tests augmenter run method."""
         doc_id = UUID("12345678-1234-5678-1234-567812345678")
         set_id = UUID("87654321-4321-8765-4321-876543218765")
 
@@ -96,7 +96,7 @@ class TestEicrAugmenter:
         )
 
     def test_eicr_related_doc(self, mocker: MockerFixture, snapshot: Snapshot):
-        """Tests augmentor run method."""
+        """Tests augmenter run method."""
         doc_id = UUID("12345678-1234-5678-1234-567812345678")
         set_id = UUID("87654321-4321-8765-4321-876543218765")
 
@@ -158,7 +158,7 @@ class TestEicrAugmenter:
         assert parent_doc_id.get("assigningAuthorityName") == "original-document"
 
     def test_empty_eicr(self, mocker: MockerFixture):
-        """Tests augmentor run method."""
+        """Tests augmenter run method."""
         doc_id = UUID("12345678-1234-5678-1234-567812345678")
         set_id = UUID("87654321-4321-8765-4321-876543218765")
 

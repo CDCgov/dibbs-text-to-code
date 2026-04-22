@@ -200,7 +200,7 @@ To run e2e tests, use the following command:
 pytest -m e2e
 ```
 
-e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS sytems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
+e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS systems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
 
 ### Type checks
 
