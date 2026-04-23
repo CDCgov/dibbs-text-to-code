@@ -19,6 +19,17 @@ _cached_s3_client: BaseClient | None = None
 _cached_opensearch_client: OpenSearch | None = None
 
 
+def reset_cached_clients() -> None:
+    """Reset cached AWS clients and auth. This is useful for testing to ensure that environment variable changes are picked up."""
+    global _cached_aws_auth  # noqa: PLW0603
+    global _cached_s3_client  # noqa: PLW0603
+    global _cached_opensearch_client  # noqa: PLW0603
+
+    _cached_aws_auth = None
+    _cached_s3_client = None
+    _cached_opensearch_client = None
+
+
 def strip_protocol(url: str) -> str:
     """Remove http/https from a URL.
 
