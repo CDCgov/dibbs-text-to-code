@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "attributes": {
+        "ApproximateFirstReceiveTimestamp": "1752691260458",
+        "ApproximateReceiveCount": "1",
+        "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+        "SentTimestamp": "1752691260451"
+      },
+      "awsRegion": "us-east-1",
+      "body": "{\"version\": \"0\", \"id\": \"12345678-1234-5678-9012-123456789012\", \"detail-type\": \"Object Created\", \"source\": \"aws.s3\", \"account\": \"111122223333\", \"time\": \"2025-09-03T12:34:56Z\", \"region\": \"us-east-1\", \"resources\": [\"arn:aws:s3:::dibbs-text-to-code\"], \"detail\": {\"version\": \"0\", \"bucket\": {\"name\": \"custom-bucket\"}, \"object\": {\"key\": \"TTCAugmentationMetadataV2/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234\", \"size\": 1024, \"etag\": \"0123456789abcdef0123456789abcdef\", \"sequencer\": \"0055AED6DCD90281E5\"}, \"request-id\": \"C3D13FE58DE4C810\", \"requester\": \"arn:aws:iam::111122223333:user/example-user\", \"reason\": \"PutObject\"}}",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:queue-name",
+      "md5OfBody": "dummy-md5",
+      "messageAttributes": {},
+      "messageId": "msg-routing",
+      "receiptHandle": "test-receipt-handle-0"
+    }
+  ]
+}
