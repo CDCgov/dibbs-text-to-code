@@ -49,7 +49,7 @@ def load_loinc_enhancements(cwd: str) -> dict:
     level_prefix = Path(*([".."] * levels)) if levels > 0 else Path(".")
 
     # Use glob pattern relative to the computed prefix
-    pattern = str(level_prefix / "data" / "snoinc_extracts" / "*_abbrv_syn_*.json")
+    pattern = str(level_prefix / "data" / "snoinc_extracts" / "enhancements" / "*_abbrv_syn_*.json")
     matches = glob.glob(pattern)
 
     enhancements = {}
