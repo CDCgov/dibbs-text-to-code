@@ -19,11 +19,11 @@ from text_to_code.models import Candidate
 from text_to_code.models import SchematronErrorDetail
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor
-from text_to_code.services import embedder
 from text_to_code.services import evaluator
-from text_to_code.services import reranker
 from text_to_code.services import schematron_processor
+from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
+from text_to_code.services.reranker import rerank
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -37,11 +37,6 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
-
-# Instantiate wrapper objects for the sentence-transformers models
-# to re-use across invocations
-RETRIEVER = embedder.Embedder()
-RERANKER = reranker.Reranker()
 
 # Constants
 NO_DATA_FIELDS_MESSAGE = (
@@ -290,7 +285,7 @@ def _process_schematron_errors(
             ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
             continue
 
-        vector_embedding = RETRIEVER.embed(selected_candidate.value)
+        vector_embedding = embed(selected_candidate.value)
 
         vector_parameters = query_models.VectorSearchParams(
             vector=vector_embedding.tolist(), data_field=data_field
@@ -310,7 +305,7 @@ def _process_schematron_errors(
         # text strings of the ANN LOINC codes
         results_list = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = RERANKER.rerank(selected_candidate.value, retrieved_loinc_names)
+        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
 
         if results_list:
             ttc_output["schematron_errors"][data_field].append(

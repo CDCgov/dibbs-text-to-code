@@ -1,19 +1,13 @@
-import pytest
-
-from text_to_code.services.reranker import Reranker
+from text_to_code.services.reranker import rerank
 
 
 class TestReranker:
-    @pytest.fixture(scope="class")
-    def reranker(self) -> Reranker:
-        return Reranker()
-
-    def test_reranker_empty_hits(self, reranker: Reranker) -> None:
-        ranks = reranker.rerank("Influenza virus A and B and SARS-CoV-2 (COVID-19)", [])
+    def test_reranker_empty_hits(self) -> None:
+        ranks = rerank("Influenza virus A and B and SARS-CoV-2 (COVID-19)", [])
         assert len(ranks) == 0
 
-    def test_reranker_single_search_result(self, reranker: Reranker) -> None:
-        ranks = reranker.rerank(
+    def test_reranker_single_search_result(self) -> None:
+        ranks = rerank(
             "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
             ["Influenza virus A and B and SARS-CoV-2 (COVID-19)"],
         )
@@ -24,7 +18,7 @@ class TestReranker:
             {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.989}
         ]
 
-    def test_reranker_multiple_hits(self, reranker: Reranker) -> None:
+    def test_reranker_multiple_hits(self) -> None:
         nonstandard_in = "albumin/creatinine ratio (acr)"
         search_hits = [
             "Albumin/Creatinine [Ratio] in Urine",
@@ -32,7 +26,7 @@ class TestReranker:
             "Albumin/Creatinine [Ratio] in 24 hour Urine",
             "Albumin/Creatinine (U) [Molar ratio]",
         ]
-        ranks = reranker.rerank(nonstandard_in, search_hits)
+        ranks = rerank(nonstandard_in, search_hits)
         ranks = [
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
