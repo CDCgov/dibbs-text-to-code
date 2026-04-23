@@ -33,6 +33,14 @@ def _serialize_ttc_metadata_snapshot(ttc_metadata_output: dict[str, object]) -> 
             ):
                 error["opensearch_retrieved_scores"] = "<opensearch_retrieved_scores>"
 
+            if (
+                "reranker_processed_results" in error
+                and error["reranker_processed_results"] is not None
+            ):
+                for result in error["reranker_processed_results"]:
+                    if "score" in result and result["score"] is not None:
+                        result["score"] = f"{float(result['score']):.3f}"
+
     return json.dumps(normalized, indent=2, sort_keys=True)
 
 
