@@ -277,8 +277,8 @@ class TestHandler:
             return_value=None,
         )
 
-        retriever_embed_mock = mocker.patch.object(lambda_function.RETRIEVER, "embed")
-        reranker_mock = mocker.patch.object(lambda_function.RERANKER, "rerank")
+        retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
+        reranker_mock = mocker.patch.object(lambda_function, "rerank")
 
         resp = lambda_function.handler(example_sqs_event, {})
 
@@ -370,7 +370,7 @@ class TestHandler:
         )
 
         reranker_mock = mocker.patch.object(
-            lambda_function.RERANKER,
+            lambda_function,
             "rerank",
             return_value=[],
         )
