@@ -18,7 +18,6 @@ version = "0.1.0"
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.0",
-  "pyinstrument>=5.1.2",
   "pytest-benchmark>=5.2.3",
   "pytest-cov>=7.0.0",
   "pytest-env>=1.6.0",
@@ -43,7 +42,7 @@ env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-include = ["."]
+include = ["./"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
