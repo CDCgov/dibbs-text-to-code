@@ -1,7 +1,4 @@
 [project]
-name = "dibbs-text-to-code-root"
-version = "0.1.0"
-description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
   { name = "Brandon Mader", email = "brandon@skylight.digital" },
@@ -11,13 +8,18 @@ authors = [
   { name = "Nick Clyde", email = "nclyde@skylight.digital" },
   { name = "Rob Mitchell", email = "robert.a.mitchell@skylight.digital" },
 ]
+dependencies = []
+description = ""
 license-files = ["LICENSE"]
+name = "dibbs-text-to-code-root"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.13"
-dependencies = []
+version = "0.1.0"
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.0",
+  "pyinstrument>=5.1.2",
+  "pytest-benchmark>=5.2.3",
   "pytest-cov>=7.0.0",
   "pytest-env>=1.6.0",
   "pytest>=9.0.3",
@@ -28,29 +30,20 @@ dev = [
 
 
 [tool.coverage.run]
-source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
+source = ["packages"]
 
 [tool.pytest.ini_options]
 markers = ["e2e"]
-testpaths = ["e2e", "packages"]
 pythonpath = ["."]
+testpaths = ["benchmarks", "e2e", "packages"]
 
 [tool.pytest_env]
 env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-include = [
-  "packages/api/src",
-  "packages/augmentation-lambda/src",
-  "packages/augmentation/src",
-  "packages/index-lambda/src",
-  "packages/lambda-handler/src",
-  "packages/text-to-code-lambda/src",
-  "packages/text-to-code/src",
-  "packages/utils/src",
-]
+include = ["."]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
@@ -67,13 +60,18 @@ exclude = [
   "model-tuning",
   "packages/api",
 ]
-line-length = 100
-indent-width = 4
-target-version = "py312"
-show-fixes = true
 fix = true
+indent-width = 4
+line-length = 100
+show-fixes = true
+target-version = "py312"
 
 [tool.ruff.lint]
+ignore = [
+  "D100",   # undocumented-public-module
+  "E501",   # line-too-long - Handled by formatter
+  "RET504", # unnecessary-assign
+]
 select = [
   "ANN",  # flake8-annotations
   "B",    # flake8-bugbear
@@ -94,11 +92,6 @@ select = [
   "SIM",  # flake8-simplify
   "UP",   # pyupgrade
   "W",    # pycodestyle warning
-]
-ignore = [
-  "D100",   # undocumented-public-module
-  "E501",   # line-too-long - Handled by formatter
-  "RET504", # unnecessary-assign
 ]
 
 [tool.ruff.lint.flake8-annotations]
@@ -122,6 +115,9 @@ known-first-party = [
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
 # Ignore the following rules in test files
+"**/conftest.py" = [
+  "PT003", # pytest-extraneous-scope-function"
+]
 "**/test_*.py" = [
   "ANN001", # missing type annotation for arguments from fixtures
   "ANN201", # missing-return-type-annotation
@@ -129,9 +125,6 @@ known-first-party = [
   "D102",   # undocumented-public-method
   "D103",   # undocumented-public-function
   "S101",   # assert
-]
-"**/conftest.py" = [
-  "PT003", # pytest-extraneous-scope-function"
 ]
 
 [tool.ruff.lint.pydocstyle]
