@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
@@ -95,7 +96,8 @@ def _build_empty_body_event() -> dict[str, object]:
     }
 
 
-def _mock_augmented_ids(mocker: MockerFixture) -> None:
+@pytest.fixture(autouse=False)
+def mock_augmented_ids(mocker: MockerFixture) -> None:
     doc_id = UUID("12345678-1234-5678-1234-567812345678")
     set_id = UUID("87654321-4321-8765-4321-876543218765")
     mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
@@ -151,9 +153,13 @@ class TestHandler:
         assert result["num_success_eicrs"] == 1
 
     def test_handler_writes_outputs_to_s3(
-        self, example_sqs_event, mock_aws_setup, mocker: MockerFixture, snapshot: Snapshot
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mocker: MockerFixture,
+        snapshot: Snapshot,
+        mock_augmented_ids,
     ) -> None:
-        _mock_augmented_ids(mocker)
 
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
@@ -186,6 +192,7 @@ class TestHandler:
         mock_aws_setup,
         mocker: MockerFixture,
         snapshot: Snapshot,
+        mock_augmented_ids,
     ) -> None:
         """Verify bucket name is extracted from the S3 event, not the env var."""
         custom_bucket = "custom-bucket"
@@ -223,8 +230,6 @@ class TestHandler:
             _serialize_snapshot_value(event),
             "handler_source_bucket_routing_event.json",
         )
-
-        _mock_augmented_ids(mocker)
 
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
