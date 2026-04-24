@@ -42,7 +42,16 @@ env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-include = ["./"]
+include = [
+  "packages/api/src",
+  "packages/augmentation-lambda/src",
+  "packages/augmentation/src",
+  "packages/index-lambda/src",
+  "packages/lambda-handler/src",
+  "packages/text-to-code-lambda/src",
+  "packages/text-to-code/src",
+  "packages/utils/src",
+]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
