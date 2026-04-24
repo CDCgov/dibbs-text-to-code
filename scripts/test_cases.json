@@ -1,0 +1,54 @@
+{
+  "test_cases": [
+    {
+      "nonstandard_in": "blood urea nitrogen (BUN)",
+      "correct_standardized_code": "Urea nitrogen [Mass/volume] in Blood",
+      "numeric_loinc_code": "6299-2"
+    },
+    {
+      "nonstandard_in": "K+, Whole Blood",
+      "correct_standardized_code": "Potassium [Moles/volume] in Blood",
+      "numeric_loinc_code": "6298-4"
+    },
+    {
+      "nonstandard_in": "POC Oxymorphone, Qualitative, Urine",
+      "correct_standardized_code": "oxyMORphone Ql (U)",
+      "numeric_loinc_code": "11247-4"
+    },
+    {
+      "nonstandard_in": "Calculated VLDL",
+      "correct_standardized_code": "Cholesterol in VLDL Calc [Mass/vol]",
+      "numeric_loinc_code": "13458-5"
+    },
+    {
+      "nonstandard_in": "pCO2 Venous",
+      "correct_standardized_code": "pCO2 BldV",
+      "numeric_loinc_code": "2021-4"
+    },
+    {
+      "nonstandard_in": "hep A Ab, IgM",
+      "correct_standardized_code": "Hepatitis A virus IgM Ab [Units/volume] in Serum",
+      "numeric_loinc_code": "22315-6"
+    },
+    {
+      "nonstandard_in": "Automated erythrocyte mean corpuscular hemoglobin concentration (MCHC) measurement (m",
+      "correct_standardized_code": "MCHC [Entitic Mass/volume] in Red Blood Cells by Automated count",
+      "numeric_loinc_code": "786-4"
+    },
+    {
+      "nonstandard_in": "Screening urine fentanyl detection",
+      "correct_standardized_code": "fentaNYL [Presence] in Urine by Screen method",
+      "numeric_loinc_code": "59673-4"
+    },
+    {
+      "nonstandard_in": "GLUCOSE 1H POST 50 G GLUCOSE PO",
+      "correct_standardized_code": "Glucose^1H post 50 g glucose PO:MCnc:Pt:Ser/Plas:Qn:",
+      "numeric_loinc_code": "1504-0"
+    },
+    {
+      "nonstandard_in": "CBC Pnl (Auto Diff), Bld",
+      "correct_standardized_code": "CBC W Auto Differential panel (Bld)",
+      "numeric_loinc_code": "57021-8"
+    }
+  ]
+}
