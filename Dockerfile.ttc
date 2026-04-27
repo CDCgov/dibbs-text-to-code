@@ -25,6 +25,9 @@ RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
 COPY ./packages/shared-models ${LAMBDA_TASK_ROOT}/shared-models
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/shared-models"
 
+COPY ./packages/utils ${LAMBDA_TASK_ROOT}/utils
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/utils"
+
 COPY ./packages/lambda-handler ${LAMBDA_TASK_ROOT}/lambda-handler
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
 
@@ -38,7 +41,7 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
 RUN rpm -e --nodeps gcc-c++ gcc cpp make && microdnf clean all && rm -rf /var/cache/*
 
 # Clean up package source copies
-RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/lambda-handler ${LAMBDA_TASK_ROOT}/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code-lambda
+RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/utils ${LAMBDA_TASK_ROOT}/lambda-handler ${LAMBDA_TASK_ROOT}/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 
 ENV RETRIEVER_MODEL_PATH="/opt/retriever_model"
 ENV RERANKER_MODEL_PATH="/opt/reranker_model"
