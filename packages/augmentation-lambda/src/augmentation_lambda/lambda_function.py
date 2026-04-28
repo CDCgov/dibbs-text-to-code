@@ -2,7 +2,7 @@ import io
 import json
 import os
 
-import structlog
+from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
@@ -16,7 +16,7 @@ from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import NonstandardCodeInstance
 from shared_models import TTCAugmenterInput
 
-logger = structlog.get_logger()
+logger = Logger(service="augmentation-lambda")
 
 # Environment variables
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
@@ -27,6 +27,7 @@ AUGMENTATION_METADATA_PREFIX = os.getenv("AUGMENTATION_METADATA_PREFIX", "Augmen
 
 
 @event_source(data_class=SQSEvent)
+@logger.inject_lambda_context
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """AWS Lambda handler for augmenting eICRs with nonstandard codes.
 
@@ -39,7 +40,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """
     s3_client = lambda_handler.create_s3_client()
 
-    logger.info(f"Received event with {len(event['Records'])} record(s)")
+    logger.info("Received event", record_count=len(event["Records"]))
 
     failures = []
     successes = []
@@ -49,7 +50,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
             _process_record(record, s3_client)
             successes.append(record.message_id)
         except Exception as e:
-            logger.exception(f"Error processing record: {e}", message_id=record.message_id)
+            logger.exception("Error processing record", message_id=record.message_id, error=str(e))
             failures.append({"message_id": record.message_id, "error": str(e)})
 
     return (
@@ -84,38 +85,45 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
     eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
     object_key = eventbridge_data["object_key"]
     bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
-    logger.info(f"Processing S3 Object: s3://{bucket_name}/{object_key}")
 
     persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
-    logger.info(f"Extracted persistence_id: {persistence_id}")
 
-    ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
-    original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
-    nonstandard_codes = _parse_nonstandard_codes(ttc_output)
+    with logger.append_context_keys(
+        persistence_id=persistence_id,
+        bucket_name=bucket_name,
+        s3_key=object_key,
+    ):
+        logger.info("Processing S3 object")
+        logger.info("Extracted persistence_id")
 
-    augmenter_input = TTCAugmenterInput(
-        eicr_id=persistence_id,
-        nonstandard_codes=nonstandard_codes,
-    )
+        ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
+        original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
+        nonstandard_codes = _parse_nonstandard_codes(ttc_output)
 
-    # Currently only supports eICR augmentation. Other document types (e.g. from
-    # ecr-refiner or other services) may need different augmentation strategies.
-    config = TTCAugmenterConfig()
-    augmenter = EICRAugmenter(
-        document=original_eicr,
-        nonstandard_codes=augmenter_input.nonstandard_codes,
-        config=config,
-    )
+        augmenter_input = TTCAugmenterInput(
+            eicr_id=persistence_id,
+            nonstandard_codes=nonstandard_codes,
+        )
 
-    metadata = augmenter.augment()
+        # Currently only supports eICR augmentation. Other document types (e.g. from
+        # ecr-refiner or other services) may need different augmentation strategies.
+        config = TTCAugmenterConfig()
+        augmenter = EICRAugmenter(
+            document=original_eicr,
+            nonstandard_codes=augmenter_input.nonstandard_codes,
+            config=config,
+        )
 
-    output = TTCAugmenterOutput(
-        eicr_id=augmenter_input.eicr_id,
-        augmented_eicr=augmenter.augmented_xml,
-        metadata=metadata,
-    )
+        metadata = augmenter.augment()
 
-    _save_augmentation_outputs(persistence_id, output, s3_client, bucket_name)
+        output = TTCAugmenterOutput(
+            eicr_id=augmenter_input.eicr_id,
+            augmented_eicr=augmenter.augmented_xml,
+            metadata=metadata,
+        )
+
+        _save_augmentation_outputs(persistence_id, output, s3_client, bucket_name)
+        logger.info("Augmentation processing completed", status="success")
 
 
 def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> dict:
@@ -127,7 +135,7 @@ def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: st
     :return: The parsed TTC output dictionary.
     """
     object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
-    logger.info(f"Retrieving TTC output from s3://{bucket_name}/{object_key}")
+    logger.info("Retrieving TTC output from S3", bucket_name=bucket_name, s3_key=object_key)
     content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
@@ -143,7 +151,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :return: The raw eICR XML string.
     """
     object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
-    logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
+    logger.info("Retrieving eICR from S3", bucket_name=bucket_name, s3_key=object_key)
     return lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
@@ -190,4 +198,11 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         object_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
         s3_client=s3_client,
+    )
+
+    logger.info(
+        "Saved augmented eICR and metadata to S3",
+        augmented_eicr_key=f"{AUGMENTED_EICR_PREFIX}{persistence_id}",
+        metadata_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
+        status="success",
     )

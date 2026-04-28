@@ -45,6 +45,7 @@ NO_DATA_FIELDS_MESSAGE = (
 
 
 @event_source(data_class=SQSEvent)
+@logger.inject_lambda_context
 def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """Text to Code lambda entry point.
 
@@ -56,7 +57,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     opensearch_client = lambda_handler.create_opensearch_client(auth)
     s3_client = lambda_handler.create_s3_client()
 
-    logger.info(f"Received event with {len(event['Records'])} record(s)")
+    logger.info("Received event", record_count=len(event["Records"]))
 
     failures = []
     successes = []
@@ -111,8 +112,8 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
 
     logger.info(
         "Processing TTC event",
-        event_bucket=bucket_name,
-        event_object_key=object_key,
+        bucket_name=bucket_name,
+        s3_key=object_key,
     )
 
     # Extract persistence_id from the RR object key
@@ -161,7 +162,7 @@ def _load_schematron_data_fields(
     :return: The relevant Schematron data fields for TTC processing.
     """
     object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
-    logger.info("Loading Schematron errors", s3_key=f"s3://{bucket_name}/{object_key}")
+    logger.info("Loading Schematron errors", s3_bucket=bucket_name, s3_key=object_key)
     schematron_errors = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name,
         object_key=object_key,
@@ -182,11 +183,11 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :return: The original eICR content.
     """
     object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
-    logger.info(f"Retrieving eICR from s3://{bucket_name}/{object_key}")
+    logger.info("Retrieving eICR from S3", s3_bucket=bucket_name, s3_key=object_key)
     original_eicr_content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
-    logger.info(f"Retrieved eICR content for persistence_id {persistence_id}")
+    logger.info("Retrieved eICR content", persistence_id=persistence_id)
     return original_eicr_content
 
 

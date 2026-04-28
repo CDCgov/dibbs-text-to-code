@@ -103,6 +103,13 @@ def mock_augmented_ids(mocker: MockerFixture) -> None:
     mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
 
+class MockLambdaContext:
+    function_name = "augmentation-lambda"
+    memory_limit_in_mb = 128
+    invoked_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:augmentation-lambda"
+    aws_request_id = "test-request-id"
+
+
 class TestParseNonstandardCodes:
     """Tests for the _parse_nonstandard_codes helper."""
 
@@ -146,7 +153,7 @@ class TestHandler:
     """Tests for the augmentation Lambda handler."""
 
     def test_handler_success(self, example_sqs_event, mock_aws_setup) -> None:
-        result = lambda_function.handler(example_sqs_event, None)
+        result = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
@@ -164,7 +171,7 @@ class TestHandler:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            lambda_function.handler(example_sqs_event, None)
+            lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         # Verify augmented eICR was written
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -234,7 +241,7 @@ class TestHandler:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            result = lambda_function.handler(event, None)
+            result = lambda_function.handler(event, MockLambdaContext())
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_source_bucket_routing_result.json",
@@ -269,7 +276,7 @@ class TestHandler:
             "handler_error_missing_eicr_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, MockLambdaContext())
 
         assert result["num_failure_eicrs"] == 1
         assert len(result["failures"]) == 1
@@ -296,7 +303,7 @@ class TestHandler:
             "handler_error_missing_ttc_output_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, MockLambdaContext())
 
         assert result["num_failure_eicrs"] == 1
         assert len(result["failures"]) == 1
@@ -323,7 +330,7 @@ class TestHandler:
             "handler_mixed_batch_results_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, MockLambdaContext())
 
         assert result["num_success_eicrs"] == 1
         assert result["num_failure_eicrs"] == 1
@@ -335,7 +342,7 @@ class TestHandler:
     def test_handler_skips_empty_sqs_body(self, mock_aws_setup) -> None:
         event = _build_empty_body_event()
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, MockLambdaContext())
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
