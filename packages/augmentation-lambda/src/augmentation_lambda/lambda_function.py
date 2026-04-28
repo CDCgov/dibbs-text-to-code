@@ -50,10 +50,15 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
             _process_record(record, s3_client)
             successes.append(record.message_id)
         except Exception as e:
-            logger.exception("Error processing record", message_id=record.message_id, error=str(e))
+            logger.exception(
+                "Error processing record",
+                message_id=record.message_id,
+                error=str(e),
+                status="error",
+            )
             failures.append({"message_id": record.message_id, "error": str(e)})
 
-    return (
+    result = (
         {
             "statusCode": 207,
             "message": "Augmentation processed with some failures!",
@@ -69,6 +74,15 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         }
     )
 
+    logger.info(
+        "Augmentation invocation completed",
+        status="partial_failure" if failures else "success",
+        num_failure_eicrs=len(failures),
+        num_success_eicrs=len(successes),
+    )
+
+    return result
+
 
 def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
     """Process a single SQS record containing an S3 event.
@@ -77,7 +91,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
     :param s3_client: The S3 client to use for reading and writing files.
     """
     if not record.body:
-        logger.warning("Empty SQS body", message_id=record.message_id)
+        logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
         return
 
     s3_event = json.loads(record.body)
@@ -93,8 +107,8 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         bucket_name=bucket_name,
         s3_key=object_key,
     ):
-        logger.info("Processing S3 object")
-        logger.info("Extracted persistence_id")
+        logger.info("Processing S3 object", status="processing")
+        logger.info("Extracted persistence_id", status="processing")
 
         ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
@@ -135,7 +149,12 @@ def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: st
     :return: The parsed TTC output dictionary.
     """
     object_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
-    logger.info("Retrieving TTC output from S3", bucket_name=bucket_name, s3_key=object_key)
+    logger.info(
+        "Retrieving TTC output from S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="processing",
+    )
     content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
@@ -151,7 +170,12 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     :return: The raw eICR XML string.
     """
     object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
-    logger.info("Retrieving eICR from S3", bucket_name=bucket_name, s3_key=object_key)
+    logger.info(
+        "Retrieving eICR from S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="processing",
+    )
     return lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
@@ -187,22 +211,32 @@ def _save_augmentation_outputs(
     :param s3_client: The S3 client to use for uploading files.
     :param bucket_name: The S3 bucket name to write to.
     """
+    augmented_eicr_key = f"{AUGMENTED_EICR_PREFIX}{persistence_id}"
+    augmentation_metadata_key = f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}"
+
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{AUGMENTED_EICR_PREFIX}{persistence_id}",
+        object_key=augmented_eicr_key,
         s3_client=s3_client,
     )
+    logger.info(
+        "Saved augmented eICR to S3",
+        bucket_name=bucket_name,
+        s3_key=augmented_eicr_key,
+        status="success",
+    )
+
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
-        object_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
+        object_key=augmentation_metadata_key,
         s3_client=s3_client,
     )
 
     logger.info(
-        "Saved augmented eICR and metadata to S3",
-        augmented_eicr_key=f"{AUGMENTED_EICR_PREFIX}{persistence_id}",
-        metadata_key=f"{AUGMENTATION_METADATA_PREFIX}{persistence_id}",
+        "Saved augmentation metadata to S3",
+        bucket_name=bucket_name,
+        s3_key=augmentation_metadata_key,
         status="success",
     )
