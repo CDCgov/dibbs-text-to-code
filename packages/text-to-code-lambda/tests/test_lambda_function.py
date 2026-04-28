@@ -44,6 +44,13 @@ def _serialize_ttc_metadata_snapshot(ttc_metadata_output: dict[str, object]) -> 
     return json.dumps(normalized, indent=2, sort_keys=True)
 
 
+class MockLambdaContext:
+    function_name = "augmentation-lambda"
+    memory_limit_in_mb = 128
+    invoked_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:augmentation-lambda"
+    aws_request_id = "test-request-id"
+
+
 class TestHandler:
     def test_handler_success(
         self,
@@ -64,7 +71,7 @@ class TestHandler:
             return_value=type("SelectedCandidate", (), selected_candidate)(),
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -100,7 +107,7 @@ class TestHandler:
         """Test handler with no records."""
         example_sqs_event["Records"] = []
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -113,7 +120,7 @@ class TestHandler:
         """Test handler with an empty SQS body."""
         example_sqs_event["Records"][0]["body"] = None
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
         assert "Empty SQS body" in caplog_warning.text
         assert resp == {
             "statusCode": 200,
@@ -128,7 +135,7 @@ class TestHandler:
         del payload["detail"]["bucket"]["name"]
         example_sqs_event["Records"][0]["body"] = json.dumps(payload)
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert resp["num_failure_eicrs"] == 1
         assert resp["num_success_eicrs"] == 0
@@ -142,7 +149,7 @@ class TestHandler:
             "text_to_code_lambda.lambda_function._load_schematron_data_fields", return_value=[]
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -182,7 +189,7 @@ class TestHandler:
             side_effect=[Exception("boom"), None],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
         assert resp == {
@@ -209,7 +216,7 @@ class TestHandler:
             side_effect=[Exception("first failure"), Exception("second failure")],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
         assert resp == {
@@ -236,7 +243,7 @@ class TestHandler:
         retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
         reranker_mock = mocker.patch.object(lambda_function, "rerank")
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert resp == {
             "statusCode": 200,
@@ -303,7 +310,7 @@ class TestHandler:
             return_value=[],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, MockLambdaContext())
 
         assert resp == {
             "statusCode": 200,
