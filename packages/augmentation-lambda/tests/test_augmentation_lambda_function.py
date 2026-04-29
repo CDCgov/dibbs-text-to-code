@@ -120,8 +120,6 @@ class TestHandler:
             "handler_writes_outputs_metadata.json",
         )
 
-        # Validate augmented eICR
-
     def test_handler_source_bucket_routing(
         self,
         example_s3_event_payload,
