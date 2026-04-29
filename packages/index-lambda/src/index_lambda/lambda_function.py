@@ -84,10 +84,6 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> d
     settings = os_client.indices.get_settings(index=index_name)
     mappings = os_client.indices.get_mapping(index=index_name)
 
-    print(index)
-    print(settings)
-    print(mappings)
-
     threshold = f"{threshold_ms}ms" if threshold_ms > 0 else "-1"
     body = {
         "index.search.slowlog.threshold.query.warn": threshold,

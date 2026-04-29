@@ -45,9 +45,9 @@ def _serialize_ttc_metadata_snapshot(ttc_metadata_output: dict[str, object]) -> 
 
 
 class MockLambdaContext:
-    function_name = "augmentation-lambda"
+    function_name = "ttc-lambda"
     memory_limit_in_mb = 128
-    invoked_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:augmentation-lambda"
+    invoked_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:ttc-lambda"
     aws_request_id = "test-request-id"
 
 
