@@ -13,7 +13,7 @@ from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from text_to_code_lambda.lambda_function import handler as ttc_handler
-from validation.main import validate_eicr
+from validation import validate_eicr
 
 AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
 AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"

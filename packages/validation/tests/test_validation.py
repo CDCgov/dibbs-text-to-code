@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from validation.main import validate_eicr
+from validation import validate_eicr
 
 
 def test_validation():
