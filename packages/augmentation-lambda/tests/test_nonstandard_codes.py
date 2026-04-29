@@ -6,10 +6,7 @@ TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
 
 
 class TestParseNonstandardCodes:
-    """Tests for the _parse_nonstandard_codes helper.
-
-    This is testing a private function, which typically do not need to be unit testing, as unit tests should be testing the implementation of the public function, just its output/behaviour.
-    """
+    """Tests for the _parse_nonstandard_codes helper."""
 
     def test_parses_valid_ttc_output(self, test_ttc_output) -> None:
         codes = lambda_function._parse_nonstandard_codes(test_ttc_output)
