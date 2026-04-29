@@ -256,6 +256,11 @@ class TestHandler:
             "handler_source_bucket_routing_augmented_eicr.xml",
         )
 
+        # Validate augmented eICR
+        actual_validation_results = validate_eicr(augmented_eicr)
+
+        assert actual_validation_results == []  # Empty list means no errors.
+
     def test_handler_error_missing_eicr(
         self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot
     ) -> None:
