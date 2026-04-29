@@ -1,0 +1,83 @@
+from pathlib import Path
+
+from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
+
+BASE_FOLDER = Path(__file__).parent / "eicr-validator"
+
+EICR_FOLDER = BASE_FOLDER / "eicr"
+OUTPUT_FOLDER = BASE_FOLDER / "output"
+RESULT_FOLDER = OUTPUT_FOLDER / "result"
+SCHEMA_FOLDER = BASE_FOLDER / "schematron"
+XSLT_FOLDER = BASE_FOLDER / "schxslt"
+
+APHL_SCHEMATRON = SCHEMA_FOLDER / "APHL_TextToCodeSchematron_09252025.sch"
+STAGE1_OUTPUT = OUTPUT_FOLDER / "stage1.sch.tmp"
+STAGE2_OUTPUT = OUTPUT_FOLDER / "stage2.sch.tmp"
+VALIDATOR_OUTPUT = OUTPUT_FOLDER / "validator.xsl.tmp"
+XSLT_COMPILE = XSLT_FOLDER / "compile-for-svrl.xsl"
+XSLT_EXPAND = XSLT_FOLDER / "expand.xsl"
+XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
+
+
+def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> None:
+    """Validate an eICR."""
+    print("Starting eICR Validation")
+    print(f"For eICR: {eicr}")
+    try:
+        with PySaxonProcessor(license=False) as proc:
+            print(f"Saxon/C version: {proc.version}")
+            xsltproc = proc.new_xslt30_processor()
+            if redo_all_steps:
+                print("Remove all previous files generated at all steps")
+                STAGE1_OUTPUT.unlink(missing_ok=True)
+                STAGE2_OUTPUT.unlink(missing_ok=True)
+                VALIDATOR_OUTPUT.unlink(missing_ok=True)
+            else:
+                print("Will use existing files for Step 1-3")
+
+            if not STAGE1_OUTPUT.exists():
+                # Step 1: Process includes
+                # Note: For schxslt, you typically apply the XSLT to the SCH file as the source
+                print("--- Step 1: Process Includes against Schematron File")
+                xsltproc.transform_to_file(
+                    source_file=str(APHL_SCHEMATRON),
+                    stylesheet_file=str(XSLT_INCLUDE),
+                    output_file=str(STAGE1_OUTPUT),
+                )
+
+            if not STAGE2_OUTPUT.exists():
+                # Step 2: Expand abstract rules
+                print("--- Step 2: Expand abstract rules using output from Step 1")
+                xsltproc.transform_to_file(
+                    source_file=str(STAGE1_OUTPUT),
+                    stylesheet_file=str(XSLT_EXPAND),
+                    output_file=str(STAGE2_OUTPUT),
+                )
+
+            if not VALIDATOR_OUTPUT.exists():
+                # Step 3: Compile to an SVRL-producing XSLT stylesheet
+                print(
+                    "--- Step 3: Compile to an SVRL-producing XSLT stylesheet ",
+                    "using the output from Step 2",
+                )
+                xsltproc.transform_to_file(
+                    source_file=str(STAGE2_OUTPUT),
+                    stylesheet_file=str(XSLT_COMPILE),
+                    output_file=str(VALIDATOR_OUTPUT),
+                )
+
+            # Step 4: Apply the generated XSLT to the source XML
+            # Parse the XML string into an XDM node
+            xml_node = proc.parse_xml(xml_text=eicr)
+
+            # Use the node as the source for transformation
+            executable = xsltproc.compile_stylesheet(stylesheet_file=str(VALIDATOR_OUTPUT))
+            _ = executable.apply_templates_returning_string(xdm_value=xml_node)
+            value = xsltproc.transform_to_value(
+                stylesheet_file=str(VALIDATOR_OUTPUT),
+            )
+            print(value)
+            print("--- Validation complete process complete for all ECR files. ---")
+
+    except Exception as e:
+        print(f"An error occurred during validation: {e}")
