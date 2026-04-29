@@ -1,5 +1,4 @@
-import logging
-
+from aws_lambda_powertools import Logger
 from lxml import etree
 from lxml.etree import Element
 
@@ -9,7 +8,7 @@ from text_to_code.models import Candidate
 from text_to_code.models.eicr import Metadata
 from text_to_code.services.utils import get_config_for_data_field
 
-logger = logging.getLogger(__name__)
+logger = Logger(service="ttc", child=True)
 
 
 class EicrProcessor:
@@ -66,11 +65,10 @@ class EicrProcessor:
         except Exception:
             logger.exception(
                 "Failed to extract text candidates from eICR",
-                extra={
-                    "base_xpath": base_xpath,
-                    "data_field": str(data_field),
-                    "sub_xpaths": sub_xpaths,
-                },
+                base_xpath=base_xpath,
+                data_field=str(data_field),
+                sub_xpaths=sub_xpaths,
+                status="error",
             )
             return candidates
         return candidates
