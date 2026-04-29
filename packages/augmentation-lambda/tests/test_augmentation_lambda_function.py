@@ -12,6 +12,7 @@ import lambda_handler
 from augmentation_lambda import lambda_function
 from shared_models import DataField
 from shared_models import NonstandardCodeInstance
+from validation.main import validate_eicr
 
 S3_BUCKET = "dibbs-text-to-code"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
@@ -185,6 +186,11 @@ class TestHandler:
             _serialize_snapshot_value(metadata),
             "handler_writes_outputs_metadata.json",
         )
+
+        # Validate augmented eICR
+        actual_validation_results = validate_eicr(augmented_eicr)
+
+        assert actual_validation_results == []  # Empty list means no errors.
 
     def test_handler_source_bucket_routing(
         self,

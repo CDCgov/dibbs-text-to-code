@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
@@ -19,10 +20,19 @@ XSLT_EXPAND = XSLT_FOLDER / "expand.xsl"
 XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 
 
-def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> None:
+@dataclass
+class ValidationResult:
+    """Error ID and list."""
+
+    error_id: str
+    locations: list[str]
+
+
+def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
     """Validate an eICR."""
     print("Starting eICR Validation")
     print(f"For eICR: {eicr}")
+    errors = []
     try:
         with PySaxonProcessor(license=False) as proc:
             print(f"Saxon/C version: {proc.version}")
@@ -72,12 +82,18 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> None
 
             # Use the node as the source for transformation
             executable = xsltproc.compile_stylesheet(stylesheet_file=str(VALIDATOR_OUTPUT))
-            _ = executable.apply_templates_returning_string(xdm_value=xml_node)
-            value = xsltproc.transform_to_value(
-                stylesheet_file=str(VALIDATOR_OUTPUT),
-            )
-            print(value)
-            print("--- Validation complete process complete for all ECR files. ---")
+            result = executable.apply_templates_returning_value(xdm_value=xml_node)
+            print(result)
 
+            for x in result[0][0].children:
+                if x.local_name == "failed-assert":
+                    errors.append(
+                        {
+                            "error_id": x.get_attribute_value("id"),
+                            "location": x.get_attribute_value("location"),
+                        }
+                    )
     except Exception as e:
         print(f"An error occurred during validation: {e}")
+
+    return errors
