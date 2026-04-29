@@ -189,7 +189,6 @@ class TestHandler:
 
         # Validate augmented eICR
         actual_validation_results = validate_eicr(augmented_eicr)
-
         assert actual_validation_results == []  # Empty list means no errors.
 
     def test_handler_source_bucket_routing(
@@ -258,7 +257,6 @@ class TestHandler:
 
         # Validate augmented eICR
         actual_validation_results = validate_eicr(augmented_eicr)
-
         assert actual_validation_results == []  # Empty list means no errors.
 
     def test_handler_error_missing_eicr(
