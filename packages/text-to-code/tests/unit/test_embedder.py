@@ -8,6 +8,10 @@ class TestEmbedder:
         ("input_text"), ["Influenza virus A and B and SARS-CoV-2 (COVID-19)", "COVID"]
     )
     def test_embed(self, input_text: str, benchmark) -> None:
+        """Test the embedder.
+
+        Only ran as a benchmark if benchmarks are enabled (disabled by default).
+        """
         embedding = benchmark(embed(input_text))
 
         expected_embedding_length = 1024
