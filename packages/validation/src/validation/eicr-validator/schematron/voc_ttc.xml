@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<systems xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.lantanagroup.com/voc">
+    <system valueSetOid="2.16.840.1.113883.1.11.78" valueSetName="Observation Interpretation (HL7)">
+        <code value="&lt;" displayName="Off scale low" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="&gt;" displayName="Off scale high" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="A" displayName="Abnormal" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="AA" displayName="Critical abnormal" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="AC" displayName="Anti-complementary substances present"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="B" displayName="Better" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="CAR" displayName="Carrier" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="Carrier" displayName="Carrier" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="D" displayName="Significant change down"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="DET" displayName="Detected" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="E" displayName="Equivocal" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="EX" displayName="outside threshold" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="EXP" displayName="Expected" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="H" displayName="High" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="H&gt;" displayName="Significantly high"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="HH" displayName="Critical high" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="HM" displayName="Hold for Medical Review"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="HU" displayName="Significantly high" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="HX" displayName="above high threshold"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="I" displayName="Intermediate" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="IE" displayName="Insufficient evidence"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="IND" displayName="Indeterminate" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="L" displayName="Low" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="L&lt;" displayName="Significantly low"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="LL" displayName="Critical low" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="LU" displayName="Significantly low" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="LX" displayName="below low threshold"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="MS" displayName="moderately susceptible"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="N" displayName="Normal" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="NCL" displayName="No CLSI defined breakpoint"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="ND" displayName="Not detected" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="NEG" displayName="Negative" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="NR" displayName="Non-reactive" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="NS" displayName="Non-susceptible" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="OBX" displayName="Interpretation qualifiers in separate OBX segments"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="ObservationInterpretationDetection"
+            displayName="ObservationInterpretationDetection"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="ObservationInterpretationExpectation"
+            displayName="ObservationInterpretationExpectation"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="POS" displayName="Positive" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="QCF" displayName="Quality control failure"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="R" displayName="Resistant" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="RR" displayName="Reactive" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="ReactivityObservationInterpretation"
+            displayName="ReactivityObservationInterpretation"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="S" displayName="Susceptible" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="SDD" displayName="Susceptible-dose dependent"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="SYN-R" displayName="Synergy - resistant"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="SYN-S" displayName="Synergy - susceptible"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="TOX" displayName="Cytotoxic substance present"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="U" displayName="Significant change up"
+            codeSystemName="ObservationInterpretation" codeSystem="2.16.840.1.113883.5.83" />
+        <code value="UNE" displayName="Unexpected" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="VS" displayName="very susceptible" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="W" displayName="Worse" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+        <code value="WR" displayName="Weakly reactive" codeSystemName="ObservationInterpretation"
+            codeSystem="2.16.840.1.113883.5.83" />
+    </system>
+</systems>
