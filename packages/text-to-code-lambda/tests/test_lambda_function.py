@@ -97,6 +97,35 @@ class TestHandler:
             "handler_success_ttc_metadata_output.json",
         )
 
+    def test_save_ttc_metadata_output(
+        self,
+        mock_aws_setup,
+    ):
+        """Test saving TTC metadata output to S3."""
+        ttc_metadata_output = {
+            "persistence_id": mock_aws_setup.persistence_id,
+            "eicr_metadata": {},
+            "schematron_errors": {},
+            "processed_at": "<processed_at>",
+        }
+        s3_client = lambda_handler.create_s3_client()
+
+        lambda_function._save_ttc_metadata_output(
+            persistence_id=mock_aws_setup.persistence_id,
+            ttc_metadata_output=ttc_metadata_output,
+            s3_client=s3_client,
+            bucket_name=S3_BUCKET,
+        )
+
+        result = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
+            )
+        )
+
+        assert result == ttc_metadata_output
+
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch, mock_lambda_context):
         """Test handler with no records."""
         example_sqs_event["Records"] = []

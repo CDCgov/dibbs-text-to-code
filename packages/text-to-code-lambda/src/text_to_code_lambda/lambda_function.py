@@ -361,6 +361,41 @@ def _process_schematron_errors(
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
+def _save_ttc_metadata_output(
+    persistence_id: str,
+    ttc_metadata_output: dict,
+    s3_client: BaseClient,
+    bucket_name: str,
+) -> None:
+    """Save TTC metadata output to S3.
+
+    :param persistence_id: The persistence ID extracted from the S3 object key
+    :param ttc_metadata_output: The TTC metadata output dictionary.
+    :param s3_client: The S3 client to use for uploading files.
+    :param bucket_name: The S3 bucket name to write to.
+    """
+    metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
+
+    logger.info(
+        "Saving TTC metadata output to S3",
+        bucket_name=bucket_name,
+        s3_key=metadata_key,
+        status="processing",
+    )
+    lambda_handler.put_file(
+        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+        bucket_name=bucket_name,
+        object_key=metadata_key,
+        s3_client=s3_client,
+    )
+    logger.info(
+        "Saved TTC metadata output to S3",
+        bucket_name=bucket_name,
+        s3_key=metadata_key,
+        status="success",
+    )
+
+
 def _save_ttc_outputs(
     persistence_id: str,
     ttc_output: dict,
@@ -397,24 +432,7 @@ def _save_ttc_outputs(
     )
 
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
-    logger.info(
-        "Saving TTC metadata output to S3",
-        bucket_name=bucket_name,
-        s3_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-        status="processing",
-    )
-    lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
-        bucket_name=bucket_name,
-        object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-        s3_client=s3_client,
-    )
-    logger.info(
-        "Saved TTC metadata output to S3",
-        bucket_name=bucket_name,
-        s3_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-        status="success",
-    )
+    _save_ttc_metadata_output(persistence_id, ttc_metadata_output, s3_client, bucket_name)
 
 
 def _process_record_pipeline(
@@ -454,24 +472,7 @@ def _process_record_pipeline(
         )
         ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
         ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
-        logger.info(
-            "Saving TTC metadata output to S3",
-            bucket_name=bucket_name,
-            s3_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-            status="processing",
-        )
-        lambda_handler.put_file(
-            file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
-            bucket_name=bucket_name,
-            object_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-            s3_client=s3_client,
-        )
-        logger.info(
-            "Saved TTC metadata output to S3",
-            bucket_name=bucket_name,
-            s3_key=f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json",
-            status="success",
-        )
+        _save_ttc_metadata_output(persistence_id, ttc_metadata_output, s3_client, bucket_name)
         logger.info("TTC processing completed", status="no_matches_found")
         return {
             "statusCode": 200,
