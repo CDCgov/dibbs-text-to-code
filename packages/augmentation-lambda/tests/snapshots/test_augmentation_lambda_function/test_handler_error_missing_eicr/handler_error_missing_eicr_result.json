@@ -1,0 +1,12 @@
+{
+  "failures": [
+    {
+      "error": "S3 object not found: dibbs-text-to-code/TextToCodeSubmissionV2/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+      "message_id": "msg-missing-eicr"
+    }
+  ],
+  "message": "Augmentation processed with some failures!",
+  "num_failure_eicrs": 1,
+  "num_success_eicrs": 0,
+  "statusCode": 207
+}
