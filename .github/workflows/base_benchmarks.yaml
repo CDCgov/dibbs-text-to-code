@@ -10,7 +10,22 @@ jobs:
       checks: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: 'Set up Python'
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: 'pyproject.toml'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --all-packages --locked --all-extras --dev
+
       - uses: bencherdev/bencher@main
       - name: Track base branch benchmarks with Bencher
         run: |
@@ -24,7 +39,7 @@ jobs:
           --threshold-max-sample-size 64 \
           --threshold-upper-boundary 0.99 \
           --thresholds-reset \
-          --error-on-alert \
-          --adapter json \
+          --adapter python_pytest \
+          --file results.json \
           --github-actions '${{ secrets.GITHUB_TOKEN }}' \
-          bencher mock
+          "pytest --benchmark-only --override-ini='addopts=' --benchmark-json=results.json"
