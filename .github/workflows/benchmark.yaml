@@ -28,6 +28,9 @@ jobs:
 
       - uses: bencherdev/bencher@main
       - name: Track PR Benchmarks with Bencher
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           bencher run \
           --project dibbs-text-to-code \
