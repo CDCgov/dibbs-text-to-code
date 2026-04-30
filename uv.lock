@@ -781,6 +781,7 @@ name = "index-lambda"
 version = "0.1.0"
 source = { editable = "packages/index-lambda" }
 dependencies = [
+    { name = "aws-lambda-powertools" },
     { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "botocore" },
@@ -791,6 +792,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3" },
     { name = "botocore" },

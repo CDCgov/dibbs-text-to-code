@@ -101,13 +101,6 @@ def _drain_sqs_for_prefix(sqs_client, queue_url, prefix, max_messages=10) -> lis
     ]
 
 
-class MockLambdaContext:
-    function_name = "augmentation-lambda"
-    memory_limit_in_mb = 128
-    invoked_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:augmentation-lambda"
-    aws_request_id = "test-request-id"
-
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -208,7 +201,13 @@ def infra(aws):
 @pytest.mark.e2e
 class TestEndToEndSimulated:
     def test_upload_and_process(
-        self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
+        self,
+        aws,
+        infra,
+        snapshot: Snapshot,
+        mock_opensearch,
+        mocker: MockerFixture,
+        mock_lambda_context,
     ):
         # Upload Schematron errors to S3
         with open(
@@ -248,7 +247,7 @@ class TestEndToEndSimulated:
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
-        _ = ttc_handler(sqs_event, MockLambdaContext())
+        _ = ttc_handler(sqs_event, mock_lambda_context)
 
         ##########################################################
         # Augmenter
@@ -263,7 +262,7 @@ class TestEndToEndSimulated:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            _ = augmentation_lambda(sqs_event, MockLambdaContext())
+            _ = augmentation_lambda(sqs_event, mock_lambda_context)
 
         augmented_eicr = (
             aws["s3"]
