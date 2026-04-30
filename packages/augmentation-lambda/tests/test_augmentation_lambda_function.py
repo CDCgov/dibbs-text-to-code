@@ -101,8 +101,7 @@ class TestHandler:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            lambda_function.handler(example_sqs_event, mock_lambda_context)
-            result = lambda_function.handler(example_sqs_event, None)
+            result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         # Assert handler function returns expected values
         assert result["statusCode"] == SUCCESS_CODE
