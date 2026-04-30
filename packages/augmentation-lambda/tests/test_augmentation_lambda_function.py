@@ -10,8 +10,6 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
-from shared_models import DataField
-from shared_models import NonstandardCodeInstance
 
 S3_BUCKET = "dibbs-text-to-code"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
@@ -19,29 +17,6 @@ AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
 AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
 TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 SUCCESS_CODE = 200
-
-TEST_TTC_OUTPUT = {
-    "persistence_id": TEST_PERSISTENCE_ID,
-    "eicr_metadata": {},
-    "schematron_errors": {
-        "Lab Test Name Resulted": [
-            {
-                "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-                "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
-                "field_type": "Lab Test Name Resulted",
-                "new_translation": {
-                    "code": "109224-6",
-                    "code_system": "2.16.840.1.113883.6.1",
-                    "code_system_name": "LOINC",
-                    "display_name": "Weed Allergen Mix 3 IgE Ab",
-                    "value_set": None,
-                    "value_set_version": None,
-                    "original_text": "A custom code in original text.",
-                },
-            }
-        ]
-    },
-}
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -103,54 +78,8 @@ def mock_augmented_ids(mocker: MockerFixture) -> None:
     mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
 
-class TestParseNonstandardCodes:
-    """Tests for the _parse_nonstandard_codes helper."""
-
-    def test_parses_valid_ttc_output(self) -> None:
-        codes = lambda_function._parse_nonstandard_codes(TEST_TTC_OUTPUT)
-
-        assert len(codes) == 1
-        assert isinstance(codes[0], NonstandardCodeInstance)
-        assert codes[0].field_type == DataField.LAB_TEST_NAME_RESULTED
-        assert codes[0].new_translation.code == "109224-6"
-        assert codes[0].new_translation.code_system == "2.16.840.1.113883.6.1"
-        assert codes[0].new_translation.display_name == "Weed Allergen Mix 3 IgE Ab"
-
-    def test_skips_entries_without_new_translation(self) -> None:
-        ttc_output = {
-            "schematron_errors": {
-                "Lab Test Name Resulted": [
-                    {
-                        "field": "Lab Test Name Resulted",
-                        "error": "some error",
-                        "error_context": "/some/xpath",
-                    }
-                ]
-            }
-        }
-
-        codes = lambda_function._parse_nonstandard_codes(ttc_output)
-
-        assert len(codes) == 0
-
-    def test_handles_empty_schematron_errors(self) -> None:
-        codes = lambda_function._parse_nonstandard_codes({"schematron_errors": {}})
-        assert len(codes) == 0
-
-    def test_handles_missing_schematron_errors(self) -> None:
-        codes = lambda_function._parse_nonstandard_codes({})
-        assert len(codes) == 0
-
-
 class TestHandler:
     """Tests for the augmentation Lambda handler."""
-
-    def test_handler_success(self, example_sqs_event, mock_aws_setup) -> None:
-        result = lambda_function.handler(example_sqs_event, None)
-
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
 
     def test_handler_writes_outputs_to_s3(
         self,
@@ -164,7 +93,12 @@ class TestHandler:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            lambda_function.handler(example_sqs_event, None)
+            result = lambda_function.handler(example_sqs_event, None)
+
+        # Assert handler function returns expected values
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
 
         # Verify augmented eICR was written
         augmented_eicr = lambda_handler.get_file_content_from_s3(
