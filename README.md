@@ -177,19 +177,19 @@ export HF_TOKEN="hf_your_token_here"
 To run all the unit tests, use the following command:
 
 ```sh
-pytest -m \"not e2e\"
+just test unit
 ```
 
 To run a single unit test, use the following command:
 
 ```sh
-pytest tests/unit/test_utils.py::test_function
+just test unit tests/unit/test_utils.py::test_function
 ```
 
 To update snapshots:
 
 ```sh
-pytest --snapshot-update
+just test all --snapshot-update
 ```
 
 ### e2e Tests:
@@ -197,7 +197,7 @@ pytest --snapshot-update
 To run e2e tests, use the following command:
 
 ```sh
-pytest -m e2e
+just test e2e
 ```
 
 e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS systems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
