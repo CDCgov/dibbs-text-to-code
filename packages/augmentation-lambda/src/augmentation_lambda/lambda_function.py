@@ -104,10 +104,9 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
     with logger.append_context_keys(
         persistence_id=persistence_id,
         bucket_name=bucket_name,
-        s3_key=object_key,
+        trigger_s3_key=object_key,
     ):
         logger.info("Processing S3 object", status="processing")
-        logger.info("Extracted persistence_id", status="processing")
 
         ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)

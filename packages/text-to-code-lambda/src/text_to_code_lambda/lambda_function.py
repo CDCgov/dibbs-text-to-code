@@ -124,22 +124,15 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
             "detail.bucket.name."
         )
 
-    logger.info(
-        "Processing TTC event",
-        bucket_name=bucket_name,
-        s3_key=object_key,
-        status="processing",
-    )
-
     # Extract persistence_id from the RR object key
     persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
 
     with logger.append_context_keys(
         persistence_id=persistence_id,
         bucket_name=bucket_name,
-        s3_key=object_key,
+        trigger_s3_key=object_key,
     ):
-        logger.info("Extracted persistence_id", status="processing")
+        logger.info("Processing TTC event", status="processing")
         _process_record_pipeline(persistence_id, s3_client, opensearch_client, bucket_name)
 
 
