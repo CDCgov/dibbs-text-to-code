@@ -47,10 +47,12 @@ class TestEmptyEicrProcessor:
         assert result == []
         mock_exception.assert_called_once_with(
             "Failed to extract text candidates from eICR",
-            base_xpath=BASE_XPATH,
-            data_field=str(DataField.LAB_TEST_NAME_RESULTED),
-            sub_xpaths=expected_sub_xpaths,
-            status="error",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "error",
+            },
         )
 
     def test_resolve_reference_returns_none_for_empty_reference_value(self):

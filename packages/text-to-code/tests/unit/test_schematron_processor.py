@@ -266,7 +266,9 @@ class TestSchematronProcessor:
         assert result == []
         mock_exception.assert_called_once_with(
             "Failed to process a schematron error detail",
-            error_message="Text to Code: Lab Test Name Resulted does not have a @code attribute",
-            error_context="/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
-            status="error",
+            extra={
+                "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
+                "status": "error",
+            },
         )
