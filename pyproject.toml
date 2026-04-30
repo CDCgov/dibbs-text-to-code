@@ -22,8 +22,8 @@ dev = [
   "pytest-env>=1.6.0",
   "pytest>=9.0.3",
   "requests>=2.32.5",
-  "ruff>=0.15.10",
-  "ty>=0.0.30",
+  "ruff>=0.15.12",
+  "ty>=0.0.33",
 ]
 
 
@@ -50,6 +50,7 @@ include = [
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
   "packages/utils/src",
+  "packages/validation/src",
 ]
 
 [tool.ruff]
@@ -118,6 +119,7 @@ known-first-party = [
   "text_to_code",
   "text_to_code_lambda",
   "utils",
+  "validation",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -150,4 +152,5 @@ members = [
   "packages/text-to-code",
   "packages/text-to-code-lambda",
   "packages/utils",
+  "packages/validation",
 ]
