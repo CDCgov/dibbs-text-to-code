@@ -42,4 +42,4 @@ jobs:
           --adapter python_pytest \
           --file results.json \
           --github-actions '${{ secrets.GITHUB_TOKEN }}' \
-          "pytest --benchmark-only --override-ini='addopts=' --benchmark-json=results.json"
+          "uv run pytest --benchmark-only --override-ini='addopts=' --benchmark-json=results.json"
