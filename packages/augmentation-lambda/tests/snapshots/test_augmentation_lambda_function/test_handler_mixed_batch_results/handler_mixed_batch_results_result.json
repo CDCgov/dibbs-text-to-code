@@ -1,0 +1,12 @@
+{
+  "failures": [
+    {
+      "error": "S3 object not found: dibbs-text-to-code/TTCAugmentationMetadataV2/nonexistent/id",
+      "message_id": "msg-fail"
+    }
+  ],
+  "message": "Augmentation processed with some failures!",
+  "num_failure_eicrs": 1,
+  "num_success_eicrs": 1,
+  "statusCode": 207
+}
