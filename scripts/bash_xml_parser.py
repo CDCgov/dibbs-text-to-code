@@ -13,28 +13,28 @@
 #     that might require defusedxml (Billion Laughs, Quadratic Explosion)
 #  2. CPython's own documentation has removed recommendations to use defusedxml
 #  3. defusedxml is effectively a dead project, with no release in years and no
-#     official Python support for versions 3.9+, while the underlyling expat
+#     official Python support for versions 3.9+, while the underlying expat
 #     package continues to see hardening security fixes
 #  4. For purposes of bulk testing, we are fully in control of the XML data, since
-#     it originates from an eICR we send, which makes security overhead unneccessary.
+#     it originates from an eICR we send, which makes security overhead unnecessary.
 
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 if __name__ == "__main__":
     xml = os.environ["CONTENT"]
 
-    root = ET.fromstring(xml)  # noqa
+    root = ET.fromstring(xml)
 
-    node = (
-        root.find("component")
-        .find("structuredBody")
-        .find("component")
-        .find("section")
-        .find("entry")
-        .find("observation")
-        .find("code")
-        .find("translation")
+    node = root.find(
+        "component/structuredBody/component/section/entry/observation/code/translation"
     )
+
+    if node is None:
+        print()
+        print()
+        sys.exit(0)
+
     print(node.get("code"))
     print(node.get("DisplayName"))

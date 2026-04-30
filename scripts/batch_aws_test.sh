@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
 # A batch-uploading bulk testing script for the DIBBs TTC Pipeline.
-#
+
 # Given a JSON file of nonstandard test cases, this script:
 #   1. Loads each test case from the file into a bash array.
-#   2. Templates a dummy test eicr with the nonstandard input name
+#   2. Templates a dummy test eICR with the nonstandard input name
 #      of each test case, and stamps each result with a fresh UUID.
 #   3. For each test eICR, one at a time, uploads the templated eICR + a 
 #      canned schematron errors file to S3, which fires the TTC lambda
@@ -15,26 +15,19 @@
 #      translated code name (where the TTC Pipeline leaves its predicted
 #      standardization), and compares the result to the expected value of
 #      the test case.
-#
-# Usage: ./scripts/aws_e2e.sh ./test_cases_file.json
+
+# Usage: ./scripts/batch_aws_test.sh ./test_cases_file.json
 #
 
 set -euo pipefail
 
 # ── Required tooling ──────────────────────────────────────────────────────────
 # gum:      TUI chrome (styled banners, spinners, log levels).
-# unbuffer: wraps `aws` in a pseudo-TTY so it line-buffers stdout. Without this
-#           the AWS CLI v2 (a PyInstaller bundle that ignores PYTHONUNBUFFERED)
-#           block-buffers output when piped and all log lines would arrive in
-#           one burst at the end.
 command -v gum >/dev/null || {
     echo "This script requires 'gum'. Install with: brew install gum" >&2
     exit 1
 }
-command -v unbuffer >/dev/null || {
-    echo "This script requires 'unbuffer' (from expect). Install with: brew install expect" >&2
-    exit 1
-}
+
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -99,13 +92,13 @@ follow_until_report() {
 
     # Start the tail in the background; read its output from FD 3 so we can
     # use `read -t` on it (needs a persistent FD, not a redirect per-read).
-    unbuffer aws logs tail "$log_group" --follow --since 1m --color off >"$fifo" &
+    aws logs tail "$log_group" --region "$AWS_REGION" --follow --since "${start}s" --color off >"$fifo" &
     tail_pid=$!
     exec 3<"$fifo"
 
     while :; do
         if IFS= read -r -t 1 -u 3 line; then
-            :
+            [[ "$line" == *"REPORT RequestId:"* ]] && break
         else
             rc=$?
             (( rc > 128 )) || break   # rc > 128 = timeout; anything else = EOF
@@ -124,7 +117,7 @@ follow_until_report() {
 wait_for_s3_object() {
     local key="$1" label="$2" timeout="${3:-120}" interval=2 elapsed=0
 
-    while ! aws s3api head-object --bucket "$BUCKET" --key "$key" >/dev/null 2>&1; do
+    while ! aws s3api head-object --region "$AWS_REGION" --bucket "$BUCKET" --key "$key" >/dev/null 2>&1; do
         if (( elapsed >= timeout )); then
             gum log -l error "Timed out waiting for $label at s3://$BUCKET/$key"
             return 1
@@ -142,27 +135,16 @@ wait_for_s3_object() {
 # The test cases JSON file has some nested structuring to make it easy to
 # define new cases or modify existing ones, so the easiest way to programmatically
 # handle this is to use a simple helper script with a few lines of python that
-# loads the appropriate variable within the nested structure. We can call this
-# helper a few different times, giving a different variable name each time, as
-# this lets us avoid repeating any python code here and also avoids having to 
-# unpack JSON in bash (we get to skip directly to an array of strings).
-NONSTANDARD_INPUTS=()
-while IFS= read -r line; do
-    NONSTANDARD_INPUTS+=("$line")
-done < <(JSON_FP="$JSON_FP" python3 ./bash_json_loader.py "nonstandard_in")
-CORRECT_OUTPUTS=()
-while IFS= read -r line; do
-    CORRECT_OUTPUTS+=("$line")
-done < <(JSON_FP="$JSON_FP" python3 ./bash_json_loader.py "correct_standardized_code")
-LOINC_CODES=()
-while IFS= read -r line; do
-    LOINC_CODES+=("$line")
-done < <(JSON_FP="$JSON_FP" python3 ./bash_json_loader.py "numeric_loinc_code")
+# loads the appropriate variable within the nested structure.
+NONSTANDARD_INPUTS=(); CORRECT_OUTPUTS=(); LOINC_CODES=()
+while IFS=$'\t' read -r nin cout loinc; do
+    NONSTANDARD_INPUTS+=("$nin"); CORRECT_OUTPUTS+=("$cout"); LOINC_CODES+=("$loinc")
+done < <(JSON_FP="$JSON_FP" python3 "$SCRIPT_DIR/bash_json_loader.py")
 
 for i in "${!NONSTANDARD_INPUTS[@]}"; do
 
     section "Test Case $i:"
-    FILENAME="$(date +%m-%d-%Y_%H:%M:%S).xml"
+    FILENAME="$(date +%m-%d-%Y_%H:%M:%S)_$i.xml"
     TEMPLATED_EICR="$TMPDIR/$FILENAME"
 
     # ── Template the eICR ─────────────────────────────────────────────────────────
@@ -171,7 +153,7 @@ for i in "${!NONSTANDARD_INPUTS[@]}"; do
     # <id>/<setId> so this eICR looks like a new document to downstream systems.
     echo "  Templating eICR with nonstandard input '${NONSTANDARD_INPUTS[$i]}'"
     INPUT="${NONSTANDARD_INPUTS[$i]}" SOURCE_EICR="$SOURCE_EICR" OUT_PATH="$TEMPLATED_EICR" \
-        python3 ./bash_eicr_templater.py
+        python3 "$SCRIPT_DIR/bash_eicr_templater.py"
     
     
     # # ── Fire the pipeline ─────────────────────────────────────────────────────────
@@ -181,9 +163,9 @@ for i in "${!NONSTANDARD_INPUTS[@]}"; do
     # # the same filename.
     echo "  Uploading to S3"
     gum spin --spinner=dot --title "Uploading schematron errors…" -- \
-        aws s3 cp "$SOURCE_SCHEMATRON" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
+        aws s3 cp --region "$AWS_REGION" "$SOURCE_SCHEMATRON" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
     gum spin --spinner=dot --title "Uploading templated eICR…" -- \
-        aws s3 cp "$TEMPLATED_EICR" "s3://$BUCKET/TextToCodeSubmissionV2/$FILENAME"
+        aws s3 cp --region "$AWS_REGION" "$TEMPLATED_EICR" "s3://$BUCKET/TextToCodeSubmissionV2/$FILENAME"
 
     # Block until each lambda finishes. TTC writes TTCAugmentationMetadataV2/<name>.json,
     # which triggers the augmentation lambda; that's why we watch them in sequence.
@@ -194,14 +176,14 @@ for i in "${!NONSTANDARD_INPUTS[@]}"; do
     # ── Parse the outputs ──────────────────────────────────────────────────────────
     echo "  Fetching results..."
     wait_for_s3_object "AugmentationEICRV2/$FILENAME" "augmented eICR"
-    content="$(aws s3 cp "s3://$BUCKET/AugmentationEICRV2/$FILENAME" -)"
-    { read PREDICTED_LOINC; read PREDICTED_CODE_STRING; } < <(CONTENT="$content" python3 ./bash_xml_parser.py)
+    content="$(aws s3 cp --region "$AWS_REGION" "s3://$BUCKET/AugmentationEICRV2/$FILENAME" -)"
+    { read PREDICTED_LOINC; read PREDICTED_CODE_STRING; } < <(CONTENT="$content" python3 "$SCRIPT_DIR/bash_xml_parser.py")
 
     if [[ "$PREDICTED_LOINC" = "${LOINC_CODES[$i]}" ]]; then
         echo "  Predicted LOINC code $PREDICTED_LOINC matches expected code ${LOINC_CODES[$i]}"
         echo "  Test Case Passed!"
     else
-        echo "  Predicted code $PREDICTED_LOINC does not match expected code "${LOINC_CODES[$i]}""
+        echo "  Predicted code $PREDICTED_LOINC does not match expected code ${LOINC_CODES[$i]}"
         echo "    Predicted code string: $PREDICTED_CODE_STRING"
         echo "    Expected code string:  ${CORRECT_OUTPUTS[$i]}"
         echo "  Test Case Failed :/"

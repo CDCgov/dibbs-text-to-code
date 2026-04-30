@@ -5,10 +5,15 @@
 
 import json
 import os
-import sys
 
 if __name__ == "__main__":
     with open(os.environ["JSON_FP"]) as fp:
         data = json.load(fp)
     for i in data["test_cases"]:
-        print(i[sys.argv[1]])
+        print(
+            i["nonstandard_in"]
+            + "\t"
+            + i["correct_standardized_code"]
+            + "\t"
+            + i["numeric_loinc_code"]
+        )
