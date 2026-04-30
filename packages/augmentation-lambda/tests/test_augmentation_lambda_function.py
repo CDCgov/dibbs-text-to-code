@@ -10,10 +10,7 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
-from shared_models import DataField
-from shared_models import NonstandardCodeInstance
 from validation import validate_eicr
-
 
 S3_BUCKET = "dibbs-text-to-code"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"

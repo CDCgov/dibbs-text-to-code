@@ -6,7 +6,7 @@ from validation import validate_eicr
 def test_validation():
     with Path.open("packages/validation/tests/assets/test_eicr.xml") as f:
         eicr = f.read()
-    results = validate_eicr(eicr, True)
+    results = validate_eicr(eicr)
 
     assert results == [
         {
@@ -19,6 +19,6 @@ def test_validation():
 def test_validation_no_errors():
     with Path.open("e2e/snapshots/test_e2e/test_upload_and_process/augmented_eicr.xml") as f:
         eicr = f.read()
-    results = validate_eicr(eicr, True)
+    results = validate_eicr(eicr)
 
     assert results == []
