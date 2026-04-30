@@ -12,7 +12,7 @@ class TestEmbedder:
 
         Only ran as a benchmark if benchmarks are enabled (disabled by default).
         """
-        embedding = benchmark(embed(input_text))
+        embedding = benchmark(embed, input_text)
 
         expected_embedding_length = 1024
 
