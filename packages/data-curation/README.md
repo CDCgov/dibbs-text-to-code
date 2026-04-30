@@ -157,14 +157,18 @@ These data files are for the Lab codes/concepts in LOINC for the base TTC model.
 #### Data Structure:
 
 ```csv
-code|lab_type|property|time_aspect|system|scale_type|method_type|class_type|short_name|long_name|display_name|definition_desc|related_names|full_name|consumer_name
-110636-8|Order|{Measurement}|-|Urine|-||LABORDERS.ONTOLOGY|APAP Msmt Ur|Acetaminophen [Measurement] in Urine|Acetaminophen (U) [Measurement]||ACET; Acetamidophenol; Acetaminoph; Acetominophen; APAP; c209; C55; Hydroxyacetanilide; Lab orders; Msmt; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; p-Acetamidophenol; Paracetamol; p-Hydroxyacetanilide; Tylenol; u209; UA; UR; Urn|Acetaminophen:{Measurement}:-:Urine:-:|Acetaminophen, Urine
-53781-1|Order|MCnc|Pt|Urine|Qn||PANEL.DRUG/TOX|Acetamin+Propoxyph Pnl Ur-mCnc|Acetaminophen and Propoxyphene panel [Mass/volume] - Urine|Acetaminophen and Propoxyphene panel (U) [Mass/Vol]||ACET; Acetamidophenol; Acetamin+Propoxyph Pnl; Acetaminoph; Acetominophen; Algaphan; APAP; c209; C55; Cosalgesic; Cotonal-65; Darvocet; Darvon; Depronal; Dextrogesic; Dextropropoxyphene; Distalgesic; Dolasan; Doloxene; D-propoxyphene; DRUG/TOXICOLOGY; Drugs; Hydroxyacetanilide; Level; Mass concentration; N-(4-Hydroxyphenyl)acetanilide; N-Acetyl-p-aminophenol; Napsalgesic; p-Acetamidophenol; Pan; PANEL.DRUG & TOXICOLOGY; Panl; Paracetamol; p-Hydroxyacetanilide; Pnl; Point in time; Propoxyph pnl; QNT; Quan; Quant; Quantitative; Random; Tylenol; u209; UA; UR; Urn|Acetaminophen & Propoxyphene panel:MCnc:Pt:Urine:Qn:|Acetaminophen and Propoxyphene panel, Urine
+code|display_name|related_names|definition_desc|lab_type|full_name|property|time_aspect|system|scale_type|method_type|class_type|short_name|long_name|consumer_name
+33958-0|Vitamin D3 [Moles/Vol]|C27H43OH; Calciol; Chemistry; Colecalciferol; Level; Pl; Plasma; Plsm; Point in time; QNT; Quan; Quant; Quantitative; Random; SerP; SerPl; SerPlas; Serum; Serum or plasma; SR; Substance concentration; Vit D3; Vitamin D3||Both|Cholecalciferol:SCnc:Pt:Ser/Plas:Qn:|SCnc|Pt|Ser/Plas|Qn||CHEM|Vitamin D3 SerPl-sCnc|Cholecalciferol (Vit D3) [Moles/volume] in Serum or Plasma|Vitamin D3, Blood
+2081-8|Cholecystokinin (P) [Mass/Vol]|CCK; CCK-PZ; Chemistry; Level; Mass concentration; Pancreozymin; Pl; Plasma; Plsm; Point in time; QNT; Quan; Quant; Quantitative; Random||Both|Cholecystokinin:MCnc:Pt:Plas:Qn:|MCnc|Pt|Plas|Qn||CHEM|CCK Plas-mCnc|Cholecystokinin [Mass/volume] in Plasma|Cholecystokinin, Blood
 
 ```
 
 - code: A unique identifier for a specific test or observation, typically in a 5-digit-then-a-dash format (e.g., 806-0).
+- display_name: A flexible field that can be the Long Common Name, Short Name, or another name for the term, depending on how the user or system wants to present it.
+- related_names: This category can include various other terms or synonyms used to describe the same test or observation, helping to map local codes to the LOINC standard. List of terms is `;` delimited.
+- definition_desc (Fully-Specified Name): The formal, six-part description that provides the complete and standardized meaning of the observation.
 - lab_type: A code from LOINC indicating if the lab is an 'Order', an 'Observation' or 'Both'.
+- full_name: The Fully-Specified name of the LOINC concept.
 - property: The LOINC 'Property' Axis - The specific attribute of the component being measured (e.g., length, mass, number).
 - time_aspect: The LOINC 'Time Aspect' Axis - The time frame or duration over which the measurement was made.
 - system: The LOINC 'System' Axis - The specimen source or origin of the measurement (e.g., serum, plasma, blood).
@@ -173,10 +177,6 @@ code|lab_type|property|time_aspect|system|scale_type|method_type|class_type|shor
 - class_type: The LOINC 'Class' Axis.
 - short_name: A concise name used for quick displays, such as in a report's column header.
 - long_name (Long Common Name): A more readable, expanded version of the LOINC concept, created to be user-friendly for clinicians.
-- display_name: A flexible field that can be the Long Common Name, Short Name, or another name for the term, depending on how the user or system wants to present it.
-- definition_desc (Fully-Specified Name): The formal, six-part description that provides the complete and standardized meaning of the observation.
-- related_names: This category can include various other terms or synonyms used to describe the same test or observation, helping to map local codes to the LOINC standard. List of terms is `;` delimited.
-- full_name: The Fully-Specified name of the LOINC concept.
 - consumer_name: A more comprehensive set of consumer-friendly names for LOINC codes.
 
 #### Extracts
@@ -202,17 +202,17 @@ LOINC terms are comprised of six parts, defining a specific clinical observation
 Each part provides unique information about the test or observation:
 
 - **Component**: What is being measured (e.g., glucose, a specific organ part).
-  - File Name: `../../data/snoinc_extracts/loinc_component_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_component_abbrv_syn_<YYYYMMDD>.json`
 - **Property**: The specific attribute of the component being measured (e.g., length, mass, number).
-  - File Name: `../../data/snoinc_extracts/loinc_property_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_property_abbrv_syn_<YYYYMMDD>.json`
 - **Time Aspect**: The time frame or duration over which the measurement was made.
-  - File Name: `../../data/snoinc_extracts/loinc_time_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_time_abbrv_syn_<YYYYMMDD>.json`
 - **System**: The specimen source or origin of the measurement (e.g., serum, plasma, blood).
-  - File Name: `../../data/snoinc_extracts/loinc_system_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_system_abbrv_syn_<YYYYMMDD>.json`
 - **Scale**: How the result is reported (e.g., quantitative for numbers, ordinal for ranked categories, narrative for text).
-  - File Name: `../../data/snoinc_extracts/loinc_scale_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_scale_abbrv_syn_<YYYYMMDD>.json`
 - **Method**: The technique or procedure used to perform the measurement. This part is the only one that is not mandatory for every LOINC term.
-  - File Name: `../../data/snoinc_extracts/loinc_method_abbrv_syn_<YYYYMMDD>.json`
+  - File Name: `../../data/snoinc_extracts/enhancements/loinc_method_abbrv_syn_<YYYYMMDD>.json`
 
 #### Data Structure:
 
@@ -244,7 +244,7 @@ Each part provides unique information about the test or observation:
 
 ### LOINC Part Descriptions
 
-This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept. Not all LOINC codes/concepts will have a result in this data file. A custom [sql query](./loinc/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API. This additional data was possibly used during the 'enhancement' phase of the creation of synthetic lab data to test the model out.
+This is a data file that contains LOINC codes/concepts that also have a LOINC Part descriptions that give a more in-depth description of the LOINC Lab code/concept. Not all LOINC codes/concepts will have a result in this data file. A custom [sql query](./sql/loinc_codes_with_part_descriptions.sql) was created to extract this data from the LOINC RELMA database, as the results weren't possible to be extracted using the LOINC API. This additional data was possibly used during the 'enhancement' phase of the creation of synthetic lab data to test the model out.
 
 #### Data Structure:
 
@@ -259,7 +259,7 @@ LOINC_NUM,DESCRIPTION
 
 #### Extracts:
 
-- LOINC Codes with Part Descriptions - File: `../../data/snoinc_extracts/loinc_codes_with_part_descriptions_<YYYYMMDD>.csv`
+- LOINC Codes with Part Descriptions - File: `../../data/snoinc_extracts/enhancements/loinc_codes_with_part_descriptions.csv`
 
 _**NOTE: we can easily change this to be a file with any delimiter instead of a comma (`,`)**_
 
@@ -293,7 +293,7 @@ This data file organizes correlated terms from LOINC and other terminology sets,
 
 #### Extracts
 
-- Loinc UMLS Related Names - File: `../../data/snoinc_extracts/loinc_umls_related_names_<YYYYMMDD>.json`
+- Loinc UMLS Related Names - File: `../../data/snoinc_extracts/enhancements/loinc_umls_related_names_<YYYYMMDD>.json`
 
 ---
 
@@ -557,11 +557,12 @@ There are a handful of CLI commands you can use to generate the extract files. H
     ![RELMA](./assets/RELMADB.jpg)
   - Select the `Create` Option in the Menu and then select `SQL Query`
     ![CREATE QUERY](./assets/create_query.jpg)
-  - Open the SQL query provided for [loinc codes with part descriptions](./loinc/loinc_codes_with_part_descriptions.sql) and copy the contents of that file into the newly created query. Then select the save button at the top left.
+  - Open the SQL query provided for [loinc codes with part descriptions](./sql/loinc_codes_with_part_descriptions.sql) and copy the contents of that file into the newly created query. Then select the save button at the top left.
   - Enter a name for the query and click on `OK`
     ![SAVE QUERY](./assets/save_query.jpg)
-  - With the newly created query still open, select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:/<your repo location>/data/snoinc_extracts/loinc_other/` and then click `OK`.
+  - With the newly created query still open, select `External Data` in the menu up-top. Then click on the `Text File` as the "Export" option. Ensure to save the file, with the name `loinc_lab_name_codes_with_term_description_<current date (YYYYMMDD)>.csv`, to the following location: `C:/<your repo location>/data/snoinc_extracts/other/` and then click `OK`.
     ![SAVE CSV](./assets/export_csv_to_repo.jpg)
+  - Ensure to save the file, with the same table name `loinc_parts_abbrv_synonyms.txt`, to the following location: `<your repo location>/data/snoinc_extracts/loinc_other` and then click `OK`.
   - When the "Export Text Wizard" appears select `Finish`.
   - This will save the query results in the [data folder](../../data/snoinc_extracts/loinc_other/)
 
