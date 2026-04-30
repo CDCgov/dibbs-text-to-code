@@ -27,14 +27,14 @@ dev = [
   "ty>=0.0.30",
 ]
 
-
 [tool.coverage.run]
 source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
 
 [tool.pytest.ini_options]
+addopts = "--benchmark-disable" # Benchmarks need to be explicitly enabled to run.
 markers = ["e2e"]
-testpaths = ["benchmarks", "e2e", "packages"]
+testpaths = ["e2e", "packages"]
 pythonpath = ["."]
 
 [tool.pytest_env]

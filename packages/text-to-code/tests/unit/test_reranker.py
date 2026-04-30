@@ -18,7 +18,11 @@ class TestReranker:
             {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.989}
         ]
 
-    def test_reranker_multiple_hits(self) -> None:
+    def test_reranker_multiple_hits(self, benchmark) -> None:
+        """Test the reranker when there are multiple search hits.
+
+        Only ran as a benchmark if benchmarks are enabled (disabled by default).
+        """
         nonstandard_in = "albumin/creatinine ratio (acr)"
         search_hits = [
             "Albumin/Creatinine [Ratio] in Urine",
@@ -26,7 +30,7 @@ class TestReranker:
             "Albumin/Creatinine [Ratio] in 24 hour Urine",
             "Albumin/Creatinine (U) [Molar ratio]",
         ]
-        ranks = rerank(nonstandard_in, search_hits)
+        ranks = benchmark(rerank, nonstandard_in, search_hits)
         ranks = [
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
