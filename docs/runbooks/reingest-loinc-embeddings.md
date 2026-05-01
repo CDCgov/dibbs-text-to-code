@@ -5,7 +5,8 @@
 **Estimated wall-clock:** 25–35 min from pipeline start to pipeline success.
 **When to use:** After the model team has produced new LOINC embeddings (NDJSON) that need to replace the current index contents.
 
-> ⚠️ Run during an off-hours window when possible. SQS will accumulate a backlog during the halt — that's expected and drained automatically once TTC resumes.
+> [!WARNING]
+> Run during an off-hours window when possible. SQS will accumulate a backlog during the halt — that's expected and drained automatically once TTC resumes.
 
 ## Pre-flight checklist
 

@@ -14,11 +14,11 @@ Each time a new fine-tuned model is deployed, the LOINC vector embeddings stored
 3. The index Lambda (`ttc-index-lambda`) drops and recreates the OpenSearch index.
 4. The OpenSearch Ingestion (OSIS) pipeline `ttc-ingestion-pipeline` bulk-loads the new embeddings (~10–15 min).
 
-In production, the TTC Lambda keeps polling SQS during steps 3–4 and queries a missing or partially populated index, producing degraded code mappings for any eICR received in that window. The TTC Lambda's current behaviour is to log "no match" and ack the SQS message as success — bad data flows downstream silently.
+In production, the TTC Lambda keeps polling SQS during steps 3–4 and queries a missing or partially populated index, producing degraded code mappings for any eICR received in that window. The TTC Lambda's current behavior is to log "no match" and ack the SQS message as success — bad data flows downstream silently.
 
 ## Goal
 
-A concrete mechanism for safely pausing TTC processing during re-ingestion, automated end-to-end so the production pause is as short as possible. APHL has confirmed the automation will live in their GitLab CI/CD with AWS CLI access. SQS is allowed to back up during the halt — that is expected behaviour.
+A concrete mechanism for safely pausing TTC processing during re-ingestion, automated end-to-end so the production pause is as short as possible. APHL has confirmed the automation will live in their GitLab CI/CD with AWS CLI access. SQS is allowed to back up during the halt — that is expected behavior.
 
 ## Recommended end-to-end flow
 
@@ -58,7 +58,7 @@ It throttles new invocations only; running invocations complete normally. The CI
 
 With reserved concurrency at 0 and the ESM (event source mapping) still enabled, the ESM keeps polling SQS. Each poll attempt invokes the Lambda, gets throttled, and returns the message to the queue. With `max_receive_count = 3` (`terraform/main.tf:761-787`), messages can land in the DLQ (dead-letter queue) if the halt outlasts 3x the visibility timeout. Visibility timeout is 5400s (90 min) — 3× = 4.5 h. A correctly-bounded halt (~25 min) won't hit that, but the safety margin is small.
 
-**Disabling the ESM** stops polling cleanly with zero DLQ pressure. This design doc recommends doing **both**: disable ESM (primary halt) and concurrency=0 (defence in depth, and it satisfies APHL's stated preference).
+**Disabling the ESM** stops polling cleanly with zero DLQ pressure. This design doc recommends doing **both**: disable ESM (primary halt) and concurrency=0 (defense in depth, and it satisfies APHL's stated preference).
 
 ### Index Lambda already supports atomic drop+recreate
 
@@ -89,7 +89,7 @@ The CI/CD job runs the AWS CLI directly (no Terraform run per pause/resume). To 
 | A. Toggle `enabled` via Terraform | **Rejected** | Slow per pause/resume; requires Terraform credentials in CI/CD. |
 | B. `aws lambda update-event-source-mapping --no-enabled` | **Recommended (primary)** | Fast, clean stop of polling; in-flight drains naturally. Drift mitigated by `ignore_changes`. |
 | C. Feature-flag env var read at Lambda runtime | **Rejected** | Adds runtime complexity; messages still get invoked, hit OS, and must be NACKed; visibility-timeout interactions are messy. |
-| D. Reserved concurrency = 0 | **Recommended (secondary)** | APHL's stated preference. Used as defence-in-depth alongside (B). Note the in-flight-not-killed correction above. |
+| D. Reserved concurrency = 0 | **Recommended (secondary)** | APHL's stated preference. Used as defense-in-depth alongside (B). Note the in-flight-not-killed correction above. |
 
 ### 2. How do we drain in-flight messages before dropping the index?
 
