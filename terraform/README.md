@@ -104,14 +104,15 @@ Environment variables injected at deploy time: `S3_BUCKET`, `AUGMENTED_EICR_PREF
 
 Lambda packages use `aws_lambda_powertools.Logger` for structured JSON logging.
 
-The TTC and augmentation Lambdas emit structured logs with consistent keys so a TTC invocation can be correlated with the augmentation job that consumes its output. Lambda handlers use `@logger.inject_lambda_context` so Powertools adds Lambda runtime metadata, including `function_request_id`.
+The different text-to-code Lambdas emit structured logs with consistent keys so a TTC invocation can be correlated with the augmentation job that consumes its output. Lambda handlers use `@logger.inject_lambda_context` so Powertools adds Lambda runtime metadata, including `function_request_id`.
 
 Standard log keys:
 
 - `function_request_id`: Injected by Powertools from the Lambda context
 - `persistence_id`: Shared identifier used to correlate TTC output with augmentation input
 - `bucket_name`: S3 bucket being read from or written to
-- `s3_key`: S3 object key being read from or written to
+- `trigger_s3_key`: S3 object key from the EventBridge/SQS event that triggered the Lambda record
+- `s3_key`: S3 object key being read from or written to by a specific log line
 - `status`: Processing state or terminal result, such as `processing`, `success`, `skipped`, `error`, `matched`, `no_matches_found`, or `partial_failure`
 
 Lambda entry points initialize a service logger:
@@ -130,15 +131,16 @@ def handler(event, context):
     ...
 ```
 
-Shared/core packages called by Lambda code use Powertools child loggers rather than stdlib `logging`:
+Use `trigger_s3_key` for the incoming event object and `s3_key` for individual S3 read/write operations:
 
 ```python
-from aws_lambda_powertools import Logger
-
-logger = Logger(service="ttc", child=True)
+with logger.append_context_keys(
+    persistence_id=persistence_id,
+    bucket_name=bucket_name,
+    trigger_s3_key=object_key,
+):
+    logger.info("Processing TTC event", status="processing")
 ```
-
-Use structured keyword arguments instead of formatted strings for values that need to be queried in CloudWatch Logs Insights:
 
 ```python
 logger.info(
@@ -149,12 +151,14 @@ logger.info(
 )
 ```
 
-Do not use `print()`, `structlog`, or stdlib `logging` in Lambda packages or shared packages used by Lambda code.
+Core library packages that are also used outside Lambda should continue to use stdlib `logging` instead of Powertools. This keeps non-Lambda callers such as data-curation and evaluator scripts from depending on Lambda-specific logging behavior. Lambda packages are responsible for using Powertools at the invocation boundary and emitting the structured fields needed for CloudWatch correlation.
+
+Do not use `print()` or `structlog` in Lambda packages.
 
 Example CloudWatch Logs Insights query:
 
 ```sql
-fields @timestamp, service, function_name, function_request_id, persistence_id, bucket_name, s3_key, status, message
+fields @timestamp, service, function_name, function_request_id, persistence_id, bucket_name, trigger_s3_key, s3_key, status, message
 | filter persistence_id = "REPLACE_WITH_PERSISTENCE_ID"
 | sort @timestamp asc
 ```
