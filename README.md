@@ -53,7 +53,7 @@ Given TTC results, the augmenter:
 
 ### Repository Structure
 
-This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScript/React frontend). All Python packages live under `packages/`; the frontend lives under `frontend/`.
+This is a **uv workspace** (Python). All Python packages live under `packages/`.
 
 | Package                                                | Role                                                                                                 |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
@@ -65,8 +65,6 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
 | [`utils`](packages/utils/)                             | Path, regex, and LOINC name parsing utilities                                                        |
 | [`data-curation`](packages/data-curation/)             | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
 | [`model-tuning`](packages/model-tuning/)               | Fine-tunes SentenceTransformer models and builds HNSW indexes for OpenSearch                         |
-| [`api`](packages/api/)                                 | FastAPI service exposing `/api` endpoints; serves the built frontend in non-local environments       |
-| [`frontend`](frontend/)                                | React 19 + TypeScript + Vite demo application for interacting with the API                           |
 
 ### Architecture Diagram
 
@@ -100,7 +98,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
                       Augmented eICR XML (to S3)
 ```
 
-A **demo site** (FastAPI + React frontend) is available for local testing of the API, though it is not currently under active development. In production, the two Lambda functions handle large-scale eICR processing.
+In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Key Design Patterns
 
@@ -129,14 +127,6 @@ After installing the above requirements run `just bootstrap` to initiate the Pyt
 ```sh
 just bootstrap
 ```
-
-To start the demo site and API:
-
-```sh
-just dev up
-```
-
-The demo site can be accessed at http:localhost:8081
 
 To run tests:
 
