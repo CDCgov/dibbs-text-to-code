@@ -93,6 +93,7 @@ select = [
   "RUF",  # Ruff-specific rules
   "S",    # flake8-bandit
   "SIM",  # flake8-simplify
+  "T20",  # flake8-print
   "UP",   # pyupgrade
   "W",    # pycodestyle warning
 ]
@@ -132,6 +133,7 @@ known-first-party = [
   "D103",    # undocumented-public-function
   "PLR0913", # too many arguments
   "S101",    # assert,
+  "T201",    # print
 ]
 "**/conftest.py" = [
   "PT003", # pytest-extraneous-scope-function"
