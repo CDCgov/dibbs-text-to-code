@@ -125,6 +125,11 @@ known-first-party = [
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
+
+# ignore scripts/ folder
+"scripts/*.py" = [
+  "T201", # print
+]
 # Ignore the following rules in test files
 "**/test_*.py" = [
   "ANN001",  # missing type annotation for arguments from fixtures
