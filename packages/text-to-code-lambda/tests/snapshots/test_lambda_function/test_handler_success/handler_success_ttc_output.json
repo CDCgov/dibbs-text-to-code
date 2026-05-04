@@ -6,10 +6,10 @@
       {
         "field_type": "Lab Test Name Ordered",
         "new_translation": {
-          "code": "109224-6",
+          "code": "82041-5",
           "code_system": "2.16.840.1.113883.6.1",
           "code_system_name": "LOINC",
-          "display_name": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
           "original_text": "weed allergen mix 3",
           "value_set": null,
           "value_set_version": null
@@ -20,10 +20,10 @@
       {
         "field_type": "Lab Test Name Ordered",
         "new_translation": {
-          "code": "109224-6",
+          "code": "82041-5",
           "code_system": "2.16.840.1.113883.6.1",
           "code_system_name": "LOINC",
-          "display_name": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
           "original_text": "weed allergen mix 3",
           "value_set": null,
           "value_set_version": null
@@ -36,10 +36,10 @@
       {
         "field_type": "Lab Test Name Resulted",
         "new_translation": {
-          "code": "109224-6",
+          "code": "82041-5",
           "code_system": "2.16.840.1.113883.6.1",
           "code_system_name": "LOINC",
-          "display_name": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
           "original_text": "weed allergen mix 3",
           "value_set": null,
           "value_set_version": null
@@ -50,10 +50,10 @@
       {
         "field_type": "Lab Test Name Resulted",
         "new_translation": {
-          "code": "109224-6",
+          "code": "82041-5",
           "code_system": "2.16.840.1.113883.6.1",
           "code_system_name": "LOINC",
-          "display_name": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
           "original_text": "weed allergen mix 3",
           "value_set": null,
           "value_set_version": null
