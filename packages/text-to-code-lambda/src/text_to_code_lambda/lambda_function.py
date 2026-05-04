@@ -349,20 +349,15 @@ def _process_schematron_errors(
                 ).model_dump()
             )
         else:
-            # TODO: Shape of this output could change depending on needs of the Augmentation Lambda
             unmatched_error = error.model_dump()
             unmatched_error["reason"] = (
-                "Selected candidate found, but no OpenSearch code match was returned"
+                "Selected candidate found, but no standardized code was returned."
             )
             ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
 
         metadata_error = error.model_dump()
         metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
         metadata_error["reranker_processed_results"] = ranked_results
-        if not results_list:
-            metadata_error["reason"] = (
-                "Selected candidate found, but no OpenSearch code match was returned"
-            )
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 
 
