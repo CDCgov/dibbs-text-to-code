@@ -67,6 +67,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
 | [`model-tuning`](packages/model-tuning/)               | Fine-tunes SentenceTransformer models and builds HNSW indexes for OpenSearch                         |
 | [`api`](packages/api/)                                 | FastAPI service exposing `/api` endpoints; serves the built frontend in non-local environments       |
 | [`frontend`](frontend/)                                | React 19 + TypeScript + Vite demo application for interacting with the API                           |
+| [`validation`](packages/validation/)                   | Functionality to validate an eICR and to create Schematron output                                    |
 
 ### Architecture Diagram
 
