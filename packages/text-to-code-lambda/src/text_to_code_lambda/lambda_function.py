@@ -13,6 +13,7 @@ from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from lambda_handler.models.opensearch import OpenSearchHit
 from shared_models import Code
 from shared_models import NonstandardCodeInstance
 from text_to_code.models import Candidate
@@ -326,19 +327,21 @@ def _process_schematron_errors(
         # The OpenSearch results object has a couple levels of nesting,
         # but all we care about for reranking is extracting the actual
         # text strings of the ANN LOINC codes
-        results_list = opensearch_retrieved_scores.hits.hits
+        results_list: list[OpenSearchHit] = opensearch_retrieved_scores.hits.hits
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
 
-        if results_list:
+        top_result = next((x for x in results_list if x.source.description), None)
+
+        if top_result:
             ttc_output["schematron_errors"][data_field].append(
                 _build_nonstandard_code_instance(
                     schematron_error=error,
                     new_translation=Code(
-                        code=results_list[0].source.loinc_code,
+                        code=top_result.source.loinc_code,
                         code_system="2.16.840.1.113883.6.1",
                         code_system_name="LOINC",
-                        display_name=results_list[0].source.description,
+                        display_name=top_result.source.description,
                     ),
                     selected_candidate=selected_candidate,
                 ).model_dump()
