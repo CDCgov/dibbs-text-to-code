@@ -331,7 +331,10 @@ def _process_schematron_errors(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
 
-        top_result = next((x for x in results_list if x.source.description), None)
+        top_result = next(
+            (x for x in results_list if x.source.description == ranked_results[0]["code_string"]),
+            None,
+        )
 
         if top_result:
             ttc_output["schematron_errors"][data_field].append(
