@@ -51,6 +51,7 @@ include = [
   "packages/text-to-code-lambda/src",
   "packages/text-to-code/src",
   "packages/utils/src",
+  "packages/validation/src",
 ]
 
 [tool.ruff]
@@ -93,6 +94,7 @@ select = [
   "RUF",  # Ruff-specific rules
   "S",    # flake8-bandit
   "SIM",  # flake8-simplify
+  "T20",  # flake8-print
   "UP",   # pyupgrade
   "W",    # pycodestyle warning
 ]
@@ -100,6 +102,7 @@ ignore = [
   "D100",   # undocumented-public-module
   "E501",   # line-too-long - Handled by formatter
   "RET504", # unnecessary-assign
+  "S314",   # recommend `defusedxml` over `xml` and `lxml`
 ]
 
 [tool.ruff.lint.flake8-annotations]
@@ -118,18 +121,26 @@ known-first-party = [
   "text_to_code",
   "text_to_code_lambda",
   "utils",
+  "validation",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
+
+# ignore scripts/ folder
+"scripts/*.py" = [
+  "T201", # print
+]
 # Ignore the following rules in test files
 "**/test_*.py" = [
-  "ANN001", # missing type annotation for arguments from fixtures
-  "ANN201", # missing-return-type-annotation
-  "D101",   # undocumented-public-class
-  "D102",   # undocumented-public-method
-  "D103",   # undocumented-public-function
-  "S101",   # assert
+  "ANN001",  # missing type annotation for arguments from fixtures
+  "ANN201",  # missing-return-type-annotation
+  "D101",    # undocumented-public-class
+  "D102",    # undocumented-public-method
+  "D103",    # undocumented-public-function
+  "PLR0913", # too many arguments
+  "S101",    # assert,
+  "T201",    # print
 ]
 "**/conftest.py" = [
   "PT003", # pytest-extraneous-scope-function"
@@ -150,4 +161,5 @@ members = [
   "packages/text-to-code",
   "packages/text-to-code-lambda",
   "packages/utils",
+  "packages/validation",
 ]

@@ -1,7 +1,11 @@
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
 from utils import get_env_variable
+
+logger = Logger(service="index-lambda")
 
 INDEX_MAPPING = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
@@ -33,7 +37,8 @@ INDEX_MAPPING = {
 }
 
 
-def handler(event: dict, context: dict) -> dict:
+@logger.inject_lambda_context
+def handler(event: dict, context: LambdaContext) -> dict:
     """Lambda function to manage the OpenSearch index for LOINC code embeddings.
 
     Supports two actions via the event dict:
@@ -51,11 +56,22 @@ def handler(event: dict, context: dict) -> dict:
 
     action = event.get("action", "create_index") if event else "create_index"
 
-    if action == "clear_index":
-        return _clear_index(os_client, index_name)
-    if action == "set_slowlog":
-        return _set_slowlog(os_client, index_name, event.get("threshold_ms", 0))
-    return _create_index(os_client, index_name)
+    with logger.append_context_keys(
+        index_name=index_name,
+        action=action,
+    ):
+        logger.info("Index Lambda started", status="processing")
+
+        if action == "clear_index":
+            result = _clear_index(os_client, index_name)
+        elif action == "set_slowlog":
+            result = _set_slowlog(os_client, index_name, event.get("threshold_ms", 0))
+        else:
+            result = _create_index(os_client, index_name)
+
+        logger.info("Index Lambda completed", status="success")
+
+        return result
 
 
 def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
@@ -71,6 +87,13 @@ def _clear_index(os_client: OpenSearch, index_name: str) -> dict:
 
     os_client.indices.create(index=index_name, body=INDEX_MAPPING)
 
+    logger.info(
+        "OpenSearch index cleared",
+        index_deleted=deleted,
+        index_recreated=True,
+        status="success",
+    )
+
     return {
         "statusCode": 200,
         "action": "clear_index",
@@ -84,10 +107,6 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> d
     settings = os_client.indices.get_settings(index=index_name)
     mappings = os_client.indices.get_mapping(index=index_name)
 
-    print(index)
-    print(settings)
-    print(mappings)
-
     threshold = f"{threshold_ms}ms" if threshold_ms > 0 else "-1"
     body = {
         "index.search.slowlog.threshold.query.warn": threshold,
@@ -96,6 +115,13 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> d
         "index.search.slowlog.threshold.fetch.info": threshold,
     }
     os_client.indices.put_settings(index=index_name, body=body)
+
+    logger.info(
+        "OpenSearch slowlog settings updated",
+        threshold_ms=threshold_ms,
+        status="success",
+    )
+
     return {
         "statusCode": 200,
         "action": "set_slowlog",
@@ -114,6 +140,7 @@ def _create_index(os_client: OpenSearch, index_name: str) -> dict:
     """
     if not os_client.indices.exists(index=index_name):
         os_client.indices.create(index=index_name, body=INDEX_MAPPING)
+        logger.info("OpenSearch index created", status="success")
 
     status = os_client.indices.exists(index=index_name)
 
@@ -128,6 +155,13 @@ def _create_index(os_client: OpenSearch, index_name: str) -> dict:
         os_client.indices.delete(index=index_name)
         os_client.indices.create(index=index_name, body=INDEX_MAPPING)
         recreated = True
+
+    logger.info(
+        "OpenSearch index validated",
+        index_exists=status,
+        index_recreated=recreated,
+        status="success",
+    )
 
     return {
         "statusCode": 200,

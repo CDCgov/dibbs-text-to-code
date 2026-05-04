@@ -255,6 +255,12 @@ To format a specific file, use the following command:
 ruff format path/to/file.py
 ```
 
+### Logging
+
+Lambda entry points use `aws_lambda_powertools.Logger` for structured JSON logs. TTC and augmentation Lambda logs include shared correlation fields such as `function_request_id`, `persistence_id`, `bucket_name`, `trigger_s3_key`, `s3_key`, and `status`.
+
+Core packages that are also used outside Lambda, such as `text-to-code`, should use standard Python `logging` so non-Lambda callers do not depend on Lambda-specific logging behavior.
+
 ## Releases
 
 See the [Releases](docs/releases.md) page for details.

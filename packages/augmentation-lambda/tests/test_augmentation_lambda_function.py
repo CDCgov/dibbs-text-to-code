@@ -10,6 +10,7 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
+from validation import validate_eicr
 
 S3_BUCKET = "dibbs-text-to-code"
 TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
@@ -81,6 +82,13 @@ def mock_augmented_ids(mocker: MockerFixture) -> None:
 class TestHandler:
     """Tests for the augmentation Lambda handler."""
 
+    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_lambda_context) -> None:
+        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
+
     def test_handler_writes_outputs_to_s3(
         self,
         example_sqs_event,
@@ -88,12 +96,13 @@ class TestHandler:
         mocker: MockerFixture,
         snapshot: Snapshot,
         mock_augmented_ids,
+        mock_lambda_context,
     ) -> None:
 
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            result = lambda_function.handler(example_sqs_event, None)
+            result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         # Assert handler function returns expected values
         assert result["statusCode"] == SUCCESS_CODE
@@ -120,6 +129,10 @@ class TestHandler:
             "handler_writes_outputs_metadata.json",
         )
 
+        # Validate augmented eICR
+        actual_validation_results = validate_eicr(augmented_eicr)
+        assert actual_validation_results == []  # Empty list means no errors.
+
     def test_handler_source_bucket_routing(
         self,
         example_s3_event_payload,
@@ -127,6 +140,7 @@ class TestHandler:
         mocker: MockerFixture,
         snapshot: Snapshot,
         mock_augmented_ids,
+        mock_lambda_context,
     ) -> None:
         """Verify bucket name is extracted from the S3 event, not the env var."""
         custom_bucket = "custom-bucket"
@@ -168,7 +182,7 @@ class TestHandler:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            result = lambda_function.handler(event, None)
+            result = lambda_function.handler(event, mock_lambda_context)
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_source_bucket_routing_result.json",
@@ -184,8 +198,12 @@ class TestHandler:
             "handler_source_bucket_routing_augmented_eicr.xml",
         )
 
+        # Validate augmented eICR
+        actual_validation_results = validate_eicr(augmented_eicr)
+        assert actual_validation_results == []  # Empty list means no errors.
+
     def test_handler_error_missing_eicr(
-        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot
+        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot, mock_lambda_context
     ) -> None:
         """Test error when the original eICR is not found in S3."""
         # Remove the eICR from S3
@@ -203,7 +221,7 @@ class TestHandler:
             "handler_error_missing_eicr_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, mock_lambda_context)
 
         assert result["num_failure_eicrs"] == 1
         assert len(result["failures"]) == 1
@@ -213,7 +231,7 @@ class TestHandler:
         )
 
     def test_handler_error_missing_ttc_output(
-        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot
+        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot, mock_lambda_context
     ) -> None:
         """Test error when the TTC output is not found in S3."""
         mock_aws_setup.delete_object(
@@ -230,7 +248,7 @@ class TestHandler:
             "handler_error_missing_ttc_output_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, mock_lambda_context)
 
         assert result["num_failure_eicrs"] == 1
         assert len(result["failures"]) == 1
@@ -240,7 +258,7 @@ class TestHandler:
         )
 
     def test_handler_mixed_batch_results(
-        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot
+        self, example_s3_event_payload, mock_aws_setup, snapshot: Snapshot, mock_lambda_context
     ) -> None:
         """Test batch with both success and failure records."""
         # Create a second event pointing to a non-existent persistence ID
@@ -257,7 +275,7 @@ class TestHandler:
             "handler_mixed_batch_results_event.json",
         )
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, mock_lambda_context)
 
         assert result["num_success_eicrs"] == 1
         assert result["num_failure_eicrs"] == 1
@@ -266,10 +284,10 @@ class TestHandler:
             "handler_mixed_batch_results_result.json",
         )
 
-    def test_handler_skips_empty_sqs_body(self, mock_aws_setup) -> None:
+    def test_handler_skips_empty_sqs_body(self, mock_aws_setup, mock_lambda_context) -> None:
         event = _build_empty_body_event()
 
-        result = lambda_function.handler(event, None)
+        result = lambda_function.handler(event, mock_lambda_context)
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
