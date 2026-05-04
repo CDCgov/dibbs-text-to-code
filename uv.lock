@@ -782,6 +782,7 @@ name = "index-lambda"
 version = "0.1.0"
 source = { editable = "packages/index-lambda" }
 dependencies = [
+    { name = "aws-lambda-powertools" },
     { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "botocore" },
@@ -792,6 +793,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3" },
     { name = "botocore" },
@@ -847,6 +849,7 @@ name = "lambda-handler"
 version = "0.1.0"
 source = { editable = "packages/lambda-handler" }
 dependencies = [
+    { name = "aws-lambda-powertools" },
     { name = "aws-lambda-typing" },
     { name = "boto3" },
     { name = "opensearch-py" },
@@ -862,6 +865,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "opensearch-py", specifier = ">=2.0.0" },

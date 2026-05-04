@@ -94,11 +94,11 @@ def patch_lambda_handler(
 
 
 class TestHandler:
-    def test_handler_success(self, monkeypatch):
+    def test_handler_success(self, monkeypatch, mock_lambda_context):
         """Test handler creates the index when it does not exist and returns expected response."""
         patch_lambda_handler(monkeypatch, "knn_vector")
 
-        resp = lambda_function.handler({}, {})
+        resp = lambda_function.handler({}, mock_lambda_context)
 
         assert resp["statusCode"] == SUCCESS_CODE
         assert resp["index_exists"] is True
@@ -112,11 +112,13 @@ class TestHandler:
             }
         }
 
-    def test_handler_recreates_index_when_vector_mapping_incorrect(self, monkeypatch):
+    def test_handler_recreates_index_when_vector_mapping_incorrect(
+        self, monkeypatch, mock_lambda_context
+    ):
         """Test handler recreates the index when description_vector mapping is not knn_vector."""
         patch_lambda_handler(monkeypatch, "keyword")
 
-        resp = lambda_function.handler({}, {})
+        resp = lambda_function.handler({}, mock_lambda_context)
 
         assert resp["statusCode"] == SUCCESS_CODE
         assert resp["index_exists"] is True
@@ -130,11 +132,11 @@ class TestHandler:
             }
         }
 
-    def test_handler_clear_index_deletes_and_recreates(self, monkeypatch):
+    def test_handler_clear_index_deletes_and_recreates(self, monkeypatch, mock_lambda_context):
         """Test clear_index action deletes existing index and recreates it."""
         mock_client = patch_lambda_handler(monkeypatch, "knn_vector", initially_exists=True)
 
-        resp = lambda_function.handler({"action": "clear_index"}, {})
+        resp = lambda_function.handler({"action": "clear_index"}, mock_lambda_context)
 
         assert resp["statusCode"] == SUCCESS_CODE
         assert resp["action"] == "clear_index"
@@ -143,11 +145,11 @@ class TestHandler:
         assert mock_client.indices.delete_calls == [INDEX_NAME]
         assert mock_client.indices.create_calls == [INDEX_NAME]
 
-    def test_handler_clear_index_when_no_existing_index(self, monkeypatch):
+    def test_handler_clear_index_when_no_existing_index(self, monkeypatch, mock_lambda_context):
         """Test clear_index action when the index doesn't exist yet."""
         mock_client = patch_lambda_handler(monkeypatch, "knn_vector")
 
-        resp = lambda_function.handler({"action": "clear_index"}, {})
+        resp = lambda_function.handler({"action": "clear_index"}, mock_lambda_context)
 
         assert resp["statusCode"] == SUCCESS_CODE
         assert resp["action"] == "clear_index"
@@ -156,13 +158,13 @@ class TestHandler:
         assert mock_client.indices.delete_calls == []
         assert mock_client.indices.create_calls == [INDEX_NAME]
 
-    def test_handler_set_slowlog_updates_index_settings(self, monkeypatch):
+    def test_handler_set_slowlog_updates_index_settings(self, monkeypatch, mock_lambda_context):
         """Test set_slowlog action updates slowlog thresholds and returns index metadata."""
         mock_client = patch_lambda_handler(monkeypatch, "knn_vector", initially_exists=True)
 
         resp = lambda_function.handler(
             {"action": "set_slowlog", "threshold_ms": THRESHOLD_MS},
-            {},
+            mock_lambda_context,
         )
 
         assert resp["statusCode"] == SUCCESS_CODE

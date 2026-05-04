@@ -52,6 +52,7 @@ class TestHandler:
         mock_opensearch,
         mocker,
         snapshot: Snapshot,
+        mock_lambda_context,
     ):
         """Test handler with no failures."""
         selected_candidate = {
@@ -64,7 +65,7 @@ class TestHandler:
             return_value=type("SelectedCandidate", (), selected_candidate)(),
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -96,11 +97,40 @@ class TestHandler:
             "handler_success_ttc_metadata_output.json",
         )
 
-    def test_handler_with_no_records(self, example_sqs_event, mock_opensearch):
+    def test_save_ttc_metadata_output(
+        self,
+        mock_aws_setup,
+    ):
+        """Test saving TTC metadata output to S3."""
+        ttc_metadata_output = {
+            "persistence_id": mock_aws_setup.persistence_id,
+            "eicr_metadata": {},
+            "schematron_errors": {},
+            "processed_at": "<processed_at>",
+        }
+        s3_client = lambda_handler.create_s3_client()
+
+        lambda_function._save_ttc_metadata_output(
+            persistence_id=mock_aws_setup.persistence_id,
+            ttc_metadata_output=ttc_metadata_output,
+            s3_client=s3_client,
+            bucket_name=S3_BUCKET,
+        )
+
+        result = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
+            )
+        )
+
+        assert result == ttc_metadata_output
+
+    def test_handler_with_no_records(self, example_sqs_event, mock_opensearch, mock_lambda_context):
         """Test handler with no records."""
         example_sqs_event["Records"] = []
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -109,11 +139,13 @@ class TestHandler:
         assert resp["num_success_eicrs"] == 0
         assert mock_opensearch.search.call_count == expected_num_errors
 
-    def test_handler_with_empty_body(self, example_sqs_event, caplog_warning, mock_opensearch):
+    def test_handler_with_empty_body(
+        self, example_sqs_event, caplog_warning, mock_opensearch, mock_lambda_context
+    ):
         """Test handler with an empty SQS body."""
         example_sqs_event["Records"][0]["body"] = None
         expected_num_errors = 0
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert "Empty SQS body" in caplog_warning.text
         assert resp == {
             "statusCode": 200,
@@ -122,27 +154,35 @@ class TestHandler:
         }
         assert mock_opensearch.search.call_count == expected_num_errors
 
-    def test_handler_fails_when_event_has_no_bucket(self, example_sqs_event, mock_opensearch):
+    def test_handler_fails_when_event_has_no_bucket(
+        self, example_sqs_event, mock_opensearch, mock_lambda_context
+    ):
         """Test handler reports failure when S3 event payload is missing a bucket name."""
         payload = json.loads(example_sqs_event["Records"][0]["body"])
         del payload["detail"]["bucket"]["name"]
         example_sqs_event["Records"][0]["body"] = json.dumps(payload)
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert resp["num_failure_eicrs"] == 1
         assert resp["num_success_eicrs"] == 0
         assert "No bucket name found" in resp["failures"][0]["error"]
 
     def test_handler_saves_metadata_when_no_relevant_schematron_fields(
-        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker, snapshot: Snapshot
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+        snapshot: Snapshot,
+        mock_lambda_context,
     ):
         """Test handler saves TTC metadata output when no relevant Schematron fields are found."""
         mocker.patch(
             "text_to_code_lambda.lambda_function._load_schematron_data_fields", return_value=[]
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
             "statusCode": 200,
             "message": "TTC processed successfully!",
@@ -171,7 +211,7 @@ class TestHandler:
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_continues_processing_after_record_exception(
-        self, example_sqs_event, mocker, mock_opensearch
+        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
     ):
         """Test handler continues processing remaining records when one record raises an exception."""
         example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
@@ -182,7 +222,7 @@ class TestHandler:
             side_effect=[Exception("boom"), None],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
         assert resp == {
@@ -197,7 +237,7 @@ class TestHandler:
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_returns_failures_when_all_records_raise(
-        self, example_sqs_event, mocker, mock_opensearch
+        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
     ):
         """Test handler returns aggregated failures when all records raise exceptions."""
         example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
@@ -209,7 +249,7 @@ class TestHandler:
             side_effect=[Exception("first failure"), Exception("second failure")],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
         assert resp == {
@@ -225,7 +265,13 @@ class TestHandler:
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_continues_when_selected_candidate_is_none(
-        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker, snapshot: Snapshot
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+        snapshot: Snapshot,
+        mock_lambda_context,
     ):
         """Test handler skips embedding and OpenSearch when no candidate is selected."""
         mocker.patch(
@@ -236,7 +282,7 @@ class TestHandler:
         retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
         reranker_mock = mocker.patch.object(lambda_function, "rerank")
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert resp == {
             "statusCode": 200,
@@ -273,7 +319,13 @@ class TestHandler:
         )
 
     def test_handler_adds_unmatched_error_when_selected_candidate_has_no_opensearch_hits(
-        self, example_sqs_event, mock_aws_setup, mock_opensearch, mocker, snapshot: Snapshot
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+        snapshot: Snapshot,
+        mock_lambda_context,
     ):
         """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
         selected_candidate = {
@@ -303,7 +355,7 @@ class TestHandler:
             return_value=[],
         )
 
-        resp = lambda_function.handler(example_sqs_event, {})
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert resp == {
             "statusCode": 200,
@@ -339,7 +391,7 @@ class TestHandler:
         )
 
     def test_process_record_pipeline_returns_no_matches_found_when_no_candidates_are_selected(
-        self, mock_aws_setup, mock_opensearch, mocker
+        self, mock_aws_setup, mock_opensearch, mocker, mock_lambda_context
     ):
         """Test pipeline returns no_matches_found when no relevant candidates are selected."""
         mocker.patch(

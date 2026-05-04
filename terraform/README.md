@@ -100,6 +100,69 @@ The augmentation Lambda uses only the Lambda security group (not the OpenSearch 
 
 Environment variables injected at deploy time: `S3_BUCKET`, `AUGMENTED_EICR_PREFIX`, `AUGMENTATION_METADATA_PREFIX`, `REGION`.
 
+### Logging
+
+Lambda packages use `aws_lambda_powertools.Logger` for structured JSON logging.
+
+The different text-to-code Lambdas emit structured logs with consistent keys so a TTC invocation can be correlated with the augmentation job that consumes its output. Lambda handlers use `@logger.inject_lambda_context` so Powertools adds Lambda runtime metadata, including `function_request_id`.
+
+Standard log keys:
+
+- `function_request_id`: Injected by Powertools from the Lambda context
+- `persistence_id`: Shared identifier used to correlate TTC output with augmentation input
+- `bucket_name`: S3 bucket being read from or written to
+- `trigger_s3_key`: S3 object key from the EventBridge/SQS event that triggered the Lambda record
+- `s3_key`: S3 object key being read from or written to by a specific log line
+- `status`: Processing state or terminal result, such as `processing`, `success`, `skipped`, `error`, `matched`, `no_matches_found`, or `partial_failure`
+
+Lambda entry points initialize a service logger:
+
+```python
+from aws_lambda_powertools import Logger
+
+logger = Logger(service="ttc")
+```
+
+Lambda handlers inject runtime context:
+
+```python
+@logger.inject_lambda_context
+def handler(event, context):
+    ...
+```
+
+Use `trigger_s3_key` for the incoming event object and `s3_key` for individual S3 read/write operations:
+
+```python
+with logger.append_context_keys(
+    persistence_id=persistence_id,
+    bucket_name=bucket_name,
+    trigger_s3_key=object_key,
+):
+    logger.info("Processing TTC event", status="processing")
+```
+
+```python
+logger.info(
+    "Retrieving eICR from S3",
+    bucket_name=bucket_name,
+    s3_key=object_key,
+    status="processing",
+)
+```
+
+Core library packages that are also used outside Lambda should continue to use stdlib `logging` instead of Powertools. This keeps non-Lambda callers such as data-curation and evaluator scripts from depending on Lambda-specific logging behavior. Lambda packages are responsible for using Powertools at the invocation boundary and emitting the structured fields needed for CloudWatch correlation.
+
+Do not use `print()` or `structlog` in Lambda packages.
+
+Example CloudWatch Logs Insights query:
+
+```sql
+fields @timestamp, service, function_name, function_request_id, persistence_id, bucket_name, trigger_s3_key, s3_key, status, message
+| filter persistence_id = "REPLACE_WITH_PERSISTENCE_ID"
+| sort @timestamp asc
+```
+
 ### OpenSearch Ingestion Pipeline (`main.tf`)
 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
