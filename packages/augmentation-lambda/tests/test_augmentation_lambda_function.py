@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -12,11 +13,11 @@ import lambda_handler
 from augmentation_lambda import lambda_function
 from validation import validate_eicr
 
-S3_BUCKET = "dibbs-text-to-code"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
-AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
-AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
-TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+S3_BUCKET = os.environ["S3_BUCKET"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
+AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
 
 
