@@ -7,16 +7,17 @@ import moto
 import pytest
 
 from augmentation_lambda import lambda_function
-from lambda_handler.test_constants import AWS_ACCESS_KEY_ID
-from lambda_handler.test_constants import AWS_REGION
-from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
-from lambda_handler.test_constants import S3_BUCKET
-from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 
-TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
-AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
-AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
+S3_BUCKET = os.environ["S3_BUCKET"]
+AWS_REGION = os.environ["AWS_REGION"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
+
+TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
+AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 
 TEST_EICR_PATH = (
     Path(__file__).parent.parent.parent
@@ -52,18 +53,6 @@ def test_ttc_output() -> dict:
             ]
         },
     }
-
-
-def pytest_configure() -> None:
-    """Configure env variables for pytest."""
-    os.environ["S3_BUCKET"] = S3_BUCKET
-    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
-    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
-    os.environ["AUGMENTED_EICR_PREFIX"] = AUGMENTED_EICR_PREFIX
-    os.environ["AUGMENTATION_METADATA_PREFIX"] = AUGMENTATION_METADATA_PREFIX
-    os.environ["AWS_REGION"] = AWS_REGION
-    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
-    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
 
 
 @pytest.fixture
