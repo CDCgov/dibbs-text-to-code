@@ -90,7 +90,7 @@ and a label: 1 for positive terms, 2 for negative terms. Optionally, the cript c
 
 ---
 
-### terminology_valueset_sync.py
+### terminology_extraction.py
 
 Contains various functions to pull data from SNOMED, LOINC, and HL7 APIs to provide data for the TTC model. For detailed instructions on how to use the various scripts [see instruction section below](#command-line)
 
@@ -414,7 +414,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
 - **HELP**
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --help`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --help`
 
 ![CLI_HELP](./assets/CLI_HELP1.jpg)
 
@@ -424,7 +424,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your loinc username and password are [set as environment variables](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --lab_orders`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --lab_orders`
   - A file named loinc*lab_orders*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -433,7 +433,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your loinc username and password are [set as environment variables](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --lab_obs`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --lab_obs`
   - A file named loinc*lab_result*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -442,7 +442,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your loinc username and password are [set as environment variables](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --lab_names`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --lab_names`
   - A file named loinc*lab_names*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -451,7 +451,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --lab_values`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --lab_values`
   - A file named snomed*lab_values*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -459,7 +459,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
 - [**Lab Interpretations**](#hl7)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --lab_interp`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --lab_interp`
   - A file named hl7*lab_interp*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -489,7 +489,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - This will save the necessary data in a file within the repo that will be used to generate the LOINC Part Abbreviation Files.
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --loinc_abbr_syn`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --loinc_abbr_syn`
   - Several files with a similar pattern for all the different LOINC Parts: loinc*<part>/\_abbrv_syn*<current date (YYYYMMDD)>.json will be created in the [data folder](../../data/)
 
 ---
@@ -497,7 +497,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
 - [**Loinc Lab UMLS Related Names**](#loinc-umls-related-names)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --loinc_umls_syn`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --loinc_umls_syn`
   - A file named loinc*umls_related_names*<current date (YYYYMMDD)>.json will be created in the [data folder](../../data/)
 
   :warning: **NOTE: This will take approximately 36 hours to complete, but if you stop it or you receive an error, you can restart this process and it will pick up where it left off** :warning:
@@ -507,7 +507,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
 - [**Encounter Act (Type) Codes**](#hl7)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --encounter_code`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --encounter_code`
   - A file named hl7*encounter_code*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -516,7 +516,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --vaccine`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --vaccine`
   - A file named vsac*cvx_vaccines*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -525,7 +525,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --medication`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --medication`
   - A file named vsac*rxnorm_medications*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -534,7 +534,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Make sure your UMLS API Key is [set as an environment variable](#dependencies)
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --problem`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --problem`
   - A file named vsac*snomed_problems*<current date (YYYYMMDD)>.csv will be created in the [data folder](../../data/)
 
 ---
@@ -543,7 +543,7 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - Ensure that all [dependencies](#dependencies) are handled
   - In a terminal at the base of the dibbs-text-to-code
   - enter `just bootstrap`
-  - then enter `uv run packages/data-curation/src/data_curation/terminology_valueset_sync.py --all`
+  - then enter `uv run packages/data-curation/src/data_curation/terminology_extraction.py --all`
   - All processes for the various extracts, listed above, will run created all subsequent files in the [data folder](../../data/)
 
 ---
