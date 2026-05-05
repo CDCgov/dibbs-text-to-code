@@ -2,6 +2,7 @@ import os
 import typing
 
 import boto3
+from aws_lambda_powertools import Logger
 from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
 from botocore.credentials import Credentials
@@ -13,6 +14,8 @@ from requests_aws4auth import AWS4Auth
 from utils import get_env_variable
 
 from .models import OpenSearchResult
+
+logger = Logger(service="lambda-handler", child=True)
 
 _cached_aws_auth: AWS4Auth | None = None
 _cached_s3_client: BaseClient | None = None
@@ -62,6 +65,7 @@ def create_aws_auth() -> AWS4Auth:
             "es",
             session_token=credentials.token,
         )
+        logger.info("Created AWS auth", status="success")
 
     return _cached_aws_auth
 
@@ -81,6 +85,7 @@ def create_s3_client() -> BaseClient:
             endpoint_url=endpoint_url,
             region_name=region_name,
         )
+        logger.info("Created S3 client", status="success")
 
     return _cached_s3_client
 
@@ -103,6 +108,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
             verify_certs=True,
             connection_class=RequestsHttpConnection,
         )
+        logger.info("Created OpenSearch client", status="success")
 
     return _cached_opensearch_client
 
@@ -119,11 +125,30 @@ def get_file_content_from_s3(
     """
     client = s3_client or create_s3_client()
 
+    logger.info(
+        "Retrieving file content from S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="processing",
+    )
+
     # Check if object exists
     if not check_s3_object_exists(client, bucket_name, object_key):
+        logger.warning(
+            "S3 object not found",
+            bucket_name=bucket_name,
+            s3_key=object_key,
+            status="error",
+        )
         raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}")
 
     response = client.get_object(Bucket=bucket_name, Key=object_key)
+    logger.info(
+        "Retrieved file content from S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="success",
+    )
     return response["Body"].read().decode("utf-8")
 
 
@@ -135,6 +160,13 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     """
     bucket_name = event.get("detail", {}).get("bucket", {}).get("name")
     object_key = event["detail"]["object"]["key"]
+
+    logger.info(
+        "Extracted EventBridge S3 event data",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="success",
+    )
 
     return {"bucket_name": bucket_name, "object_key": object_key}
 
@@ -153,7 +185,19 @@ def put_file(
     :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
     client = s3_client or create_s3_client()
+    logger.info(
+        "Uploading file to S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="processing",
+    )
     client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
+    logger.info(
+        "Uploaded file to S3",
+        bucket_name=bucket_name,
+        s3_key=object_key,
+        status="success",
+    )
 
 
 def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool:
@@ -167,14 +211,25 @@ def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool
     """
     try:
         s3_client.head_object(Bucket=bucket, Key=key)
+        logger.info("S3 object exists", bucket_name=bucket, s3_key=key, status="success")
         return True
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
 
         if error_code in ("404", "NoSuchKey"):
+            logger.warning(
+                "S3 object does not exist", bucket_name=bucket, s3_key=key, status="error"
+            )
             return False
 
         msg = f"Unexpected error while fetching file from S3: {bucket}/{key}. Error: {e.response['Error']['Message']}"
+        logger.exception(
+            "Unexpected error while fetching file from S3",
+            bucket_name=bucket,
+            s3_key=key,
+            error=e.response["Error"]["Message"],
+            status="error",
+        )
         raise Exception(msg) from e
 
 
@@ -191,10 +246,23 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
 
     """
     if not object_key.startswith(input_prefix):
+        logger.error(
+            "S3 object key does not start with expected prefix",
+            s3_key=object_key,
+            input_prefix=input_prefix,
+            status="error",
+        )
         raise ValueError(
             f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'"
         )
-    return object_key[len(input_prefix) :]
+    persistence_id = object_key[len(input_prefix) :]
+    logger.info(
+        "Extracted persistence_id from S3 object key",
+        s3_key=object_key,
+        persistence_id=persistence_id,
+        status="success",
+    )
+    return persistence_id
 
 
 def retrieve_opensearch_results(
@@ -204,12 +272,22 @@ def retrieve_opensearch_results(
 
     :param query: The OpenSearch query to execute.
     :param index: The OpenSearch index to search.
-    :param open_search_client: The OpenSearch client to use for the query.
+    :param opensearch_client: The OpenSearch client to use for the query.
     :return: The search results returned by OpenSearch.
     """
+    logger.info(
+        "Retrieving OpenSearch results",
+        index=index,
+        status="processing",
+    )
     response = opensearch_client.search(
         index=index,
         body=query,
+    )
+    logger.info(
+        "Retrieved OpenSearch results",
+        index=index,
+        status="success",
     )
 
     return OpenSearchResult(**response)
