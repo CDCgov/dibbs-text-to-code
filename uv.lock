@@ -838,22 +838,20 @@ wheels = [
 
 [[package]]
 name = "moto"
-version = "5.1.20"
+version = "5.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "botocore" },
     { name = "cryptography" },
-    { name = "jinja2" },
-    { name = "python-dateutil" },
     { name = "requests" },
     { name = "responses" },
     { name = "werkzeug" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/93/6b696aab5174721696a17716a488086e21f7b2547b4c9517f799a9b25e9e/moto-5.1.20.tar.gz", hash = "sha256:6d12d781e26a550d80e4b7e01d5538178e3adec6efbdec870e06e84750f13ec0", size = 8318716, upload-time = "2026-01-17T21:49:00.101Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/25/6aab597cc8ad992b6052e544130e8065d9639825b5a78728573b4f408750/moto-5.2.0.tar.gz", hash = "sha256:be592dd93cc016a94afe2e2cae5de59c2df1cdd9d017c497d9a81e507ebe7fc8", size = 8632930, upload-time = "2026-05-02T09:32:09.945Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/2f/f50892fdb28097917b87d358a5fcefd30976289884ff142893edcb0243ba/moto-5.1.20-py3-none-any.whl", hash = "sha256:58c82c8e6b2ef659ef3a562fa415dce14da84bc7a797943245d9a338496ea0ea", size = 6392751, upload-time = "2026-01-17T21:48:57.099Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/6b/613c9d9ee4ea7ee2d03199ee45b235326043e94d2149126a6951b5037846/moto-5.2.0-py3-none-any.whl", hash = "sha256:d728d5c9c431e0f1043d907bebd663b09a9105c62380991068598a3799373a85", size = 6671253, upload-time = "2026-05-02T09:32:06.312Z" },
 ]
 
 [[package]]
