@@ -10,17 +10,20 @@ to generate and maintain embeddings in Opensearch for TTC.
 """
 import csv
 from datetime import datetime
+import json
 import os
 import requests
 from .general import clean_text_string
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
-LOINC_LAB_ORDER_SUFFIX = "query=orderobs:Order+OR+orderobs:Both&rows=500"
-LOINC_LAB_RESULT_SUFFIX = "query=orderobs:Observation+OR+orderobs:Both&rows=500"
-LOINC_LAB_NAMES_SUFFIX = "query=orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation&rows=500"
+LOINC_LAB_ORDER_QUERY = "orderobs:Order+OR+orderobs:Both&rows=500"
+#"query=orderobs:Order+OR+orderobs:Both&rows=500"
+LOINC_LAB_RESULT_QUERY = "orderobs:Observation+OR+orderobs:Both&rows=500"
+LOINC_LAB_NAMES_QUERY = "orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation&rows=500"
 UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
 UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
+LOINC_META_URL = "https://loinc.regenstrief.org/api/v1/Loinc"
 
 # Get LOINC Username and Password
 LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
@@ -29,6 +32,9 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 # LOINC Specific Files & Directories
 LOINC_CS_NAMES = "./data/snoinc_extracts/loinc_other/consumer_names.csv"
 LOINC_PARTS_ABBRV_SYNONYMS = "./data/snoinc_extracts/loinc_other/loinc_parts_abbrv_synonyms.txt"
+LAB_NAMES = "loinc_lab_names"
+LAB_ORDERS = "loinc_lab_orders"
+LAB_RESULT = "loinc_lab_result"
 
 # Data Filter Criteria
 LOINC_TEXT_TO_FILTER = [
@@ -36,8 +42,14 @@ LOINC_TEXT_TO_FILTER = [
 ]
 
 
-def get_loinc_lab_names():  # noqa: D103
-    api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
+def get_loinc_lab_names(version: str = ""):  # noqa: D103
+    # if version is supplied we grab the delta 
+    # and filter based upon version changes
+    # otherwise grab all Orders/Obsersavtions/Both
+    if version != "":
+        api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_NAMES_QUERY
+    else:
+        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_NAMES_QUERY}" 
     loinc_vs_type = "Lab Names"
     all_loinc_rows = process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -46,8 +58,14 @@ def get_loinc_lab_names():  # noqa: D103
     return all_loinc_rows
 
 
-def get_loinc_lab_orders():  # noqa: D103
-    api_url = LOINC_BASE_URL + LOINC_LAB_ORDER_SUFFIX
+def get_loinc_lab_orders(version: str = ""):  # noqa: D103
+     # if version is supplied we grab the delta 
+    # and filter based upon version changes
+    # otherwise grab all Orders
+    if version != "":
+        api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_ORDER_QUERY
+    else:
+        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = process_loinc_valueset(api_url, loinc_vs_type)
     # Now let's add the ConsumerName for each of the loinc codes
@@ -56,8 +74,14 @@ def get_loinc_lab_orders():  # noqa: D103
     return loinc_order_rows
 
 
-def get_loinc_lab_results():  # noqa: D103
-    api_url = LOINC_BASE_URL + LOINC_LAB_RESULT_SUFFIX
+def get_loinc_lab_results(version: str = ""):  # noqa: D103
+     # if version is supplied we grab the delta 
+    # and filter based upon version changes
+    # otherwise grab all Obsersavtions
+    if version != "":
+        api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_RESULT_QUERY
+    else:
+        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_RESULT_QUERY}"
     loinc_vs_type = "Lab Results"
     loinc_result_rows = process_loinc_valueset(api_url, loinc_vs_type)
     # Now let's add the ConsumerName for each of the loinc codes
@@ -146,7 +170,7 @@ def get_loinc_umls_urls(loinc_results, loinc_rows_list):
 
 
 def process_loincs_for_umls_urls() -> dict:
-    loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_SUFFIX
+    loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_QUERY
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
@@ -200,6 +224,8 @@ def get_loinc_consumer_names(loinc_rows):
         cs_name = cs_names.get(loinc_code)
         if cs_name:
             row["consumer_name"] = cs_name
+        else:
+            row["consumer_name"] = None
     return loinc_rows
 
 
@@ -209,3 +235,133 @@ def _filter_loinc_term(text: str) -> bool:
         if filter_text in text:
             result = True
     return result
+
+
+def get_loinc_current_version_data() -> (str, str):  # noqa: D103
+    if LOINC_USERNAME is None or LOINC_PWD is None:
+        raise KeyError(
+            "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
+        )
+    loinc_response = requests.get(LOINC_META_URL, auth=(LOINC_USERNAME, LOINC_PWD))
+    if loinc_response.status_code != 200:
+        print(
+            f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
+        )
+        return None
+    loinc_meta = json.loads(loinc_response.text)
+    loinc_version_date = datetime.fromisoformat(loinc_meta["releaseDate"]).strftime("%Y-%m-%d")
+    loinc_version = loinc_meta["version"]
+    return loinc_version, loinc_version_date
+
+
+def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str):
+    delta_extract_rows = get_loinc_lab_names(new_version)
+    embedding_candidates = []
+    change_log = {
+                "short_name": 0,
+                "long_name": 0,
+                "display_name": 0,
+                "full_name": 0,
+                "consumer_name": 0,
+                "New LOINC": 0,
+                "LOINC Type": 0,
+    }                  
+    for update_loinc_record in delta_extract_rows:
+        loinc_code = update_loinc_record['code']
+        current_loinc_record = current_loinc_dict.get(loinc_code)
+        changes = []
+
+        if current_loinc_record is None:
+            # new loinc code
+            change_log["New LOINC"] += 1
+            changes.append("New LOINC")
+        elif current_loinc_record["lab_type"] != update_loinc_record["lab_type"]:
+            change_log["LOINC Type"] += 1
+            changes.append("LOINC Type")
+            print(f"FOR LOINC CODE: {loinc_code}")
+            print(f"LOINC_TYPE WENT FROM: {current_loinc_record["lab_type"]} TO: {update_loinc_record["lab_type"]}")
+        else:
+            if current_loinc_record["short_name"] != update_loinc_record["short_name"]:
+                change_log["short_name"] += 1
+                changes.append("short_name")
+            if current_loinc_record["long_name"] != update_loinc_record["long_name"]:
+                change_log["long_name"] += 1
+                changes.append("long_name")
+            if current_loinc_record["display_name"] != update_loinc_record["display_name"]:
+                change_log["display_name"] += 1
+                changes.append("display_name")
+            if current_loinc_record["full_name"] != update_loinc_record["full_name"]:
+                change_log["full_name"] += 1
+                changes.append("full_name")
+            if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
+                change_log["consumer_name"] += 1
+                changes.append("consumer_name")
+        embedding_candidates.extend(get_embedding_candidates(loinc_code,update_loinc_record,changes))
+    # test_lc = delta_extract_rows[0]['code']
+    # print(f"DELTA ROW 1:::   {delta_extract_rows[0]}")
+    # print(f"Current Extract Row 1:::   {current_loinc_dict[test_lc]}")
+    print(f"EMB CANDIDATES: {len(embedding_candidates)}")
+    print(change_log)
+
+
+def get_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+    emb_candidates = []
+    emb_candidate = {}
+    short_name = loinc_row["short_name"]
+    loinc_code = loinc_code
+    loinc_type = loinc_row["lab_type"]
+    property = loinc_row["property"]
+    time_aspect = loinc_row["time_aspect"]
+    system = loinc_row["system"]
+    scale = loinc_row["scale_type"]
+    method = loinc_row["method_type"]
+    class_type = loinc_row["class_type"]
+    long_name = loinc_row["long_name"]
+    display_name = loinc_row["display_name"]
+    full_name = loinc_row["full_name"]
+    consumer_name = loinc_row["consumer_name"]
+
+    emb_candidate["loinc_code"] = loinc_code
+    emb_candidate["loinc_type"] = loinc_type
+    emb_candidate["property"] = property
+    emb_candidate["time"] = time_aspect
+    emb_candidate["system"] = system
+    emb_candidate["scale"] = scale
+    emb_candidate["method"] = method
+    emb_candidate["class"] = class_type
+
+    # just add the whole row for each of the different 
+    # terms used for embedding with the other fields
+    # the same, when it's a NEW LOINC or the LOINC TYPE changes
+    if ("LOINC Type" in element_changes or
+        "New LOINC" in element_changes or
+        "short_name" in element_changes):
+        emb_candidate["loinc_name_type"] = "short_name"
+        emb_candidate["term"] = short_name # same as codes or name_codes in embedding notebook
+        emb_candidates.append(emb_candidate)
+    if ("LOINC Type" in element_changes or
+        "New LOINC" in element_changes or
+        "long_name" in element_changes):
+        emb_candidate["loinc_name_type"] = "long_name"
+        emb_candidate["term"] = long_name # same as codes or name_codes in embedding notebook
+        emb_candidates.append(emb_candidate)
+    if ("LOINC Type" in element_changes or
+        "New LOINC" in element_changes or
+        "display_name" in element_changes):
+        emb_candidate["loinc_name_type"] = "display_name"
+        emb_candidate["term"] = display_name # same as codes or name_codes in embedding notebook
+        emb_candidates.append(emb_candidate)
+    if ("LOINC Type" in element_changes or
+        "New LOINC" in element_changes or
+        "full_name" in element_changes):
+        emb_candidate["loinc_name_type"] = "full_name"
+        emb_candidate["term"] = full_name # same as codes or name_codes in embedding notebook
+        emb_candidates.append(emb_candidate)
+    if ("LOINC Type" in element_changes or
+        "New LOINC" in element_changes or
+        "consumer_name" in element_changes):
+        emb_candidate["loinc_name_type"] = "consumer_name"
+        emb_candidate["term"] = consumer_name # same as codes or name_codes in embedding notebook
+        emb_candidates.append(emb_candidate)
+    return emb_candidates
+
