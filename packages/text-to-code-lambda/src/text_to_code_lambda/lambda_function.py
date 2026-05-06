@@ -272,12 +272,9 @@ def _process_schematron_errors(
         data_field = error.field
         criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
 
-        if data_field not in ttc_output["schematron_errors"]:
-            ttc_output["schematron_errors"][data_field] = []
-        if data_field not in ttc_output["unmatched_schematron_errors"]:
-            ttc_output["unmatched_schematron_errors"][data_field] = []
-        if data_field not in ttc_metadata_output["schematron_errors"]:
-            ttc_metadata_output["schematron_errors"][data_field] = []
+        ttc_output["schematron_errors"].setdefault(data_field, [])
+        ttc_output["unmatched_schematron_errors"].setdefault(data_field, [])
+        ttc_metadata_output["schematron_errors"].setdefault(data_field, [])
 
         text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
