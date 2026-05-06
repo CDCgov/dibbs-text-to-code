@@ -16,7 +16,7 @@
         "error_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
         "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Ordered",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned"
+        "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       },
       {
         "candidate": {},
@@ -27,7 +27,7 @@
         "error_message": "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
         "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
         "field": "Lab Test Name Ordered",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned"
+        "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       }
     ],
     "Lab Test Name Resulted": [
@@ -40,7 +40,7 @@
         "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
         "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Resulted",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned"
+        "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       },
       {
         "candidate": {},
@@ -51,7 +51,7 @@
         "error_message": "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
         "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
         "field": "Lab Test Name Resulted",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned"
+        "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       }
     ]
   }

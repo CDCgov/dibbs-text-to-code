@@ -14,7 +14,7 @@
         "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Ordered",
         "opensearch_retrieved_scores": "<opensearch_retrieved_scores>",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned",
+        "reason": "Selected candidate found, but no OpenSearch code match was returned.",
         "reranker_processed_results": []
       },
       {
@@ -27,7 +27,7 @@
         "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
         "field": "Lab Test Name Ordered",
         "opensearch_retrieved_scores": "<opensearch_retrieved_scores>",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned",
+        "reason": "Selected candidate found, but no OpenSearch code match was returned.",
         "reranker_processed_results": []
       }
     ],
@@ -42,7 +42,7 @@
         "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Resulted",
         "opensearch_retrieved_scores": "<opensearch_retrieved_scores>",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned",
+        "reason": "Selected candidate found, but no OpenSearch code match was returned.",
         "reranker_processed_results": []
       },
       {
@@ -55,7 +55,7 @@
         "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
         "field": "Lab Test Name Resulted",
         "opensearch_retrieved_scores": "<opensearch_retrieved_scores>",
-        "reason": "Selected candidate found, but no OpenSearch code match was returned",
+        "reason": "Selected candidate found, but no OpenSearch code match was returned.",
         "reranker_processed_results": []
       }
     ]
