@@ -197,10 +197,9 @@ class EICRAugmenter(Augmenter):
 
     def _get_new_version_number(self) -> Element:
         """Generate a versionNumber element for the augmented eICR document."""
+        original_version_number = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         version_number_tag = etree.Element("versionNumber")
-        # hard code to 1 for now
-        # TODO: we may need to have some way to increment this later
-        version_number_tag.set("value", "1")
+        version_number_tag.set("value", original_version_number.get("value"))
         return version_number_tag
 
     def _get_augmented_template_id(self) -> Element:
