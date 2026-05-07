@@ -1,5 +1,6 @@
 from datetime import datetime
-from uuid import uuid4
+from uuid import NAMESPACE_URL
+from uuid import uuid5
 
 from lxml import etree
 from lxml.etree import Element
@@ -28,6 +29,7 @@ class EICRAugmenter(Augmenter):
         nonstandard_codes: list[NonstandardCodeInstance],
         config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
+        deterministic_id_seed: str | None = None,
     ):
         """Initialize EICRAugmenter.
 
@@ -40,8 +42,9 @@ class EICRAugmenter(Augmenter):
         super().__init__(document, config, ApplicationCode.TEXT_TO_CODE, augmentation_date)
 
         self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
-        self.new_doc_id: str = str(uuid4())
-        self.new_set_id: str = str(uuid4())
+        self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
+        self.new_doc_id: str = self._generate_deterministic_id("document")
+        self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
 
     def augment(self) -> Metadata:
@@ -175,6 +178,15 @@ class EICRAugmenter(Augmenter):
         """Extract the parent versionNumber from original eICR document."""
         version = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
         return version
+
+    def _generate_deterministic_id(self, identifier_type: str) -> str:
+        """Generate a stable UUID for augmented eICR identifiers."""
+        return str(
+            uuid5(
+                NAMESPACE_URL,
+                f"{self._get_application_code_value()}:{self.deterministic_id_seed}:{identifier_type}",
+            )
+        )
 
     def _get_new_document_id(self) -> Element:
         """Generate a new document ID element for the augmented eICR document."""

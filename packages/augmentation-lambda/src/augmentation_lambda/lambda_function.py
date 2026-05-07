@@ -124,6 +124,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
             document=original_eicr,
             nonstandard_codes=augmenter_input.nonstandard_codes,
             config=config,
+            deterministic_id_seed=augmenter_input.eicr_id,
         )
 
         metadata = augmenter.augment()
