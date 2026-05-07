@@ -156,8 +156,8 @@ class TestEicrAugmenter:
         ):
             EICRAugmenter(EMPTY_ECR, [])
 
-    def test_get_new_version_number_raises_value_error_when_value_is_missing(self):
-        """Tests versionNumber raises ValueError when value attribute is missing."""
+    def test_get_new_version_number_defaults_to_one_when_value_is_missing(self):
+        """Tests versionNumber defaults to 1 when value attribute is missing."""
         eicr_without_version_number_value = BASIC_ECR.replace(
             '<versionNumber value="1" />',
             "<versionNumber />",
@@ -167,11 +167,9 @@ class TestEicrAugmenter:
 
         augmenter = EICRAugmenter(eicr_without_version_number_value, [])
 
-        with pytest.raises(
-            ValueError,
-            match=r"Unable to find value attribute for XPath: /ClinicalDocument/versionNumber",
-        ):
-            augmenter._get_new_version_number()
+        version_number = augmenter._get_new_version_number()
+
+        assert version_number.get("value") == "1"
 
     def test_generates_same_augmented_ids_for_same_seed(self):
         """Tests deterministic augmented identifiers use stable values for the same seed."""
