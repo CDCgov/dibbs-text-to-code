@@ -3,9 +3,9 @@
     <!--DATA AUGMENTATION: eICR Data Augmentation Header -->
     <templateId root="2.16.840.1.113883.10.20.15.2.1.3" extension="2025-11-01"/>
     <!--DATA AUGMENTATION: new-document-id -->
-    <id root="e99f5313-a803-571b-830c-2ced0b33dc10" assigningAuthorityName="text-to-code"/>
+    <id root="12345678-1234-5678-1234-567812345678" assigningAuthorityName="text-to-code"/>
     <!--DATA AUGMENTATION: new-document-setId -->
-    <setId root="cf5b6dbd-a0de-5e97-88e7-b2ef154aa8b7"/>
+    <setId root="87654321-4321-8765-4321-876543218765"/>
     <!--DATA AUGMENTATION: time of data augmentation operation -->
     <effectiveTime value="20260213152757"/>
     <!--DATA AUGMENTATION: new-document-versionNumber -->
