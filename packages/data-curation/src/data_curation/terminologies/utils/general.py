@@ -16,13 +16,16 @@ import os
 import re
 
 
-
+# Value Set Directories
 SNOINC_DIRECTORY = "./data/snoinc_extracts"
 SNOINC_ENHANCEMENTS_DIRECTORY = "./data/snoinc_extracts/enhancements"
-SNOINC_DELTA_DIRECTORY = "./data/snoinc_extracts/deltas"
 TMP_DIRECTORY = "./tmp"
+
+# regex patterns
 MULTIPLE_SPACE = re.compile(r"\s+")
 
+# Keys - the UMLS key is used for more than 
+#   one terminology set so it's here in General
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
@@ -52,7 +55,6 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
     extract_dict = {}
     with open(file_path, mode='r', encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
-        #extract_dict_list = list(reader)
         extract_dict = {row['code']: row for row in reader}
     
     return extract_dict
