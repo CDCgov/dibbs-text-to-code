@@ -23,6 +23,16 @@ def update_loinc_embeddings():
     if len(loinc_updates) > 0:
         # now process the updates into embeddings
         None
+
+    # TODO: add a function here that will clean up
+    # the existing file and make a new one with a new date
+    # so that the next time the process is run it will ensure 
+    # to not add updates unless they are really necessary
+    # 
+    # This will be part of the creating the actual embeddings work
+    #  It will have to succeed from this step to making the embeddings
+    #   into a file or files and then we can update/remove the existing
+    # csv file
     
 
 
