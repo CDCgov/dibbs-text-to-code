@@ -21,7 +21,8 @@ def update_loinc_embeddings():
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
     
     if len(loinc_updates) > 0:
-        # now process the updates into embeddings
+        # TODO: now process the updates into embeddings
+        # This will be handled in the next ticket
         None
 
     # TODO: add a function here that will clean up
