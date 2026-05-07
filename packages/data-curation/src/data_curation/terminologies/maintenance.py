@@ -1,6 +1,10 @@
 
-from data_curation.terminologies.utils.loinc import get_loinc_current_version_data, LAB_NAMES, get_loinc_embedding_candidates
-from data_curation.terminologies.utils.general import get_latest_extract_file_name, get_date_from_latest_filename, load_extract_file_to_dict
+from data_curation.terminologies.utils.loinc import (get_loinc_current_version_data,
+                                                     LAB_NAMES,
+                                                     get_loinc_embedding_candidates)
+from data_curation.terminologies.utils.general import (get_latest_extract_file_name, 
+                                                       get_date_from_latest_filename, 
+                                                       load_extract_file_to_dict)
 
 
 def update_loinc_embeddings():
@@ -8,26 +12,23 @@ def update_loinc_embeddings():
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     file_date = get_date_from_latest_filename(current_loinc_file,"loinc")
     if (file_date <= loinc_version_date):
-        print("UPDATE IS A GO!")
+        print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
-        get_loinc_embedding_candidates(loinc_current_dict,loinc_version)
+        loinc_updates = get_loinc_embedding_candidates(loinc_current_dict,loinc_version)
 
     else:
-        print("DO NOTHING!")
+        print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
+    
+    if len(loinc_updates) > 0:
+        # now process the updates into embeddings
+        None
+    
 
 
-def main():
-    update_loinc_embeddings()
-    # loinc_data1, loinc_data2 = get_loinc_current_version_data()
-    # print(loinc_data1)
-    # print(loinc_data2)
-    # filename = get_latest_extract_file_name(LAB_NAMES)
-    # print(filename)
-    # file_date = get_date_from_latest_filename(filename,"loinc")
-    # print(file_date)
-
-
+def main(all: bool = False, loinc=False):
+    if all or loinc:
+        update_loinc_embeddings()
 
 if __name__ == "__main__":
-    main()
+    main(all=True)

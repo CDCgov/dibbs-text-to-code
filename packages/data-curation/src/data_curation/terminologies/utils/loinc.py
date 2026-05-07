@@ -254,16 +254,16 @@ def get_loinc_current_version_data() -> (str, str):  # noqa: D103
     return loinc_version, loinc_version_date
 
 
-def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str):
+def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -> list[dict]:
     delta_extract_rows = get_loinc_lab_names(new_version)
     embedding_candidates = []
     change_log = {
+                "New LOINC": 0,
                 "short_name": 0,
                 "long_name": 0,
                 "display_name": 0,
                 "full_name": 0,
                 "consumer_name": 0,
-                "New LOINC": 0,
                 "LOINC Type": 0,
     }                  
     for update_loinc_record in delta_extract_rows:
@@ -281,7 +281,7 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str):
             print(f"FOR LOINC CODE: {loinc_code}")
             print(f"LOINC_TYPE WENT FROM: {current_loinc_record["lab_type"]} TO: {update_loinc_record["lab_type"]}")
         else:
-            if current_loinc_record["short_name"] != update_loinc_record["short_name"]:
+            if current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip():
                 change_log["short_name"] += 1
                 changes.append("short_name")
             if current_loinc_record["long_name"] != update_loinc_record["long_name"]:
@@ -296,15 +296,13 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str):
             if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
                 change_log["consumer_name"] += 1
                 changes.append("consumer_name")
-        embedding_candidates.extend(get_embedding_candidates(loinc_code,update_loinc_record,changes))
-    # test_lc = delta_extract_rows[0]['code']
-    # print(f"DELTA ROW 1:::   {delta_extract_rows[0]}")
-    # print(f"Current Extract Row 1:::   {current_loinc_dict[test_lc]}")
-    print(f"EMB CANDIDATES: {len(embedding_candidates)}")
-    print(change_log)
+        embedding_candidates.extend(_create_embedding_candidates(loinc_code,update_loinc_record,changes))
+    print(f"EMB CANDIDATES: {len(embedding_candidates)} see counts of the various changes below")
+    print(json.dumps(change_log, indent=4))
+    return embedding_candidates
 
 
-def get_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
     emb_candidates = []
     emb_candidate = {}
     short_name = loinc_row["short_name"]
@@ -333,9 +331,10 @@ def get_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
     # the same, when it's a NEW LOINC or the LOINC TYPE changes
-    if ("LOINC Type" in element_changes or
+    if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
-        "short_name" in element_changes):
+        "short_name" in element_changes)
+        and short_name ):
         emb_candidate["loinc_name_type"] = "short_name"
         emb_candidate["term"] = short_name # same as codes or name_codes in embedding notebook
         emb_candidates.append(emb_candidate)
