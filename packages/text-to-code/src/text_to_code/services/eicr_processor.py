@@ -70,6 +70,7 @@ class EicrProcessor:
                     "base_xpath": base_xpath,
                     "data_field": str(data_field),
                     "sub_xpaths": sub_xpaths,
+                    "status": "error",
                 },
             )
             return candidates

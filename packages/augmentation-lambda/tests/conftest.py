@@ -7,16 +7,17 @@ import moto
 import pytest
 
 from augmentation_lambda import lambda_function
-from lambda_handler.test_constants import AWS_ACCESS_KEY_ID
-from lambda_handler.test_constants import AWS_REGION
-from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
-from lambda_handler.test_constants import S3_BUCKET
-from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 
-TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
-AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
-AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
+S3_BUCKET = os.environ["S3_BUCKET"]
+AWS_REGION = os.environ["AWS_REGION"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
+
+TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
+AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 
 TEST_EICR_PATH = (
     Path(__file__).parent.parent.parent
@@ -26,40 +27,32 @@ TEST_EICR_PATH = (
     / "basic_test_eicr.xml"
 )
 
-TEST_TTC_OUTPUT = {
-    "persistence_id": TEST_PERSISTENCE_ID,
-    "eicr_metadata": {},
-    "schematron_errors": {
-        "Lab Test Name Resulted": [
-            {
-                "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-                "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
-                "field_type": "Lab Test Name Resulted",
-                "new_translation": {
-                    "code": "109224-6",
-                    "code_system": "2.16.840.1.113883.6.1",
-                    "code_system_name": "LOINC",
-                    "display_name": "Weed Allergen Mix 3 IgE Ab",
-                    "value_set": None,
-                    "value_set_version": None,
-                    "original_text": "A custom code in original text.",
-                },
-            }
-        ]
-    },
-}
 
-
-def pytest_configure() -> None:
-    """Configure env variables for pytest."""
-    os.environ["S3_BUCKET"] = S3_BUCKET
-    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
-    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
-    os.environ["AUGMENTED_EICR_PREFIX"] = AUGMENTED_EICR_PREFIX
-    os.environ["AUGMENTATION_METADATA_PREFIX"] = AUGMENTATION_METADATA_PREFIX
-    os.environ["AWS_REGION"] = AWS_REGION
-    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
-    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
+@pytest.fixture
+def test_ttc_output() -> dict:
+    """A test example of the output of the TTC lambda."""
+    return {
+        "persistence_id": TEST_PERSISTENCE_ID,
+        "eicr_metadata": {},
+        "schematron_errors": {
+            "Lab Test Name Resulted": [
+                {
+                    "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                    "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                    "field_type": "Lab Test Name Resulted",
+                    "new_translation": {
+                        "code": "109224-6",
+                        "code_system": "2.16.840.1.113883.6.1",
+                        "code_system_name": "LOINC",
+                        "display_name": "Weed Allergen Mix 3 IgE Ab",
+                        "value_set": None,
+                        "value_set_version": None,
+                        "original_text": "A custom code in original text.",
+                    },
+                }
+            ]
+        },
+    }
 
 
 @pytest.fixture
@@ -90,7 +83,7 @@ def example_s3_event_payload() -> dict:
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def example_sqs_event(example_s3_event_payload: dict) -> dict:
     """Full SQS event that mimics real Lambda input."""
     return {
@@ -116,7 +109,7 @@ def example_sqs_event(example_s3_event_payload: dict) -> dict:
 
 
 @pytest.fixture(scope="function")
-def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+def mock_aws_setup(monkeypatch: pytest.MonkeyPatch, test_ttc_output: dict) -> boto3.client:
     """Setup test AWS environment with moto mock S3."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", AWS_REGION)
@@ -147,7 +140,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.put_object(
             Bucket=S3_BUCKET,
             Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=json.dumps(TEST_TTC_OUTPUT),
+            Body=json.dumps(test_ttc_output),
         )
 
         # Reset cached S3 client so Lambda creates a new one inside moto context

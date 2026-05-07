@@ -9,30 +9,19 @@ import boto3
 import moto
 import pytest
 
-from lambda_handler.test_constants import AWS_ACCESS_KEY_ID
-from lambda_handler.test_constants import AWS_REGION
-from lambda_handler.test_constants import AWS_SECRET_ACCESS_KEY
-from lambda_handler.test_constants import S3_BUCKET
-from lambda_handler.test_constants import TEST_PERSISTENCE_ID
 from text_to_code_lambda import lambda_function
 
-SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
-TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
-TTC_METADATA_PREFIX = "TTCMetadataV2/"
-OPENSEARCH_ENDPOINT_URL = "https://test-opensearch-endpoint.com"
+S3_BUCKET = os.environ["S3_BUCKET"]
+AWS_REGION = os.environ["AWS_REGION"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
-
-def pytest_configure() -> None:
-    """Configure env variables for pytest."""
-    os.environ["SCHEMATRON_ERROR_PREFIX"] = SCHEMATRON_ERROR_PREFIX
-    os.environ["TTC_INPUT_PREFIX"] = TTC_INPUT_PREFIX
-    os.environ["TTC_OUTPUT_PREFIX"] = TTC_OUTPUT_PREFIX
-    os.environ["TTC_METADATA_PREFIX"] = TTC_METADATA_PREFIX
-    os.environ["AWS_REGION"] = AWS_REGION
-    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
-    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
-    os.environ["OPENSEARCH_ENDPOINT_URL"] = OPENSEARCH_ENDPOINT_URL
+SCHEMATRON_ERROR_PREFIX = os.environ["SCHEMATRON_ERROR_PREFIX"]
+TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
+OPENSEARCH_ENDPOINT_URL = os.environ["OPENSEARCH_ENDPOINT_URL"]
 
 
 @pytest.fixture

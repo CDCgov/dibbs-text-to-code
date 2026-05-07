@@ -51,6 +51,7 @@ class TestEmptyEicrProcessor:
                 "base_xpath": BASE_XPATH,
                 "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
                 "sub_xpaths": expected_sub_xpaths,
+                "status": "error",
             },
         )
 

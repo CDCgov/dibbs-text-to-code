@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -13,17 +14,18 @@ from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from text_to_code_lambda.lambda_function import handler as ttc_handler
+from validation import validate_eicr
 
-AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
-AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
-AWS_ACCESS_KEY_ID = "test_access_key_id"
-AWS_SECRET_ACCESS_KEY = "test_secret_access_key"  # noqa: S105
-EICR_INPUT_PREFIX = "eCRMessageV2/"
-REGION = "us-east-1"
-S3_BUCKET = "dibbs-text-to-code"
-SCHEMATRON_ERROR_PREFIX = "ValidationResponseV2/"
-TTC_INPUT_PREFIX = "TextToCodeSubmissionV2/"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
+AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
+AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+EICR_INPUT_PREFIX = os.environ["EICR_INPUT_PREFIX"]
+REGION = os.environ["AWS_REGION"]
+S3_BUCKET = os.environ["S3_BUCKET"]
+SCHEMATRON_ERROR_PREFIX = os.environ["SCHEMATRON_ERROR_PREFIX"]
+TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
 
 ACCOUNT_ID = "123456789012"
 
@@ -34,7 +36,7 @@ RULE_2_NAME = "results-prefix-rule"
 FUNCTION_1_NAME = "stage1-processor"
 FUNCTION_2_NAME = "stage2-processor"
 
-TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
 SCHEMATRON_PATH = "e2e/assets/test_schematron_errors.xml"
 EICR_PATH = "e2e/assets/test_eicr.xml"
@@ -201,7 +203,13 @@ def infra(aws):
 @pytest.mark.e2e
 class TestEndToEndSimulated:
     def test_upload_and_process(
-        self, aws, infra, snapshot: Snapshot, mock_opensearch, mocker: MockerFixture
+        self,
+        aws,
+        infra,
+        snapshot: Snapshot,
+        mock_opensearch,
+        mocker: MockerFixture,
+        mock_lambda_context,
     ):
         # Upload Schematron errors to S3
         with open(
@@ -241,7 +249,7 @@ class TestEndToEndSimulated:
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
-        _ = ttc_handler(sqs_event, None)
+        _ = ttc_handler(sqs_event, mock_lambda_context)
 
         ##########################################################
         # Augmenter
@@ -256,7 +264,7 @@ class TestEndToEndSimulated:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            _ = augmentation_lambda(sqs_event, None)
+            _ = augmentation_lambda(sqs_event, mock_lambda_context)
 
         augmented_eicr = (
             aws["s3"]
@@ -267,6 +275,10 @@ class TestEndToEndSimulated:
             .decode("utf-8")
         )
         snapshot.assert_match(augmented_eicr, "augmented_eicr.xml")
+
+        # Validate augmented eICR
+        actual_validation_results = validate_eicr(augmented_eicr)
+        assert actual_validation_results == []  # Empty list means no errors.
 
         augmentation_metadata = (
             aws["s3"]

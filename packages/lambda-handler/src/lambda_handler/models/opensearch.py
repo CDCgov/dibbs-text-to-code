@@ -8,7 +8,9 @@ class OpenSearchHitSource(BaseModel):
     id: int = Field(description="The unique ID from the embedding data of the search result hit.")
     loinc_code: str = Field(description="The LOINC code of the search result hit.")
     loinc_name_type: str = Field(description="The LOINC name type of the search result hit.")
-    description: str = Field(description="The description of the search result hit.")
+    description: str = Field(
+        description="The description of the search result hit. This is the code's display name."
+    )
     loinc_type: str = Field(description="The LOINC type of the search result hit.")
 
 

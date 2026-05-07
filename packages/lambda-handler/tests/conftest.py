@@ -6,12 +6,17 @@ import boto3
 import moto
 import pytest
 
+from lambda_handler import reset_cached_clients
+
 
 @pytest.fixture(scope="function")
 def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
     """Setup test AWS."""
-    with moto.mock_aws():
+    reset_cached_clients()
+
+    with moto.mock_aws(config={"core": {"mock_credentials": False}}):
         monkeypatch.setenv("AWS_REGION", "us-east-1")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test_access_key_id")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test_secret_access_key")
         bucket_name = "test-bucket"
@@ -21,8 +26,6 @@ def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3 = boto3.client(
             "s3",
             region_name=os.environ["AWS_REGION"],
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         )
         s3.create_bucket(Bucket=bucket_name)
 
@@ -30,6 +33,8 @@ def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.bucket_name = bucket_name
 
         yield s3
+
+    reset_cached_clients()
 
 
 @pytest.fixture

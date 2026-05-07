@@ -1,4 +1,5 @@
 import pytest
+
 from utils.normalize import merge_enhancements
 from utils.normalize import merge_two_lists
 

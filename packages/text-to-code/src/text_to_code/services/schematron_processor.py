@@ -116,6 +116,7 @@ def get_data_fields_from_schematron_error(
                     extra={
                         "error_message": message_elem.text if message_elem is not None else None,
                         "error_context": context_elem.text if context_elem is not None else None,
+                        "status": "error",
                     },
                 )
                 continue

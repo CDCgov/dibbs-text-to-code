@@ -1,0 +1,70 @@
+{
+  "eicr_metadata": "eicr_id=CdaInstanceIdentifier(null_flavor=None, assigning_authority_name=None, displayable=None, root='c8516bdc-8bb2-40aa-8dae-20a77546488f', extension=None) eicr_vendor='Test eCR Vendor Name'",
+  "persistence_id": "<persistence_id>",
+  "schematron_errors": {
+    "Lab Test Name Ordered": [
+      {
+        "field_type": "Lab Test Name Ordered",
+        "new_translation": {
+          "code": "82041-5",
+          "code_system": "2.16.840.1.113883.6.1",
+          "code_system_name": "LOINC",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
+          "original_text": "weed allergen mix 3",
+          "value_set": null,
+          "value_set_version": null
+        },
+        "schematron_error": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
+        "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]"
+      },
+      {
+        "field_type": "Lab Test Name Ordered",
+        "new_translation": {
+          "code": "82041-5",
+          "code_system": "2.16.840.1.113883.6.1",
+          "code_system_name": "LOINC",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
+          "original_text": "weed allergen mix 3",
+          "value_set": null,
+          "value_set_version": null
+        },
+        "schematron_error": "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
+        "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]"
+      }
+    ],
+    "Lab Test Name Resulted": [
+      {
+        "field_type": "Lab Test Name Resulted",
+        "new_translation": {
+          "code": "82041-5",
+          "code_system": "2.16.840.1.113883.6.1",
+          "code_system_name": "LOINC",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
+          "original_text": "weed allergen mix 3",
+          "value_set": null,
+          "value_set_version": null
+        },
+        "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+        "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
+      },
+      {
+        "field_type": "Lab Test Name Resulted",
+        "new_translation": {
+          "code": "82041-5",
+          "code_system": "2.16.840.1.113883.6.1",
+          "code_system_name": "LOINC",
+          "display_name": "Weed Allerg Mix3 IgE Qn",
+          "original_text": "weed allergen mix 3",
+          "value_set": null,
+          "value_set_version": null
+        },
+        "schematron_error": "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
+        "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
+      }
+    ]
+  },
+  "unmatched_schematron_errors": {
+    "Lab Test Name Ordered": [],
+    "Lab Test Name Resulted": []
+  }
+}

@@ -38,7 +38,7 @@ jobs:
         fi
 
     - name: Post to Slack
-      uses: slackapi/slack-github-action@v3.0.1
+      uses: slackapi/slack-github-action@v3.0.3
       if: ${{ env.SHOULD_POST_TO_SLACK == 'true' }}
       with:
         webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
