@@ -2,14 +2,12 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import boto3
 import pytest
 import time_machine
 from moto import mock_aws
-from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
@@ -208,7 +206,6 @@ class TestEndToEndSimulated:
         infra,
         snapshot: Snapshot,
         mock_opensearch,
-        mocker: MockerFixture,
         mock_lambda_context,
     ):
         # Upload Schematron errors to S3
@@ -250,13 +247,6 @@ class TestEndToEndSimulated:
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
         _ = ttc_handler(sqs_event, mock_lambda_context)
-
-        ##########################################################
-        # Augmenter
-        doc_id = UUID("12345678-1234-5678-1234-567812345678")
-        set_id = UUID("87654321-4321-8765-4321-876543218765")
-
-        mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         sqs_event = _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME)
