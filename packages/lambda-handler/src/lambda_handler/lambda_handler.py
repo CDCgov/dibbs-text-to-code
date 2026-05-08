@@ -90,7 +90,7 @@ def create_s3_client() -> BaseClient:
     return _cached_s3_client
 
 
-def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
+def create_opensearch_client() -> OpenSearch:
     """Creates an OpenSearch client.
 
     :param aws_auth: AWS4Auth object for authentication
@@ -100,7 +100,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
 
     if _cached_opensearch_client is None:
         endpoint_url = get_env_variable("OPENSEARCH_ENDPOINT_URL")
-        auth = aws_auth or create_aws_auth()
+        auth = create_aws_auth()
         _cached_opensearch_client = OpenSearch(
             hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
             http_auth=auth,
@@ -114,7 +114,9 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
 
 
 def get_file_content_from_s3(
-    bucket_name: str, object_key: str, s3_client: BaseClient | None = None
+    bucket_name: str,
+    object_key: str,
+    s3_client: BaseClient | None = None,
 ) -> str:
     """Extracts the file content from an S3 bucket.
 
@@ -152,12 +154,14 @@ def get_file_content_from_s3(
     return response["Body"].read().decode("utf-8")
 
 
-def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) -> dict:
+def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) -> tuple[str, str]:
     """Extracts the file metadata from an S3 event triggered by a Lambda function.
 
     :param event: The S3 event containing the bucket and object key information.
     :return: A dictionary containing the bucket name and object key.
     """
+    logger.info("Extracting relevant fields", status="processing")
+
     bucket_name = event.get("detail", {}).get("bucket", {}).get("name")
     object_key = event["detail"]["object"]["key"]
 
@@ -168,7 +172,7 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
         status="success",
     )
 
-    return {"bucket_name": bucket_name, "object_key": object_key}
+    return bucket_name, object_key
 
 
 def put_file(
@@ -218,7 +222,10 @@ def check_s3_object_exists(s3_client: BaseClient, bucket: str, key: str) -> bool
 
         if error_code in ("404", "NoSuchKey"):
             logger.warning(
-                "S3 object does not exist", bucket_name=bucket, s3_key=key, status="error"
+                "S3 object does not exist",
+                bucket_name=bucket,
+                s3_key=key,
+                status="error",
             )
             return False
 
@@ -253,7 +260,7 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
             status="error",
         )
         raise ValueError(
-            f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'"
+            f"Object key '{object_key}' does not start with expected prefix '{input_prefix}'",
         )
     persistence_id = object_key[len(input_prefix) :]
     logger.info(
@@ -266,7 +273,9 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
 
 
 def retrieve_opensearch_results(
-    query: dict, index: str, opensearch_client: OpenSearch
+    query: dict,
+    index: str,
+    opensearch_client: OpenSearch,
 ) -> OpenSearchResult:
     """Retrieves search results from OpenSearch based on the provided query.
 
