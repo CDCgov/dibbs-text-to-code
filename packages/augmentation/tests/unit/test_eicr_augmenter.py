@@ -35,6 +35,10 @@ eicr_path = EXAMPLE_EICRS_DIRECTORY / "empty_eicr.xml"
 with eicr_path.open() as f:
     EMPTY_ECR = f.read()
 
+eicr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
+with eicr_path.open() as f:
+    COVID_ECR = f.read()
+
 
 @pytest.mark.time_machine(datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")))
 class TestEicrAugmenter:
@@ -171,8 +175,8 @@ class TestEicrAugmenter:
 
         assert version_number.get("value") == "1"
 
-    def test_generates_same_augmented_ids_for_same_seed(self):
-        """Tests deterministic augmented identifiers use stable values for the same seed."""
+    def test_generates_same_augmented_ids_for_same_document_when_seed_is_not_supplied(self):
+        """Tests deterministic augmented identifiers default to stable values for the same document."""
         first_augmenter = EICRAugmenter(BASIC_ECR, [])
         second_augmenter = EICRAugmenter(BASIC_ECR, [])
 
@@ -189,6 +193,22 @@ class TestEicrAugmenter:
 
         assert augmenter.new_doc_id == "d44dc1c6-8a0c-5236-906e-12f6475589ec"
         assert augmenter.new_set_id == "2683d208-bbec-5d37-8886-3b46fb5ec908"
+
+    def test_generates_same_augmented_ids_for_same_seed_when_documents_are_different(self):
+        """Tests deterministic augmented identifiers use supplied seed values when present."""
+        first_augmenter = EICRAugmenter(
+            BASIC_ECR,
+            [],
+            deterministic_id_seed=TEST_PERSISTENCE_ID,
+        )
+        second_augmenter = EICRAugmenter(
+            COVID_ECR,
+            [],
+            deterministic_id_seed=TEST_PERSISTENCE_ID,
+        )
+
+        assert first_augmenter.new_doc_id == second_augmenter.new_doc_id
+        assert first_augmenter.new_set_id == second_augmenter.new_set_id
 
     def test_get_old_document_id_sets_assigning_authority_name_when_missing(self):
         """Tests old document id gets assigningAuthorityName when missing."""
