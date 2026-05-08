@@ -256,6 +256,11 @@ def get_loinc_current_version_data() -> (str, str):  # noqa: D103
 
 def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -> list[dict]:
     delta_extract_rows = get_loinc_lab_names(new_version)
+    # get the max number to ensure no id collisions in Opensearch
+    # by getting the max loinc codes in the current file *5 for all the
+    # different 'names/text' that will be used to create embeddings
+    #  then add 1
+    loinc_record_max_id = (len(current_loinc_dict)*5)+1
     embedding_candidates = []
     change_log = {
                 "New LOINC": 0,
@@ -296,15 +301,31 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -
             if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
                 change_log["consumer_name"] += 1
                 changes.append("consumer_name")
-        embedding_candidates.extend(_create_embedding_candidates(loinc_code,update_loinc_record,changes))
+        embedding_candidates.extend(_create_embedding_candidates(loinc_record_max_id, loinc_code,update_loinc_record,changes))
     print(f"EMB CANDIDATES: {len(embedding_candidates)} see counts of the various changes below")
     print(json.dumps(change_log, indent=4))
     return embedding_candidates
 
 
-def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+def _create_embedding_candidates(loinc_record_id: int, loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
     emb_candidates = []
-    emb_candidate = {}
+    # predefined structure of embeddings using
+    # structure from previously used Azure Notebooks
+    emb_candidate = {
+                    "id": "", # split_id from notebook - internal defined int id
+                    "description": "", # mini_batch - the term/string being embedded
+                    "loinc_name_type": "", # mini_batch_loinc_name_types - the specific term/name/string used
+                    "description_vector":  "", # split_embeddings - actual embedding of text in 'description' field
+                    "loinc_type": "", # mini_batch_details[i]["loinc_type"] - Loinc Lab Type
+                    "loinc_code": "", # mini_batch_details[i]["loinc_code"] - Actual Loinc code
+                    "property": "", # mini_batch_details[i]["axis_property"] - Axis Property
+                    "time_aspect": "", # mini_batch_details[i]["axis_time"] - Axis of Time Aspect
+                    "system": "", # mini_batch_details[i]["axis_system"] - Axis of System
+                    "scale_type": "", # mini_batch_details[i]["axis_scale"] - Axis of Scale Type
+                    "method_type": "", # mini_batch_details[i]["axis_method"] - Axis of Method
+                    "class_type": "", # mini_batch_details[i]["axis_class"] - Axis of Class
+                }
+    new_id = loinc_record_id
     short_name = loinc_row["short_name"]
     loinc_code = loinc_code
     loinc_type = loinc_row["lab_type"]
@@ -322,11 +343,11 @@ def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_chang
     emb_candidate["loinc_code"] = loinc_code
     emb_candidate["loinc_type"] = loinc_type
     emb_candidate["property"] = property
-    emb_candidate["time"] = time_aspect
+    emb_candidate["time_aspect"] = time_aspect
     emb_candidate["system"] = system
-    emb_candidate["scale"] = scale
-    emb_candidate["method"] = method
-    emb_candidate["class"] = class_type
+    emb_candidate["scale_type"] = scale
+    emb_candidate["method_type"] = method
+    emb_candidate["class_type"] = class_type
 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
@@ -334,33 +355,47 @@ def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_chang
     if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "short_name" in element_changes)
-        and short_name ):
+            and short_name):
         emb_candidate["loinc_name_type"] = "short_name"
-        emb_candidate["term"] = short_name # same as codes or name_codes in embedding notebook
+        emb_candidate["description"] = short_name # same as codes or name_codes in embedding notebook
+        new_id = new_id+1
+        emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
-    if ("LOINC Type" in element_changes or
+    if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
-        "long_name" in element_changes):
+        "long_name" in element_changes)
+            and long_name):
         emb_candidate["loinc_name_type"] = "long_name"
         emb_candidate["term"] = long_name # same as codes or name_codes in embedding notebook
+        new_id = new_id+1
+        emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
-    if ("LOINC Type" in element_changes or
+    if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
-        "display_name" in element_changes):
+        "display_name" in element_changes)
+            and display_name):
         emb_candidate["loinc_name_type"] = "display_name"
         emb_candidate["term"] = display_name # same as codes or name_codes in embedding notebook
+        new_id = new_id+1
+        emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
-    if ("LOINC Type" in element_changes or
+    if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
-        "full_name" in element_changes):
+        "full_name" in element_changes)
+            and full_name):
         emb_candidate["loinc_name_type"] = "full_name"
         emb_candidate["term"] = full_name # same as codes or name_codes in embedding notebook
+        new_id = new_id+1
+        emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
-    if ("LOINC Type" in element_changes or
+    if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
-        "consumer_name" in element_changes):
+        "consumer_name" in element_changes)
+            and consumer_name):
         emb_candidate["loinc_name_type"] = "consumer_name"
         emb_candidate["term"] = consumer_name # same as codes or name_codes in embedding notebook
+        new_id = new_id+1
+        emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
     return emb_candidates
 

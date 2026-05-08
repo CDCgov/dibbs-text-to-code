@@ -1,10 +1,13 @@
 
+import json
+
 from data_curation.terminologies.utils.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
                                                      get_loinc_embedding_candidates)
 from data_curation.terminologies.utils.general import (get_latest_extract_file_name, 
                                                        get_date_from_latest_filename, 
                                                        load_extract_file_to_dict)
+from text_to_code.services.embedder import embed
 
 
 def update_loinc_embeddings():
@@ -20,10 +23,18 @@ def update_loinc_embeddings():
     else:
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
     
-    if len(loinc_updates) > 0:
-        # TODO: now process the updates into embeddings
-        # This will be handled in the next ticket
-        None
+    # add embeddings to any of the candidates for the various descriptions
+    # if there are none, no looping will occur
+    my_test = embed("Weed Allerg Mix3 IgE Msmt Ser").tolist()
+    print(f"MY TEST: {my_test}")
+    
+    for loinc_update_record in loinc_updates:
+        if (loinc_update_record["description"].strip is not None):
+            loinc_update_record["description_vector"] = embed(loinc_update_record["description"])
+    
+        print(loinc_update_record)
+        return
+        
 
     # TODO: add a function here that will clean up
     # the existing file and make a new one with a new date
