@@ -113,10 +113,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put test Schematron error file in the mock S3 bucket
-        current_dir = Path(__file__).parent.parent.parent
-        schematron_path = (
-            current_dir / "text-to-code" / "tests" / "assets" / "test_schematron_errors.xml"
-        )
+        schematron_path = Path("e2e/assets/test_schematron_errors.xml")
         with schematron_path.open() as f:
             schematron_output = f.read()
         s3.put_object(
@@ -126,7 +123,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         )
 
         # Put test eCR message file in the mock S3 bucket
-        ecr_path = current_dir / "text-to-code" / "tests" / "assets" / "basic_test_eicr.xml"
+        ecr_path = Path("e2e/assets/test_eicr.xml")
         with ecr_path.open() as f:
             ecr_message = f.read()
         s3.put_object(

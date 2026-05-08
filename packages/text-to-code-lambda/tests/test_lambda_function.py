@@ -8,6 +8,7 @@ from conftest import S3_BUCKET
 from conftest import TTC_METADATA_PREFIX
 from conftest import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
+from text_to_code_lambda.lambda_function import SuccessResponse
 
 EXPECTED_RESULTED_ERRORS = 2
 EXPECTED_ORDERED_ERRORS = 2
@@ -55,47 +56,34 @@ class TestHandler:
         mock_lambda_context,
     ):
         """Test handler with no failures."""
-        selected_candidate = {
-            "value": "weed allergen mix 3",
-            "confidence": 1.0,
-        }
-
-        mocker.patch(
-            "text_to_code.services.evaluator.select_relevant_text",
-            return_value=type("SelectedCandidate", (), selected_candidate)(),
-        )
-
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
-
+        assert resp == SuccessResponse(num_success_eicrs=1)
         # Assert that the TTC output was saved to S3
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
+        ttc_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
         assert ttc_output is not None
-        snapshot.assert_match(
-            _serialize_ttc_output_snapshot(ttc_output),
-            "handler_success_ttc_output.json",
-        )
+        snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
         assert ttc_metadata_output is not None
-        snapshot.assert_match(
-            _serialize_ttc_metadata_snapshot(ttc_metadata_output),
-            "handler_success_ttc_metadata_output.json",
-        )
+        snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
 
     def test_save_ttc_metadata_output(
         self,
@@ -121,7 +109,8 @@ class TestHandler:
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
                 object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+            ),
+            indent=4,
         )
 
         assert result == ttc_metadata_output

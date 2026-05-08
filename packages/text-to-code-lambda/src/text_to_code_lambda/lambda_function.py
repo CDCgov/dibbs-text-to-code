@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from datetime import UTC
 from datetime import datetime
+from typing import Literal
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
@@ -13,6 +14,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 import lambda_handler
+from lambda_handler.models import OpenSearchResult
 from shared_models import Code
 from shared_models import DataField
 from text_to_code.models import Candidate
@@ -23,6 +25,7 @@ from text_to_code.services import evaluator
 from text_to_code.services import schematron_processor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
+from text_to_code.services.reranker import ScoredResult
 from text_to_code.services.reranker import rerank
 
 # Initialize the logger
@@ -81,8 +84,10 @@ class TTCSchematronIssueDetail:
     issue_id: str | None
     issue_message: str
     issue_test: str | None
-    unmatched_reason: str | None
     new_translation: Code | None
+    opensearch_retrieved_scores: OpenSearchResult | None
+    reranker_processed_results: list[ScoredResult] | None
+    unmatched_reason: str | None
 
 
 class TTCMetadata(BaseModel):
@@ -110,8 +115,13 @@ class Failure:
 class FailureResponse(BaseModel):
     """Response given by the Lambda handler when one more more failures occur."""
 
-    status_code = 200
-    message = "TTC processed with some failures!"
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    status_code: Literal[200] = 200
+    message: Literal["TTC processed with some failures!"] = "TTC processed with some failures!"
     failures: list[Failure]
     num_failure_eicrs: int
     num_success_eicrs: int
@@ -120,8 +130,13 @@ class FailureResponse(BaseModel):
 class SuccessResponse(BaseModel):
     """Response given by the Lambda handler when no failures occur."""
 
-    status_code = 200
-    message = "TTC processed successfully!"
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    status_code: Literal[200] = 200
+    message: Literal["TTC processed successfully!"] = "TTC processed successfully!"
     num_success_eicrs: int
 
 
@@ -215,7 +230,11 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                 nonstandard_code_replacements: list[NonstandardCodeReplacement] = []
                 ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
                 for ttc_issue in ttc_schematron_issues:
+                    unmatched_message = None
+                    opensearch_retrieved_scores = None
+                    ranked_results = None
                     field_type = ttc_issue.field
+
                     criteria = evaluator.get_evaluation_criteria_for_data_field(field_type)
 
                     text_candidates = processor.get_text_candidates(
@@ -310,6 +329,8 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                             issue_test=ttc_issue.error_test,
                             unmatched_reason=unmatched_message,
                             new_translation=None,
+                            opensearch_retrieved_scores=opensearch_retrieved_scores,
+                            reranker_processed_results=ranked_results,
                         ),
                     )
 
@@ -333,7 +354,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                     status="processing",
                 )
                 lambda_handler.put_file(
-                    file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
+                    file_obj=io.BytesIO(ttc_output.model_dump_json().encode("utf-8")),
                     bucket_name=bucket_name,
                     object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
                     s3_client=s3_client,
@@ -354,7 +375,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                     status="processing",
                 )
                 lambda_handler.put_file(
-                    file_obj=io.BytesIO(json.dumps(ttc_metadata, default=str).encode("utf-8")),
+                    file_obj=io.BytesIO(ttc_metadata.model_dump_json().encode("utf-8")),
                     bucket_name=bucket_name,
                     object_key=metadata_key,
                     s3_client=s3_client,
