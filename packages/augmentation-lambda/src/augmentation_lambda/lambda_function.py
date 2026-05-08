@@ -113,7 +113,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         nonstandard_codes = _parse_nonstandard_codes(ttc_output)
 
         augmenter_input = TTCAugmenterInput(
-            eicr_id=persistence_id,
+            persistence_id=persistence_id,
             nonstandard_codes=nonstandard_codes,
         )
 
@@ -124,13 +124,13 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
             document=original_eicr,
             nonstandard_codes=augmenter_input.nonstandard_codes,
             config=config,
-            deterministic_id_seed=augmenter_input.eicr_id,
+            deterministic_id_seed=augmenter_input.persistence_id,
         )
 
         metadata = augmenter.augment()
 
         output = TTCAugmenterOutput(
-            eicr_id=augmenter_input.eicr_id,
+            persistence_id=augmenter_input.persistence_id,
             augmented_eicr=augmenter.augmented_xml,
             metadata=metadata,
         )
