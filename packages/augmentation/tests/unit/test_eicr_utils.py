@@ -30,3 +30,12 @@ class TestEicrUtils:
             eicr_utils.cda_xpath("/ClinicalDocument/id/@root")
             == "/cda:ClinicalDocument/cda:id/@root"
         )
+
+    def test_cda_xpath_strips_surrounding_whitespace(self):
+        # Schematron <context> elements often emit XPath surrounded by indentation
+        # whitespace; lxml's xpath() is lenient about it but our rewriter must
+        # tolerate it too.
+        assert (
+            eicr_utils.cda_xpath("\n    /ClinicalDocument/component[1]/observation[1]  ")
+            == "/cda:ClinicalDocument/cda:component[1]/cda:observation[1]"
+        )

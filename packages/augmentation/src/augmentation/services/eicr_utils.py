@@ -17,8 +17,11 @@ def cda_xpath(xpath: str) -> str:
     prefixes (e.g. '/ClinicalDocument/id'). Once the tree carries its real
     namespaces, those XPaths must be rewritten to '/cda:ClinicalDocument/cda:id'
     and evaluated with namespaces={'cda': 'urn:hl7-org:v3'}.
+
+    Leading/trailing whitespace is stripped because schematron `<context>`
+    elements emitted upstream often carry surrounding indentation.
     """
-    parts = xpath.split("/")
+    parts = xpath.strip().split("/")
     rewritten = []
     for part in parts:
         if not part or part.startswith("@") or part == "*" or ":" in part or "(" in part:
