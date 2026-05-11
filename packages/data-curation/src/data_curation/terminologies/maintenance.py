@@ -1,16 +1,19 @@
 
-import json
-
 from data_curation.terminologies.utils.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
-                                                     get_loinc_embedding_candidates)
+                                                     get_loinc_embedding_candidates,
+                                                     extract_full_loinc_lab_names)
 from data_curation.terminologies.utils.general import (get_latest_extract_file_name, 
                                                        get_date_from_latest_filename, 
-                                                       load_extract_file_to_dict)
+                                                       load_extract_file_to_dict,
+                                                       archive_valueset_file)
 from text_to_code.services.embedder import embed
 
 
 def update_loinc_embeddings():
+    # this current function is just set to work for
+    # labnames, but can be modified to perform some or all
+    # of the various LOINC valuesets
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     file_date = get_date_from_latest_filename(current_loinc_file,"loinc")
@@ -18,7 +21,10 @@ def update_loinc_embeddings():
         print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
-        loinc_updates = get_loinc_embedding_candidates(loinc_current_dict,loinc_version)
+        loinc_updates = get_loinc_embedding_candidates(loinc_current_dict,
+                                                       loinc_version,
+                                                       loinc_version_date,
+                                                       current_loinc_file)
 
     else:
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
@@ -34,18 +40,10 @@ def update_loinc_embeddings():
     
         print(loinc_update_record)
         return
-        
-
-    # TODO: add a function here that will clean up
-    # the existing file and make a new one with a new date
-    # so that the next time the process is run it will ensure 
-    # to not add updates unless they are really necessary
-    # 
-    # This will be part of the creating the actual embeddings work
-    #  It will have to succeed from this step to making the embeddings
-    #   into a file or files and then we can update/remove the existing
-    # csv file
-    
+    # if all goes well archive the old file and 
+    # write a new valueset file with all the existing codes
+    archive_valueset_file(current_loinc_file)
+    extract_full_loinc_lab_names()   
 
 
 def main(all: bool = False, loinc=False):

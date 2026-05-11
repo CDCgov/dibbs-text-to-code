@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 import os
 import requests
-from .general import clean_text_string
+from .general import clean_text_string, save_json_file, save_valueset_csv_file, SNOINC_CHANGES_DIRECTORY
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -40,6 +40,25 @@ LAB_RESULT = "loinc_lab_result"
 LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
+
+
+def extract_full_loinc_lab_names():  # noqa: D103
+    loinc_filename = f"loinc_lab_names_{datetime.now().strftime('%Y%m%d')}.csv"
+    all_loinc_rows = get_loinc_lab_names()
+
+    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+
+def extract_full_loinc_lab_orders():  # noqa: D103
+    loinc_filename = f"loinc_lab_orders_{datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_order_rows = get_loinc_lab_orders()
+
+    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
+
+
+def extract_full_loinc_lab_results():  # noqa: D103
+    loinc_filename = f"loinc_lab_result_{datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_result_rows = get_loinc_lab_results()
+    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
 def get_loinc_lab_names(version: str = ""):  # noqa: D103
@@ -254,22 +273,27 @@ def get_loinc_current_version_data() -> (str, str):  # noqa: D103
     return loinc_version, loinc_version_date
 
 
-def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -> list[dict]:
+def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str, loinc_version_date: str, current_loinc_file: str) -> list[dict]:
     delta_extract_rows = get_loinc_lab_names(new_version)
     # get the max number to ensure no id collisions in Opensearch
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
     #  then add 1
     loinc_record_max_id = (len(current_loinc_dict)*5)+1
-    embedding_candidates = []
+    embedding_candidates = []    
+    change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.csv"
     change_log = {
-                "New LOINC": 0,
-                "short_name": 0,
-                "long_name": 0,
-                "display_name": 0,
-                "full_name": 0,
-                "consumer_name": 0,
-                "LOINC Type": 0,
+                "New Loinc Version": f"{new_version} as of {loinc_version_date}",
+                "Compared to file": current_loinc_file,
+                "Changes": {
+                    "New LOINC": 0,
+                    "short_name": 0,
+                    "long_name": 0,
+                    "display_name": 0,
+                    "full_name": 0,
+                    "consumer_name": 0,
+                    "LOINC Type": 0,
+                }
     }                  
     for update_loinc_record in delta_extract_rows:
         loinc_code = update_loinc_record['code']
@@ -278,32 +302,34 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -
 
         if current_loinc_record is None:
             # new loinc code
-            change_log["New LOINC"] += 1
+            change_log["Changes"]["New LOINC"] += 1
             changes.append("New LOINC")
         elif current_loinc_record["lab_type"] != update_loinc_record["lab_type"]:
-            change_log["LOINC Type"] += 1
+            change_log["Changes"]["LOINC Type"] += 1
             changes.append("LOINC Type")
             print(f"FOR LOINC CODE: {loinc_code}")
             print(f"LOINC_TYPE WENT FROM: {current_loinc_record["lab_type"]} TO: {update_loinc_record["lab_type"]}")
         else:
             if current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip():
-                change_log["short_name"] += 1
+                change_log["Changes"]["short_name"] += 1
                 changes.append("short_name")
             if current_loinc_record["long_name"] != update_loinc_record["long_name"]:
-                change_log["long_name"] += 1
+                change_log["Changes"]["long_name"] += 1
                 changes.append("long_name")
             if current_loinc_record["display_name"] != update_loinc_record["display_name"]:
-                change_log["display_name"] += 1
+                change_log["Changes"]["display_name"] += 1
                 changes.append("display_name")
             if current_loinc_record["full_name"] != update_loinc_record["full_name"]:
-                change_log["full_name"] += 1
+                change_log["Changes"]["full_name"] += 1
                 changes.append("full_name")
             if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
-                change_log["consumer_name"] += 1
+                change_log["Changes"]["consumer_name"] += 1
                 changes.append("consumer_name")
         embedding_candidates.extend(_create_embedding_candidates(loinc_record_max_id, loinc_code,update_loinc_record,changes))
     print(f"EMB CANDIDATES: {len(embedding_candidates)} see counts of the various changes below")
     print(json.dumps(change_log, indent=4))
+    # store the record of changes
+    write_change_log_file(change_log_filename, change_log)
     return embedding_candidates
 
 
@@ -398,4 +424,8 @@ def _create_embedding_candidates(loinc_record_id: int, loinc_code: str, loinc_ro
         emb_candidate["id"] = new_id
         emb_candidates.append(emb_candidate)
     return emb_candidates
+
+
+def write_change_log_file(file_name: str, content: dict):
+    save_json_file(SNOINC_CHANGES_DIRECTORY, file_name, content)
 
