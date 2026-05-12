@@ -66,5 +66,5 @@ class TTCAugmenterInput(BaseModel):
         frozen=True,
         extra="forbid",
     )
-    eicr_id: str
+    persistence_id: str
     nonstandard_codes: list[NonstandardCodeInstance]
