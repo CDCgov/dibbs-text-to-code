@@ -135,6 +135,50 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         yield s3
 
 
+@pytest.fixture(scope="function")
+def mock_aws_setup_no_schematron_issues(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+    """Setup test AWS environment."""
+    with moto.mock_aws():
+        monkeypatch.setenv("AWS_REGION", AWS_REGION)
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+        monkeypatch.setenv("OPENSEARCH_ENDPOINT_URL", OPENSEARCH_ENDPOINT_URL)
+        # Create the single S3 bucket
+        s3 = boto3.client(
+            "s3",
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        )
+        s3.create_bucket(Bucket=S3_BUCKET)
+
+        # Add convenience attributes for tests
+        s3.bucket_name = S3_BUCKET
+        s3.persistence_id = TEST_PERSISTENCE_ID
+
+        # Put test Schematron error file in the mock S3 bucket
+        schematron_path = Path("packages/text-to-code-lambda/tests/assets/empty_schematron.xml")
+        with schematron_path.open() as f:
+            schematron_output = f.read()
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=f"{SCHEMATRON_ERROR_PREFIX}{TEST_PERSISTENCE_ID}",
+            Body=schematron_output,
+        )
+
+        # Put test eCR message file in the mock S3 bucket
+        ecr_path = Path("e2e/assets/test_eicr.xml")
+        with ecr_path.open() as f:
+            ecr_message = f.read()
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            Body=ecr_message,
+        )
+
+        yield s3
+
+
 @pytest.fixture(autouse=True)
 def reset_opensearch_cache() -> None:
     """Reset cached OpenSearch client before every test."""

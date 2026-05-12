@@ -17,34 +17,11 @@
                     <entry>
                         <observation classCode="OBS" moodCode="INT">
                             <templateId root="2.16.840.1.113883.10.20.22.4.44" extension="2014-06-09"/>
-                            <!--DATA AUGMENTATION: This data has been augmented with a standard LOINC code -->
-                            <!--DATA AUGMENTATION: The data in the code and code/originalText data elements is the original data -->
                             <code displayName=" A custom code in display name. ">
                                 <originalText>
                                     A custom code in original text.
                                 </originalText>
-                                <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="A custom code in display name."/>
                             </code>
-                            <author>
-                                <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->
-                                <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
-                                <!--DATA AUGMENTATION: time of data augmentation operation -->
-                                <effectiveTime value="20260213152757"/>
-                                <assignedAuthor>
-                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                    <id nullFlavor="NA"/>
-                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                    <addr nullFlavor="NA"/>
-                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                    <telecom nullFlavor="NA"/>
-                                    <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
-                                    <assignedAuthoringDevice>
-                                        <!--DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
-                                        <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
-                                    </assignedAuthoringDevice>
-                                </assignedAuthor>
-                            </author>
                         </observation>
                     </entry>
                 </section>

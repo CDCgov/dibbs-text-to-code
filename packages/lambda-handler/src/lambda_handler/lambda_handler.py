@@ -158,7 +158,7 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     """Extracts the file metadata from an S3 event triggered by a Lambda function.
 
     :param event: The S3 event containing the bucket and object key information.
-    :return: A dictionary containing the bucket name and object key.
+    :return: tuple: bucket_name, object_key
     """
     logger.info("Extracting relevant fields", status="processing")
 

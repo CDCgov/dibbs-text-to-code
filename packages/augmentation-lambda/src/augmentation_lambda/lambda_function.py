@@ -95,9 +95,8 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
 
     s3_event = json.loads(record.body)
 
-    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-    object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
+    bucket_name, object_key = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
+    bucket_name = bucket_name or S3_BUCKET
 
     persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
 

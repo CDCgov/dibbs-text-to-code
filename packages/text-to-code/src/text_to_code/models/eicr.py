@@ -1,6 +1,7 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 from shared_models import CdaInstanceIdentifier
 
@@ -18,6 +19,11 @@ class LabXPaths(StrEnum):
 class Candidate(BaseModel):
     """Model representing a piece of text to be considered for encoding."""
 
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
     value: str
     xpath: LabXPaths
     system: str | None = None
@@ -25,6 +31,11 @@ class Candidate(BaseModel):
 
 class Metadata(BaseModel):
     """Model representing metadata about the eICR."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
 
     eicr_id: CdaInstanceIdentifier
     eicr_vendor: str | None = None

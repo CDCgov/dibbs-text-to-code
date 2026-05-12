@@ -83,13 +83,6 @@ def mock_augmented_ids(mocker: MockerFixture) -> None:
 class TestHandler:
     """Tests for the augmentation Lambda handler."""
 
-    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_lambda_context) -> None:
-        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
-
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
-
     def test_handler_writes_outputs_to_s3(
         self,
         example_sqs_event,

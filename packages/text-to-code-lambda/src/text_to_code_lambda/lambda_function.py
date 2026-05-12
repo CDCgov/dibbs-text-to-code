@@ -102,6 +102,10 @@ class TTCMetadata(BaseModel):
     persistence_id: str
     ttc_schematron_issues: list[TTCSchematronIssueDetail]
     processed_at: datetime
+    reason_for_skipping: (
+        Literal["No relevant data fields identified from Schematron errors for TTC processing"]
+        | None
+    ) = None
 
 
 @dataclass
@@ -185,13 +189,30 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
             ):
                 logger.info("Starting TTC processing", status="processing")
 
-                object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
+                object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
+                logger.info(
+                    "Retrieving eICR from S3",
+                    bucket_name=bucket_name,
+                    s3_key=object_key,
+                    status="processing",
+                )
+                original_eicr_content = lambda_handler.get_file_content_from_s3(
+                    bucket_name=bucket_name,
+                    object_key=object_key,
+                    s3_client=s3_client,
+                )
+                logger.info("Retrieved eICR content", status="success")
+
+                processor = eicr_processor.EicrProcessor(original_eicr_content)
+
                 logger.info(
                     "Loading Schematron errors",
                     bucket_name=bucket_name,
                     s3_key=object_key,
                     status="processing",
                 )
+
+                object_key = f"{SCHEMATRON_ERROR_PREFIX}{persistence_id}"
                 all_schematron_issues = lambda_handler.get_file_content_from_s3(
                     bucket_name=bucket_name,
                     object_key=object_key,
@@ -209,23 +230,39 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                         status="skipped",
                     )
                     logger.info("TTC processing completed", status="no_matches_found")
+
+                    ttc_metadata = TTCMetadata(
+                        eicr_metadata=processor.eicr_metadata,
+                        persistence_id=persistence_id,
+                        ttc_schematron_issues=[],
+                        processed_at=datetime.now(UTC),
+                        reason_for_skipping="No relevant data fields identified from Schematron errors for TTC processing",
+                    )
+
+                    metadata_key = (
+                        f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
+                    )
+
+                    logger.info(
+                        "Saving TTC metadata output to S3",
+                        bucket_name=bucket_name,
+                        s3_key=metadata_key,
+                        status="processing",
+                    )
+                    lambda_handler.put_file(
+                        file_obj=io.BytesIO(ttc_metadata.model_dump_json().encode("utf-8")),
+                        bucket_name=bucket_name,
+                        object_key=metadata_key,
+                        s3_client=s3_client,
+                    )
+                    logger.info(
+                        "Saved TTC metadata output to S3",
+                        bucket_name=bucket_name,
+                        s3_key=metadata_key,
+                        status="success",
+                    )
+
                     continue
-
-                object_key = f"{TTC_INPUT_PREFIX}{persistence_id}"
-                logger.info(
-                    "Retrieving eICR from S3",
-                    bucket_name=bucket_name,
-                    s3_key=object_key,
-                    status="processing",
-                )
-                original_eicr_content = lambda_handler.get_file_content_from_s3(
-                    bucket_name=bucket_name,
-                    object_key=object_key,
-                    s3_client=s3_client,
-                )
-                logger.info("Retrieved eICR content", status="success")
-
-                processor = eicr_processor.EicrProcessor(original_eicr_content)
 
                 nonstandard_code_replacements: list[NonstandardCodeReplacement] = []
                 ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
@@ -234,8 +271,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                     opensearch_retrieved_scores = None
                     ranked_results = None
                     field_type = ttc_issue.field
-
-                    criteria = evaluator.get_evaluation_criteria_for_data_field(field_type)
 
                     text_candidates = processor.get_text_candidates(
                         ttc_issue.error_context,
@@ -249,7 +284,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
 
                     selected_candidate = evaluator.select_relevant_text(
                         candidates=text_candidates,
-                        criteria=criteria,
+                        field_type=field_type,
                     )
 
                     logger.info(

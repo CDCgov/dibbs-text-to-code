@@ -1,55 +1,29 @@
 {
-  "eicr_metadata": "eicr_id=CdaInstanceIdentifier(null_flavor=None, assigning_authority_name=None, displayable=None, root='c8516bdc-8bb2-40aa-8dae-20a77546488f', extension=None) eicr_vendor='Test eCR Vendor Name'",
-  "persistence_id": "<persistence_id>",
-  "processed_at": "<processed_at>",
-  "schematron_errors": {
-    "Lab Test Name Ordered": [
-      {
-        "candidate": null,
-        "eicr_id": null,
-        "error": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
-        "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]",
-        "error_id": null,
-        "error_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
-        "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
-        "field": "Lab Test Name Ordered",
-        "reason": "No relevant text candidate was selected"
-      },
-      {
-        "candidate": null,
-        "eicr_id": null,
-        "error": "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
-        "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]",
-        "error_id": null,
-        "error_message": "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
-        "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
-        "field": "Lab Test Name Ordered",
-        "reason": "No relevant text candidate was selected"
-      }
-    ],
-    "Lab Test Name Resulted": [
-      {
-        "candidate": null,
-        "eicr_id": null,
-        "error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-        "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
-        "error_id": null,
-        "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-        "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
-        "field": "Lab Test Name Resulted",
-        "reason": "No relevant text candidate was selected"
-      },
-      {
-        "candidate": null,
-        "eicr_id": null,
-        "error": "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
-        "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
-        "error_id": null,
-        "error_message": "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
-        "error_test": "not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']",
-        "field": "Lab Test Name Resulted",
-        "reason": "No relevant text candidate was selected"
-      }
+    "eicr_metadata": {
+        "eicr_id": {
+            "assigning_authority_name": null,
+            "displayable": null,
+            "extension": null,
+            "null_flavor": null,
+            "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+        },
+        "eicr_vendor": "Test eCR Vendor Name"
+    },
+    "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+    "processed_at": "2026-01-01T01:01:00Z",
+    "reason_for_skipping": null,
+    "ttc_schematron_issues": [
+        {
+            "candidate": null,
+            "field_type": "Lab Test Name Ordered",
+            "issue_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]",
+            "issue_id": null,
+            "issue_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
+            "issue_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
+            "new_translation": null,
+            "opensearch_retrieved_scores": null,
+            "reranker_processed_results": null,
+            "unmatched_reason": "No candidate found."
+        }
     ]
-  }
 }

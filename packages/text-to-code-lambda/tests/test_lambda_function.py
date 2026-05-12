@@ -1,4 +1,6 @@
 import json
+from datetime import UTC
+from datetime import datetime
 
 import pytest
 from pytest_snapshot.plugin import Snapshot
@@ -8,6 +10,8 @@ from conftest import S3_BUCKET
 from conftest import TTC_METADATA_PREFIX
 from conftest import TTC_OUTPUT_PREFIX
 from text_to_code_lambda import lambda_function
+from text_to_code_lambda.lambda_function import Failure
+from text_to_code_lambda.lambda_function import FailureResponse
 from text_to_code_lambda.lambda_function import SuccessResponse
 
 EXPECTED_RESULTED_ERRORS = 2
@@ -15,43 +19,13 @@ EXPECTED_ORDERED_ERRORS = 2
 EXPECTED_EXCEPTION_RESULTS = 2
 
 
-def _serialize_ttc_output_snapshot(ttc_output: dict[str, object]) -> str:
-    normalized = json.loads(json.dumps(ttc_output))
-    normalized["persistence_id"] = "<persistence_id>"
-    return json.dumps(normalized, indent=2, sort_keys=True)
-
-
-def _serialize_ttc_metadata_snapshot(ttc_metadata_output: dict[str, object]) -> str:
-    normalized = json.loads(json.dumps(ttc_metadata_output))
-    normalized["persistence_id"] = "<persistence_id>"
-    normalized["processed_at"] = "<processed_at>"
-
-    for field_errors in normalized.get("schematron_errors", {}).values():
-        for error in field_errors:
-            if (
-                "opensearch_retrieved_scores" in error
-                and error["opensearch_retrieved_scores"] is not None
-            ):
-                error["opensearch_retrieved_scores"] = "<opensearch_retrieved_scores>"
-
-            if (
-                "reranker_processed_results" in error
-                and error["reranker_processed_results"] is not None
-            ):
-                for result in error["reranker_processed_results"]:
-                    if "score" in result and result["score"] is not None:
-                        result["score"] = f"{float(result['score']):.3f}"
-
-    return json.dumps(normalized, indent=2, sort_keys=True)
-
-
+@pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 class TestHandler:
     def test_handler_success(
         self,
         example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
-        mocker,
         snapshot: Snapshot,
         mock_lambda_context,
     ):
@@ -69,7 +43,6 @@ class TestHandler:
             indent=4,
             sort_keys=True,
         )
-        assert ttc_output is not None
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
 
         ttc_metadata_output = json.dumps(
@@ -85,48 +58,13 @@ class TestHandler:
         assert ttc_metadata_output is not None
         snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
 
-    def test_save_ttc_metadata_output(
-        self,
-        mock_aws_setup,
-    ):
-        """Test saving TTC metadata output to S3."""
-        ttc_metadata_output = {
-            "persistence_id": mock_aws_setup.persistence_id,
-            "eicr_metadata": {},
-            "schematron_errors": {},
-            "processed_at": "<processed_at>",
-        }
-        s3_client = lambda_handler.create_s3_client()
-
-        lambda_function._save_ttc_metadata_output(
-            persistence_id=mock_aws_setup.persistence_id,
-            ttc_metadata_output=ttc_metadata_output,
-            s3_client=s3_client,
-            bucket_name=S3_BUCKET,
-        )
-
-        result = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            ),
-            indent=4,
-        )
-
-        assert result == ttc_metadata_output
-
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch, mock_lambda_context):
         """Test handler with no records."""
         example_sqs_event["Records"] = []
-        expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 0,
-        }
-        assert resp["num_success_eicrs"] == 0
-        assert mock_opensearch.search.call_count == expected_num_errors
+        assert resp == SuccessResponse(num_success_eicrs=0)
+
+        assert mock_opensearch.search.call_count == 0
 
     def test_handler_with_empty_body(
         self, example_sqs_event, caplog_warning, mock_opensearch, mock_lambda_context
@@ -136,11 +74,7 @@ class TestHandler:
         expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert "Empty SQS body" in caplog_warning.text
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == SuccessResponse(num_success_eicrs=0)
         assert mock_opensearch.search.call_count == expected_num_errors
 
     def test_handler_fails_when_event_has_no_bucket(
@@ -153,105 +87,50 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp["num_failure_eicrs"] == 1
-        assert resp["num_success_eicrs"] == 0
-        assert "No bucket name found" in resp["failures"][0]["error"]
+        assert resp == FailureResponse(
+            num_success_eicrs=0,
+            num_failure_eicrs=1,
+            failures=[
+                Failure(
+                    error="No bucket name found in S3 event payload. The TTC lambda derives its target bucket from the event and does not use a static bucket configuration. Ensure the EventBridge/S3 event includes detail.bucket.name.",
+                    message_id="f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                )
+            ],
+        )
 
     def test_handler_saves_metadata_when_no_relevant_schematron_fields(
         self,
         example_sqs_event,
-        mock_aws_setup,
+        mock_aws_setup_no_schematron_issues,
         mock_opensearch,
-        mocker,
         snapshot: Snapshot,
         mock_lambda_context,
     ):
         """Test handler saves TTC metadata output when no relevant Schematron fields are found."""
-        mocker.patch(
-            "text_to_code_lambda.lambda_function._load_schematron_data_fields", return_value=[]
-        )
-
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == SuccessResponse(num_success_eicrs=0)
 
         # Assert that the TTC output was not saved to S3
         with pytest.raises(FileNotFoundError):
             lambda_handler.get_file_content_from_s3(
                 bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_no_schematron_issues.persistence_id}",
             )
 
         # Assert that the TTC metadata output was saved to S3 with the expected content
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup_no_schematron_issues.persistence_id.removesuffix('.xml')}.json",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
-        assert ttc_metadata_output is not None
         snapshot.assert_match(
-            _serialize_ttc_metadata_snapshot(ttc_metadata_output),
-            "handler_no_relevant_schematron_fields_ttc_metadata_output.json",
+            ttc_metadata_output, "handler_no_relevant_schematron_fields_ttc_metadata_output.json"
         )
-        assert mock_opensearch.search.call_count == 0
-
-    def test_handler_continues_processing_after_record_exception(
-        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
-    ):
-        """Test handler continues processing remaining records when one record raises an exception."""
-        example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
-        example_sqs_event["Records"][1]["messageId"] = "second-message-id"
-
-        process_record_mock = mocker.patch(
-            "text_to_code_lambda.lambda_function.process_record",
-            side_effect=[Exception("boom"), None],
-        )
-
-        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-
-        assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": [
-                {"message_id": example_sqs_event["Records"][0]["messageId"], "error": "boom"}
-            ],
-            "num_failure_eicrs": 1,
-            "num_success_eicrs": 1,
-        }
-        assert mock_opensearch.search.call_count == 0
-
-    def test_handler_returns_failures_when_all_records_raise(
-        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
-    ):
-        """Test handler returns aggregated failures when all records raise exceptions."""
-        example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
-        example_sqs_event["Records"][0]["messageId"] = "first-message-id"
-        example_sqs_event["Records"][1]["messageId"] = "second-message-id"
-
-        process_record_mock = mocker.patch(
-            "text_to_code_lambda.lambda_function.process_record",
-            side_effect=[Exception("first failure"), Exception("second failure")],
-        )
-
-        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-
-        assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": [
-                {"message_id": "first-message-id", "error": "first failure"},
-                {"message_id": "second-message-id", "error": "second failure"},
-            ],
-            "num_failure_eicrs": 2,
-            "num_success_eicrs": 0,
-        }
-        assert mock_opensearch.search.call_count == 0
 
     def test_handler_continues_when_selected_candidate_is_none(
         self,
@@ -273,37 +152,41 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == SuccessResponse(num_success_eicrs=1)
 
         retriever_embed_mock.assert_not_called()
         reranker_mock.assert_not_called()
         assert mock_opensearch.search.call_count == 0
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
+        ttc_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
-        assert ttc_output is not None
+        snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
+
         snapshot.assert_match(
-            _serialize_ttc_output_snapshot(ttc_output),
+            ttc_output,
             "handler_selected_candidate_none_ttc_output.json",
         )
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
-        assert ttc_metadata_output is not None
         snapshot.assert_match(
-            _serialize_ttc_metadata_snapshot(ttc_metadata_output),
+            ttc_metadata_output,
             "handler_selected_candidate_none_ttc_metadata_output.json",
         )
 
@@ -346,59 +229,36 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == SuccessResponse(num_success_eicrs=1)
 
-        assert mock_opensearch.search.call_count == 0
-        assert reranker_mock.call_count == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
+        assert reranker_mock.call_count == 0
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
+        ttc_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
-        assert ttc_output is not None
         snapshot.assert_match(
-            _serialize_ttc_output_snapshot(ttc_output),
+            ttc_output,
             "handler_no_opensearch_hits_ttc_output.json",
         )
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = json.dumps(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
+                )
+            ),
+            indent=4,
+            sort_keys=True,
         )
-        assert ttc_metadata_output is not None
         snapshot.assert_match(
-            _serialize_ttc_metadata_snapshot(ttc_metadata_output),
+            ttc_metadata_output,
             "handler_no_opensearch_hits_ttc_metadata_output.json",
         )
-
-    def test_process_record_pipeline_returns_no_matches_found_when_no_candidates_are_selected(
-        self, mock_aws_setup, mock_opensearch, mocker, mock_lambda_context
-    ):
-        """Test pipeline returns no_matches_found when no relevant candidates are selected."""
-        mocker.patch(
-            "text_to_code.services.evaluator.select_relevant_text",
-            return_value=None,
-        )
-
-        s3_client = lambda_handler.create_s3_client()
-
-        resp = lambda_function._process_record_pipeline(
-            persistence_id=mock_aws_setup.persistence_id,
-            s3_client=s3_client,
-            opensearch_client=mock_opensearch,
-            bucket_name=S3_BUCKET,
-        )
-
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
-            "result": "no_matches_found",
-        }

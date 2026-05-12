@@ -26,15 +26,17 @@ class TestGetEventBridgeDataFromS3Event:
             "detail": {"bucket": {"name": moto_setup.bucket_name}, "object": {"key": "test.txt"}}
         }
 
-        content = lambda_handler.get_eventbridge_data_from_s3_event(event)
-        assert content == {"bucket_name": moto_setup.bucket_name, "object_key": "test.txt"}
+        bucket_name, object_key = lambda_handler.get_eventbridge_data_from_s3_event(event)
+        assert bucket_name == moto_setup.bucket_name
+        assert object_key == "test.txt"
 
     def test_get_eventbridge_data_missing_bucket(self):
         """Test that a missing bucket name returns None instead of raising."""
         event = {"detail": {"object": {"key": "test.txt"}}}
 
-        result = lambda_handler.get_eventbridge_data_from_s3_event(event)
-        assert result == {"bucket_name": None, "object_key": "test.txt"}
+        bucket_name, object_key = lambda_handler.get_eventbridge_data_from_s3_event(event)
+        assert bucket_name is None
+        assert object_key == "test.txt"
 
 
 class TestGetFileContentFromS3:
@@ -134,8 +136,7 @@ class TestCreateOpenSearchClient:
     def test_create_opensearch_client(self, moto_setup):
         """Test create OpenSearch client."""
         expected_port = 443  # The expected default port for the OpenSearch client.
-        auth = lambda_handler.create_aws_auth()
-        client = lambda_handler.create_opensearch_client(auth)
+        client = lambda_handler.create_opensearch_client()
 
         assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
         assert client.transport.hosts[0]["port"] == expected_port
