@@ -8,6 +8,7 @@ import boto3
 import pytest
 import time_machine
 from botocore.exceptions import ClientError
+from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
 
@@ -50,6 +51,9 @@ EICR_CASES: tuple[tuple[str, str], ...] = (
     ),
 )
 FAIL_EICR_CASES: tuple[tuple[str, str], ...] = (("empty_eicr", "e2e/assets/empty_eicr.xml"),)
+
+NAMESPACE_PRESERVATION_SCHEMATRON_PATH = "e2e/assets/namespace_preservation_schematron_errors.xml"
+NAMESPACE_PRESERVATION_EICR_PATH = "e2e/assets/namespace_preservation_eicr.xml"
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +334,23 @@ class TestEndToEndSimulated:
         self,
         eicr_id: str,
         eicr_path: str,
+        snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")
+
+
+@pytest.mark.e2e
+class TestNamespacePreservation:
+    """Regression test for the APHL-reported RCKMS 422 rejection.
+
+    The augmenter previously stripped CDA namespaces during parsing and never put
+    them back on serialization, producing output that RCKMS rejected as
+    'Payload is missing or empty'. The test feeds the original eICR Geo used to
+    surface the bug through the local pipeline and asserts the augmented output
+    declares every namespace the input declared, with the root in the CDA
+    namespace.
+    """
+
+    def test_augmented_eicr_preserves_cda_namespaces(
+        self,
         aws,
         infra,
         mock_opensearch,
@@ -357,3 +378,73 @@ class TestEndToEndSimulated:
             f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
             eicr_id,
         )
+        with open(NAMESPACE_PRESERVATION_SCHEMATRON_PATH, "rb") as schematron_file:
+            aws["s3"].upload_fileobj(
+                schematron_file,
+                S3_BUCKET,
+                f"{SCHEMATRON_ERROR_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        with open(NAMESPACE_PRESERVATION_EICR_PATH, "rb") as eicr_file:
+            aws["s3"].upload_fileobj(
+                eicr_file,
+                S3_BUCKET,
+                f"{EICR_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        with open(NAMESPACE_PRESERVATION_EICR_PATH, "rb") as eicr_file:
+            aws["s3"].upload_fileobj(
+                eicr_file,
+                S3_BUCKET,
+                f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+
+        q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
+        ttc_handler(_build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context)
+
+        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
+        with time_machine.travel(
+            datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
+        ):
+            augmentation_lambda(
+                _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME),
+                mock_lambda_context,
+            )
+
+        augmented_eicr = (
+            aws["s3"]
+            .get_object(Bucket=S3_BUCKET, Key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}")[
+                "Body"
+            ]
+            .read()
+            .decode("utf-8")
+        )
+
+        # Verify that the input had the namespace declarations we expect to see preserved,
+        # so that this regression test stays meaningful if the fixture is ever swapped out.
+        with open(NAMESPACE_PRESERVATION_EICR_PATH, "rb") as eicr_file:
+            input_nsmap = etree.fromstring(eicr_file.read()).nsmap
+        assert input_nsmap == {
+            None: "urn:hl7-org:v3",
+            "cda": "urn:hl7-org:v3",
+            "sdtc": "urn:hl7-org:sdtc",
+            "voc": "http://www.lantanagroup.com/voc",
+            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        }
+
+        augmented_root = etree.fromstring(augmented_eicr.encode("utf-8"))
+
+        # The default CDA namespace must be declared — without it, RCKMS reads every
+        # child element as being in the null namespace and rejects with 422.
+        assert augmented_root.nsmap == input_nsmap, (
+            "Augmented eICR root namespace declarations diverged from input: "
+            f"{dict(augmented_root.nsmap)}"
+        )
+        assert augmented_root.tag == "{urn:hl7-org:v3}ClinicalDocument"
+
+        # Spot-check a descendant the augmenter touches: every <translation> it injects
+        # must resolve under the CDA namespace, not the null namespace.
+        translations = augmented_root.xpath(
+            "//cda:translation", namespaces={"cda": "urn:hl7-org:v3"}
+        )
+        assert translations, "Augmenter did not inject any <translation> elements"
+        for translation in translations:
+            assert etree.QName(translation).namespace == "urn:hl7-org:v3"
