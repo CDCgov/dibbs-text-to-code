@@ -12,5 +12,5 @@
     "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
     "processed_at": "2026-01-01T01:01:00Z",
     "reason_for_skipping": "No relevant data fields identified from Schematron errors for TTC processing",
-    "ttc_schematron_issues": []
+    "ttc_schematron_issues": null
 }

@@ -179,7 +179,6 @@ def put_file(
     file_obj: typing.BinaryIO,
     bucket_name: str,
     object_key: str,
-    s3_client: BaseClient | None = None,
 ) -> None:
     """Uploads a file object to a S3 bucket.
 
@@ -188,7 +187,7 @@ def put_file(
     :param object_key: The key to assign to the uploaded object in S3.
     :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
-    client = s3_client or create_s3_client()
+    client = create_s3_client()
     logger.info(
         "Uploading file to S3",
         bucket_name=bucket_name,

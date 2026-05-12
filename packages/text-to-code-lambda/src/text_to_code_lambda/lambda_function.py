@@ -25,6 +25,7 @@ from text_to_code.models.eicr import Metadata as EICRMetadata
 from text_to_code.services import eicr_processor
 from text_to_code.services import evaluator
 from text_to_code.services import schematron_processor
+from text_to_code.services.eicr_processor import EicrProcessor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import ScoredResult
@@ -78,12 +79,9 @@ class TTCMetadata(BaseModel):
 
     eicr_metadata: EICRMetadata | None
     persistence_id: str
-    ttc_schematron_issues: list[TTCSchematronIssueDetail]
+    ttc_schematron_issues: list[TTCSchematronIssueDetail] | None
     processed_at: datetime
-    reason_for_skipping: (
-        Literal["No relevant data fields identified from Schematron errors for TTC processing"]
-        | None
-    ) = None
+    reason_for_skipping: str | None = None
 
 
 @dataclass
@@ -209,35 +207,11 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                     )
                     logger.info("TTC processing completed", status="no_matches_found")
 
-                    ttc_metadata = TTCMetadata(
-                        eicr_metadata=processor.eicr_metadata,
-                        persistence_id=persistence_id,
-                        ttc_schematron_issues=[],
-                        processed_at=datetime.now(UTC),
-                        reason_for_skipping="No relevant data fields identified from Schematron errors for TTC processing",
-                    )
-
-                    metadata_key = (
-                        f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
-                    )
-
-                    logger.info(
-                        "Saving TTC metadata output to S3",
-                        bucket_name=bucket_name,
-                        s3_key=metadata_key,
-                        status="processing",
-                    )
-                    lambda_handler.put_file(
-                        file_obj=io.BytesIO(ttc_metadata.model_dump_json().encode("utf-8")),
-                        bucket_name=bucket_name,
-                        object_key=metadata_key,
-                        s3_client=s3_client,
-                    )
-                    logger.info(
-                        "Saved TTC metadata output to S3",
-                        bucket_name=bucket_name,
-                        s3_key=metadata_key,
-                        status="success",
+                    _save_metadata(
+                        processor,
+                        persistence_id,
+                        bucket_name,
+                        reason_for_skipping=NO_DATA_FIELDS_MESSAGE,
                     )
 
                     continue
@@ -347,57 +321,31 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
                         ),
                     )
 
+                # Save the TTC output to S3 for the Augmentation Lambda to consume
                 ttc_output = TTCOutput(
                     persistence_id=persistence_id,
                     nonstandard_codes=nonstandard_code_replacements,
                 )
-
-                ttc_metadata = TTCMetadata(
-                    eicr_metadata=processor.eicr_metadata,
-                    persistence_id=persistence_id,
-                    ttc_schematron_issues=ttc_schematron_issues_details,
-                    processed_at=datetime.now(UTC),
-                )
-
-                # Save the TTC output to S3 for the Augmentation Lambda to consume
+                ttc_output_key = f"{TTC_OUTPUT_PREFIX}{persistence_id}"
                 logger.info(
                     "Saving TTC output to S3",
                     bucket_name=bucket_name,
-                    s3_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
+                    s3_key=ttc_output_key,
                     status="processing",
                 )
-                lambda_handler.put_file(
-                    file_obj=io.BytesIO(ttc_output.model_dump_json().encode("utf-8")),
-                    bucket_name=bucket_name,
-                    object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
-                    s3_client=s3_client,
-                )
+                _save_to_s3(ttc_output, bucket_name, ttc_output_key)
                 logger.info(
                     "Saved TTC output to S3",
                     bucket_name=bucket_name,
-                    s3_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
+                    s3_key=ttc_output_key,
                     status="success",
                 )
 
-                metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
-
-                logger.info(
-                    "Saving TTC metadata output to S3",
-                    bucket_name=bucket_name,
-                    s3_key=metadata_key,
-                    status="processing",
-                )
-                lambda_handler.put_file(
-                    file_obj=io.BytesIO(ttc_metadata.model_dump_json().encode("utf-8")),
-                    bucket_name=bucket_name,
-                    object_key=metadata_key,
-                    s3_client=s3_client,
-                )
-                logger.info(
-                    "Saved TTC metadata output to S3",
-                    bucket_name=bucket_name,
-                    s3_key=metadata_key,
-                    status="success",
+                _save_metadata(
+                    processor,
+                    persistence_id,
+                    bucket_name,
+                    ttc_schematron_issues_details,
                 )
 
             successes.append(record.message_id)
@@ -427,3 +375,49 @@ def handler(event: SQSEvent, context: LambdaContext) -> SuccessResponse | Failur
     )
 
     return response
+
+
+def _save_metadata(
+    processor: EicrProcessor,
+    persistence_id: str,
+    bucket_name: str,
+    ttc_schematron_issues: list[TTCSchematronIssueDetail] | None = None,
+    reason_for_skipping: str | None = None,
+) -> None:
+    """Save augmentation metadata to S3 bucket."""
+    ttc_metadata = TTCMetadata(
+        eicr_metadata=processor.eicr_metadata,
+        persistence_id=persistence_id,
+        ttc_schematron_issues=ttc_schematron_issues,
+        processed_at=datetime.now(UTC),
+        reason_for_skipping=reason_for_skipping,
+    )
+
+    metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
+
+    logger.info(
+        "Saving TTC metadata output to S3",
+        bucket_name=bucket_name,
+        s3_key=metadata_key,
+        status="processing",
+    )
+    _save_to_s3(
+        ttc_metadata,
+        bucket_name,
+        metadata_key,
+    )
+    logger.info(
+        "Saved TTC metadata output to S3",
+        bucket_name=bucket_name,
+        s3_key=metadata_key,
+        status="success",
+    )
+
+
+def _save_to_s3(model: BaseModel, bucket_name: str, object_key: str) -> None:
+    """Save model to S3 bucket."""
+    lambda_handler.put_file(
+        file_obj=io.BytesIO(model.model_dump_json().encode("utf-8")),
+        bucket_name=bucket_name,
+        object_key=object_key,
+    )

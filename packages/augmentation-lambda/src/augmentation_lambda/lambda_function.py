@@ -197,7 +197,6 @@ def _save_augmentation_outputs(
         file_obj=io.BytesIO(output.augmented_eicr.encode("utf-8")),
         bucket_name=bucket_name,
         object_key=augmented_eicr_key,
-        s3_client=s3_client,
     )
     logger.info(
         "Saved augmented eICR to S3",
@@ -210,7 +209,6 @@ def _save_augmentation_outputs(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=augmentation_metadata_key,
-        s3_client=s3_client,
     )
 
     logger.info(
