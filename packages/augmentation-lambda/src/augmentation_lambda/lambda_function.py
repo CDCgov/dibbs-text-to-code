@@ -13,8 +13,7 @@ import lambda_handler
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import NonstandardCodeInstance
-from shared_models import TTCAugmenterInput
+from shared_models import TTCOutput
 
 logger = Logger(service="augmentation-lambda")
 
@@ -109,10 +108,10 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
 
         ttc_output = _load_ttc_output(persistence_id, s3_client, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, s3_client, bucket_name)
-        nonstandard_codes = _parse_nonstandard_codes(ttc_output)
+        nonstandard_codes = ttc_output.nonstandard_codes
 
-        augmenter_input = TTCAugmenterInput(
-            eicr_id=persistence_id,
+        augmenter_input = TTCOutput(
+            persistence_id=persistence_id,
             nonstandard_codes=nonstandard_codes,
         )
 
@@ -128,7 +127,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         metadata = augmenter.augment()
 
         output = TTCAugmenterOutput(
-            eicr_id=augmenter_input.eicr_id,
+            eicr_id=augmenter_input.persistence_id,
             augmented_eicr=augmenter.augmented_xml,
             metadata=metadata,
         )
@@ -137,7 +136,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         logger.info("Augmentation processing completed", status="success")
 
 
-def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> dict:
+def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> TTCOutput:
     """Load TTC output from S3.
 
     :param persistence_id: The persistence ID for the S3 object key.
@@ -155,7 +154,7 @@ def _load_ttc_output(persistence_id: str, s3_client: BaseClient, bucket_name: st
     content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
-    return json.loads(content)
+    return TTCOutput.model_validate_json(content)
 
 
 def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> str:
@@ -176,23 +175,6 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
     return lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
     )
-
-
-def _parse_nonstandard_codes(ttc_output: dict) -> list[NonstandardCodeInstance]:
-    """Parse nonstandard codes from TTC output.
-
-    The TTC Lambda writes NonstandardCodeInstance model dumps to the schematron_errors
-    field of the TTC output. This function validates and reconstructs them.
-
-    :param ttc_output: The TTC output dictionary from S3.
-    :return: A list of NonstandardCodeInstance objects.
-    """
-    codes = []
-    for entries in ttc_output.get("schematron_errors", {}).values():
-        for entry in entries:
-            if "new_translation" in entry:
-                codes.append(NonstandardCodeInstance.model_validate(entry))
-    return codes
 
 
 def _save_augmentation_outputs(

@@ -33,25 +33,21 @@ def test_ttc_output() -> dict:
     """A test example of the output of the TTC lambda."""
     return {
         "persistence_id": TEST_PERSISTENCE_ID,
-        "eicr_metadata": {},
-        "schematron_errors": {
-            "Lab Test Name Resulted": [
-                {
-                    "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-                    "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
-                    "field_type": "Lab Test Name Resulted",
-                    "new_translation": {
-                        "code": "109224-6",
-                        "code_system": "2.16.840.1.113883.6.1",
-                        "code_system_name": "LOINC",
-                        "display_name": "Weed Allergen Mix 3 IgE Ab",
-                        "value_set": None,
-                        "value_set_version": None,
-                        "original_text": "A custom code in original text.",
-                    },
-                }
-            ]
-        },
+        "nonstandard_codes": [
+            {
+                "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                "field_type": "Lab Test Name Resulted",
+                "new_translation": {
+                    "code": "109224-6",
+                    "code_system": "2.16.840.1.113883.6.1",
+                    "code_system_name": "LOINC",
+                    "display_name": "Weed Allergen Mix 3 IgE Ab",
+                    "value_set": None,
+                    "value_set_version": None,
+                    "original_text": "A custom code in original text.",
+                },
+            }
+        ],
     }
 
 

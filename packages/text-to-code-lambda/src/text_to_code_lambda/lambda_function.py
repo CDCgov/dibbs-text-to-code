@@ -17,6 +17,8 @@ import lambda_handler
 from lambda_handler.models import OpenSearchResult
 from shared_models import Code
 from shared_models import DataField
+from shared_models import NonstandardCodeReplacement
+from shared_models import TTCOutput
 from text_to_code.models import Candidate
 from text_to_code.models import query as query_models
 from text_to_code.models.eicr import Metadata as EICRMetadata
@@ -45,30 +47,6 @@ OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 NO_DATA_FIELDS_MESSAGE = (
     "No relevant data fields identified from Schematron errors for TTC processing"
 )
-
-
-@dataclass
-class NonstandardCodeReplacement:
-    """Model with the information needed to update a nonstandard code."""
-
-    schematron_error_xpath: str
-    """The XPath give by the Schematron error to the observation with a nonconforming code."""
-    field_type: DataField
-    """The `DataField` type of the nonconforming code."""
-    new_translation: Code
-    """The new translation."""
-
-
-class TTCOutput(BaseModel):
-    """The data that will be sent to the augmentation Lambda."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    persistence_id: str
-    nonstandard_codes: list[NonstandardCodeReplacement]
 
 
 @dataclass

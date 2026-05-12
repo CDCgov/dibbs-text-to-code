@@ -14,7 +14,6 @@
         "value_set_version": null
       },
       "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation",
-      "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
       "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
     }
   ],

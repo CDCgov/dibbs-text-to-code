@@ -41,16 +41,9 @@ class Code(BaseModel):
     original_text: str | None = None
 
 
-class NonstandardCodeInstance(BaseModel):
+class NonstandardCodeReplacement(BaseModel):
     """Model with the information needed to update a nonstandard code."""
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
-
-    schematron_error: str
-    """The text of the Schematron error. This is only needed so that the augmentation metadata can save it."""
     schematron_error_xpath: str
     """The XPath give by the Schematron error to the observation with a nonconforming code."""
     field_type: DataField
@@ -59,12 +52,13 @@ class NonstandardCodeInstance(BaseModel):
     """The new translation."""
 
 
-class TTCAugmenterInput(BaseModel):
-    """Input for the augmentation service."""
+class TTCOutput(BaseModel):
+    """The data that will be sent to the augmentation Lambda."""
 
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",
     )
-    eicr_id: str
-    nonstandard_codes: list[NonstandardCodeInstance]
+
+    persistence_id: str
+    nonstandard_codes: list[NonstandardCodeReplacement]

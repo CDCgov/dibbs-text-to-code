@@ -9,7 +9,7 @@ from augmentation.models import Metadata
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
-from shared_models import NonstandardCodeInstance
+from shared_models import NonstandardCodeReplacement
 
 
 class EICRAugmenter(Augmenter):
@@ -25,7 +25,7 @@ class EICRAugmenter(Augmenter):
     def __init__(
         self,
         document: str,
-        nonstandard_codes: list[NonstandardCodeInstance],
+        nonstandard_codes: list[NonstandardCodeReplacement],
         config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
     ):
@@ -64,7 +64,6 @@ class EICRAugmenter(Augmenter):
 
             nonstandard_code_metadata.append(
                 NonstandardCodeInstanceMetadata(
-                    schematron_error=nonstandard_code_instance.schematron_error,
                     schematron_error_xpath=nonstandard_code_instance.schematron_error_xpath,
                     field_type=nonstandard_code_instance.field_type,
                     new_translation=nonstandard_code_instance.new_translation,
@@ -73,7 +72,7 @@ class EICRAugmenter(Augmenter):
             )
 
         metadata = Metadata(
-            original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
+            original_eicr_id=str(self.original_eicr_id),
             augmented_eicr_id=self.new_doc_id,
             nonstandard_codes=nonstandard_code_metadata,
         )
@@ -280,14 +279,14 @@ class EICRAugmenter(Augmenter):
         author = self._generate_author(level="header")
         self._augmented_element.append(author)
 
-    def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
+    def _handle_author_entry(self, augmentation: NonstandardCodeReplacement) -> None:
         entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
         author = self._generate_author(level="data_element")
         entry.append(author)
 
     # TODO: this will need to be modified in the future when we have
     # other data elements, other than observation.codes that are being augmented
-    def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
+    def _handle_translation(self, augmentation: NonstandardCodeReplacement) -> str:
         entry_code = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath + "/code")
         self._add_previous_element_comment(
             "This data has been augmented with a standard LOINC code", entry_code

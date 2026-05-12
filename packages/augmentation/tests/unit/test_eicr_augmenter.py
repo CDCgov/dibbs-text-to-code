@@ -16,7 +16,7 @@ from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import Code
 from shared_models import DataField
-from shared_models import NonstandardCodeInstance
+from shared_models import NonstandardCodeReplacement
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
@@ -59,7 +59,7 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(
             BASIC_ECR,
             [
-                NonstandardCodeInstance(
+                NonstandardCodeReplacement(
                     schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
@@ -82,7 +82,6 @@ class TestEicrAugmenter:
             augmented_eicr_id="12345678-1234-5678-1234-567812345678",
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -103,8 +102,7 @@ class TestEicrAugmenter:
         mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
 
         nonstandard_codes = [
-            NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
+            NonstandardCodeReplacement(
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
