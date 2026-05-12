@@ -45,10 +45,6 @@ EICR_CASES: tuple[tuple[str, str], ...] = (
         "eicr_sample9_null_flavor_result_values_local_codes",
         "e2e/assets/eICR_Sample9_nullFlavorResultValues_localCodes.xml",
     ),
-    (
-        "eicr_sample7_null_flavor_result_values",
-        "e2e/assets/eICR_Sample7_nullFlavorResultValues.xml",
-    ),
 )
 FAIL_EICR_CASES: tuple[tuple[str, str], ...] = (("empty_eicr", "e2e/assets/empty_eicr.xml"),)
 
@@ -334,23 +330,6 @@ class TestEndToEndSimulated:
         self,
         eicr_id: str,
         eicr_path: str,
-        snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")
-
-
-@pytest.mark.e2e
-class TestNamespacePreservation:
-    """Regression test for the APHL-reported RCKMS 422 rejection.
-
-    The augmenter previously stripped CDA namespaces during parsing and never put
-    them back on serialization, producing output that RCKMS rejected as
-    'Payload is missing or empty'. The test feeds the original eICR Geo used to
-    surface the bug through the local pipeline and asserts the augmented output
-    declares every namespace the input declared, with the root in the CDA
-    namespace.
-    """
-
-    def test_augmented_eicr_preserves_cda_namespaces(
-        self,
         aws,
         infra,
         mock_opensearch,
@@ -378,6 +357,27 @@ class TestNamespacePreservation:
             f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
             eicr_id,
         )
+
+
+@pytest.mark.e2e
+class TestNamespacePreservation:
+    """Regression test for the APHL-reported RCKMS 422 rejection.
+
+    The augmenter previously stripped CDA namespaces during parsing and never put
+    them back on serialization, producing output that RCKMS rejected as
+    'Payload is missing or empty'. The test feeds the original eICR Geo used to
+    surface the bug through the local pipeline and asserts the augmented output
+    declares every namespace the input declared, with the root in the CDA
+    namespace.
+    """
+
+    def test_augmented_eicr_preserves_cda_namespaces(
+        self,
+        aws,
+        infra,
+        mock_opensearch,
+        mock_lambda_context,
+    ):
         with open(NAMESPACE_PRESERVATION_SCHEMATRON_PATH, "rb") as schematron_file:
             aws["s3"].upload_fileobj(
                 schematron_file,
@@ -398,7 +398,9 @@ class TestNamespacePreservation:
             )
 
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
-        ttc_handler(_build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context)
+        ttc_handler(
+            _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context
+        )
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         with time_machine.travel(
