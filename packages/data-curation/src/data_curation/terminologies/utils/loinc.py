@@ -159,11 +159,17 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
     while current_row_count > 0:
+        # Two pathways here - one is specific to getting all the UMLS Urls
+        # for additional information from UMLS (SNOMED to LOINC Crosswalk and related terms)
+        # - and the other specific for handling the standard LOINC API return data
+        # into records that are digestable for TTC
         if loinc_valueset_type not in ("UMLS Atoms"):
             loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
         else:
             loinc_umls_urls = get_loinc_umls_urls(loinc_codes["Results"], loinc_umls_urls)
 
+        # handles the looping mechanism to get the next set of LOINC codes 
+        # via the 'next' url
         if next_url_call is not None:
             next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
             if next_loinc_response.status_code != 200:
@@ -184,7 +190,19 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         return loinc_umls_urls
 
 
-def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
+def process_loinc_results(loinc_results, loinc_order_rows) -> dict:
+    """Function that loops through the LOINC results, returned via the various
+        API calls and sends them into another function to ex
+
+        :param api_url: LOINC url for the specific API used for requesting
+            data for LOINC codes.
+        :param loinc_valueset_type: Distinguishes which LOINC codes are being 
+            requested.  Options (Lab Names, Lab Orders, Lab Results, UMLS Atoms)
+
+        :returns: A list of dictionaries containing LOINC code and term data
+            or a list of UMLS URLS to pull additional information for each
+            LOINC code.
+    """
     if len(loinc_results) == 0:
         # TODO: In Subsequent PR update this to be a logging statement
         print("NO RESULTS TO PROCESS!")
