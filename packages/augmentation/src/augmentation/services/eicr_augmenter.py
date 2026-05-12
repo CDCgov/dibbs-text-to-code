@@ -12,6 +12,18 @@ from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
 from shared_models import NonstandardCodeInstance
 
+from .eicr_utils import CDA_NS
+from .eicr_utils import CDA_NSMAP
+from .eicr_utils import cda_xpath
+
+
+def _cda_element(tag: str, parent: Element | None = None) -> Element:
+    """Create an element in the CDA default namespace (urn:hl7-org:v3)."""
+    full_tag = f"{{{CDA_NS}}}{tag}"
+    if parent is not None:
+        return etree.SubElement(parent, full_tag)
+    return etree.Element(full_tag)
+
 
 class EICRAugmenter(Augmenter):
     """Augmenter specific to eICR documents.
@@ -125,10 +137,10 @@ class EICRAugmenter(Augmenter):
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
-        related_doc = etree.SubElement(self._augmented_element, "relatedDocument")
+        related_doc = _cda_element("relatedDocument", self._augmented_element)
         related_doc.set("typeCode", "XFRM")
         self._add_previous_element_comment(" typeCode 'XFRM' ", related_doc)
-        parent_doc = etree.SubElement(related_doc, "parentDocument")
+        parent_doc = _cda_element("parentDocument", related_doc)
         parent_doc_id = self._get_old_document_id()
         parent_doc.append(parent_doc_id)
         # comments need to be added to the element after it's been appended to the
@@ -157,7 +169,7 @@ class EICRAugmenter(Augmenter):
 
     def _get_element_by_xpath(self, element: Element, xpath: str) -> Element:
         """Get the first matching child element by XPath, or raise if not found."""
-        results = element.xpath(xpath)
+        results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
         if not results:
             raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
         return results[0]
@@ -190,34 +202,34 @@ class EICRAugmenter(Augmenter):
 
     def _get_new_document_id(self) -> Element:
         """Generate a new document ID element for the augmented eICR document."""
-        doc_id_tag = etree.Element("id")
+        doc_id_tag = _cda_element("id")
         doc_id_tag.set("root", self.new_doc_id)
         doc_id_tag.set("assigningAuthorityName", self._get_application_code_value())
         return doc_id_tag
 
     def _get_new_set_id(self) -> Element:
         """Generate a new setId element for the augmented eICR document."""
-        set_id_tag = etree.Element("setId")
+        set_id_tag = _cda_element("setId")
         set_id_tag.set("root", self.new_set_id)
         return set_id_tag
 
     def _get_new_effective_time(self) -> Element:
         """Generate an effectiveTime element for the augmented eICR document."""
-        effective_time_tag = etree.Element("effectiveTime")
+        effective_time_tag = _cda_element("effectiveTime")
         effective_time_tag.set("value", self.augmentation_date.strftime("%Y%m%d%H%M%S"))
         return effective_time_tag
 
     def _get_new_version_number(self) -> Element:
         """Generate a versionNumber element for the augmented eICR document."""
         old_version_number = self._get_old_version_number()
-        version_number_tag = etree.Element("versionNumber")
+        version_number_tag = _cda_element("versionNumber")
         version_number_tag.set("value", old_version_number.get("value", "1"))
         return version_number_tag
 
     def _get_augmented_template_id(self) -> Element:
         """Generate a new templateId element for the augmented eICR document."""
         # this new templateId is defined in the Augmentation Spec V2
-        template_id_tag = etree.Element("templateId")
+        template_id_tag = _cda_element("templateId")
         template_id_tag.set("root", "2.16.840.1.113883.10.20.15.2.1.3")
         template_id_tag.set("extension", "2025-11-01")
         return template_id_tag
@@ -229,13 +241,13 @@ class EICRAugmenter(Augmenter):
 
     def _generate_author(self, level: str = "header") -> Element:
         null_flavor_comment = " set to nullFlavor 'NA' "
-        author = etree.Element("author")
+        author = _cda_element("author")
         # TODO: Eventually we will not only separate by header vs. data_element
         # but will also separate out the various comments by the various data element
         # type being modified. This can easily be stored in the model for the data element.
         # For now we are hard coding for code-text-to-code and observation in the comment
         if level != "header":
-            function_code = etree.SubElement(author, "functionCode")
+            function_code = _cda_element("functionCode", author)
             function_code.set("code", value=self.config.author_function_code)
             function_code.set("codeSystem", value=self.config.author_function_code_system)
             function_code.set("codeSystemName", value=self.config.author_function_code_system_name)
@@ -260,21 +272,21 @@ class EICRAugmenter(Augmenter):
                 ),
                 author,
             )
-        assigned_author = etree.SubElement(author, "assignedAuthor")
-        id = etree.SubElement(assigned_author, "id")
+        assigned_author = _cda_element("assignedAuthor", author)
+        id = _cda_element("id", assigned_author)
         id.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, id)
-        addr = etree.SubElement(assigned_author, "addr")
+        addr = _cda_element("addr", assigned_author)
         addr.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, addr)
-        telecom = etree.SubElement(assigned_author, "telecom")
+        telecom = _cda_element("telecom", assigned_author)
         telecom.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, telecom)
-        assigned_authoring_device = etree.SubElement(assigned_author, "assignedAuthoringDevice")
+        assigned_authoring_device = _cda_element("assignedAuthoringDevice", assigned_author)
         self._add_previous_element_comment(
             " set to 'Data Augmentation Tool' ", assigned_authoring_device
         )
-        software_name = etree.SubElement(assigned_authoring_device, "softwareName")
+        software_name = _cda_element("softwareName", assigned_authoring_device)
         software_name.set("code", value=self._get_application_code_value())
         software_name.set("codeSystem", value=self.config.author_function_code_system)
         software_name.set("codeSystemName", value=self.config.author_function_code_system_name)
@@ -307,7 +319,7 @@ class EICRAugmenter(Augmenter):
             "The data in the code and code/originalText data elements is the original data",
             entry_code,
         )
-        new_translation = etree.SubElement(entry_code, "translation")
+        new_translation = _cda_element("translation", entry_code)
         _set_attribute(new_translation, "code", augmentation.new_translation.code)
         new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
         new_translation.set("codeSystemName", "LOINC")
@@ -317,9 +329,39 @@ class EICRAugmenter(Augmenter):
             "The data in the translation is the augmented data", new_translation
         )
 
-        return self._augmented_element.getroottree().getpath(new_translation)
+        return _absolute_local_xpath(new_translation)
 
 
 def _set_attribute(element: Element, key: str, value: str | None) -> None:
     if value:
         element.set(key, value)
+
+
+def _absolute_local_xpath(element: Element) -> str:
+    """Build an absolute XPath using local element names.
+
+    Adds a 1-based positional index `[N]` only when siblings share the same
+    local tag, so that unique elements yield clean paths like
+    `/ClinicalDocument/component/.../translation` while ambiguous ones remain
+    addressable.
+    """
+    parts: list[str] = []
+    current: Element | None = element
+    while current is not None:
+        local = etree.QName(current).localname
+        parent = current.getparent()
+        if parent is not None:
+            same_tag_siblings = [
+                c
+                for c in parent
+                if not isinstance(c, etree._Comment) and etree.QName(c).localname == local
+            ]
+            if len(same_tag_siblings) > 1:
+                idx = same_tag_siblings.index(current) + 1
+                parts.append(f"{local}[{idx}]")
+            else:
+                parts.append(local)
+        else:
+            parts.append(local)
+        current = parent
+    return "/" + "/".join(reversed(parts))
