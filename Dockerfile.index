@@ -10,8 +10,13 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 # Initialize the index_lambda directory
 RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/index_lambda"
 
-# Install build tools for compiling C++ extensions
-RUN microdnf install -y gcc-c++ make && microdnf clean all
+# Update OS packages for CVE fixes, install build tools for compiling C++ extensions,
+# and drop the Runtime Interface Emulator (only used for local Lambda emulation).
+# --releasever=latest is required: AL2023 base images pin to a snapshot release.
+RUN microdnf update -y --releasever=latest \
+    && microdnf install -y --releasever=latest gcc-c++ make \
+    && microdnf clean all \
+    && rm -f /usr/local/bin/aws-lambda-rie
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
@@ -22,7 +27,8 @@ COPY ./packages/lambda-handler ${LAMBDA_TASK_ROOT}/lambda-handler
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
 
 COPY ./packages/index-lambda ${LAMBDA_TASK_ROOT}/index-lambda
-RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/index-lambda"
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/index-lambda" \
+    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
 # Copy over the rest of the code
 COPY ./packages/index-lambda/src ${LAMBDA_TASK_ROOT}/src
