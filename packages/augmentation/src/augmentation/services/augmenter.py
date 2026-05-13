@@ -10,7 +10,7 @@ from augmentation.models import Metadata
 
 from ..models.application import ApplicationCode
 from ..models.config import AugmenterConfig
-from .eicr_utils import clean_xml_tree
+from .eicr_utils import parse_eicr_xml
 
 
 class Augmenter(ABC):
@@ -45,7 +45,7 @@ class Augmenter(ABC):
         """Validates that the document payload is always supplied as a non-empty string."""
         if v is None or v.strip() == "":
             raise ValueError("Document payload must be a non-empty string!")
-        return clean_xml_tree(v)
+        return parse_eicr_xml(v)
 
     def _get_application_code_value(self) -> str:
         return self.application_code.code
