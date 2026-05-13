@@ -38,28 +38,33 @@ FUNCTION_2_NAME = "stage2-processor"
 
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
-EICR_CASES: tuple[tuple[str, str, str], ...] = (
+BASE_FOLDER = Path(__file__).parent
+ASSETS_FOLDER = BASE_FOLDER / "assets"
+
+EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
         "test_eicr",
-        "e2e/assets/test_eicr.xml",
-        "e2e/assets/test_schematron_errors.xml",
+        ASSETS_FOLDER / "test_eicr.xml",
+        ASSETS_FOLDER / "test_schematron_errors.xml",
     ),
     (
         "eicr_covid",
-        "e2e/assets/eicr_covid.xml",
-        "e2e/assets/eicr_covid_schematron_errors.xml",
+        ASSETS_FOLDER / "eicr_covid.xml",
+        ASSETS_FOLDER / "eicr_covid_schematron_errors.xml",
     ),
 )
-FAIL_EICR_CASES: tuple[tuple[str, str, str], ...] = (
+FAIL_EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
         "empty_eicr",
-        "e2e/assets/empty_eicr.xml",
-        "e2e/assets/empty_eicr_schematron_errors.xml",
+        ASSETS_FOLDER / "empty_eicr.xml",
+        ASSETS_FOLDER / "empty_eicr_schematron_errors.xml",
     ),
 )
 
-NAMESPACE_PRESERVATION_SCHEMATRON_PATH = "e2e/assets/namespace_preservation_schematron_errors.xml"
-NAMESPACE_PRESERVATION_EICR_PATH = "e2e/assets/namespace_preservation_eicr.xml"
+NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
+    ASSETS_FOLDER / "namespace_preservation_schematron_errors.xml"
+)
+NAMESPACE_PRESERVATION_EICR_PATH = ASSETS_FOLDER / "namespace_preservation_eicr.xml"
 
 
 # ---------------------------------------------------------------------------
