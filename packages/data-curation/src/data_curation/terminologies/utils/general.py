@@ -20,7 +20,7 @@ import re
 # Value Set Directories
 BASE_FOLDER = Path(__file__).parents[6] / "data" / "snoinc_extracts"
 ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
-TMP_DIRECTORY = "tmp"
+TMP_DIRECTORY = Path(__file__).parents[6] / "tmp"
 
 # regex patterns
 MULTIPLE_SPACE = re.compile(r"\s+")

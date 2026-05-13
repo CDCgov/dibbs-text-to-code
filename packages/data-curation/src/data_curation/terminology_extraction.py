@@ -130,7 +130,6 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     starting_loinc_code = ""
     umls_filename_tmp = "loinc_umls_related_names_PARTIAL.json"
     full_partial_file_path = TMP_DIRECTORY / umls_filename_tmp
-    print("TEMP FILE PATH: " + full_partial_file_path)
 
     if os.path.exists(full_partial_file_path):
         try:
@@ -308,7 +307,7 @@ def save_json_file(  # noqa: D103
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
 
-    full_file_path = os.path.join(directory_path, filename)
+    full_file_path = directory_path / filename
 
     if append_to_file:
         file_method = "a"
