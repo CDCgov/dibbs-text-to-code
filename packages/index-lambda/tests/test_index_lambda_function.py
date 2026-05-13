@@ -73,7 +73,7 @@ def patch_lambda_handler(
         """Mock create_aws_auth function that returns a dummy AWS auth object."""
         return object()
 
-    def mock_create_opensearch_client(aws_auth: object) -> MockOpenSearchClient:
+    def mock_create_opensearch_client() -> MockOpenSearchClient:
         """Mock create_opensearch_client function that returns a MockOpenSearchClient."""
         return mock_client
 

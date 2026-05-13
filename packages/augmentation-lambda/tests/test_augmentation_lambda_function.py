@@ -102,7 +102,6 @@ class TestHandler:
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
-            s3_client=mock_aws_setup,
         )
         snapshot.assert_match(augmented_eicr, "handler_writes_outputs_augmented_eicr.xml")
 
@@ -110,7 +109,6 @@ class TestHandler:
         metadata_raw = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-            s3_client=mock_aws_setup,
         )
         metadata = json.loads(metadata_raw)
         snapshot.assert_match(
@@ -178,7 +176,6 @@ class TestHandler:
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=custom_bucket,
             object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
-            s3_client=mock_aws_setup,
         )
         snapshot.assert_match(
             augmented_eicr,
