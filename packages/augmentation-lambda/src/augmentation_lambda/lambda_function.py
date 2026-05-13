@@ -128,7 +128,7 @@ def _process_record(record: SQSRecord, s3_client: BaseClient) -> None:
         metadata = augmenter.augment()
 
         output = TTCAugmenterOutput(
-            eicr_id=augmenter_input.persistence_id,
+            persistence_id=augmenter_input.persistence_id,
             augmented_eicr=augmenter.augmented_xml,
             metadata=metadata,
         )
