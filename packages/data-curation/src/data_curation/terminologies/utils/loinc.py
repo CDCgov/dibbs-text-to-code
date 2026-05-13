@@ -14,7 +14,7 @@ import json
 import os
 from pathlib import Path
 import requests
-from .general import clean_text_string
+from .general import clean_text_string, BASE_FOLDER
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -30,7 +30,6 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 
 # LOINC Specific Files & Directories
-BASE_FOLDER = Path(__file__).resolve().parent[4] / "data" / "snoinc_extracts"
 LOINC_CS_NAMES = BASE_FOLDER / "loinc_other"/ "consumer_names.csv"
 LOINC_PARTS_ABBRV_SYNONYMS = BASE_FOLDER / "loinc_other"/ "loinc_parts_abbrv_synonyms.txt"
 LAB_NAMES = "loinc_lab_names"
