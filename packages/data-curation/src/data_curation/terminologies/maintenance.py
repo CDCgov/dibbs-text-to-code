@@ -1,7 +1,7 @@
-from data_curation.terminologies.utils.loinc import (get_loinc_current_version_data,
+from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
                                                      get_loinc_embedding_candidates)
-from data_curation.terminologies.utils.general import (get_latest_extract_file_name, 
+from data_curation.terminologies.general import (get_latest_extract_file_name, 
                                                        get_date_from_latest_filename, 
                                                        load_extract_file_to_dict)
 

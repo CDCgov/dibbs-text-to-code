@@ -31,11 +31,11 @@ import json
 import os
 import sys
 import requests
-from data_curation.terminologies.utils.loinc import get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, process_loincs_for_umls_urls, LOINC_PARTS_ABBRV_SYNONYMS
-from data_curation.terminologies.utils.snomed import get_umls_snomed_lab_values
-from data_curation.terminologies.utils.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
-from data_curation.terminologies.utils.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.utils.general import BASE_FOLDER, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
+from data_curation.terminologies.loinc import get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, process_loincs_for_umls_urls, LOINC_PARTS_ABBRV_SYNONYMS
+from data_curation.terminologies.snomed import get_umls_snomed_lab_values
+from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
+from data_curation.terminologies.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
+from data_curation.terminologies.general import BASE_FOLDER, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 

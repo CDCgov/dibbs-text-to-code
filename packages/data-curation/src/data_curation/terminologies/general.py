@@ -14,16 +14,14 @@ import csv
 from datetime import datetime
 import os
 from pathlib import Path
+from utils.regex_patterns import MULTIPLE_SPACE
 import re
 
 
 # Value Set Directories
-BASE_FOLDER = Path(__file__).parents[6] / "data" / "snoinc_extracts"
+BASE_FOLDER = Path(__file__).parents[5] / "data" / "snoinc_extracts"
 ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
-TMP_DIRECTORY = Path(__file__).parents[6] / "tmp"
-
-# regex patterns
-MULTIPLE_SPACE = re.compile(r"\s+")
+TMP_DIRECTORY = Path(__file__).parents[5] / "tmp"
 
 # Keys - the UMLS key is used for more than 
 #   one terminology set so it's here in General
