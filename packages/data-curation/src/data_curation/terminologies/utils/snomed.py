@@ -11,13 +11,19 @@ to generate and maintain embeddings in Opensearch for TTC.
 import requests
 from .general import clean_text_string, UMLS_API_KEY
 
-# Set Terminology URLS
+# Terminology URLS
 UMLS_SNOMED_LAB_VALUES_URL = (
     "https://uts-ws.nlm.nih.gov/rest/content/current/source/SNOMEDCT_US/260245000/descendants"
 )
 
 
-def get_umls_snomed_lab_values():  # noqa: D103
+def get_umls_snomed_lab_values() -> list[dict]:
+    """Process to get the all SNOMED Codes and terms for lab values
+        via the UMLS API.
+
+        :returns: A list of dictionaries containing SNOMED Lab Value records
+            including codes and text.
+    """
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
     page_num = 1
@@ -48,6 +54,7 @@ def get_umls_snomed_lab_values():  # noqa: D103
         page_num += 1
         params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": page_size}
         umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
-
+        
+    # TODO: In Subsequent PR update this to be a logging statement
     print(f"{snomed_row_count} Codes Extracted")
     return snomed_rows

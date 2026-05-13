@@ -13,13 +13,14 @@ to generate and maintain embeddings in Opensearch for TTC.
 import csv
 from datetime import datetime
 import os
+from pathlib import Path
 import re
 
 
 # Value Set Directories
-SNOINC_DIRECTORY = "./data/snoinc_extracts"
-SNOINC_ENHANCEMENTS_DIRECTORY = "./data/snoinc_extracts/enhancements"
-TMP_DIRECTORY = "./tmp"
+BASE_FOLDER = Path(__file__).resolve().parent[4] / "data" / "snoinc_extracts"
+ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
+TMP_DIRECTORY = "tmp"
 
 # regex patterns
 MULTIPLE_SPACE = re.compile(r"\s+")
@@ -30,6 +31,14 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
 def clean_text_string(value: str) -> str:
+    """Function that removes multile space characters from a string
+        and returns it for further processing.
+
+        :param value: Text string that needs to be clean.
+
+        :returns: A text string that has spaces removed. Returns ""
+            if value input is empty or None.
+    """
     if value is not None:
         return re.sub(MULTIPLE_SPACE, " ", value).strip()
     else:
@@ -37,6 +46,19 @@ def clean_text_string(value: str) -> str:
 
 
 def get_date_from_latest_filename(filename: str, terminology: str) -> str:
+    """Function that extracts and formats the date from any of
+        the value set extract files based upon the pattern used
+        by terminology set in their 'meta' API call (get the latest
+        version and version date).
+
+        :param filename: Text of the filename to extact the date from.
+        :param terminology: The name of the value set in question as the
+            date formats may have different requirements based upon
+            the API response for said value set.
+
+        :returns: A formatted date string that can be used for comparison
+            to determine if an update is required.
+    """
     file_date = re.search(r'\d{8}', filename).group()
 
     if terminology == 'loinc':
@@ -44,14 +66,33 @@ def get_date_from_latest_filename(filename: str, terminology: str) -> str:
 
 
 def get_latest_extract_file_name(filename_prefix: str):
-    files = [f for f in os.listdir(SNOINC_DIRECTORY) if f.startswith(filename_prefix)]
+    """Function that gets the most current/recent value set csv 
+        file from the TTC code repo, by filename prefix.
+
+        :param filename_prefix: The part of the filename that defines the
+            terminology value set type (ie. loinc_lab_names) that you want
+            to find the most recent file of.
+
+        :returns: The file name and file path of the most recent value set
+            extract file.
+    """
+    files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(filename_prefix)]
     if files:
         latest_file = max(files)
     return latest_file
 
 
 def load_extract_file_to_dict(filename: str) -> list[dict]:
-    file_path = os.path.join(SNOINC_DIRECTORY, filename)
+    """Function that takes a filename and parses 
+
+        :param filename_prefix: The part of the filename that defines the
+            terminology value set type (ie. loinc_lab_names) that you want
+            to find the most recent file of.
+
+        :returns: The file name and file path of the most recent value set
+            extract file.
+    """
+    file_path = BASE_FOLDER / filename
     extract_dict = {}
     with open(file_path, mode='r', encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")

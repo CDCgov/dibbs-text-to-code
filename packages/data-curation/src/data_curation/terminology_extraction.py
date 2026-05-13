@@ -35,7 +35,7 @@ from data_curation.terminologies.utils.loinc import get_loinc_lab_names, get_loi
 from data_curation.terminologies.utils.snomed import get_umls_snomed_lab_values
 from data_curation.terminologies.utils.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
 from data_curation.terminologies.utils.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.utils.general import SNOINC_DIRECTORY, SNOINC_ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
+from data_curation.terminologies.utils.general import SNOINC_DIRECTORY, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -98,7 +98,7 @@ def get_loinc_umls_related_results():  # noqa: D103
     # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
+    save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
 def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
@@ -456,12 +456,12 @@ def create_loinc_part_abbrv_syn_dicts():
                 )
     print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, component_file, component_dict)
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, method_file, method_dict)
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, property_file, property_dict)
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, system_file, system_dict)
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, time_file, time_dict)
-    save_json_file(SNOINC_ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, property_file, property_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
+    save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
 
 
 def extract_full_hl7_encounter_act_codes():  # noqa: D103

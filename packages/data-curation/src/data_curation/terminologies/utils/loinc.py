@@ -154,6 +154,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
     loinc_umls_urls = {}
 
     record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
+    # TODO: In Subsequent PR update this to be a logging statement
     print(f"{loinc_valueset_type} Record Count: {record_count}")
     current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
