@@ -155,8 +155,9 @@ def _create_xml_tree(xml: str) -> Element:
     """Remove all namespaces from an XML tree."""
     tree = etree.fromstring(xml.encode("utf-8"))
     for elem in tree.iter():
-        # Remove namespace from tag
-        elem.tag = etree.QName(elem).localname
+        # Skip comment nodes — their .tag is a callable, not a QName-compatible string
+        if not isinstance(elem, etree._Comment):
+            elem.tag = etree.QName(elem).localname
     # Remove namespace declarations
     etree.cleanup_namespaces(tree)
     return tree
