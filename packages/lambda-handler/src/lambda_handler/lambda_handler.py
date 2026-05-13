@@ -11,8 +11,11 @@ from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
+from lambda_handler.models.opensearch import OpenSearchHitSource
 from utils import get_env_variable
 
+from .models import OpenSearchHit
+from .models import OpenSearchHits
 from .models import OpenSearchResult
 
 logger = Logger(service="lambda-handler", child=True)
@@ -290,4 +293,29 @@ def retrieve_opensearch_results(
         status="success",
     )
 
-    return OpenSearchResult(**response)
+    hits_json = response["hits"]
+    hits = OpenSearchHits(
+        total=hits_json["total"],
+        hits=[
+            OpenSearchHit(
+                _index=hit["_index"],
+                _id=hit["_id"],
+                _score=hit["_score"],
+                _source=OpenSearchHitSource(
+                    id=hit["_source"]["id"],
+                    loinc_code=hit["_source"]["loinc_code"],
+                    loinc_name_type=hit["_source"]["loinc_name_type"],
+                    description=hit["_source"]["description"],
+                    loinc_type=hit["_source"]["loinc_type"],
+                ),
+            )
+            for hit in hits_json["hits"]
+        ],
+    )
+
+    return OpenSearchResult(
+        took=response["took"],
+        timed_out=response["timed_out"],
+        _shards=response["_shards"],
+        hits=hits,
+    )

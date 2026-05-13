@@ -1,8 +1,7 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
-
 from shared_models import CdaInstanceIdentifier
+from shared_models import FrozenBaseModel
 
 
 class LabXPaths(StrEnum):
@@ -15,7 +14,7 @@ class LabXPaths(StrEnum):
     CODE_TRANSLATION_ORIGINAL_TEXT = "code/translation/originalText"
 
 
-class Candidate(BaseModel):
+class Candidate(FrozenBaseModel):
     """Model representing a piece of text to be considered for encoding."""
 
     value: str
@@ -23,7 +22,7 @@ class Candidate(BaseModel):
     system: str | None = None
 
 
-class Metadata(BaseModel):
+class Metadata(FrozenBaseModel):
     """Model representing metadata about the eICR."""
 
     eicr_id: CdaInstanceIdentifier

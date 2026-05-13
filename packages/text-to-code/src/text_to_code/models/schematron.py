@@ -1,9 +1,8 @@
 from enum import Enum
 
-from pydantic import BaseModel
-
 from shared_models import CdaInstanceIdentifier
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 from text_to_code.models.eicr import Candidate
 
 
@@ -30,7 +29,7 @@ _SCHEMATRON_ENUM_TO_FIELD: dict[type[Enum], DataField] = {
 }
 
 
-class SchematronConfig(BaseModel):
+class SchematronConfig(FrozenBaseModel):
     """Config for Schematron configuration settings."""
 
     data_field: DataField
@@ -40,7 +39,7 @@ class SchematronConfig(BaseModel):
     """The list of Schematron error messages relevant to the data field."""
 
 
-class SchematronErrorDetail(BaseModel):
+class SchematronErrorDetail(FrozenBaseModel):
     """Structured details for a Schematron validation error."""
 
     eicr_id: CdaInstanceIdentifier | None = None
