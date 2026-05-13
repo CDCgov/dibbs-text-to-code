@@ -3,14 +3,23 @@ FROM public.ecr.aws/lambda/python:3.12
 LABEL org.opencontainers.image.source=https://github.com/CDCgov/dibbs-text-to-code
 LABEL org.opencontainers.image.licenses=Apache-2.0
 
-# Install build tools for C++ extensions
-RUN microdnf install -y gcc-c++ make && microdnf clean all
+# Update OS packages for CVE fixes, install build tools for compiling C++ extensions,
+# and drop the Runtime Interface Emulator (only used for local Lambda emulation).
+# --releasever=latest is required: AL2023 base images pin to a snapshot release.
+RUN microdnf update -y --releasever=latest \
+    && microdnf install -y --releasever=latest gcc-c++ make \
+    && microdnf clean all \
+    && rm -f /usr/local/bin/aws-lambda-rie
 
 # Heavy, rarely-changing layers first so they stay cached across source changes.
 # Install CPU-only PyTorch before any workspace package — a transitive pin
 # could otherwise pull the full CUDA wheel before our override lands.
 RUN pip install --no-cache-dir torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir huggingface_hub
+
+# Torch's build environment can leave behind an older setuptools that shadows
+# the workspace pin and trips CVE-2025-47273. Upgrade explicitly.
+RUN pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
 
 # Download retriever at build time (private repo, needs token)
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
@@ -35,7 +44,8 @@ COPY ./packages/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
-RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda"
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda" \
+    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
 # Remove build tools no longer needed at runtime
 RUN rpm -e --nodeps gcc-c++ gcc cpp make && microdnf clean all && rm -rf /var/cache/*

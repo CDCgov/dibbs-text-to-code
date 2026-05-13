@@ -12,13 +12,13 @@ import csv
 from datetime import datetime
 import json
 import os
+from pathlib import Path
 import requests
-from .general import clean_text_string, save_json_file, save_valueset_csv_file, SNOINC_CHANGES_DIRECTORY
+from .general import clean_text_string, save_json_file, save_valueset_csv_file, BASE_FOLDER
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
 LOINC_LAB_ORDER_QUERY = "orderobs:Order+OR+orderobs:Both&rows=500"
-#"query=orderobs:Order+OR+orderobs:Both&rows=500"
 LOINC_LAB_RESULT_QUERY = "orderobs:Observation+OR+orderobs:Both&rows=500"
 LOINC_LAB_NAMES_QUERY = "orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation&rows=500"
 UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
@@ -30,8 +30,8 @@ LOINC_USERNAME = os.environ.get("LOINC_USERNAME")
 LOINC_PWD = os.environ.get("LOINC_PWD")
 
 # LOINC Specific Files & Directories
-LOINC_CS_NAMES = "./data/snoinc_extracts/loinc_other/consumer_names.csv"
-LOINC_PARTS_ABBRV_SYNONYMS = "./data/snoinc_extracts/loinc_other/loinc_parts_abbrv_synonyms.txt"
+LOINC_CS_NAMES = BASE_FOLDER / "loinc_other"/ "consumer_names.csv"
+LOINC_PARTS_ABBRV_SYNONYMS = BASE_FOLDER / "loinc_other"/ "loinc_parts_abbrv_synonyms.txt"
 LAB_NAMES = "loinc_lab_names"
 LAB_ORDERS = "loinc_lab_orders"
 LAB_RESULT = "loinc_lab_result"
@@ -42,26 +42,17 @@ LOINC_TEXT_TO_FILTER = [
 ]
 
 
-def extract_full_loinc_lab_names():  # noqa: D103
-    loinc_filename = f"loinc_lab_names_{datetime.now().strftime('%Y%m%d')}.csv"
-    all_loinc_rows = get_loinc_lab_names()
+def get_loinc_lab_names(version: str = ""):
+    """Process to get the all, or version specific, LOINC Codes and terms
+        via the LOINC API for all labs (Lab Names) that are categorized as
+        'Observations', 'Orders', or 'Both'.
 
-    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+        :param version: Text string of the version number you want to 
+            use to filter LOINC codes for.
 
-def extract_full_loinc_lab_orders():  # noqa: D103
-    loinc_filename = f"loinc_lab_orders_{datetime.now().strftime('%Y%m%d')}.csv"
-    loinc_order_rows = get_loinc_lab_orders()
-
-    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
-
-
-def extract_full_loinc_lab_results():  # noqa: D103
-    loinc_filename = f"loinc_lab_result_{datetime.now().strftime('%Y%m%d')}.csv"
-    loinc_result_rows = get_loinc_lab_results()
-    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
-
-
-def get_loinc_lab_names(version: str = ""):  # noqa: D103
+        :returns: A list of dictionaries containing LOINC lab name records
+            including codes, terms, and axis information.
+    """
     # if version is supplied we grab the delta 
     # and filter based upon version changes
     # otherwise grab all Orders/Obsersavtions/Both
@@ -77,8 +68,18 @@ def get_loinc_lab_names(version: str = ""):  # noqa: D103
     return all_loinc_rows
 
 
-def get_loinc_lab_orders(version: str = ""):  # noqa: D103
-     # if version is supplied we grab the delta 
+def get_loinc_lab_orders(version: str = ""):
+    """Process to get all of the, or version specific, LOINC Codes and terms
+        via the LOINC API for all lab 'Orders' that are categorized as 
+        'Orders', or 'Both'.
+
+        :param version: Text string of the version number you want to 
+            use to filter LOINC codes for.
+
+        :returns: A list of dictionaries containing LOINC lab order records
+            including codes, terms, and axis information.
+    """
+    # if version is supplied we grab the delta 
     # and filter based upon version changes
     # otherwise grab all Orders
     if version != "":
@@ -93,8 +94,18 @@ def get_loinc_lab_orders(version: str = ""):  # noqa: D103
     return loinc_order_rows
 
 
-def get_loinc_lab_results(version: str = ""):  # noqa: D103
-     # if version is supplied we grab the delta 
+def get_loinc_lab_results(version: str = ""):
+    """Process to get all of the, or version specific, LOINC Codes and terms
+        via the LOINC API for all lab 'Observations' (Lab Results) that are
+        categorized as 'Observations', or 'Both'.
+
+        :param version: Text string of the version number you want to 
+            use to filter LOINC codes for.
+
+        :returns: A list of dictionaries containing LOINC lab result records
+            including codes, terms, and axis information.
+    """
+    # if version is supplied we grab the delta 
     # and filter based upon version changes
     # otherwise grab all Obsersavtions
     if version != "":
@@ -108,13 +119,30 @@ def get_loinc_lab_results(version: str = ""):  # noqa: D103
     return loinc_result_rows
 
 
-def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
+def process_loinc_valueset(api_url, loinc_valueset_type):
+    """Function that makes the LOINC API calls based upon the
+        url and the loinc_Valueset_type passed in.  It confirms
+        that the LOINC User/PWD are configured, makes the calls and then 
+        passes the output into another function for more detailed processing.
+        This function also performs the looping and row count maintanence as
+        LOINC can only return 500 rows at a time.
+
+        :param api_url: LOINC url for the specific API used for requesting
+            data for LOINC codes.
+        :param loinc_valueset_type: Distinguishes which LOINC codes are being 
+            requested.  Options (Lab Names, Lab Orders, Lab Results, UMLS Atoms)
+
+        :returns: A list of dictionaries containing LOINC code and term data
+            or a list of UMLS URLS to pull additional information for each
+            LOINC code.
+    """
     if LOINC_USERNAME is None or LOINC_PWD is None:
         raise KeyError(
             "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
         )
     loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != 200:
+        # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
         )
@@ -125,19 +153,27 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
     loinc_umls_urls = {}
 
     record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
+    # TODO: In Subsequent PR update this to be a logging statement
     print(f"{loinc_valueset_type} Record Count: {record_count}")
     current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
     while current_row_count > 0:
+        # Two pathways here - one is specific to getting all the UMLS Urls
+        # for additional information from UMLS (SNOMED to LOINC Crosswalk and related terms)
+        # - and the other specific for handling the standard LOINC API return data
+        # into records that are digestable for TTC
         if loinc_valueset_type not in ("UMLS Atoms"):
             loinc_rows = process_loinc_results(loinc_codes["Results"], loinc_rows)
         else:
             loinc_umls_urls = get_loinc_umls_urls(loinc_codes["Results"], loinc_umls_urls)
 
+        # handles the looping mechanism to get the next set of LOINC codes 
+        # via the 'next' url
         if next_url_call is not None:
             next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
             if next_loinc_response.status_code != 200:
+                # TODO: In Subsequent PR update this to be a logging statement
                 print(
                     f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
                 )
@@ -154,28 +190,48 @@ def process_loinc_valueset(api_url, loinc_valueset_type):  # noqa: D103
         return loinc_umls_urls
 
 
-def process_loinc_results(loinc_results, loinc_order_rows) -> dict:  # noqa: D103
+def process_loinc_results(loinc_results, loinc_rows) -> dict:
+    """Function that loops through the LOINC results, returned via the various
+        API calls, and sends them into another function to extract and add
+        all the different terms/names for each loinc code.
+
+        :param loinc_results: The current iteration of LOINC data returned 
+            from the API.  It will be empty if all results have been processed.
+        :param loinc_rows: The list of 'processed' LOINC records, per code
+            that are ready for TTC consumption.
+
+        :returns: A list of dictionaries containing LOINC code, terms, and
+            axis data.
+    """
     if len(loinc_results) == 0:
+        # TODO: In Subsequent PR update this to be a logging statement
         print("NO RESULTS TO PROCESS!")
-        return loinc_order_rows
+        return loinc_rows
 
     for loinc_result in loinc_results:
-        loinc_order_rows = get_all_loinc_terms_per_code(loinc_result, loinc_order_rows)
+        loinc_rows = get_all_loinc_terms_per_code(loinc_result, loinc_rows)
 
-    return loinc_order_rows
+    return loinc_rows
 
 
 def get_loinc_umls_urls(loinc_results, loinc_rows_list):
-    """
-    This function will just generate and store the UMLS Urls that need
-    to be used for each LOINC code.  They can be processed separately by another
-    function.  Performance issues resulted in trying to do it all at once.
+    """This function is used to generate and store the UMLS Urls that need
+        to be used for each LOINC code.  They can be processed separately by another
+        function.  Performance issues resulted in trying to do it all at once.
+
+        :param loinc_results: The current iteration of LOINC data returned 
+            from the API.
+        :param loinc_rows: The list of UMLS 'processed' LOINC records, per code
+            that are ready for UMLS processing.
+
+        :returns: A list of dictionaries containing LOINC code, Long Name,
+            and all the UMLS urls, per code, that are needed for UMLS processing.
     """
 
     # loop through all the LOINC codes for labs (orders and results)
     for loinc_result in loinc_results:
-        # get the LOINC Code and store it for use in the
-        # UMLS urls
+        # get the LOINC Code and the Long name for each LOINC concept
+        # and store it for use in the UMLS urls
         loinc_code = loinc_result.get("LOINC_NUM")
         long_name = loinc_result.get("LONG_COMMON_NAME")
         loinc_umls_urls = {
@@ -189,12 +245,32 @@ def get_loinc_umls_urls(loinc_results, loinc_rows_list):
 
 
 def process_loincs_for_umls_urls() -> dict:
+    """Process that constructs and makes the various API calls necessary to gather
+        the UMLS data about the current LOINC codes.  The lower functions, related
+        to ATOM/UMLS process are leveraged to extract and organize the data together
+        for the enhancement/other LOINC files.
+
+        :returns: A list of dictionaries that contain the various LOINC and
+            UMLS data for each LOINC code, ready to be loaded into the enhancement file(s).
+    """
     loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_QUERY
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
 
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict:  # noqa: D103
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> dict:
+    """This function receives the most recent result from the LOINC API
+        and extracts the various terms/names and adds to the list of records
+        ready for consumption into TTC model DB.
+
+        :param loinc_results: The current iteration of LOINC data returned 
+            from the API.
+        :param loinc_rows: The list of 'processed' LOINC records, per code
+            that are ready for TTC consumption.
+
+        :returns: A list of dictionaries containing LOINC code, terms, and
+            axis data.
+    """
     result_row = {"code": loinc_result.get("LOINC_NUM")}
     # More human centered name for the concept
     result_row["display_name"] =clean_text_string(loinc_result.get("DisplayName"))
@@ -221,12 +297,23 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_order_rows) -> dict: 
     result_row["short_name"] = clean_text_string(loinc_result.get("SHORTNAME"))
     result_row["long_name"] = clean_text_string(loinc_result.get("LONG_COMMON_NAME"))
 
-    loinc_order_rows.append(result_row)
+    loinc_rows.append(result_row)
 
-    return loinc_order_rows
+    return loinc_rows
 
 
 def get_loinc_consumer_names(loinc_rows):
+    """Function that utilizes the downloaded consumer_names.csv file, in the 
+        'other' data folder, to related the consumer name term with each loinc
+        code.
+
+        :param loinc_rows: The list of dictionaries that contain all the LOINC
+            data (codes, terms/names, and axis information) so that this function
+            can add the consumer name data to each record.
+
+        :returns: The updated list of dictionaries of LOINC data records with
+            the newly added consumer name term(s).
+    """
     cs_names = {}
     # loop through all the loinc rows and get the code
     # use that to look up the consumer name for each and add it to the row
@@ -249,6 +336,16 @@ def get_loinc_consumer_names(loinc_rows):
 
 
 def _filter_loinc_term(text: str) -> bool:
+    """Function to determine if the input text is suppose to be filtered
+        out of the LOINC terms/names based upon our understandings stored 
+        in a list.
+        (List: LOINC_TEXT_TO_FILTER).
+
+        :param text: The LOINC term/name in question - should this text
+            be filtered or not?
+
+        :returns: boolean - true if it should be filtered and false if not
+    """
     result: bool = False
     for filter_text in LOINC_TEXT_TO_FILTER:
         if filter_text in text:
@@ -256,13 +353,19 @@ def _filter_loinc_term(text: str) -> bool:
     return result
 
 
-def get_loinc_current_version_data() -> (str, str):  # noqa: D103
+def get_loinc_current_version_data() -> (str, str):
+    """Function Makes an API call to LOINC to determine current
+        version and version date.
+        
+        :returns: str, str - LOINC version number, LOINC version Date
+    """
     if LOINC_USERNAME is None or LOINC_PWD is None:
         raise KeyError(
             "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
         )
     loinc_response = requests.get(LOINC_META_URL, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != 200:
+        # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
         )
@@ -272,8 +375,33 @@ def get_loinc_current_version_data() -> (str, str):  # noqa: D103
     loinc_version = loinc_meta["version"]
     return loinc_version, loinc_version_date
 
-
 def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str, loinc_version_date: str, current_loinc_file: str) -> list[dict]:
+    """Function compares New LOINC Version delta API response against the existing
+        version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
+        This function creates a change_log that will be used by another function to 
+        contstruct a list of embedding candidates based upon the need for the different
+        types of changes.  This change_log will also be used to record the updates in
+        a delta file. 
+
+        5 new candidate embedding records will be created for each 'NEW' LOINC code and
+        a single candidate embedding record for each name/term change.  If the LOINC
+        code changes from one lab type to another then we will create a record that 
+        will simply update that records lab_type field via the Opensearch Index Load
+        process. 
+
+        Once this comparison is complete, a summary of the changes is then stored in a
+        'delta' file in the 'data' folder to log/record the updates.
+        
+        This is currently just for the LOINC Lab Names data, but this can be
+        modified to be more flexible for ALL LOINC extraction types as needed.
+
+        :param current_loinc_dict: The current LOINC data, from the existing LOINC Lab Names
+            csv file, loaded into an easier to compare dictionary structure.
+        :param new_version: The string of the NEW LOINC version number to be used to 
+            get the delta from the LOINC API call.
+
+        :returns: boolean - true if it should be filtered and false if not
+    """
     delta_extract_rows = get_loinc_lab_names(new_version)
     # get the max number to ensure no id collisions in Opensearch
     # by getting the max loinc codes in the current file *5 for all the
@@ -307,8 +435,6 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str, l
         elif current_loinc_record["lab_type"] != update_loinc_record["lab_type"]:
             change_log["Changes"]["LOINC Type"] += 1
             changes.append("LOINC Type")
-            print(f"FOR LOINC CODE: {loinc_code}")
-            print(f"LOINC_TYPE WENT FROM: {current_loinc_record["lab_type"]} TO: {update_loinc_record["lab_type"]}")
         else:
             if current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip():
                 change_log["Changes"]["short_name"] += 1
@@ -325,15 +451,33 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str, l
             if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
                 change_log["Changes"]["consumer_name"] += 1
                 changes.append("consumer_name")
+
         embedding_candidates.extend(_create_embedding_candidates(loinc_record_max_id, loinc_code,update_loinc_record,changes))
-    print(f"EMB CANDIDATES: {len(embedding_candidates)} see counts of the various changes below")
-    print(json.dumps(change_log, indent=4))
     # store the record of changes
     write_change_log_file(change_log_filename, change_log)
     return embedding_candidates
 
-
 def _create_embedding_candidates(loinc_record_id: int, loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+    """This function takes the loinc_code and a list of changes from a change_log,
+        created by a higher function that performs the LOINC change comparison, and
+        generates a list of embedding candidate records per LOINC Code.  As it is possible
+        that a single LOINC code could have multiple term/name changes in a single LOINC
+        update.
+        
+        5 new candidate embedding records will be created for each 'NEW' LOINC code and
+        a single candidate embedding record for each name/term change.  If the LOINC
+        code changes from one lab type to another then we will create a record that 
+        will simply update that records lab_type field via the Opensearch Index Load
+        process.
+
+        :param loinc_code: The LOINC code that is either new or the existing one
+            where changes are required.
+        :param loinc_row: The actual LOINC data from the API for the LOINC code
+            being added/updated.
+        :param element_change: The list of changes required per LOINC code.
+
+        :returns: a list of embedding candidate records for the LOINC code.
+    """
     emb_candidates = []
     # predefined structure of embeddings using
     # structure from previously used Azure Notebooks
@@ -427,5 +571,5 @@ def _create_embedding_candidates(loinc_record_id: int, loinc_code: str, loinc_ro
 
 
 def write_change_log_file(file_name: str, content: dict):
-    save_json_file(SNOINC_CHANGES_DIRECTORY, file_name, content)
+    save_json_file(BASE_FOLDER, file_name, content)
 

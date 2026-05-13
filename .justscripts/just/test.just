@@ -6,7 +6,7 @@ unit *ARGS:
 
 [doc("Run e2e tests, forwarding optional arguments to pytest")]
 e2e *ARGS:
-    uv run pytest e -m "e2e" {{ ARGS }}
+    uv run pytest -m "e2e" {{ ARGS }}
 
 [doc("Run all tests, forwarding optional arguments to pytest")]
 all *ARGS:

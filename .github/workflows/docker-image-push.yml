@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+  schedule:
+    # Weekly rebuild so AWS-published base-image patches land without
+    # waiting for a code change. Mondays 10:00 UTC (6 AM ET / 3 AM PT).
+    - cron: "0 10 * * 1"
+
   workflow_dispatch:
     inputs:
       ref:
@@ -79,6 +84,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          pull: true
           platforms: linux/amd64
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
