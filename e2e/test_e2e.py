@@ -38,15 +38,25 @@ FUNCTION_2_NAME = "stage2-processor"
 
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
-SCHEMATRON_PATH = "e2e/assets/test_schematron_errors.xml"
-EICR_CASES: tuple[tuple[str, str], ...] = (
-    ("test_eicr", "e2e/assets/test_eicr.xml"),
+EICR_CASES: tuple[tuple[str, str, str], ...] = (
     (
-        "eicr_sample9_null_flavor_result_values_local_codes",
-        "e2e/assets/eICR_Sample9_nullFlavorResultValues_localCodes.xml",
+        "test_eicr",
+        "e2e/assets/test_eicr.xml",
+        "e2e/assets/test_schematron_errors.xml",
+    ),
+    (
+        "eicr_covid",
+        "e2e/assets/eicr_covid.xml",
+        "e2e/assets/eicr_covid_schematron_errors.xml",
     ),
 )
-FAIL_EICR_CASES: tuple[tuple[str, str], ...] = (("empty_eicr", "e2e/assets/empty_eicr.xml"),)
+FAIL_EICR_CASES: tuple[tuple[str, str, str], ...] = (
+    (
+        "empty_eicr",
+        "e2e/assets/empty_eicr.xml",
+        "e2e/assets/empty_eicr_schematron_errors.xml",
+    ),
+)
 
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = "e2e/assets/namespace_preservation_schematron_errors.xml"
 NAMESPACE_PRESERVATION_EICR_PATH = "e2e/assets/namespace_preservation_eicr.xml"
@@ -216,12 +226,13 @@ class TestEndToEndSimulated:
         self,
         aws,
         infra,
+        schematron_path: str,
         eicr_path: str,
         mock_lambda_context,
     ) -> None:
         # Upload Schematron errors to S3
         with open(
-            Path(SCHEMATRON_PATH),
+            Path(schematron_path),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
@@ -283,7 +294,7 @@ class TestEndToEndSimulated:
         assert exc_info.value.response["Error"]["Code"] == "NoSuchKey", eicr_id
 
     @pytest.mark.parametrize(
-        ("eicr_id", "eicr_path"),
+        ("eicr_id", "eicr_path", "schematron_path"),
         EICR_CASES,
         ids=[eicr_case[0] for eicr_case in EICR_CASES],
     )
@@ -291,6 +302,7 @@ class TestEndToEndSimulated:
         self,
         eicr_id: str,
         eicr_path: str,
+        schematron_path: str,
         aws,
         infra,
         snapshot: Snapshot,
@@ -300,6 +312,7 @@ class TestEndToEndSimulated:
         self._run_eicr_pipeline(
             aws,
             infra,
+            schematron_path,
             eicr_path,
             mock_lambda_context,
         )
@@ -322,7 +335,7 @@ class TestEndToEndSimulated:
         snapshot.assert_match(augmentation_metadata, f"{eicr_id}_augmentation_metadata.json")
 
     @pytest.mark.parametrize(
-        ("eicr_id", "eicr_path"),
+        ("eicr_id", "eicr_path", "schematron_path"),
         FAIL_EICR_CASES,
         ids=[eicr_case[0] for eicr_case in FAIL_EICR_CASES],
     )
@@ -330,6 +343,7 @@ class TestEndToEndSimulated:
         self,
         eicr_id: str,
         eicr_path: str,
+        schematron_path: str,
         aws,
         infra,
         mock_opensearch,
@@ -338,6 +352,7 @@ class TestEndToEndSimulated:
         self._run_eicr_pipeline(
             aws,
             infra,
+            schematron_path,
             eicr_path,
             mock_lambda_context,
         )
