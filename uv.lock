@@ -95,7 +95,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aws-lambda-powertools", specifier = ">=3.29.0" },
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "structlog", specifier = ">=24.0.0" },
 ]
 
@@ -653,7 +653,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aws-lambda-powertools", specifier = ">=3.29.0" },
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3" },
     { name = "botocore" },
@@ -725,7 +725,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aws-lambda-powertools", specifier = ">=3.29.0" },
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "opensearch-py", specifier = ">=2.0.0" },
@@ -1844,7 +1844,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aws-lambda-powertools", specifier = ">=3.29.0" },
+    { name = "aws-lambda-powertools", specifier = ">=2.0.0" },
     { name = "boto3", specifier = ">=1.40.60" },
     { name = "opensearch-py", specifier = ">=2.0.0" },
     { name = "requests-aws4auth", specifier = ">=1.1.3" },
