@@ -18,7 +18,7 @@ import re
 
 
 # Value Set Directories
-BASE_FOLDER = Path(__file__).parents[4] / "data" / "snoinc_extracts"
+BASE_FOLDER = Path(__file__).parents[6] / "data" / "snoinc_extracts"
 ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
 TMP_DIRECTORY = "tmp"
 

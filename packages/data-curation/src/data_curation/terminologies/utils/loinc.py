@@ -79,6 +79,8 @@ def get_loinc_lab_orders(version: str = ""):
         :returns: A list of dictionaries containing LOINC lab order records
             including codes, terms, and axis information.
     """
+    print(f"DIR: {LOINC_CS_NAMES}")
+    print(f"BASE: {BASE_FOLDER}")
     # if version is supplied we grab the delta 
     # and filter based upon version changes
     # otherwise grab all Orders
