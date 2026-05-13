@@ -1,7 +1,8 @@
 # DIBBs Text to Code
 
 [![codecov](https://codecov.io/github/CDCgov/dibbs-text-to-code/graph/badge.svg)](https://codecov.io/github/CDCgov/dibbs-text-to-code)
-[![python](https://img.shields.io/badge/python-3.11%2B-yellow)](https://docs.python.org/3.11/)
+![python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FCDCgov%2Fdibbs-text-to-code%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 **General disclaimer** This repository was created for use by CDC programs to collaborate on public health related projects in support of the [CDC mission](https://www.cdc.gov/about/cdc/#cdc_about_cio_mission-our-mission). GitHub is not hosted by the CDC, but is a third party website used by CDC and its partners to share information and collaborate on software. CDC use of GitHub does not imply an endorsement of any one particular service, product, or enterprise.
 
@@ -53,7 +54,7 @@ Given TTC results, the augmenter:
 
 ### Repository Structure
 
-This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScript/React frontend). All Python packages live under `packages/`; the frontend lives under `frontend/`.
+This is a **uv workspace** (Python). All Python packages live under `packages/`.
 
 | Package                                                | Role                                                                                                 |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
@@ -101,7 +102,7 @@ This is a **uv workspace** (Python) with a separate **npm workspace** (TypeScrip
                       Augmented eICR XML (to S3)
 ```
 
-A **demo site** (FastAPI + React frontend) is available for local testing of the API, though it is not currently under active development. In production, the two Lambda functions handle large-scale eICR processing.
+In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Key Design Patterns
 
@@ -130,14 +131,6 @@ After installing the above requirements run `just bootstrap` to initiate the Pyt
 ```sh
 just bootstrap
 ```
-
-To start the demo site and API:
-
-```sh
-just dev up
-```
-
-The demo site can be accessed at http:localhost:8081
 
 To run tests:
 

@@ -12,6 +12,10 @@ RUN microdnf install -y gcc-c++ make && microdnf clean all
 RUN pip install --no-cache-dir torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir huggingface_hub
 
+# Torch's build environment can leave behind an older setuptools that shadows
+# the workspace pin and trips CVE-2025-47273. Upgrade explicitly.
+RUN pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
+
 # Download retriever at build time (private repo, needs token)
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
   python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])"

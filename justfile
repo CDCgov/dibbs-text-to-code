@@ -6,10 +6,6 @@ alias help := _default
 @_default:
     just --list --list-submodules
 
-[group('sub-command')]
-[doc('Run dev-related docker compose commands')]
-mod dev './.justscripts/just/dev.just'
-
 alias b := bootstrap
 
 [group('sub-command')]
@@ -20,7 +16,6 @@ mod test './.justscripts/just/test.just'
 bootstrap:
     uv sync --all-packages
     pre-commit install
-    npm i --save-dev
 
 [doc("Sync Python environment")]
 sync:

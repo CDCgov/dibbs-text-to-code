@@ -5,11 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: 'Apply changes (if false, only runs plan)'
+        description: "Apply changes (if false, only runs plan)"
         type: boolean
         default: false
       destroy:
-        description: 'Destroy all resources (WARNING: irreversible)'
+        description: "Destroy all resources (WARNING: irreversible)"
         type: boolean
         default: false
   push:
@@ -95,6 +95,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.index
+          pull: true
           push: true
           platforms: linux/amd64
           provenance: false
@@ -112,6 +113,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.ttc
+          pull: true
           push: true
           platforms: linux/amd64
           provenance: false
@@ -129,6 +131,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.augmentation
+          pull: true
           push: true
           platforms: linux/amd64
           provenance: false

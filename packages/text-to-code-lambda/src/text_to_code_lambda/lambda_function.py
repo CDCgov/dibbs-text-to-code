@@ -330,24 +330,28 @@ def _process_schematron_errors(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
 
-        if results_list:
+        top_result = next(
+            (x for x in results_list if x.source.description == ranked_results[0]["code_string"]),
+            None,
+        )
+
+        if top_result:
             ttc_output["schematron_errors"][data_field].append(
                 _build_nonstandard_code_instance(
                     schematron_error=error,
                     new_translation=Code(
-                        code=results_list[0].source.loinc_code,
+                        code=top_result.source.loinc_code,
                         code_system="2.16.840.1.113883.6.1",
                         code_system_name="LOINC",
-                        display_name=results_list[0].source.description,
+                        display_name=top_result.source.description,
                     ),
                     selected_candidate=selected_candidate,
                 ).model_dump()
             )
         else:
-            # TODO: Shape of this output could change depending on needs of the Augmentation Lambda
             unmatched_error = error.model_dump()
             unmatched_error["reason"] = (
-                "Selected candidate found, but no OpenSearch code match was returned"
+                "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
             )
             ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
 
@@ -356,7 +360,7 @@ def _process_schematron_errors(
         metadata_error["reranker_processed_results"] = ranked_results
         if not results_list:
             metadata_error["reason"] = (
-                "Selected candidate found, but no OpenSearch code match was returned"
+                "Selected candidate found, but no OpenSearch code match was returned."
             )
         ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
 

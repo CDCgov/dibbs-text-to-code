@@ -1,3 +1,4 @@
+from text_to_code.services.reranker import ScoredResult
 from text_to_code.services.reranker import rerank
 
 
@@ -11,7 +12,7 @@ class TestReranker:
             "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
             ["Influenza virus A and B and SARS-CoV-2 (COVID-19)"],
         )
-        ranks = [
+        ranks: list[ScoredResult] = [
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
         assert ranks == [
@@ -27,7 +28,7 @@ class TestReranker:
             "Albumin/Creatinine (U) [Molar ratio]",
         ]
         ranks = rerank(nonstandard_in, search_hits)
-        ranks = [
+        ranks: list[ScoredResult] = [
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
         assert ranks == [

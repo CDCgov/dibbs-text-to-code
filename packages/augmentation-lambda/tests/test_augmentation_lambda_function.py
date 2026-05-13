@@ -1,22 +1,20 @@
 import json
+import os
 from datetime import datetime
-from uuid import UUID
 from zoneinfo import ZoneInfo
 
-import pytest
 import time_machine
-from pytest_mock import MockerFixture
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
 from validation import validate_eicr
 
-S3_BUCKET = "dibbs-text-to-code"
-TTC_OUTPUT_PREFIX = "TTCAugmentationMetadataV2/"
-AUGMENTED_EICR_PREFIX = "AugmentationEICRV2/"
-AUGMENTATION_METADATA_PREFIX = "AugmentationMetadataV2/"
-TEST_PERSISTENCE_ID = "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
+S3_BUCKET = os.environ["S3_BUCKET"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
+AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
+TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
 
 
@@ -72,13 +70,6 @@ def _build_empty_body_event() -> dict[str, object]:
     }
 
 
-@pytest.fixture(autouse=False)
-def mock_augmented_ids(mocker: MockerFixture) -> None:
-    doc_id = UUID("12345678-1234-5678-1234-567812345678")
-    set_id = UUID("87654321-4321-8765-4321-876543218765")
-    mocker.patch("augmentation.services.eicr_augmenter.uuid4", side_effect=[doc_id, set_id])
-
-
 class TestHandler:
     """Tests for the augmentation Lambda handler."""
 
@@ -93,9 +84,7 @@ class TestHandler:
         self,
         example_sqs_event,
         mock_aws_setup,
-        mocker: MockerFixture,
         snapshot: Snapshot,
-        mock_augmented_ids,
         mock_lambda_context,
     ) -> None:
 
@@ -137,9 +126,7 @@ class TestHandler:
         self,
         example_s3_event_payload,
         mock_aws_setup,
-        mocker: MockerFixture,
         snapshot: Snapshot,
-        mock_augmented_ids,
         mock_lambda_context,
     ) -> None:
         """Verify bucket name is extracted from the S3 event, not the env var."""

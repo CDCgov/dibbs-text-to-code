@@ -100,6 +100,16 @@ class TestBadEicr:
             EicrProcessor(eicr_output)
 
 
+class TestEicrWithInlineComments:
+    def test_eicr_with_inline_comments_does_not_crash(self):
+        eicr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
+        with eicr_path.open() as f:
+            eicr_output = f.read()
+
+        processor = EicrProcessor(eicr_output)
+        assert processor.eicr_metadata.eicr_id is not None
+
+
 class TestBasicEicrProcessor:
     @pytest.fixture(scope="class")
     def eicr_processor(self) -> EicrProcessor:

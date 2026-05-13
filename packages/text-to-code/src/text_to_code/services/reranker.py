@@ -11,6 +11,9 @@ class ScoredResult(TypedDict):
     """The search result with its score."""
 
     code_string: str
+    """
+    This is the code's display name.
+    """
     score: float
 
 
