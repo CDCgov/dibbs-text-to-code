@@ -83,14 +83,13 @@ def get_latest_extract_file_name(filename_prefix: str):
 
 
 def load_extract_file_to_dict(filename: str) -> list[dict]:
-    """Function that takes a filename and parses 
+    """Function that takes a filename, finds the file and parses
+        it into an easier to process dictionary.
 
-        :param filename_prefix: The part of the filename that defines the
-            terminology value set type (ie. loinc_lab_names) that you want
-            to find the most recent file of.
+        :param filename: The filename of the file you wanted parsed
+            into a dictiary.
 
-        :returns: The file name and file path of the most recent value set
-            extract file.
+        :returns: A dictionary of the data pulled from a csv file.
     """
     file_path = BASE_FOLDER / filename
     extract_dict = {}

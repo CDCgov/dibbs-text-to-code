@@ -19,12 +19,20 @@ HL7_LAB_INTERP_URL = (
 HL7_ENCOUNTER_CODE_URL = "https://terminology.hl7.org/6.5.0/CodeSystem-v3-ActCode.json"
 
 
-def get_hl7_encounter_act_codes():  # noqa: D103
+def get_hl7_encounter_act_codes() -> list[dict]:
+    """Function to get the all HL7 Codes and Terms for 
+        Encounter Act via the HL7 Valueset API and organize
+        the data into a list of dictionaries.
+
+        :returns: A list of dictionaries containing HL7 Encounter
+            Act records including codes, text, and descriptions.
+    """
     hl7_response = requests.get(HL7_ENCOUNTER_CODE_URL)
     encounter_act_code = "_ActEncounterCode"
     hl7_rows = []
 
     if hl7_response.status_code != 200:
+        # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving HL7 Encounter Act Codes: {hl7_response.status_code}: {hl7_response.text}",
             file=sys.stderr,
@@ -34,6 +42,7 @@ def get_hl7_encounter_act_codes():  # noqa: D103
 
     if hl7_codes is not None:
         record_count = len(hl7_codes)
+        # TODO: In Subsequent PR update this to be a logging statement
         print(f"HL7 ACT Codes to process through to get the Encounter Codes: {record_count}")
 
         for hl7_row in hl7_codes:
@@ -72,15 +81,24 @@ def get_hl7_encounter_act_codes():  # noqa: D103
             "description": "External Encounter",
         }
         hl7_rows.append(external_encounter)
+        # TODO: In Subsequent PR update this to be a logging statement
         print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
         return hl7_rows
 
 
-def get_hl7_lab_interp():  # noqa: D103
+def get_hl7_lab_interp() -> list[dict]:
+    """Function to get the all HL7 Codes and Terms for 
+        Lab Interpretations via the HL7 Valueset API and organize
+        the data into a list of dictionaries.
+
+        :returns: A list of dictionaries containing HL7 Lab
+            Interpretations records including codes and text.
+    """
     hl7_response = requests.get(HL7_LAB_INTERP_URL)
     hl7_rows = []
 
     if hl7_response.status_code != 200:
+        # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}",
             file=sys.stderr,
@@ -90,6 +108,7 @@ def get_hl7_lab_interp():  # noqa: D103
 
     if hl7_codes is not None:
         record_count = len(hl7_codes)
+        # TODO: In Subsequent PR update this to be a logging statement
         print(f"HL7 Lab Interpretation Record Count: {record_count}")
 
         for hl7_row in hl7_codes:

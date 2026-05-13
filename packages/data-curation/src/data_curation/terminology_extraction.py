@@ -35,7 +35,7 @@ from data_curation.terminologies.utils.loinc import get_loinc_lab_names, get_loi
 from data_curation.terminologies.utils.snomed import get_umls_snomed_lab_values
 from data_curation.terminologies.utils.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
 from data_curation.terminologies.utils.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.utils.general import SNOINC_DIRECTORY, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
+from data_curation.terminologies.utils.general import BASE_FOLDER, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -78,7 +78,7 @@ def get_loinc_umls_related_results():  # noqa: D103
 
     url_filename = "loinc_umls_related_names_urls.json"
     umls_filename = f"loinc_umls_related_names_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    full_url_file_path = os.path.join(TMP_DIRECTORY, url_filename)
+    full_url_file_path = TMP_DIRECTORY / url_filename
 
     # handle the first step of the process - find all the loinc codes
     # and generate the two different URLS specific for UMLS API
@@ -129,7 +129,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     process_loinc_code = True
     starting_loinc_code = ""
     umls_filename_tmp = "loinc_umls_related_names_PARTIAL.json"
-    full_partial_file_path = os.path.join(TMP_DIRECTORY, umls_filename_tmp)
+    full_partial_file_path = TMP_DIRECTORY / umls_filename_tmp
     print("TEMP FILE PATH: " + full_partial_file_path)
 
     if os.path.exists(full_partial_file_path):
@@ -272,16 +272,13 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print("Empty file contents!  Failed to save CSV!")
         return
 
-    if not os.path.exists(SNOINC_DIRECTORY):
-        os.makedirs(SNOINC_DIRECTORY)
-
     if append_to_file:
         file_method = "a"
     else:
         file_method = "w"
 
     try:
-        full_file_path = os.path.join(SNOINC_DIRECTORY, filename)
+        full_file_path = BASE_FOLDER / filename
         csv_headers = contents[0].keys()
 
         with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
