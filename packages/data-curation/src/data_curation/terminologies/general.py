@@ -12,6 +12,7 @@ to generate and maintain embeddings in Opensearch for TTC.
 # File & Directories
 import csv
 from datetime import datetime
+import json
 import os
 from pathlib import Path
 from utils.regex_patterns import MULTIPLE_SPACE
@@ -96,3 +97,66 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
         extract_dict = {row['code']: row for row in reader}
     
     return extract_dict
+
+
+def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
+    if not filename.strip():
+        print("No filename supplied.  Failed to save CSV file!")
+        return
+
+    if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save CSV!")
+        return
+
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
+
+    try:
+        full_file_path = BASE_FOLDER / filename
+        csv_headers = contents[0].keys()
+
+        with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
+            if not (append_to_file):
+                writer.writeheader()
+            writer.writerows(contents)
+        print(f"CSV File successfully saved as {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+def save_json_file(  # noqa: D103
+    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
+):
+    if not filename.strip() or not directory_path.strip():
+        print("No filename & path supplied.  Failed to save JSON File!")
+        return
+
+    if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save JSON File!")
+        return
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+    full_file_path = directory_path / filename
+
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
+
+    try:
+        with open(full_file_path, file_method, encoding="utf-8") as dictfile:
+            json.dump(contents, dictfile, indent=4)
+        print(f"JSON File successfully saved as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
