@@ -111,9 +111,6 @@ def select_relevant_text(candidates: list[Candidate], field_type: DataField) -> 
         if best_candidate is None:
             continue
 
-        if best_candidate.value is None:
-            continue
-
         if not best_candidate.value.strip():
             continue
 
