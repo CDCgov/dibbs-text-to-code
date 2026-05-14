@@ -474,26 +474,19 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
     emb_records = []
     loinc_axis_info = {}
     short_name = loinc_row["short_name"]
-    loinc_type = loinc_row["lab_type"]
-    property = loinc_row["property"]
-    time_aspect = loinc_row["time_aspect"]
-    system = loinc_row["system"]
-    scale = loinc_row["scale_type"]
-    method = loinc_row["method_type"]
-    class_type = loinc_row["class_type"]
     long_name = loinc_row["long_name"]
     display_name = loinc_row["display_name"]
     full_name = loinc_row["full_name"]
     consumer_name = loinc_row["consumer_name"]
 
     loinc_axis_info["loinc_code"] = loinc_code
-    loinc_axis_info["loinc_type"] = loinc_type
-    loinc_axis_info["property"] = property
-    loinc_axis_info["time"] = time_aspect
-    loinc_axis_info["system"] = system
-    loinc_axis_info["scale"] = scale
-    loinc_axis_info["method"] = method
-    loinc_axis_info["class"] = class_type
+    loinc_axis_info["loinc_type"] = loinc_row["lab_type"]
+    loinc_axis_info["property"] = loinc_row["property"]
+    loinc_axis_info["time"] = loinc_row["time_aspect"]
+    loinc_axis_info["system"] = loinc_row["system"]
+    loinc_axis_info["scale"] = loinc_row["scale_type"]
+    loinc_axis_info["method"] = loinc_row["method_type"]
+    loinc_axis_info["class"] = loinc_row["class_type"]
 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
