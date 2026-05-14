@@ -147,7 +147,7 @@ class TestHandler:
         """Test handler raises error if given an unknown or invalid action."""
         patch_lambda_handler(monkeypatch, description_vector_type="knn_vector")
 
-        with pytest.raises(ValueError, match="Received unknown action: disallowed"):
+        with pytest.raises(ValueError, match="Received unknown action: 'disallowed'"):
             lambda_function.handler({"action": "disallowed"}, mock_lambda_context)
 
     def test_handler_create_index_success(self, monkeypatch, mock_lambda_context):
