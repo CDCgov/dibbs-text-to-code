@@ -43,28 +43,30 @@ ASSETS_FOLDER = BASE_FOLDER / "assets"
 
 EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
-        "test_eicr",
-        ASSETS_FOLDER / "test_eicr.xml",
-        ASSETS_FOLDER / "test_schematron_errors.xml",
+        "eicr_test",
+        ASSETS_FOLDER / "eicr_test" / "eicr_test.xml",
+        ASSETS_FOLDER / "eicr_test" / "eicr_test_schematron_errors.xml",
     ),
     (
         "eicr_covid",
-        ASSETS_FOLDER / "eicr_covid.xml",
-        ASSETS_FOLDER / "eicr_covid_schematron_errors.xml",
+        ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
+        ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
     ),
 )
 FAIL_EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
-        "empty_eicr",
-        ASSETS_FOLDER / "empty_eicr.xml",
-        ASSETS_FOLDER / "empty_eicr_schematron_errors.xml",
+        "eicr_empty",
+        ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
+        ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
     ),
 )
 
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
-    ASSETS_FOLDER / "namespace_preservation_schematron_errors.xml"
+    ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_schematron_errors.xml"
 )
-NAMESPACE_PRESERVATION_EICR_PATH = ASSETS_FOLDER / "namespace_preservation_eicr.xml"
+NAMESPACE_PRESERVATION_EICR_PATH = (
+    ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_eicr.xml"
+)
 
 
 # ---------------------------------------------------------------------------
