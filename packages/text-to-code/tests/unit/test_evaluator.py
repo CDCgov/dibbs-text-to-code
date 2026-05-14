@@ -197,3 +197,17 @@ def test_select_relevant_text_no_systems(mocker):
     actual = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
 
     assert actual == candidates[0]
+
+
+def test_select_relevant_text_not_loinc_or_snomed_system(mocker):
+    candidates = [
+        Candidate(
+            xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
+            value="SARS-CoV-2 (COVID-19) RNA [Presence] in Specimen by NAA with probe detection",
+            system="Something else",
+        )
+    ]
+
+    actual = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
+
+    assert actual == candidates[0]
