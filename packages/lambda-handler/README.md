@@ -7,7 +7,7 @@
 - [Pre-requisites](#pre-requisites)
 - [Responsibilities](#responsibilities)
 - [Cached Clients](#cached-clients)
-- [S3 Helpers](#s3-helpers)
+- [S3 and Event Helpers](#s3-and-event-helpers)
 - [OpenSearch Helpers](#opensearch-helpers)
 - [Tests](#tests)
 
@@ -45,7 +45,7 @@ The package caches AWS authentication, S3, and OpenSearch clients so Lambda invo
 
 The `reset_cached_clients` helper clears cached clients and auth. This is primarily useful in tests when environment variables or mocked AWS resources need to be reset between cases.
 
-## S3 Helpers
+## S3 and Event Helpers
 
 The package includes helpers for common S3 operations:
 
@@ -61,7 +61,7 @@ The package includes helpers for common S3 operations:
 For example:
 
 ```text
-TTCInput/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+TextToCodeSubmissionV2/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
 ```
 
 becomes:

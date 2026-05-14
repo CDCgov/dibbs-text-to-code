@@ -228,11 +228,11 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
     """Get the persistence_id from an S3 object key.
 
     Object key format: <pipeline-step>/<persistance_id>
-    Example: TTCInput/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+    Example: TextToCodeSubmissionV2/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
     Returns: 2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
 
     :param object_key: The S3 object key
-    :param input_prefix: The pipeline step prefix (e.g., "TTCInput/")
+    :param input_prefix: The pipeline step prefix (e.g., "TextToCodeSubmissionV2/")
     :return: The persistence_id portion of the key
 
     """
