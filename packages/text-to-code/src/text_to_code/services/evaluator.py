@@ -21,8 +21,6 @@ def _classify_translation_system(
         system identifier, otherwise None.
     """
     system = candidate.system
-    if system is None:
-        return None
 
     if system in preference.loinc_system_values:
         return CodeTranslation.LOINC
