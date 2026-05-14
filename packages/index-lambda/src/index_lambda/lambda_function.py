@@ -16,8 +16,8 @@ class OpenSearchIndexMapping(TypedDict):
     data to-index), but these attributes are themselves required.
     """
 
-    settings: str
-    mappings: str
+    settings: dict
+    mappings: dict
 
 
 logger = Logger(service="index-lambda")
