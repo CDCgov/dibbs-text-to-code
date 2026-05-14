@@ -12,7 +12,6 @@ import csv
 from datetime import datetime
 import json
 import os
-from pathlib import Path
 import requests
 from .general import clean_text_string, BASE_FOLDER
 

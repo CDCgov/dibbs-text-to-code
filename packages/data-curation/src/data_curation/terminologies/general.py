@@ -59,8 +59,16 @@ def get_date_from_latest_filename(filename: str, terminology: str) -> str:
     """
     file_date = re.search(r'\d{8}', filename).group()
 
+    if file_date is None:
+        raise ValueError(f"Unable to extract 8 digit date from file name: {file_date}!")
+
+    # date comparison for LOINC requires date in YYYY-MM-DD format
     if terminology == 'loinc':
         return datetime.strptime(file_date, "%Y%m%d").strftime("%Y-%m-%d")
+    # for all other terminologies, yet to be determined
+    # return date from file in YYYYMMDD format
+    else:
+        return datetime.strptime(file_date, "%Y%m%d").strftime("%Y%m%d")
 
 
 def get_latest_extract_file_name(filename_prefix: str):
@@ -77,7 +85,9 @@ def get_latest_extract_file_name(filename_prefix: str):
     files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(filename_prefix)]
     if files:
         latest_file = max(files)
-    return latest_file
+        return latest_file
+    else:
+        raise FileNotFoundError(f"No file with prefix {filename_prefix} under {BASE_FOLDER}!")
 
 
 def load_extract_file_to_dict(filename: str) -> list[dict]:
