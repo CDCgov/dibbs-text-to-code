@@ -119,9 +119,9 @@ The Lambda also needs permissions to access the configured OpenSearch cluster.
 
 ## Logging
 
-Every TTC invocation logs the record count at the start of processing.
+Every TTC invocation logs the record count at the start.
 
-For each record, the Lambda logs the event bucket, triggering object key, and derived persistence ID. It carries the bucket name, persistence ID, and trigger S3 key as structured context through downstream log lines during record processing.
+For each record, the Lambda logs the event bucket, triggering object key, and derived persistence ID as structured fields. It also carries the bucket name, persistence ID, and trigger S3 key as structured context through downstream log lines during record processing.
 
 This makes it possible to filter CloudWatch logs by bucket, object key, or persistence ID when debugging cross-pipeline issues.
 
