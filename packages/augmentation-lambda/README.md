@@ -1,7 +1,5 @@
 # DIBBs Augmentation Lambda
 
-**General disclaimer** This repository was created for use by CDC programs to collaborate on public health related projects in support of the CDC mission: <https://www.cdc.gov/about/cdc/#cdc_about_cio_mission-our-mission>. GitHub is not hosted by the CDC, but is a third party website used by CDC and its partners to share information and collaborate on software. CDC use of GitHub does not imply an endorsement of any one particular service, product, or enterprise.
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -37,7 +35,7 @@ This package is responsible for:
 - Loading the original eICR XML from S3.
 - Parsing nonstandard code translations from TTC output.
 - Running eICR augmentation through the core augmentation package.
-- Managing a S3-derived persistence ID for the augmented document and set IDs.
+- Seeding deterministic eICR document IDs (id, setId, versionNumber) from the persistence ID.
 - Writing the augmented eICR XML back to S3.
 - Writing augmentation metadata back to S3.
 
@@ -51,6 +49,7 @@ TTC_INPUT_PREFIX
 TTC_OUTPUT_PREFIX
 AUGMENTED_EICR_PREFIX
 AUGMENTATION_METADATA_PREFIX
+AWS_REGION
 ```
 
 ## Tests
