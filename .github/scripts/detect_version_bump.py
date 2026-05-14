@@ -19,10 +19,12 @@ import tomllib
 
 
 def read_version(text: str) -> str:
+    """Return the `[project].version` field from a pyproject.toml document."""
     return tomllib.loads(text)["project"]["version"]
 
 
 def main() -> None:
+    """Detect a version bump and write GitHub Actions outputs."""
     with open("pyproject.toml", "rb") as fh:
         new_version = read_version(fh.read().decode())
 
@@ -57,8 +59,7 @@ def main() -> None:
     output_path = os.environ.get("GITHUB_OUTPUT")
     if output_path:
         with open(output_path, "a") as fh:
-            for key, value in outputs.items():
-                fh.write(f"{key}={value}\n")
+            fh.writelines(f"{key}={value}\n" for key, value in outputs.items())
 
 
 if __name__ == "__main__":
