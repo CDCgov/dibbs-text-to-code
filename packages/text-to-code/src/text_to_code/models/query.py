@@ -1,10 +1,10 @@
 import typing
 
-from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 
 
 class DataFieldTypeMapping:
@@ -24,7 +24,7 @@ class DataFieldTypeMapping:
             raise ValueError(f"No type mapping defined for {data_field}") from err
 
 
-class VectorSearchParams(BaseModel):
+class VectorSearchParams(FrozenBaseModel):
     """Parameters for performing a vector search."""
 
     vector: list[float] = Field(description="The vector to search for.")
@@ -51,7 +51,11 @@ class VectorSearchParams(BaseModel):
     def compute_filter_value(self) -> "VectorSearchParams":
         """Uses the DataFieldTypeMapping to get the filter values corresponding to the data_field."""
         if self.filter_field == type(self).model_fields["filter_field"].default:
-            self.filter_value = DataFieldTypeMapping.to_filter_values(self.data_field)
+            # We have to use `object.__setattr__` because this is a frozen model.
+            object.__setattr__(
+                self, "filter_value", DataFieldTypeMapping.to_filter_values(self.data_field)
+            )
         else:
             raise ValueError(f"Unsupported filter field: {self.filter_field}")
+
         return self

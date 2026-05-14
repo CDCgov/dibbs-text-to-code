@@ -1,16 +1,17 @@
-import pydantic
+from pydantic import Field
 
+from shared_models import FrozenBaseModel
 from text_to_code.models.query import VectorSearchParams
 
 
-class KNNQuery(pydantic.BaseModel):
+class KNNQuery(FrozenBaseModel):
     """Builds a KNN query."""
 
-    field: str = pydantic.Field(
+    field: str = Field(
         default="description_vector", description="The field to perform the vector search on."
     )
-    vector: list[float] = pydantic.Field(description="The vector to search for.")
-    k: int = pydantic.Field(default=10, description="The number of nearest neighbors to retrieve.")
+    vector: list[float] = Field(description="The vector to search for.")
+    k: int = Field(default=10, description="The number of nearest neighbors to retrieve.")
 
     def to_opensearch(self) -> dict:
         """Builds an OpenSearch-specific KNN query."""
@@ -24,7 +25,7 @@ class KNNQuery(pydantic.BaseModel):
         }
 
 
-class TermsFilter(pydantic.BaseModel):
+class TermsFilter(FrozenBaseModel):
     """Builds a terms filter for the query.
 
     The filter narrows down the search results to only include documents where the
@@ -34,10 +35,10 @@ class TermsFilter(pydantic.BaseModel):
     codes of type "Observation" or "Both" for the lab test result data field.
     """
 
-    field: str = pydantic.Field(
+    field: str = Field(
         default="loinc_type", description="The field to filter on, e.g., 'loinc_type'."
     )
-    value: list[str] = pydantic.Field(
+    value: list[str] = Field(
         description="The value(s) to filter the specified field by, e.g., ['order','both'] or ['observation', 'both']."
     )
 

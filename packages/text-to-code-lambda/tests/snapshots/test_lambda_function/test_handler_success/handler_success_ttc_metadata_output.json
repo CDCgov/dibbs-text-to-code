@@ -5,7 +5,7 @@
   "schematron_errors": {
     "Lab Test Name Ordered": [
       {
-        "candidate": {},
+        "candidate": null,
         "eicr_id": null,
         "error": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]",
@@ -30,7 +30,7 @@
         ]
       },
       {
-        "candidate": {},
+        "candidate": null,
         "eicr_id": null,
         "error": "Text to Code: Lab Test Name Ordered code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]",
@@ -57,7 +57,7 @@
     ],
     "Lab Test Name Resulted": [
       {
-        "candidate": {},
+        "candidate": null,
         "eicr_id": null,
         "error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
@@ -82,7 +82,7 @@
         ]
       },
       {
-        "candidate": {},
+        "candidate": null,
         "eicr_id": null,
         "error": "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1",
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",

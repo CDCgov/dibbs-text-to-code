@@ -1,8 +1,9 @@
-from pydantic import BaseModel
 from pydantic import Field
 
+from shared_models import FrozenBaseModel
 
-class OpenSearchHitSource(BaseModel):
+
+class OpenSearchHitSource(FrozenBaseModel):
     """Represents a single search result _source returned from OpenSearch."""
 
     id: int = Field(description="The unique ID from the embedding data of the search result hit.")
@@ -14,7 +15,7 @@ class OpenSearchHitSource(BaseModel):
     loinc_type: str = Field(description="The LOINC type of the search result hit.")
 
 
-class OpenSearchHit(BaseModel):
+class OpenSearchHit(FrozenBaseModel):
     """Represents a single search result hit returned from OpenSearch."""
 
     index: str = Field(
@@ -29,10 +30,10 @@ class OpenSearchHit(BaseModel):
     )
 
 
-class OpenSearchHits(BaseModel):
+class OpenSearchHits(FrozenBaseModel):
     """Represents all of the search result hits returned from OpenSearch."""
 
-    total_hits: dict[str, str | int] = Field(
+    total: dict[str, str | int] = Field(
         alias="total", description="The total number of hits returned from OpenSearch."
     )
     hits: list[OpenSearchHit] = Field(
@@ -40,7 +41,7 @@ class OpenSearchHits(BaseModel):
     )
 
 
-class OpenSearchShards(BaseModel):
+class OpenSearchShards(FrozenBaseModel):
     """Represents the shard information returned from OpenSearch."""
 
     total: int = Field(description="The total number of shards involved in the search.")
@@ -49,7 +50,7 @@ class OpenSearchShards(BaseModel):
     failed: int = Field(description="The number of shards that failed to return results.")
 
 
-class OpenSearchResult(BaseModel):
+class OpenSearchResult(FrozenBaseModel):
     """Represents the overall search result returned from OpenSearch, including hits and shard information."""
 
     took: int = Field(description="The time taken to execute the search in milliseconds.")

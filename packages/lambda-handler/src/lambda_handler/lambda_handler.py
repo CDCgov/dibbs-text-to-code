@@ -11,8 +11,11 @@ from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
+from lambda_handler.models.opensearch import OpenSearchHitSource
 from utils import get_env_variable
 
+from .models import OpenSearchHit
+from .models import OpenSearchHits
 from .models import OpenSearchResult
 
 logger = Logger(service="lambda-handler", child=True)
@@ -228,11 +231,11 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
     """Get the persistence_id from an S3 object key.
 
     Object key format: <pipeline-step>/<persistance_id>
-    Example: TTCInput/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+    Example: TextToCodeSubmissionV2/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
     Returns: 2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
 
     :param object_key: The S3 object key
-    :param input_prefix: The pipeline step prefix (e.g., "TTCInput/")
+    :param input_prefix: The pipeline step prefix (e.g., "TextToCodeSubmissionV2/")
     :return: The persistence_id portion of the key
 
     """
@@ -281,4 +284,29 @@ def retrieve_opensearch_results(
         status="success",
     )
 
-    return OpenSearchResult(**response)
+    hits_json = response["hits"]
+    hits = OpenSearchHits(
+        total=hits_json["total"],
+        hits=[
+            OpenSearchHit(
+                _index=hit["_index"],
+                _id=hit["_id"],
+                _score=hit["_score"],
+                _source=OpenSearchHitSource(
+                    id=hit["_source"]["id"],
+                    loinc_code=hit["_source"]["loinc_code"],
+                    loinc_name_type=hit["_source"]["loinc_name_type"],
+                    description=hit["_source"]["description"],
+                    loinc_type=hit["_source"]["loinc_type"],
+                ),
+            )
+            for hit in hits_json["hits"]
+        ],
+    )
+
+    return OpenSearchResult(
+        took=response["took"],
+        timed_out=response["timed_out"],
+        _shards=response["_shards"],
+        hits=hits,
+    )

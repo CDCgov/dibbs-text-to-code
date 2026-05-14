@@ -1,8 +1,8 @@
-from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 
 from .eicr import LabXPaths
 from .schematron import LabTestNameOrderedSchematronErrors
@@ -10,7 +10,7 @@ from .schematron import LabTestNameResultedSchematronErrors
 from .schematron import SchematronErrors
 
 
-class BaseLabField(BaseModel):
+class BaseLabField(FrozenBaseModel):
     """Shared configuration for lab-related TTC processing."""
 
     # Made optional at type level for Ty appeasement, defaults filled in subclasses
@@ -30,7 +30,7 @@ class BaseLabField(BaseModel):
             raise ValueError("At least one Sub-XPath expression must be provided.")
         return v
 
-    xpaths: list[LabXPaths] = list(LabXPaths)
+    xpaths: list[LabXPaths] = Field(default=list(LabXPaths))
 
     schematron_errors: list[SchematronErrors] = Field(
         description="Relevant Schematron error messages.",
