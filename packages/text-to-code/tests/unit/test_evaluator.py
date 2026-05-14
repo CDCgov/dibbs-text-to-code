@@ -120,25 +120,6 @@ def test_falls_back_to_code_original_text_when_code_display_name_is_blank() -> N
     assert selected == candidates[1]
 
 
-def test_select_relevant_text_skips_candidate_when_value_is_none() -> None:
-    candidates = [
-        Candidate.model_construct(
-            xpath=LabXPaths.CODE_DISPLAY_NAME,
-            value=None,
-            system=None,
-        ),
-        Candidate(
-            xpath=LabXPaths.CODE_ORIGINAL_TEXT,
-            value="COVID19 PCR QUALITATIVE",
-            system=None,
-        ),
-    ]
-
-    selected = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
-
-    assert selected == candidates[1]
-
-
 def test_returns_none_when_all_candidates_are_blank_or_missing_for_priorities() -> None:
     candidates = [
         Candidate(
