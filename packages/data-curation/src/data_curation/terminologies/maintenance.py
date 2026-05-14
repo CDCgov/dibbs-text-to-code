@@ -1,6 +1,6 @@
 from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
-                                                     get_loinc_embedding_candidates)
+                                                     get_loinc_embedding_records)
 from data_curation.terminologies.general import (get_latest_extract_file_name, 
                                                        get_date_from_latest_filename, 
                                                        load_extract_file_to_dict)
@@ -27,7 +27,7 @@ def update_loinc_embeddings():
         print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
-        loinc_updates = get_loinc_embedding_candidates(loinc_current_dict,loinc_version)
+        loinc_updates = get_loinc_embedding_records(loinc_current_dict,loinc_version)
     else:
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")

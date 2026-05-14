@@ -376,22 +376,22 @@ def get_loinc_current_version_data() -> tuple[str, str]:
     return loinc_version, loinc_version_date
 
 
-def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -> list[dict]:
+def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> list[dict]:
     """Function compares New LOINC Version delta API response against the existing
         version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
         This function creates a change_log that will be used by another function to 
-        construct a list of embedding candidates based upon the need for the different
-        types of changes.  This change_log will also be used to record the updates in
+        construct a list of embedding records based upon the need for the different
+        types of changes.  This change_log will also be used to document the updates in
         a delta file. 
 
-        5 new candidate embedding records will be created for each 'NEW' LOINC code and
-        a single candidate embedding record for each name/term change.  If the LOINC
+        5 new embedding records will be created for each 'NEW' LOINC code and
+        a single embedding record for each name/term change.  If the LOINC
         code changes from one lab type to another then we will create a record that 
-        will simply update that records lab_type field via the Opensearch Index Load
+        will simply update that field 'lab_type' via the Opensearch Index Load
         process. 
 
         Once this comparison is complete, a summary of the changes is then stored in a
-        'delta' file in the 'data' folder to log/record the updates.
+        'delta' file in the 'data' folder to document the updates.
         
         This is currently just for the LOINC Lab Names data, but this can be
         modified to be more flexible for ALL LOINC extraction types as needed.
@@ -404,7 +404,7 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -
         :returns: boolean - true if it should be filtered and false if not
     """
     delta_extract_rows = get_loinc_lab_names(new_version)
-    embedding_candidates = []
+    embedding_records = []
     change_log = {
                 "New LOINC": 0,
                 "short_name": 0,
@@ -442,25 +442,25 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -
             if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
                 change_log["consumer_name"] += 1
                 changes.append("consumer_name")
-        embedding_candidates.extend(_create_embedding_candidates(loinc_code,update_loinc_record,changes))
+        embedding_records.extend(_create_embedding_records(loinc_code,update_loinc_record,changes))
     # TODO: In Subsequent PR update this to be a logging statement
     #  In PR for story #454 - this will be written to a file instead of printing
-    print(f"EMB CANDIDATES: {len(embedding_candidates)} see counts of the various changes below")
+    print(f"EMB recordS: {len(embedding_records)} see counts of the various changes below")
     print(json.dumps(change_log, indent=4))
-    return embedding_candidates
+    return embedding_records
 
 
-def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
     """This function takes the loinc_code and a list of changes from a change_log,
         created by a higher function that performs the LOINC change comparison, and
-        generates a list of embedding candidate records per LOINC Code.  As it is possible
+        generates a list of embedding records per LOINC Code.  As it is possible
         that a single LOINC code could have multiple term/name changes in a single LOINC
         update.
         
-        5 new candidate embedding records will be created for each 'NEW' LOINC code and
-        a single candidate embedding record for each name/term change.  If the LOINC
+        5 new embedding records will be created for each 'NEW' LOINC code and
+        a single embedding record for each name/term change.  If the LOINC
         code changes from one lab type to another then we will create a record that 
-        will simply update that records lab_type field via the Opensearch Index Load
+        will simply update that field 'lab_type' via the Opensearch Index Load
         process.
 
         :param loinc_code: The LOINC code that is either new or the existing one
@@ -469,10 +469,10 @@ def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_chang
             being added/updated.
         :param element_change: The list of changes required per LOINC code.
 
-        :returns: a list of embedding candidate records for the LOINC code.
+        :returns: a list of embedding records for the LOINC code.
     """
-    emb_candidates = []
-    emb_candidate = {}
+    emb_records = []
+    emb_record = {}
     short_name = loinc_row["short_name"]
     loinc_code = loinc_code
     loinc_type = loinc_row["lab_type"]
@@ -487,14 +487,14 @@ def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_chang
     full_name = loinc_row["full_name"]
     consumer_name = loinc_row["consumer_name"]
 
-    emb_candidate["loinc_code"] = loinc_code
-    emb_candidate["loinc_type"] = loinc_type
-    emb_candidate["property"] = property
-    emb_candidate["time"] = time_aspect
-    emb_candidate["system"] = system
-    emb_candidate["scale"] = scale
-    emb_candidate["method"] = method
-    emb_candidate["class"] = class_type
+    emb_record["loinc_code"] = loinc_code
+    emb_record["loinc_type"] = loinc_type
+    emb_record["property"] = property
+    emb_record["time"] = time_aspect
+    emb_record["system"] = system
+    emb_record["scale"] = scale
+    emb_record["method"] = method
+    emb_record["class"] = class_type
 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
@@ -503,32 +503,32 @@ def _create_embedding_candidates(loinc_code: str, loinc_row: dict, element_chang
         "New LOINC" in element_changes or
         "short_name" in element_changes)
         and short_name ):
-        emb_candidate["loinc_name_type"] = "short_name"
-        emb_candidate["term"] = short_name # same as codes or name_codes in embedding notebook
-        emb_candidates.append(emb_candidate)
+        emb_record["loinc_name_type"] = "short_name"
+        emb_record["term"] = short_name # same as codes or name_codes in embedding notebook
+        emb_records.append(emb_record)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "long_name" in element_changes):
-        emb_candidate["loinc_name_type"] = "long_name"
-        emb_candidate["term"] = long_name # same as codes or name_codes in embedding notebook
-        emb_candidates.append(emb_candidate)
+        emb_record["loinc_name_type"] = "long_name"
+        emb_record["term"] = long_name # same as codes or name_codes in embedding notebook
+        emb_records.append(emb_record)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "display_name" in element_changes):
-        emb_candidate["loinc_name_type"] = "display_name"
-        emb_candidate["term"] = display_name # same as codes or name_codes in embedding notebook
-        emb_candidates.append(emb_candidate)
+        emb_record["loinc_name_type"] = "display_name"
+        emb_record["term"] = display_name # same as codes or name_codes in embedding notebook
+        emb_records.append(emb_record)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "full_name" in element_changes):
-        emb_candidate["loinc_name_type"] = "full_name"
-        emb_candidate["term"] = full_name # same as codes or name_codes in embedding notebook
-        emb_candidates.append(emb_candidate)
+        emb_record["loinc_name_type"] = "full_name"
+        emb_record["term"] = full_name # same as codes or name_codes in embedding notebook
+        emb_records.append(emb_record)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "consumer_name" in element_changes):
-        emb_candidate["loinc_name_type"] = "consumer_name"
-        emb_candidate["term"] = consumer_name # same as codes or name_codes in embedding notebook
-        emb_candidates.append(emb_candidate)
-    return emb_candidates
+        emb_record["loinc_name_type"] = "consumer_name"
+        emb_record["term"] = consumer_name # same as codes or name_codes in embedding notebook
+        emb_records.append(emb_record)
+    return emb_records
 
