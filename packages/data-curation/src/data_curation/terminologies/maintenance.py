@@ -28,15 +28,17 @@ def update_loinc_embeddings():
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
         loinc_updates = get_loinc_embedding_records(loinc_current_dict,loinc_version)
+        if len(loinc_updates) > 0:
+            # TODO: now process the updates into embeddings
+            # This will be handled in the next ticket
+            # Handled in Ticket #454
+            None
     else:
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
+        return
     
-    if len(loinc_updates) > 0:
-        # TODO: now process the updates into embeddings
-        # This will be handled in the next ticket
-        # Handled in Ticket #454
-        None
+    
 
     # TODO: add a function here that will clean up
     # the existing file and make a new one with a new date
