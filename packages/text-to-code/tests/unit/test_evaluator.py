@@ -1,6 +1,9 @@
 from shared_models import DataField
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import LabXPaths
+from text_to_code.models.evaluator import LabTestNameResultedEvaluationCriteria
+from text_to_code.models.evaluator import TranslationPreference
+from text_to_code.models.evaluator import TranslationSelectionStrategy
 from text_to_code.services.evaluator import select_relevant_text
 
 
@@ -147,3 +150,36 @@ def test_returns_none_when_all_candidates_are_blank_or_missing_for_priorities() 
     selected = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
 
     assert selected is None
+
+
+def test_select_relevant_text_selection_strategy_first(mocker):
+    mocked_criteria = LabTestNameResultedEvaluationCriteria(
+        translation_preference=TranslationPreference(
+            strategy=TranslationSelectionStrategy.FIRST,
+            loinc_system_values=[
+                "http://loinc.org",
+                "urn:oid:2.16.840.1.113883.6.1",
+            ],
+            snomed_system_values=[
+                "http://snomed.info/sct",
+                "urn:oid:2.16.840.1.113883.6.96",
+            ],
+        )
+    )
+
+    mocker.patch.dict(
+        "text_to_code.models.evaluator.EVALUATION_REGISTRY",
+        {DataField.LAB_TEST_NAME_RESULTED: lambda: mocked_criteria},
+    )
+
+    candidates = [
+        Candidate(
+            xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
+            value="SARS-CoV-2 (COVID-19) RNA [Presence] in Specimen by NAA with probe detection",
+            system=None,
+        )
+    ]
+
+    actual = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
+
+    assert actual == candidates[0]

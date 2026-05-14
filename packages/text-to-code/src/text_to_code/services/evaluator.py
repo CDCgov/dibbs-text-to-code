@@ -41,9 +41,6 @@ def _select_translation_candidate(
     :param preference: Translation system preference configuration.
     :returns: The selected Candidate, or None if no candidates are available.
     """
-    if not translation_candidates:
-        return None
-
     if preference.strategy == TranslationSelectionStrategy.FIRST:
         return translation_candidates[0]
 
