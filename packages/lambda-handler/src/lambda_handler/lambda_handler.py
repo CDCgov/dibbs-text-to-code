@@ -1,5 +1,5 @@
 import os
-import typing
+from typing import BinaryIO
 
 import boto3
 from aws_lambda_powertools import Logger
@@ -90,7 +90,7 @@ def create_s3_client() -> BaseClient:
     return _cached_s3_client
 
 
-def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
+def create_opensearch_client() -> OpenSearch:
     """Creates an OpenSearch client.
 
     :param aws_auth: AWS4Auth object for authentication
@@ -100,7 +100,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
 
     if _cached_opensearch_client is None:
         endpoint_url = get_env_variable("OPENSEARCH_ENDPOINT_URL")
-        auth = aws_auth or create_aws_auth()
+        auth = create_aws_auth()
         _cached_opensearch_client = OpenSearch(
             hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
             http_auth=auth,
@@ -113,17 +113,14 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
     return _cached_opensearch_client
 
 
-def get_file_content_from_s3(
-    bucket_name: str, object_key: str, s3_client: BaseClient | None = None
-) -> str:
+def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
     """Extracts the file content from an S3 bucket.
 
     :param bucket_name: The name of the S3 bucket.
     :param object_key: The key of the S3 object.
-    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     :return: The content of the file as a string.
     """
-    client = s3_client or create_s3_client()
+    client = create_s3_client()
 
     logger.info(
         "Retrieving file content from S3",
@@ -171,20 +168,14 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     return {"bucket_name": bucket_name, "object_key": object_key}
 
 
-def put_file(
-    file_obj: typing.BinaryIO,
-    bucket_name: str,
-    object_key: str,
-    s3_client: BaseClient | None = None,
-) -> None:
+def put_file(file_obj: BinaryIO, bucket_name: str, object_key: str) -> None:
     """Uploads a file object to a S3 bucket.
 
     :param file_obj: The file object to upload.
     :param bucket_name: The name of the S3 bucket to upload to.
     :param object_key: The key to assign to the uploaded object in S3.
-    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
-    client = s3_client or create_s3_client()
+    client = create_s3_client()
     logger.info(
         "Uploading file to S3",
         bucket_name=bucket_name,

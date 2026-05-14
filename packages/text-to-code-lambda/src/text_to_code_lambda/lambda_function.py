@@ -9,7 +9,6 @@ from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
@@ -53,9 +52,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     :param context: The Lambda context object.
     :return: A dictionary containing the status code, message, and any relevant data about the processing results.
     """
-    auth = lambda_handler.create_aws_auth()
-    opensearch_client = lambda_handler.create_opensearch_client(auth)
-    s3_client = lambda_handler.create_s3_client()
+    opensearch_client = lambda_handler.create_opensearch_client()
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
@@ -64,7 +61,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     for record in event.records:
         try:
-            process_record(record, s3_client, opensearch_client)
+            process_record(record, opensearch_client)
             successes.append(record.message_id)
         except Exception as e:
             logger.exception(
@@ -100,7 +97,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     return result
 
 
-def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: OpenSearch) -> None:
+def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
     """Process each SQS record.
 
     :param record: The SQS record to process
@@ -133,7 +130,7 @@ def process_record(record: SQSRecord, s3_client: BaseClient, opensearch_client: 
         trigger_s3_key=object_key,
     ):
         logger.info("Processing TTC event", status="processing")
-        _process_record_pipeline(persistence_id, s3_client, opensearch_client, bucket_name)
+        _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
 
 
 def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
@@ -160,13 +157,10 @@ def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
     return ttc_output, ttc_metadata_output
 
 
-def _load_schematron_data_fields(
-    persistence_id: str, s3_client: BaseClient, bucket_name: str
-) -> list:
+def _load_schematron_data_fields(persistence_id: str, bucket_name: str) -> list:
     """Load Schematron errors from S3 and extract relevant fields.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
-    :param s3_client: The S3 client to use for fetching files.
     :param bucket_name: The S3 bucket name to read from.
     :return: The relevant Schematron data fields for TTC processing.
     """
@@ -180,7 +174,6 @@ def _load_schematron_data_fields(
     schematron_errors = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name,
         object_key=object_key,
-        s3_client=s3_client,
     )
 
     # Process Schematron errors to identify relevant data fields for TTC processing
@@ -188,7 +181,7 @@ def _load_schematron_data_fields(
     return schematron_processor.get_data_fields_from_schematron_error(schematron_errors)
 
 
-def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name: str) -> str:
+def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
     """Load the original eICR from S3.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
@@ -204,7 +197,7 @@ def _load_original_eicr(persistence_id: str, s3_client: BaseClient, bucket_name:
         status="processing",
     )
     original_eicr_content = lambda_handler.get_file_content_from_s3(
-        bucket_name=bucket_name, object_key=object_key, s3_client=s3_client
+        bucket_name=bucket_name, object_key=object_key
     )
     logger.info("Retrieved eICR content", status="success")
     return original_eicr_content
@@ -368,14 +361,12 @@ def _process_schematron_errors(
 def _save_ttc_metadata_output(
     persistence_id: str,
     ttc_metadata_output: dict,
-    s3_client: BaseClient,
     bucket_name: str,
 ) -> None:
     """Save TTC metadata output to S3.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param ttc_metadata_output: The TTC metadata output dictionary.
-    :param s3_client: The S3 client to use for uploading files.
     :param bucket_name: The S3 bucket name to write to.
     """
     metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
@@ -390,7 +381,6 @@ def _save_ttc_metadata_output(
         file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
         bucket_name=bucket_name,
         object_key=metadata_key,
-        s3_client=s3_client,
     )
     logger.info(
         "Saved TTC metadata output to S3",
@@ -404,7 +394,6 @@ def _save_ttc_outputs(
     persistence_id: str,
     ttc_output: dict,
     ttc_metadata_output: dict,
-    s3_client: BaseClient,
     bucket_name: str,
 ) -> None:
     """Save TTC output and metadata output to S3.
@@ -412,7 +401,6 @@ def _save_ttc_outputs(
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param ttc_output: The TTC output dictionary.
     :param ttc_metadata_output: The TTC metadata output dictionary.
-    :param s3_client: The S3 client to use for uploading files.
     :param bucket_name: The S3 bucket name to write to.
     """
     # Save the TTC output to S3 for the Augmentation Lambda to consume
@@ -426,7 +414,6 @@ def _save_ttc_outputs(
         file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
         bucket_name=bucket_name,
         object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
-        s3_client=s3_client,
     )
     logger.info(
         "Saved TTC output to S3",
@@ -436,12 +423,11 @@ def _save_ttc_outputs(
     )
 
     # Save the TTC metadata output for completing model evaluation and analysis of TTC results
-    _save_ttc_metadata_output(persistence_id, ttc_metadata_output, s3_client, bucket_name)
+    _save_ttc_metadata_output(persistence_id, ttc_metadata_output, bucket_name)
 
 
 def _process_record_pipeline(
     persistence_id: str,
-    s3_client: BaseClient,
     opensearch_client: OpenSearch,
     bucket_name: str,
 ) -> dict:
@@ -460,14 +446,13 @@ def _process_record_pipeline(
         - Creating the metadata object to save in S3 for analysis of TTC results
 
     :param persistence_id: The persistence ID extracted from the S3 object key
-    :param s3_client: The S3 client to use for S3 operations.
     :param opensearch_client: The OpenSearch client.
     :param bucket_name: The S3 bucket name extracted from the triggering event.
     """
     ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
 
     logger.info("Starting TTC processing", status="processing")
-    schematron_data_fields = _load_schematron_data_fields(persistence_id, s3_client, bucket_name)
+    schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
 
     if not schematron_data_fields:
         logger.warning(
@@ -476,7 +461,7 @@ def _process_record_pipeline(
         )
         ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
         ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
-        _save_ttc_metadata_output(persistence_id, ttc_metadata_output, s3_client, bucket_name)
+        _save_ttc_metadata_output(persistence_id, ttc_metadata_output, bucket_name)
         logger.info("TTC processing completed", status="no_matches_found")
         return {
             "statusCode": 200,
@@ -484,7 +469,7 @@ def _process_record_pipeline(
             "result": "no_matches_found",
         }
 
-    original_eicr_content = _load_original_eicr(persistence_id, s3_client, bucket_name)
+    original_eicr_content = _load_original_eicr(persistence_id, bucket_name)
     processor = eicr_processor.EicrProcessor(original_eicr_content)
     _populate_eicr_metadata(processor, ttc_output, ttc_metadata_output)
     _process_schematron_errors(
@@ -494,7 +479,7 @@ def _process_record_pipeline(
         ttc_output,
         ttc_metadata_output,
     )
-    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, s3_client, bucket_name)
+    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
 
     has_matches = any(len(matches) > 0 for matches in ttc_output["schematron_errors"].values())
 
