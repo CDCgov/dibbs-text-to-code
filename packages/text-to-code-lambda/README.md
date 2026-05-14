@@ -145,5 +145,5 @@ This makes it possible to filter CloudWatch logs by bucket, object key, or persi
 Run the package tests with:
 
 ```bash
-uv run pytest packages/text-to-code-lambda/tests
+just test all packages/text-to-code-lambda/tests
 ```
