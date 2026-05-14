@@ -1,41 +1,64 @@
 # Releases
 
-This document outlines our release process, from the automatic creation of draft releases to the tagging and publishing of final releases.
+Releases are driven by the `version` field in the root `pyproject.toml`. Bumping
+that field on `main` triggers automation that tags the merge commit, builds and
+publishes the three Lambda images (`index`, `ttc`, `augmentation`) to GHCR and
+APHL ECR, creates a GitHub Release with auto-generated notes, and posts the
+release link to Slack.
 
-## 1. Draft Release Creation
+## Cut a release
 
-Whenever pull requests are merged into the `main` branch, a new **draft release** is automatically generated. This draft is based on the differences between the last official release and the current state of the `main` branch.
+1. Decide the next [semver](https://semver.org/) version (`X.Y.Z`):
+   - **Patch (`X.Y.Z+1`)**: backwards-compatible bug fixes.
+   - **Minor (`X.Y+1.0`)**: backwards-compatible new functionality.
+   - **Major (`X+1.0.0`)**: incompatible API changes.
+2. Open a PR titled `Release vX.Y.Z` that bumps `version` in the root
+   `pyproject.toml` to `X.Y.Z`. Do not include a `v` prefix in the file; the
+   workflow prepends it when tagging.
+3. Get review and merge to `main`.
+4. The `release` workflow runs automatically on the merge commit:
+   - tags the merge commit as `vX.Y.Z`
+   - builds all three Lambda images for `linux/amd64`
+   - pushes `vX.Y.Z`, `vX.Y`, `vX`, and `latest` tags to both GHCR and APHL ECR
+   - publishes a GitHub Release named `vX.Y.Z` with auto-generated notes
+   - posts the release link to Slack
 
-- Only **one draft release** is maintained at any given time, tracking all upcoming changes.
-- As more pull requests are merged, the existing draft release is updated with the new changes. This ensures that the draft release always reflects the latest features, fixes, and updates heading to production.
+The `vX.Y` and `vX` tags float to the latest release within that line; the
+`vX.Y.Z` tag is immutable.
 
-## 2. Release Tagging and Publishing
+### Hotfix
 
-To publish a release, a developer with the appropriate permissions pushes a release tag. The tag format is structured using
-the [Semantic Versioning](https://semver.org/) convention:
+Same flow. Open a PR that bumps the patch number (e.g. `0.2.0` to `0.2.1`) and
+merge.
 
-`vMM.mm.pp`
+## Verification
 
-- **MM**: Version when you make an incompatible API change.
-- **mm**: Version when you add functionality in a backwards-compatible manner.
-- **pp**: Version when you make backwards-compatible bug fixes.
+After merging a release PR, confirm:
 
-#### Publishing Process:
-- When a developer pushes a release tag, the process automatically publishes the existing draft release with the corresponding tag.
-- **Only users with the `maintain` or `admin` role** can push version tags, ensuring controlled and authorized release management.
+- [ ] **Actions tab**: the `release` workflow run on the merge commit is green.
+- [ ] **Tags**: `git fetch --tags && git tag -l "vX.Y.Z"` shows the new tag.
+- [ ] **GitHub Releases**: `vX.Y.Z` is published (not draft) with PR-list notes.
+- [ ] **APHL ECR**: each of `index`, `ttc`, `augmentation` has `vX.Y.Z`,
+      `vX.Y`, `vX`, and `latest` tags.
+- [ ] **Slack**: the release-notifications channel received the release link.
 
-Example:
+## Failure modes
 
-```sh
-$ git checkout main
-$ git pull
-$ git tag -a "v[MM].[mm].[pp]" -m"v[MM].[mm].[pp]"
-$ git push --tags
-```
+- **Tag `vX.Y.Z` already exists at a different commit**: the workflow fails
+  loudly during the `detect-release` job. Bump to the next available version
+  in a new PR.
+- **Partial failure (tag and images created, release step failed)**: re-run
+  the workflow from the Actions tab. The collision check treats a same-SHA tag
+  as a no-op, so re-runs are idempotent.
+- **Non-semver version**: the workflow rejects pre-release suffixes
+  (e.g. `1.0.0-rc.1`). Use a strict `X.Y.Z` format.
 
-### 3. Release Notes
+## Release notes
 
-Our release descriptions are **automatically generated** by GitHub based on the merged pull requests and commit history.
+GitHub auto-generates notes from PRs merged since the previous `vX.Y.Z` tag.
+The category and exclusion rules live in [.github/release.yml](../.github/release.yml);
+PRs labeled `ignore-for-release` are excluded.
 
-- The format and content of these release notes can be customized by editing the `.github/release.yml` file.
-- For more information on customizing release notes, refer to [GitHub’s documentation on automatically generated release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes).
+For more on customizing release notes, see GitHub's
+[automatically generated release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)
+documentation.
