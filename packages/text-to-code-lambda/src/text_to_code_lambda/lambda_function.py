@@ -278,10 +278,7 @@ def _process_schematron_errors(
             status="processing",
         )
 
-        selected_candidate = evaluator.select_relevant_text(
-            candidates=text_candidates,
-            field_type=data_field,
-        )
+        selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
 
         error.candidate = selected_candidate
 
