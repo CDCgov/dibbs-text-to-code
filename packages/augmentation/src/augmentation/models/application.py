@@ -1,8 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
-
+from shared_models import FrozenBaseModel
 from shared_models import NonstandardCodeInstance
 
 
@@ -32,7 +30,7 @@ class NonstandardCodeInstanceMetadata(NonstandardCodeInstance):
     """XPath to the translation added to the augmented eICR with the standard code."""
 
 
-class Metadata(BaseModel):
+class Metadata(FrozenBaseModel):
     """Model to hold augmentation metadata."""
 
     original_eicr_id: str
@@ -42,13 +40,8 @@ class Metadata(BaseModel):
     error: str | None = None
 
 
-class TTCAugmenterOutput(BaseModel):
+class TTCAugmenterOutput(FrozenBaseModel):
     """Output of the augmentation service."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     persistence_id: str
     augmented_eicr: str
