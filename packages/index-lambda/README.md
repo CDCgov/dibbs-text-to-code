@@ -112,5 +112,5 @@ OPENSEARCH_ENDPOINT_URL
 Run the package tests with:
 
 ```bash
-uv run pytest packages/index-lambda/tests
+just all unit packages/index-lambda/tests
 ```
