@@ -95,5 +95,5 @@ OPENSEARCH_ENDPOINT_URL
 Run the package tests with:
 
 ```bash
-uv run pytest packages/lambda-handler/tests
+just test all packages/lambda-handler/tests
 ```
