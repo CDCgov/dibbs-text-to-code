@@ -1,4 +1,4 @@
-#!/usr/bin/env python"""
+#!/usr/bin/env python
 
 """
 data_curation.terminologies.utils.general
@@ -29,7 +29,7 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
 def clean_text_string(value: str) -> str:
-    """Function that removes multile space characters from a string
+    """Function that removes multiple space characters from a string
         and returns it for further processing.
 
         :param value: Text string that needs to be clean.
@@ -85,7 +85,7 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
         it into an easier to process dictionary.
 
         :param filename: The filename of the file you wanted parsed
-            into a dictiary.
+            into a dictionary.
 
         :returns: A dictionary of the data pulled from a csv file.
     """

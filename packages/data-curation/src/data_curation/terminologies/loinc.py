@@ -1,4 +1,4 @@
-#!/usr/bin/env python"""
+#!/usr/bin/env python
 
 """
 data_curation.terminologies.utils.loinc
@@ -55,7 +55,7 @@ def get_loinc_lab_names(version: str = ""):
     """
     # if version is supplied we grab the delta 
     # and filter based upon version changes
-    # otherwise grab all Orders/Obsersavtions/Both
+    # otherwise grab all Orders/Observations/Both
     if version != "":
         api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_NAMES_QUERY
     else:
@@ -107,7 +107,7 @@ def get_loinc_lab_results(version: str = ""):
     """
     # if version is supplied we grab the delta 
     # and filter based upon version changes
-    # otherwise grab all Obsersavtions
+    # otherwise grab all Observations
     if version != "":
         api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_RESULT_QUERY
     else:
@@ -278,10 +278,10 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> 
     result_row["related_names"] = clean_text_string(loinc_result.get("RELATEDNAMES2"))
 
     # Paragraph of information concerning the concept/code/term in question
-    defintion_desc = loinc_result.get("DefinitionDescription")
-    if defintion_desc is not None:
-        if not _filter_loinc_term(defintion_desc):
-            result_row["definition_desc"] = clean_text_string(defintion_desc)
+    definition_desc = loinc_result.get("DefinitionDescription")
+    if definition_desc is not None:
+        if not _filter_loinc_term(definition_desc):
+            result_row["definition_desc"] = clean_text_string(definition_desc)
         else:
             result_row["definition_desc"] = ""
     result_row["lab_type"] = loinc_result.get("ORDER_OBS")
@@ -380,7 +380,7 @@ def get_loinc_embedding_candidates(current_loinc_dict: dict, new_version: str) -
     """Function compares New LOINC Version delta API response against the existing
         version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
         This function creates a change_log that will be used by another function to 
-        contstruct a list of embedding candidates based upon the need for the different
+        construct a list of embedding candidates based upon the need for the different
         types of changes.  This change_log will also be used to record the updates in
         a delta file. 
 

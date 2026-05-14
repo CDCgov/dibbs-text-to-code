@@ -94,7 +94,7 @@ def get_loinc_umls_related_results():  # noqa: D103
 
     # now use the UMLS URLS to call the UMLS and get the related names 
     # and store them in a file - first just a tmp file as the process takes a long time
-    # but if hte process fails, pick up the process from the last loinc code 
+    # but if the process fails, pick up the process from the last loinc code 
     # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
