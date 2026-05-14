@@ -79,8 +79,6 @@ def get_loinc_lab_orders(version: str = ""):
         :returns: A list of dictionaries containing LOINC lab order records
             including codes, terms, and axis information.
     """
-    print(f"DIR: {LOINC_CS_NAMES}")
-    print(f"BASE: {BASE_FOLDER}")
     # if version is supplied we grab the delta 
     # and filter based upon version changes
     # otherwise grab all Orders
@@ -355,7 +353,7 @@ def _filter_loinc_term(text: str) -> bool:
     return result
 
 
-def get_loinc_current_version_data() -> (str, str):
+def get_loinc_current_version_data() -> tuple[str, str]:
     """Function Makes an API call to LOINC to determine current
         version and version date.
         
