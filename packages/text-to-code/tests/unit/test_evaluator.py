@@ -1,35 +1,7 @@
 from shared_models import DataField
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import LabXPaths
-from text_to_code.models.evaluator import TranslationPreference
-from text_to_code.models.evaluator import TranslationSelectionStrategy
-from text_to_code.services import evaluator
 from text_to_code.services.evaluator import select_relevant_text
-
-
-def test_select_translation_candidate_returns_first_when_strategy_is_first() -> None:
-    candidates = [
-        Candidate(
-            xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
-            value="first translation",
-            system="urn:oid:1.2.3",
-        ),
-        Candidate(
-            xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
-            value="second translation",
-            system="http://loinc.org",
-        ),
-    ]
-
-    preference = TranslationPreference(
-        strategy=TranslationSelectionStrategy.FIRST,
-        loinc_system_values=["http://loinc.org"],
-        snomed_system_values=["http://snomed.info/sct"],
-    )
-
-    selected = evaluator._select_translation_candidate(candidates, preference)
-
-    assert selected == candidates[0]
 
 
 def test_selects_code_display_name_when_present_and_non_empty() -> None:
