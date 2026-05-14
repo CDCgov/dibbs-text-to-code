@@ -50,8 +50,7 @@ def handler(event: dict, context: LambdaContext) -> dict:
     :param event: The event dict passed by AWS Lambda. Reads "action" key.
     :param context: The context dict passed by AWS Lambda (not used).
     """
-    aws_auth = lambda_handler.create_aws_auth()
-    os_client = lambda_handler.create_opensearch_client(aws_auth)
+    os_client = lambda_handler.create_opensearch_client()
     index_name = get_env_variable("INDEX_NAME")
 
     action = event.get("action", "create_index") if event else "create_index"

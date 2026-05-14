@@ -1,5 +1,5 @@
 import os
-import typing
+from typing import BinaryIO
 
 import boto3
 from aws_lambda_powertools import Logger
@@ -11,8 +11,11 @@ from opensearchpy import OpenSearch
 from opensearchpy import RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
+from lambda_handler.models.opensearch import OpenSearchHitSource
 from utils import get_env_variable
 
+from .models import OpenSearchHit
+from .models import OpenSearchHits
 from .models import OpenSearchResult
 
 logger = Logger(service="lambda-handler", child=True)
@@ -90,7 +93,7 @@ def create_s3_client() -> BaseClient:
     return _cached_s3_client
 
 
-def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
+def create_opensearch_client() -> OpenSearch:
     """Creates an OpenSearch client.
 
     :param aws_auth: AWS4Auth object for authentication
@@ -100,7 +103,7 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
 
     if _cached_opensearch_client is None:
         endpoint_url = get_env_variable("OPENSEARCH_ENDPOINT_URL")
-        auth = aws_auth or create_aws_auth()
+        auth = create_aws_auth()
         _cached_opensearch_client = OpenSearch(
             hosts=[{"host": strip_protocol(endpoint_url), "port": 443}],
             http_auth=auth,
@@ -113,17 +116,14 @@ def create_opensearch_client(aws_auth: AWS4Auth | None = None) -> OpenSearch:
     return _cached_opensearch_client
 
 
-def get_file_content_from_s3(
-    bucket_name: str, object_key: str, s3_client: BaseClient | None = None
-) -> str:
+def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
     """Extracts the file content from an S3 bucket.
 
     :param bucket_name: The name of the S3 bucket.
     :param object_key: The key of the S3 object.
-    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     :return: The content of the file as a string.
     """
-    client = s3_client or create_s3_client()
+    client = create_s3_client()
 
     logger.info(
         "Retrieving file content from S3",
@@ -171,20 +171,14 @@ def get_eventbridge_data_from_s3_event(event: lambda_events.EventBridgeEvent) ->
     return {"bucket_name": bucket_name, "object_key": object_key}
 
 
-def put_file(
-    file_obj: typing.BinaryIO,
-    bucket_name: str,
-    object_key: str,
-    s3_client: BaseClient | None = None,
-) -> None:
+def put_file(file_obj: BinaryIO, bucket_name: str, object_key: str) -> None:
     """Uploads a file object to a S3 bucket.
 
     :param file_obj: The file object to upload.
     :param bucket_name: The name of the S3 bucket to upload to.
     :param object_key: The key to assign to the uploaded object in S3.
-    :param s3_client: Optional pre-created S3 client. If None, a new client is created.
     """
-    client = s3_client or create_s3_client()
+    client = create_s3_client()
     logger.info(
         "Uploading file to S3",
         bucket_name=bucket_name,
@@ -237,11 +231,11 @@ def get_persistence_id(object_key: str, input_prefix: str) -> str:
     """Get the persistence_id from an S3 object key.
 
     Object key format: <pipeline-step>/<persistance_id>
-    Example: TTCInput/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
+    Example: TextToCodeSubmissionV2/2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
     Returns: 2026/01/01/0026b704-f510-4494-8d21-11d27217d96e
 
     :param object_key: The S3 object key
-    :param input_prefix: The pipeline step prefix (e.g., "TTCInput/")
+    :param input_prefix: The pipeline step prefix (e.g., "TextToCodeSubmissionV2/")
     :return: The persistence_id portion of the key
 
     """
@@ -290,4 +284,29 @@ def retrieve_opensearch_results(
         status="success",
     )
 
-    return OpenSearchResult(**response)
+    hits_json = response["hits"]
+    hits = OpenSearchHits(
+        total=hits_json["total"],
+        hits=[
+            OpenSearchHit(
+                _index=hit["_index"],
+                _id=hit["_id"],
+                _score=hit["_score"],
+                _source=OpenSearchHitSource(
+                    id=hit["_source"]["id"],
+                    loinc_code=hit["_source"]["loinc_code"],
+                    loinc_name_type=hit["_source"]["loinc_name_type"],
+                    description=hit["_source"]["description"],
+                    loinc_type=hit["_source"]["loinc_type"],
+                ),
+            )
+            for hit in hits_json["hits"]
+        ],
+    )
+
+    return OpenSearchResult(
+        took=response["took"],
+        timed_out=response["timed_out"],
+        _shards=response["_shards"],
+        hits=hits,
+    )
