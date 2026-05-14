@@ -472,9 +472,8 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
         :returns: a list of embedding records for the LOINC code.
     """
     emb_records = []
-    emb_record = {}
+    loinc_axis_info = {}
     short_name = loinc_row["short_name"]
-    loinc_code = loinc_code
     loinc_type = loinc_row["lab_type"]
     property = loinc_row["property"]
     time_aspect = loinc_row["time_aspect"]
@@ -487,14 +486,14 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
     full_name = loinc_row["full_name"]
     consumer_name = loinc_row["consumer_name"]
 
-    emb_record["loinc_code"] = loinc_code
-    emb_record["loinc_type"] = loinc_type
-    emb_record["property"] = property
-    emb_record["time"] = time_aspect
-    emb_record["system"] = system
-    emb_record["scale"] = scale
-    emb_record["method"] = method
-    emb_record["class"] = class_type
+    loinc_axis_info["loinc_code"] = loinc_code
+    loinc_axis_info["loinc_type"] = loinc_type
+    loinc_axis_info["property"] = property
+    loinc_axis_info["time"] = time_aspect
+    loinc_axis_info["system"] = system
+    loinc_axis_info["scale"] = scale
+    loinc_axis_info["method"] = method
+    loinc_axis_info["class"] = class_type
 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
@@ -503,32 +502,52 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
         "New LOINC" in element_changes or
         "short_name" in element_changes)
         and short_name ):
-        emb_record["loinc_name_type"] = "short_name"
-        emb_record["term"] = short_name # same as codes or name_codes in embedding notebook
-        emb_records.append(emb_record)
+        emb_rec = _create_embedding_record(short_name, "short_name", loinc_axis_info)
+        emb_records.append(emb_rec)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "long_name" in element_changes):
-        emb_record["loinc_name_type"] = "long_name"
-        emb_record["term"] = long_name # same as codes or name_codes in embedding notebook
-        emb_records.append(emb_record)
+        emb_rec = _create_embedding_record(long_name, "long_name", loinc_axis_info)
+        emb_records.append(emb_rec)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "display_name" in element_changes):
-        emb_record["loinc_name_type"] = "display_name"
-        emb_record["term"] = display_name # same as codes or name_codes in embedding notebook
-        emb_records.append(emb_record)
+        emb_rec = _create_embedding_record(display_name, "display_name", loinc_axis_info)
+        emb_records.append(emb_rec)
+        emb_records.append(loinc_axis_info)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "full_name" in element_changes):
-        emb_record["loinc_name_type"] = "full_name"
-        emb_record["term"] = full_name # same as codes or name_codes in embedding notebook
-        emb_records.append(emb_record)
+        emb_rec = _create_embedding_record(full_name, "full_name", loinc_axis_info)
+        emb_records.append(emb_rec)
     if ("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "consumer_name" in element_changes):
-        emb_record["loinc_name_type"] = "consumer_name"
-        emb_record["term"] = consumer_name # same as codes or name_codes in embedding notebook
-        emb_records.append(emb_record)
+        emb_rec = _create_embedding_record(consumer_name, "consumer_name", loinc_axis_info)
+        emb_records.append(emb_rec)
     return emb_records
 
+
+def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
+    """This function constructs a new basic instance of a LOINC Embedding record 
+        from parameter inputs.
+
+        :param loinc_term: The LOINC term used for the embedding.
+        :param loinc_term_type: The text to identify the term type (ie. short_name,
+            long_name, consumer_name, etc...)
+        :param loinc_axis: Dictionary of other loinc fields specific for 
+            the particular loinc_code.
+
+        :returns: A dictionary that is a new instance of a LOINC Embedding record.
+    """
+    embedding_record = {"loinc_code": loinc_axis["loinc_code"],
+                        "loinc_type": loinc_axis["loinc_type"],
+                        "loinc_name_type": loinc_term_type,
+                        "term": loinc_term,
+                        "time": loinc_axis["time"],
+                        "system": loinc_axis["system"],
+                        "scale": loinc_axis["scale"],
+                        "method": loinc_axis["method"],
+                        "class": loinc_axis["class"]
+    }
+    return embedding_record
