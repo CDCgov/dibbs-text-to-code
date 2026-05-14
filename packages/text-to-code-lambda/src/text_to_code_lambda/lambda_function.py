@@ -283,7 +283,7 @@ def _process_schematron_errors(
             candidates=text_candidates, criteria=criteria
         )
 
-        error.candidate = selected_candidate
+        error_with_candidate = error.model_copy(update={"candidate": selected_candidate})
 
         logger.info(
             "Embedding the relevant text strings for each error in the eICR",
@@ -291,11 +291,11 @@ def _process_schematron_errors(
         )
 
         if selected_candidate is None:
-            unmatched_error = error.model_dump()
+            unmatched_error = error_with_candidate.model_dump()
             unmatched_error["reason"] = "No relevant text candidate was selected"
             ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
 
-            metadata_error = error.model_dump()
+            metadata_error = error_with_candidate.model_dump()
             metadata_error["reason"] = "No relevant text candidate was selected"
             ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
             continue
