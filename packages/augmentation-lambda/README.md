@@ -58,5 +58,5 @@ AUGMENTATION_METADATA_PREFIX
 Run the package tests with:
 
 ```bash
-uv run pytest packages/augmentation-lambda/tests
+just test all packages/augmentation-lambda/tests
 ```
