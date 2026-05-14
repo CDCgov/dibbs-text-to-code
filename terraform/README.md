@@ -69,9 +69,9 @@ Each Lambda function has its own IAM role scoped to least-privilege S3 permissio
 
 Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN Index and the OpenSearch Result Cache Index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
 
-The first Index it creates--the Vector Search Index--has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
+The first Index it creates–the Vector Search Index–has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
 
-The second Index it creates--the Result Cache Index--contains the hashed results of previously computed embeddings and nearest neighbor queries, so that when the pipeline later receives eICRs containing a previously hashed value, the correct standardized code can simply be looked-up, rather than re-embedded and re-ranked. The Result Cache Index shares handling with the `lambda_handler` using the same functions but different actions than the Vector Search Index.
+The second Index it creates–the Result Cache Index–contains the hashed results of previously computed embeddings and nearest neighbor queries, so that when the pipeline later receives eICRs containing a previously hashed value, the correct standardized code can simply be looked-up, rather than re-embedded and re-ranked. The Result Cache Index shares handling with the `lambda_handler` using the same functions but different actions than the Vector Search Index.
 
 #### Main TTC Lambda (`ttc-lambda`, `Dockerfile.ttc`)
 

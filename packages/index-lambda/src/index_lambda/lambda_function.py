@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
@@ -5,9 +7,22 @@ from opensearchpy import OpenSearch
 import lambda_handler
 from utils import get_env_variable
 
+
+class OpenSearchIndexMapping(TypedDict):
+    """Defines required dictionary properties for an OpenSearch Index Mapping.
+
+    Other attributes may be present, and each of these attributes may hold
+    dictionaries with unknown keys (since they're based on the shape of the
+    data to-index), but these attributes are themselves required.
+    """
+
+    settings: str
+    mappings: str
+
+
 logger = Logger(service="index-lambda")
 
-INDEX_MAPPING = {
+INDEX_MAPPING: OpenSearchIndexMapping = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": True}},
     "mappings": {
         "properties": {
@@ -36,7 +51,7 @@ INDEX_MAPPING = {
     },
 }
 
-RESULT_CACHE_INDEX_MAPPING = {
+RESULT_CACHE_INDEX_MAPPING: OpenSearchIndexMapping = {
     "settings": {"index": {"number_of_shards": 1, "number_of_replicas": 1, "knn": False}},
     "mappings": {
         "properties": {
@@ -76,11 +91,7 @@ def handler(event: dict, context: LambdaContext) -> dict:
     result_cache_index_name = get_env_variable("RESULT_CACHE_INDEX_NAME")
 
     action = event.get("action", "create_index") if event else "create_index"
-    logger_name = (
-        index_name
-        if action in ["create_index", "set_slowlog", "clear_index"]
-        else result_cache_index_name
-    )
+    logger_name = result_cache_index_name if "result_cache" in action else index_name
     with logger.append_context_keys(
         index_name=logger_name,
         action=action,
@@ -94,20 +105,26 @@ def handler(event: dict, context: LambdaContext) -> dict:
                 os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING, action
             )
         elif action == "set_slowlog":
-            result = _set_slowlog(os_client, index_name, event.get("threshold_ms", 0))
+            result = _set_slowlog(os_client, index_name, event.get("threshold_ms", 0), action)
         elif action == "set_result_cache_slowlog":
-            result = _set_slowlog(os_client, result_cache_index_name, event.get("threshold_ms", 0))
+            result = _set_slowlog(
+                os_client, result_cache_index_name, event.get("threshold_ms", 0), action
+            )
         elif action == "create_index":
             result = _create_index(os_client, index_name, INDEX_MAPPING)
-        else:
+        elif action == "create_result_cache":
             result = _create_index(os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING)
+        else:
+            raise ValueError(f"Received unknown action: {action!r}")
 
         logger.info("Index Lambda completed", status="success")
 
         return result
 
 
-def _clear_index(os_client: OpenSearch, index_name: str, index_mapping: dict, action: str) -> dict:
+def _clear_index(
+    os_client: OpenSearch, index_name: str, index_mapping: OpenSearchIndexMapping, action: str
+) -> dict:
     """Delete the specified index if it exists, then recreate it with the supplied mapping.
 
     :param os_client: The OpenSearch client
@@ -140,7 +157,15 @@ def _clear_index(os_client: OpenSearch, index_name: str, index_mapping: dict, ac
     }
 
 
-def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> dict:
+def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int, action: str) -> dict:
+    """Modify the slowlog settings for a specified index to change logging behavior.
+
+    :param os_client: The OpenSearch client
+    :param index_name: The name of the index
+    :param threshold_ms: The threshold in miliseconds that the log should use.
+    :param action: The action from the event queue that kicked off the index clear.
+      We use this to specify appropriate logging information in the response.
+    """
     index = os_client.indices.get(index=index_name)
     settings = os_client.indices.get_settings(index=index_name)
     mappings = os_client.indices.get_mapping(index=index_name)
@@ -162,7 +187,7 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> d
 
     return {
         "statusCode": 200,
-        "action": "set_slowlog",
+        "action": action,
         "threshold_ms": threshold_ms,
         "index": index,
         "index_name": index_name,
@@ -171,8 +196,10 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int) -> d
     }
 
 
-def _create_index(os_client: OpenSearch, index_name: str, index_mapping: dict) -> dict:
-    """Create the specified index if it doesn't exist, self-healing incorrect mappings.
+def _create_index(
+    os_client: OpenSearch, index_name: str, index_mapping: OpenSearchIndexMapping
+) -> dict:
+    """Create the index if it doesn't exist; otherwise return the current settings and mappings.
 
     :param os_client: The OpenSearch client.
     :param index_name: The name of the index.
@@ -181,7 +208,7 @@ def _create_index(os_client: OpenSearch, index_name: str, index_mapping: dict) -
     created = False
     if not os_client.indices.exists(index=index_name):
         os_client.indices.create(index=index_name, body=index_mapping)
-        logger.info(f"OpenSearch index {index_name} created", status="success")
+        logger.info("OpenSearch index created", index_name=index_name, status="success")
         created = True
 
     status = os_client.indices.exists(index=index_name)

@@ -1,3 +1,5 @@
+import pytest
+
 from index_lambda import lambda_function
 
 INDEX_NAME = "test-index"
@@ -20,9 +22,9 @@ class MockIndices:
             INDEX_NAME: index_initially_exists,
             RESULT_CACHE_INDEX_NAME: result_cache_initially_exists,
         }
-        self.delete_calls: dict[list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
-        self.create_calls: dict[list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
-        self.put_settings_calls: dict[list[tuple[str, dict]]] = {
+        self.delete_calls: dict[str, list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
+        self.create_calls: dict[str, list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
+        self.put_settings_calls: dict[str, list[tuple[str, dict]]] = {
             INDEX_NAME: [],
             RESULT_CACHE_INDEX_NAME: [],
         }
@@ -141,6 +143,13 @@ def patch_lambda_handler(
 
 
 class TestHandler:
+    def test_handler_invalid_action(self, monkeypatch, mock_lambda_context):
+        """Test handler raises error if given an unknown or invalid action."""
+        patch_lambda_handler(monkeypatch, description_vector_type="knn_vector")
+
+        with pytest.raises(ValueError, match="Received unknown action: disallowed"):
+            lambda_function.handler({"action": "disallowed"}, mock_lambda_context)
+
     def test_handler_create_index_success(self, monkeypatch, mock_lambda_context):
         """Test handler creates the vector search index when it does not exist and returns expected response."""
         patch_lambda_handler(monkeypatch, description_vector_type="knn_vector")
@@ -161,7 +170,7 @@ class TestHandler:
         }
 
     def test_handler_create_result_cache_success(self, monkeypatch, mock_lambda_context):
-        """Test handler creates the result cache index when it already exists."""
+        """Test handler returns index metadata when result cache index already exists."""
         patch_lambda_handler(monkeypatch, result_cache_initially_exists=True)
 
         resp = lambda_function.handler({"action": "create_result_cache"}, mock_lambda_context)
@@ -273,4 +282,46 @@ class TestHandler:
                 )
             ],
             RESULT_CACHE_INDEX_NAME: [],
+        }
+
+    def test_handler_set_result_cache_slowlog(self, monkeypatch, mock_lambda_context):
+        """Test result cache can be updated using slowlog action."""
+        mock_client = patch_lambda_handler(monkeypatch, result_cache_initially_exists=True)
+
+        resp = lambda_function.handler(
+            {"action": "set_result_cache_slowlog", "threshold_ms": THRESHOLD_MS},
+            mock_lambda_context,
+        )
+
+        assert resp["statusCode"] == SUCCESS_CODE
+        assert resp["action"] == "set_result_cache_slowlog"
+        assert resp["threshold_ms"] == THRESHOLD_MS
+        assert resp["index"] == {
+            RESULT_CACHE_INDEX_NAME: {"aliases": {}, "mappings": {}, "settings": {}}
+        }
+        assert resp["settings"] == {
+            RESULT_CACHE_INDEX_NAME: {"settings": {"index": {"knn": "false"}}}
+        }
+        assert resp["mappings"] == {
+            RESULT_CACHE_INDEX_NAME: {
+                "mappings": {
+                    "properties": {
+                        "cache_key": {"type": "keyword"},
+                    }
+                }
+            }
+        }
+        assert mock_client.indices.put_settings_calls == {
+            INDEX_NAME: [],
+            RESULT_CACHE_INDEX_NAME: [
+                (
+                    RESULT_CACHE_INDEX_NAME,
+                    {
+                        "index.search.slowlog.threshold.query.warn": f"{THRESHOLD_MS}ms",
+                        "index.search.slowlog.threshold.query.info": f"{THRESHOLD_MS}ms",
+                        "index.search.slowlog.threshold.fetch.warn": f"{THRESHOLD_MS}ms",
+                        "index.search.slowlog.threshold.fetch.info": f"{THRESHOLD_MS}ms",
+                    },
+                )
+            ],
         }
