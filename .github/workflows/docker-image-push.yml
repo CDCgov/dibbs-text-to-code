@@ -40,32 +40,7 @@ jobs:
 
       - name: Detect version bump
         id: detect
-        shell: python
-        run: |
-          import os
-          import subprocess
-          import tomllib
-
-
-          def read_version(text: str) -> str:
-              return tomllib.loads(text)["project"]["version"]
-
-
-          with open("pyproject.toml", "rb") as fh:
-              new_version = read_version(fh.read().decode())
-
-          try:
-              old_raw = subprocess.check_output(
-                  ["git", "show", "HEAD^:pyproject.toml"],
-                  stderr=subprocess.DEVNULL,
-              ).decode()
-              old_version = read_version(old_raw)
-          except (subprocess.CalledProcessError, KeyError):
-              old_version = None
-
-          is_release = "true" if (old_version is not None and new_version != old_version) else "false"
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              fh.write(f"is_release={is_release}\n")
+        run: python3 .github/scripts/detect_version_bump.py
 
   build:
     needs: detect-bump

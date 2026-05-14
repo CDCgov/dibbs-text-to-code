@@ -35,53 +35,7 @@ jobs:
 
       - name: Detect version bump
         id: detect
-        shell: python
-        run: |
-          import os
-          import re
-          import subprocess
-          import sys
-          import tomllib
-
-
-          def read_version(text: str) -> str:
-              return tomllib.loads(text)["project"]["version"]
-
-
-          with open("pyproject.toml", "rb") as fh:
-              new_version = read_version(fh.read().decode())
-
-          try:
-              old_raw = subprocess.check_output(
-                  ["git", "show", "HEAD^:pyproject.toml"],
-                  stderr=subprocess.DEVNULL,
-              ).decode()
-              old_version = read_version(old_raw)
-          except (subprocess.CalledProcessError, KeyError):
-              old_version = None
-
-          is_release = old_version is not None and new_version != old_version
-
-          outputs = {"is_release": "false", "version": "", "minor": "", "major": ""}
-
-          if is_release:
-              if not re.fullmatch(r"\d+\.\d+\.\d+", new_version):
-                  sys.exit(
-                      f"version '{new_version}' is not a strict vX.Y.Z; "
-                      "pre-release suffixes are not allowed for releases."
-                  )
-              major, minor, _ = new_version.split(".")
-              outputs["is_release"] = "true"
-              outputs["version"] = f"v{new_version}"
-              outputs["minor"] = f"v{major}.{minor}"
-              outputs["major"] = f"v{major}"
-              print(f"Detected release: {old_version} -> {new_version}")
-          else:
-              print(f"No version bump (version={new_version}). Skipping release.")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              for key, value in outputs.items():
-                  fh.write(f"{key}={value}\n")
+        run: python3 .github/scripts/detect_version_bump.py
 
       - name: Tag merge commit (idempotent)
         if: steps.detect.outputs.is_release == 'true'
