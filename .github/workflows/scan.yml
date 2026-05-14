@@ -1,0 +1,176 @@
+name: "Scan GHCR Images for Vulnerabilities"
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to scan (e.g., latest, main, 1.0.0)"
+        required: false
+        default: "latest"
+      severity_level:
+        description: "Vulnerability severity threshold"
+        required: false
+        default: "CRITICAL,HIGH,MEDIUM,LOW"
+        type: choice
+        options:
+          - "CRITICAL,HIGH,MEDIUM,LOW"
+          - "CRITICAL,HIGH,MEDIUM"
+          - "CRITICAL,HIGH"
+          - "CRITICAL"
+      send_slack_notification:
+        description: "Send Slack notification"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Run once daily at 2 PM UTC
+    - cron: "0 14 * * *"
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  DEFAULT_SEVERITY: "CRITICAL,HIGH,MEDIUM,LOW"
+  DEFAULT_TAG: "latest"
+
+jobs:
+  scan-images:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        image:
+          - index
+          - ttc
+          - augmentation
+      fail-fast: false # Continue scanning other images if one fails
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make repo owner lowercase
+        id: repo
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Set scan parameters
+        id: params
+        run: |
+          TAG="${{ github.event.inputs.image_tag || env.DEFAULT_TAG }}"
+          SEVERITY="${{ github.event.inputs.severity_level || env.DEFAULT_SEVERITY }}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "severity=$SEVERITY" >> $GITHUB_OUTPUT
+
+      - name: Check if image exists
+        id: check
+        run: |
+          IMAGE="ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.image }}:${{ steps.params.outputs.tag }}"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+          # Try to pull image metadata to check if it exists
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Image found: $IMAGE"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Image not found: $IMAGE"
+          fi
+
+      - name: Run Trivy vulnerability scanner (SARIF)
+        if: steps.check.outputs.exists == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.check.outputs.image }}
+          format: "sarif"
+          output: "trivy-${{ matrix.image }}-results.sarif"
+          severity: ${{ steps.params.outputs.severity }}
+          ignore-unfixed: true
+          timeout: "10m"
+
+      - name: Run Trivy vulnerability scanner (JSON)
+        if: steps.check.outputs.exists == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.check.outputs.image }}
+          format: "json"
+          output: "trivy-${{ matrix.image }}-results.json"
+          severity: ${{ steps.params.outputs.severity }}
+          ignore-unfixed: true
+          timeout: "10m"
+
+      - name: Display Trivy results as table
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.check.outputs.image }}
+          format: "table"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: steps.check.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-${{ matrix.image }}-results.sarif"
+          category: "vulnerability-scan-${{ matrix.image }}"
+
+      - name: Upload JSON results as artifact
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results-${{ matrix.image }}
+          path: trivy-${{ matrix.image }}-results.json
+          retention-days: 30
+
+      - name: Scan summary for ${{ matrix.image }}
+        if: always()
+        run: |
+          if [ "${{ steps.check.outputs.exists }}" = "true" ]; then
+            echo "Vulnerability scan completed for ${{ matrix.image }}"
+            echo "Image: ${{ steps.check.outputs.image }}"
+            echo "Severity: ${{ steps.params.outputs.severity }}"
+            echo "Results uploaded to Security tab with category: vulnerability-scan-${{ matrix.image }}"
+          else
+            echo "Skipped scanning ${{ matrix.image }} - image not found"
+            echo "Attempted image: ${{ steps.check.outputs.image }}"
+          fi
+
+  scan-complete:
+    runs-on: ubuntu-latest
+    needs: scan-images
+    if: always()
+
+    steps:
+      - name: Overall scan summary
+        run: |
+          echo "Image vulnerability scanning completed"
+          echo "Scan timestamp: $(date -u)"
+          echo "Scanned tag: ${{ github.event.inputs.image_tag || env.DEFAULT_TAG }}"
+          echo "Severity threshold: ${{ github.event.inputs.severity_level || env.DEFAULT_SEVERITY }}"
+          echo ""
+          echo "Check the Security tab for detailed vulnerability reports"
+          echo "Navigate to: Repository → Security → Code scanning alerts"
+
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs: scan-images
+    # Always send message during a scheduled run but allow user to choose when running manually
+    if: always() && (github.event_name == 'schedule' || github.event.inputs.send_slack_notification == 'true')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download scan results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: trivy-results-*
+          merge-multiple: true
+
+      - name: Send Slack notification
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const script = require('./.github/scripts/security-summary.js');
+            await script.generateScheduledSummary(github, context, core);

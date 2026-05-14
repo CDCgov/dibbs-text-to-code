@@ -1,10 +1,10 @@
 from enum import StrEnum
 from typing import ClassVar
 
-from pydantic import BaseModel
 from pydantic import Field
 
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 
 from ..models.eicr import LabXPaths
 
@@ -54,7 +54,7 @@ class TranslationSelectionStrategy(StrEnum):
     PREFER_SYSTEM_ORDER = "prefer_system_order"
 
 
-class TranslationPreference(BaseModel):
+class TranslationPreference(FrozenBaseModel):
     """Preferences for choosing among multiple translations when a system attribute is available.
 
     :param strategy: Strategy used when selecting among multiple translation candidates.
@@ -73,7 +73,7 @@ class TranslationPreference(BaseModel):
     )
 
 
-class XPathPriority(BaseModel):
+class XPathPriority(FrozenBaseModel):
     """A single prioritized source of candidate text.
 
     :param xpath: The LabXPaths entry identifying where the candidate text was extracted from.
@@ -85,7 +85,7 @@ class XPathPriority(BaseModel):
     priority: int = Field(..., ge=1)
 
 
-class BaseEvaluationCriteria(BaseModel):
+class BaseEvaluationCriteria(FrozenBaseModel):
     """Base configuration for selecting the most relevant text for a given DataField.
 
     :param data_field: The DataField this evaluation criteria applies to.

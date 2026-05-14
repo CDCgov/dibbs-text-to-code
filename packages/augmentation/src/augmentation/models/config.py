@@ -1,24 +1,19 @@
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import model_validator
 
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 
 from .application import ApplicationCode
 from .document import DocumentType
 
 
-class AugmenterConfig(BaseModel):
+class AugmenterConfig(FrozenBaseModel):
     """Basic configuration controlling augmentation behavior."""
 
     # TODO: this is very much a shell and can be modified
     #  in the ticket related to creating an Augmenter config model
     #  and retrieving said config from S3 Bucket
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     application_code: ApplicationCode
     document_type: DocumentType
@@ -35,20 +30,22 @@ class TTCAugmenterConfig(AugmenterConfig):
     # TODO:
     # this is just an example of what the rules for eICR augmentation might look like
     # typically we should expect these to come from the configuration in S3
-    rules: dict = {
-        "document": [
-            "document_id_header",
-            "author_header",
-        ],
-        DataField.LAB_TEST_NAME_ORDERED: [
-            "author_entry",
-            "translation",
-        ],
-        DataField.LAB_TEST_NAME_RESULTED: [
-            "author_entry",
-            "translation",
-        ],
-    }
+    rules: dict = Field(
+        default={
+            "document": [
+                "document_id_header",
+                "author_header",
+            ],
+            DataField.LAB_TEST_NAME_ORDERED: [
+                "author_entry",
+                "translation",
+            ],
+            DataField.LAB_TEST_NAME_RESULTED: [
+                "author_entry",
+                "translation",
+            ],
+        }
+    )
     # TODO: The function code is currently a constant (used for both lab orders and results), but will need to be dynamic when additional fields with different function codes are introduced.
     author_function_code: str = "code-text-to-code"
     author_function_code_system: str = "2.16.840.1.113883.10.20.15.2.7.1"

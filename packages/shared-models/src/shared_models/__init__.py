@@ -4,7 +4,16 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 
-class CdaInstanceIdentifier(BaseModel):
+class FrozenBaseModel(BaseModel):
+    """A custom base model that all other models can inherit so that they are frozen and do not allow extra attributes."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+
+class CdaInstanceIdentifier(FrozenBaseModel):
     """CDA Instance Identifier (II) data type.
 
     https://build.fhir.org/ig/HL7/CDA-core-2.0/StructureDefinition-II.html
@@ -24,13 +33,8 @@ class DataField(StrEnum):
     LAB_TEST_NAME_ORDERED = "Lab Test Name Ordered"
 
 
-class Code(BaseModel):
+class Code(FrozenBaseModel):
     """Model for CDA "ConceptDescriptor". This is the type of the new translation."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     code: str | None = None
     code_system: str | None = None
@@ -41,7 +45,7 @@ class Code(BaseModel):
     original_text: str | None = None
 
 
-class NonstandardCodeReplacement(BaseModel):
+class NonstandardCodeReplacement(FrozenBaseModel):
     """Model with the information needed to update a nonstandard code."""
 
     schematron_error_xpath: str
@@ -52,13 +56,8 @@ class NonstandardCodeReplacement(BaseModel):
     """The new translation."""
 
 
-class TTCOutput(BaseModel):
-    """The data that will be sent to the augmentation Lambda."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
+class TTCOutput(FrozenBaseModel):
+    """Input for the augmentation service."""
 
     persistence_id: str
     nonstandard_codes: list[NonstandardCodeReplacement]

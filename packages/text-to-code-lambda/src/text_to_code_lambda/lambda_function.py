@@ -10,13 +10,14 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from opensearchpy import OpenSearch
+
 
 import lambda_handler
 from lambda_handler.models import OpenSearchResult
 from shared_models import Code
 from shared_models import DataField
+from shared_models import FrozenBaseModel
 from shared_models import NonstandardCodeReplacement
 from shared_models import TTCOutput
 from text_to_code.models import Candidate
@@ -69,13 +70,8 @@ class TTCSchematronIssueDetail:
     unmatched_reason: str | None
 
 
-class TTCMetadata(BaseModel):
+class TTCMetadata(FrozenBaseModel):
     """Model to hold metadata about the TTC process."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     eicr_metadata: EICRMetadata | None
     persistence_id: str
@@ -92,13 +88,8 @@ class Failure:
     error: str
 
 
-class FailureResponse(BaseModel):
+class FailureResponse(FrozenBaseModel):
     """Response given by the Lambda handler when one more more failures occur."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     status_code: Literal[200] = 200
     message: Literal["TTC processed with some failures!"] = "TTC processed with some failures!"
@@ -109,11 +100,6 @@ class FailureResponse(BaseModel):
 
 class SuccessResponse(BaseModel):
     """Response given by the Lambda handler when no failures occur."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
 
     status_code: Literal[200] = 200
     message: Literal["TTC processed successfully!"] = "TTC processed successfully!"
@@ -414,7 +400,7 @@ def _save_metadata(
     )
 
 
-def _save_to_s3(model: BaseModel, bucket_name: str, object_key: str) -> None:
+def _save_to_s3(model: FrozenBaseModel, bucket_name: str, object_key: str) -> None:
     """Save model to S3 bucket."""
     lambda_handler.put_file(
         file_obj=io.BytesIO(model.model_dump_json().encode("utf-8")),

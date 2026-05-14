@@ -7,8 +7,13 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 ARG ENVIRONMENT=prod
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Install build tools for compiling C++ extensions
-RUN microdnf install -y gcc-c++ make && microdnf clean all
+# Update OS packages for CVE fixes, install build tools for compiling C++ extensions,
+# and drop the Runtime Interface Emulator (only used for local Lambda emulation).
+# --releasever=latest is required: AL2023 base images pin to a snapshot release.
+RUN microdnf update -y --releasever=latest \
+    && microdnf install -y --releasever=latest gcc-c++ make \
+    && microdnf clean all \
+    && rm -f /usr/local/bin/aws-lambda-rie
 
 # Copy and install workspace packages in dependency order
 COPY ./packages/shared-models ${LAMBDA_TASK_ROOT}/shared-models
@@ -24,7 +29,8 @@ COPY ./packages/augmentation ${LAMBDA_TASK_ROOT}/augmentation
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation"
 
 COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
-RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda"
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda" \
+    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
 # Copy over the rest of the code
 COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/src
