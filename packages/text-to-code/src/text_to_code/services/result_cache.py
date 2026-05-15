@@ -114,7 +114,7 @@ def put_new_cached_result(
         cache_key=cache_key,
         text=candidate_input,
         data_field=data_field,
-        loinc_code=json.dumps(loinc_code),
+        loinc_code=json.dumps(loinc_code.__dict__),
         search_score=search_score,
         reranker_score=reranker_score,
         cached_at=datetime.now(UTC).isoformat(),
