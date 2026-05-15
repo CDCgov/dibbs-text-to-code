@@ -52,8 +52,6 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
     ),
-)
-FAIL_EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
         "eicr_empty",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
@@ -340,45 +338,6 @@ class TestEndToEndSimulated:
         )
 
         snapshot.assert_match(augmentation_metadata, f"{eicr_id}_augmentation_metadata.json")
-
-    @pytest.mark.parametrize(
-        ("eicr_id", "eicr_path", "schematron_path"),
-        FAIL_EICR_CASES,
-        ids=[eicr_case[0] for eicr_case in FAIL_EICR_CASES],
-    )
-    def test_upload_and_process_failure_cases(
-        self,
-        eicr_id: str,
-        eicr_path: str,
-        schematron_path: str,
-        aws,
-        infra,
-        mock_opensearch,
-        mock_lambda_context,
-    ):
-        self._run_eicr_pipeline(
-            aws,
-            infra,
-            schematron_path,
-            eicr_path,
-            mock_lambda_context,
-        )
-
-        self._assert_s3_object_not_found(
-            aws,
-            f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
-        )
-        self._assert_s3_object_not_found(
-            aws,
-            f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
-        )
-        self._assert_s3_object_not_found(
-            aws,
-            f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
-        )
 
 
 @pytest.mark.e2e
