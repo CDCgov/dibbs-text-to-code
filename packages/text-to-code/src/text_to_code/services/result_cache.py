@@ -76,9 +76,9 @@ def get_cached_result(
     :param index: The namespace of the Index to check.
     :param os_doc_id: The OpenSearch document `_id` parameter to check for.
     """
-    response: OpenSearchGetResponse = opensearch_client.get(index=index, id=os_doc_id)
+    response = opensearch_client.get(index=index, id=os_doc_id)
     if response and response["found"]:
-        return response.source
+        return response["source"]
     return None
 
 
