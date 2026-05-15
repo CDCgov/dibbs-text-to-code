@@ -66,6 +66,11 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
     ),
     (
+        "sample7",
+        ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues.xml",
+        ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues_schematron_errors.xml",
+    ),
+    (
         "sample9",
         ASSETS_FOLDER / "sample9" / "eICR_Sample9_nullFlavorResultValues_localCodes.xml",
         ASSETS_FOLDER
@@ -343,7 +348,13 @@ class TestEndToEndSimulated:
         )
         snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
-        # Validate augmented eICR
+        ttc_output = json.loads(
+            self._read_s3_object(
+                aws,
+                f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        )
+
         augmentation_metadata = json.loads(
             self._read_s3_object(
                 aws,
@@ -356,23 +367,33 @@ class TestEndToEndSimulated:
                 aws,
                 f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
+            passthrough_reason = augmentation_metadata["passthrough_reason"]
+
             assert augmented_eicr == original_eicr
-            assert augmentation_metadata["passthrough_reason"] in [
+            assert passthrough_reason in [
                 PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
                 PassthroughReason.NO_CODE_MATCHES,
                 PassthroughReason.TTC_EXCEPTION,
                 PassthroughReason.AUGMENTATION_EXCEPTION,
             ]
-        else:
-            actual_validation_results = validate_eicr(augmented_eicr)
-            assert actual_validation_results == []  # Empty list means no errors.
 
-        augmentation_metadata = self._read_s3_object(
-            aws,
-            f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+            if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:
+                assert ttc_output["passthrough"] is True
+                assert ttc_output["passthrough_reason"] == passthrough_reason
+        else:
+            assert augmentation_metadata.get("passthrough") in [None, False]
+            assert augmented_eicr != ""
+
+        actual_validation_results = validate_eicr(augmented_eicr)
+        snapshot.assert_match(
+            json.dumps(actual_validation_results, indent=2, sort_keys=True),
+            f"{eicr_id}_validation_results.json",
         )
 
-        snapshot.assert_match(augmentation_metadata, f"{eicr_id}_augmentation_metadata.json")
+        snapshot.assert_match(
+            json.dumps(augmentation_metadata, indent=2, sort_keys=True),
+            f"{eicr_id}_augmentation_metadata.json",
+        )
 
 
 @pytest.mark.e2e
