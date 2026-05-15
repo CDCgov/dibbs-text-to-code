@@ -1,0 +1,13 @@
+{
+    "New Loinc Version": "2.82 as of 2026-02-24",
+    "Compared to file": "loinc_lab_names_20260223.csv",
+    "Changes": {
+        "New LOINC": 1144,
+        "short_name": 1040,
+        "long_name": 649,
+        "display_name": 683,
+        "full_name": 718,
+        "consumer_name": 150,
+        "LOINC Type": 3
+    }
+}
