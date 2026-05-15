@@ -1,5 +1,5 @@
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from shared_models import Code
 from text_to_code.services.result_cache import get_cached_result
@@ -8,10 +8,9 @@ RESULT_CACHE_INDEX_NAME = "test-result-cache"
 
 
 class TestResultCacheAPIs:
-    @patch("text_to_code.services.result_cache.opensearch")
-    def test_get(self, mock_opensearch_client):
-        mock_client = mock_opensearch_client.return_value
-        mock_client.get.return_value = {
+    def test_get(self):
+        mock_opensearch_client = MagicMock()
+        mock_opensearch_client.get.return_value = {
             "index": RESULT_CACHE_INDEX_NAME,
             "id": "13579246680",
             "version": "1.0.0",
@@ -37,7 +36,9 @@ class TestResultCacheAPIs:
             "fields": {},
         }
 
-        cached_result = get_cached_result(mock_client, RESULT_CACHE_INDEX_NAME, "1357924680")
+        cached_result = get_cached_result(
+            mock_opensearch_client, RESULT_CACHE_INDEX_NAME, "1357924680"
+        )
 
         assert cached_result is not None
         assert cached_result.cache_key == "1357924680"
