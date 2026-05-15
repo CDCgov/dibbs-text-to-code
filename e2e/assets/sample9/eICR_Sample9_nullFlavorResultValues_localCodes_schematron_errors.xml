@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Results xmlns="urn:gov:nist:cdaGuideValidator">
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-001</assertionID>
+            <flag/>
+            <message>Fatal: SHALL contain exactly one [1..1] templateId (CONF:4482-96) such that it SHALL contain exactly one [1..1] @root="2.16.840.1.113883.10.20.15.2" eICR Initial Public Health Case Report Document (CONF:4482-95). SHALL contain exactly one [1..1] @extension="2022-05-01" (CONF:4482-96).</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:ClinicalDocument/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2'][@extension = '2022-05-01']) = 1</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[3]/observation[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[4]/observation[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[5]/observation[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[2]/organizer[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="errors">
+            <assertionID>a-validate_CD_CE-c</assertionID>
+            <flag/>
+            <message>Data types of CD or CE SHALL have either @code or @nullFlavor or both (@codeSystem and @nullFlavor="OTH") but SHALL NOT have both @code and @nullFlavor and SHALL NOT have @codeSystem and @nullFlavor not equal to "OTH" (Rule: validate_CD_CE)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[3]/organizer[1]/code[1]</context>
+            <test>(parent::cda:regionOfInterest) or ((@code or @nullFlavor or (@codeSystem and @nullFlavor = 'OTH')) and not(@code and @nullFlavor) and not(@codeSystem and @nullFlavor != 'OTH'))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-007</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[3]/observation[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-007</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[4]/observation[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-007</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]/component[5]/observation[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-referenceRange-002</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation referenceRange value low data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[3]/organizer[1]/component[3]/observation[1]</context>
+            <test>not(cda:referenceRange/cda:observationRange/cda:value) or cda:referenceRange/cda:observationRange/cda:value[@nullFlavor] or not(cda:referenceRange/cda:observationRange/cda:value/cda:low) or cda:referenceRange/cda:observationRange/cda:value/cda:low[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-referenceRange-006</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation referenceRange value high data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[3]/organizer[1]/component[3]/observation[1]</context>
+            <test>not(cda:referenceRange/cda:observationRange/cda:value) or cda:referenceRange/cda:observationRange/cda:value[@nullFlavor] or not(cda:referenceRange/cda:observationRange/cda:value/cda:high) or cda:referenceRange/cda:observationRange/cda:value/cda:high[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[1]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[2]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[3]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[4]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[5]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[6]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[7]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[8]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[10]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[11]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[12]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[13]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[14]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[15]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[16]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-plannedProcedure-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Data Quality: Planned Procedure (procedure) code data element codeSystem is not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96), CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[4]/section[1]/entry[17]/procedure[1]</context>
+            <test>                 not(cda:code) or                 cda:code[@nullFlavor] or count(cda:code[@codeSystem]) = 0 or cda:code[@codeSystem = ''] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code[@codeSystem = '2.16.840.1.113883.6.96'] or cda:code[@codeSystem = '2.16.840.1.113883.6.12'] or cda:code[@codeSystem = '2.16.840.1.113883.6.4'] or cda:code[@codeSystem = '2.16.840.1.113883.6.13']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-provider-002</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider ID data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>not(cda:id) or cda:id[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerName-002</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider name family data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>not(cda:assignedPerson/cda:name/cda:family) or cda:assignedPerson/cda:name/cda:family[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerName-004</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider name given data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>not(cda:assignedPerson/cda:name/cda:given) or cda:assignedPerson/cda:name/cda:given[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerTelecom-001</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider telecom data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>not(cda:telecom) or count(cda:telecom[@nullFlavor]) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerAddress-002</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider address streetAddressLine data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>cda:addr[@nullFlavor] or not(cda:addr/cda:streetAddressLine) or cda:addr/cda:streetAddressLine[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerAddress-004</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider address city data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>cda:addr[@nullFlavor] or not(cda:addr/cda:city) or cda:addr/cda:city[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerAddress-006</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider address state data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>cda:addr[@nullFlavor] or not(cda:addr/cda:state) or cda:addr/cda:state[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerAddress-009</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider address postalCode data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>cda:addr[@nullFlavor] or not(cda:addr/cda:postalCode) or cda:addr/cda:postalCode[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-healthCareFacility-004</assertionID>
+            <flag/>
+            <message>Data Quality: Encompassing encounter healthcare facility code data element and translation are not in ValueSet ServiceDeliveryLocationRoleType</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or cda:code[@code = ''] or cda:code/@code = document('CDAR2_IG_PHCASERPT_R2_STU3.1_VOCABULARY.xml')/voc:systems/voc:system[@valueSetOid = '2.16.840.1.113883.1.11.17660']/voc:code/@value or cda:code/cda:translation/@code = document('CDAR2_IG_PHCASERPT_R2_STU3.1_VOCABULARY.xml')/voc:systems/voc:system[@valueSetOid = '2.16.840.1.113883.1.11.17660']/voc:code/@value</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-healthCareFacilityTelecom-003</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassingEncounter healthCareFacility/serviceProviderOrganization telecom data element does not include an email value which is identified with prefix = "mailto:"</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]</context>
+            <test>not(cda:serviceProviderOrganization/cda:telecom) or cda:serviceProviderOrganization/cda:telecom[contains(@value, 'mailto:')]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-001</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-authorId-001</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer author id data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[1]/organizer[1]</context>
+            <test>cda:author[@nullFlavor] or not(cda:author/cda:assignedAuthor/cda:id) or cda:author/cda:assignedAuthor/cda:id[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-001</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[2]/organizer[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-001</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[3]/organizer[1]</context>
+            <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-authorId-001</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer author id data element is nullFlavor</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]/section[1]/entry[3]/organizer[1]</context>
+            <test>cda:author[@nullFlavor] or not(cda:author/cda:assignedAuthor/cda:id) or cda:author/cda:assignedAuthor/cda:id[not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-patientLanguage-004</assertionID>
+            <flag/>
+            <message>Data Quality: The patient languageCode data element is not in valueset Language</message>
+            <context>/ClinicalDocument[1]/recordTarget[1]/patientRole[1]/patient[1]</context>
+            <test>not(cda:languageCommunication) or cda:languageCommunication[@nullFlavor] or not(cda:languageCommunication/cda:languageCode) or cda:languageCommunication/cda:languageCode[@nullFlavor] or not(cda:languageCommunication/cda:languageCode[@code]) or cda:languageCommunication/cda:languageCode/@code = document('CDAR2_IG_PHCASERPT_R2_STU3.1_VOCABULARY.xml')/voc:systems/voc:system[@valueSetOid = '2.16.840.1.113883.1.11.11526']/voc:code/@value</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultObservation</assertionID>
+            <flag/>
+            <message> 30 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.2']]/cda:code)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultObservation-interpretationCode</assertionID>
+            <flag/>
+            <message> 2 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.2']]/cda:interpretationCode)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultObservation-referenceRange</assertionID>
+            <flag/>
+            <message> 20 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.2']]/cda:referenceRange)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultOrganizer</assertionID>
+            <flag/>
+            <message> 3 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:organizer[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.1']])=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultOrganizer-author</assertionID>
+            <flag/>
+            <message> 3 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:organizer[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.1']]/cda:author)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-plannedProcedure</assertionID>
+            <flag/>
+            <message> 17 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:procedure[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.41']])=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-genderIdentityObservation</assertionID>
+            <flag/>
+            <message> 1 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.34.3.45']])=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCheck-labResultTrigger</assertionID>
+            <flag/>
+            <message>DATA CHECK: this eICR has at least one Lab Result Trigger</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.2']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCheck-languageCommunication</assertionID>
+            <flag/>
+            <message>DATA CHECK: this eICR has at least one patient languageCommunication data element</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:languageCommunication) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+</Results>

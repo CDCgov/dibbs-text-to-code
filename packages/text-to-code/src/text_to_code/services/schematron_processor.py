@@ -69,56 +69,64 @@ def get_data_fields_from_schematron_error(
     eicr_id = _get_eicr_id(xml_root)
     schematron_errors: list[SchematronErrorDetail] = []
 
-    # Loop through schematron validation results
-    for result in xml_root:
-        for vr in result.findall("validationResult"):
-            try:
-                issue = vr.find("issue")
-                if issue is None:
-                    continue
-                message_elem = issue.find("message")
-                context_elem = issue.find("context")
-                test_elem = issue.find("test")
-                id_elem = issue.find("id")
-                if (
-                    message_elem is None
-                    or message_elem.text is None
-                    or context_elem is None
-                    or context_elem.text is None
-                ):
-                    continue
-                # Check if message matches any specified schematron errors
-                err_data_field = get_data_element_from_schematron_error(message_elem.text)
-                if err_data_field is None:
-                    continue
-                error_value = _get_error_enum_value(message_elem.text)
-                if error_value is None:
-                    continue
-                error_detail = SchematronErrorDetail(
-                    eicr_id=eicr_id,
-                    field=err_data_field,
-                    error=error_value,
-                    error_message=message_elem.text,
-                    error_context=context_elem.text,
-                    error_test=test_elem.text if test_elem is not None else vr.get("test"),
-                    error_id=(
-                        id_elem.text
-                        if id_elem is not None and id_elem.text is not None
-                        else vr.get("id") or issue.get("id")
-                    ),
-                    candidate=None,
-                )
-                if error_detail not in schematron_errors:
-                    schematron_errors.append(error_detail)
-            except Exception:
-                logger.exception(
-                    "Failed to process a schematron error detail",
-                    extra={
-                        "error_message": message_elem.text if message_elem is not None else None,
-                        "error_context": context_elem.text if context_elem is not None else None,
-                        "status": "error",
-                    },
-                )
+    validation_results = xml_root.xpath(".//*[local-name()='validationResult']")
+    if etree.QName(xml_root).localname == "validationResult":
+        validation_results.insert(0, xml_root)
+
+    for vr in validation_results:
+        try:
+            issue = vr.find("issue")
+            if issue is None:
                 continue
+            message_elem = issue.find("message")
+            context_elem = issue.find("context")
+            test_elem = issue.find("test")
+            id_elem = issue.find("id")
+            assertion_id_elem = issue.find("assertionID")
+            if (
+                message_elem is None
+                or message_elem.text is None
+                or context_elem is None
+                or context_elem.text is None
+            ):
+                continue
+            error_message = message_elem.text.strip()
+            error_context = context_elem.text.strip()
+            err_data_field = get_data_element_from_schematron_error(error_message)
+            if err_data_field is None:
+                continue
+            error_value = _get_error_enum_value(error_message)
+            if error_value is None:
+                continue
+            error_detail = SchematronErrorDetail(
+                eicr_id=eicr_id,
+                field=err_data_field,
+                error=error_value,
+                error_message=error_message,
+                error_context=error_context,
+                error_test=test_elem.text.strip()
+                if test_elem is not None and test_elem.text is not None
+                else vr.get("test"),
+                error_id=(
+                    id_elem.text.strip()
+                    if id_elem is not None and id_elem.text is not None
+                    else assertion_id_elem.text.strip()
+                    if assertion_id_elem is not None and assertion_id_elem.text is not None
+                    else vr.get("id") or issue.get("id")
+                ),
+                candidate=None,
+            )
+            if error_detail not in schematron_errors:
+                schematron_errors.append(error_detail)
+        except Exception:
+            logger.exception(
+                "Failed to process a schematron error detail",
+                extra={
+                    "error_message": message_elem.text if message_elem is not None else None,
+                    "error_context": context_elem.text if context_elem is not None else None,
+                    "status": "error",
+                },
+            )
+            continue
 
     return schematron_errors
