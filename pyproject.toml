@@ -95,10 +95,11 @@ select = [
   "W",    # pycodestyle warning
 ]
 ignore = [
-  "D100",   # undocumented-public-module
-  "E501",   # line-too-long - Handled by formatter
-  "RET504", # unnecessary-assign
-  "S314",   # recommend `defusedxml` over `xml` and `lxml`
+  "D100",    # undocumented-public-module
+  "E501",    # line-too-long - Handled by formatter
+  "PLR0913", # too many arguments in function definition
+  "RET504",  # unnecessary-assign
+  "S314",    # recommend `defusedxml` over `xml` and `lxml`
 ]
 
 [tool.ruff.lint.flake8-annotations]
