@@ -107,7 +107,9 @@ def put_new_cached_result(
     :returns: A boolean indicating whether the new cache hit was successfully added to
       the OpenSearch index.
     """
-    cache_key = sha256(candidate_input.strip().lower() + "|" + data_field).hexdigest()
+    cache_key = sha256(
+        (candidate_input.strip().lower() + "|" + data_field).encode("utf-8")
+    ).hexdigest()
     new_cache_hit: OpenSearchResultCacheSource = OpenSearchResultCacheSource(
         cache_key=cache_key,
         text=candidate_input,
