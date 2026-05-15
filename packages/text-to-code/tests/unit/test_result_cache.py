@@ -27,7 +27,7 @@ class TestResultCacheAPIs:
                         code_system="2.16.840.1.113883.6.1",
                         code_system_name="LOINC",
                         display_name="fentaNYL [Presence] in Urine by Screen method",
-                    )
+                    ).__dict__
                 ),
                 "search_score": 0.9563,
                 "reranker_score": 0.6789,
