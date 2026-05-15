@@ -57,6 +57,13 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
     ),
+    (
+        "sample9",
+        ASSETS_FOLDER / "sample9" / "eICR_Sample9_nullFlavorResultValues_localCodes.xml",
+        ASSETS_FOLDER
+        / "sample9"
+        / "eICR_Sample9_nullFlavorResultValues_localCodes_schematron_errors.xml",
+    ),
 )
 
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
