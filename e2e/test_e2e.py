@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 import boto3
 import pytest
 import time_machine
+from botocore.exceptions import ClientError
 from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
@@ -37,11 +38,35 @@ FUNCTION_2_NAME = "stage2-processor"
 
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
-SCHEMATRON_PATH = "e2e/assets/test_schematron_errors.xml"
-EICR_PATH = "e2e/assets/test_eicr.xml"
+BASE_FOLDER = Path(__file__).parent
+ASSETS_FOLDER = BASE_FOLDER / "assets"
 
-NAMESPACE_PRESERVATION_SCHEMATRON_PATH = "e2e/assets/namespace_preservation_schematron_errors.xml"
-NAMESPACE_PRESERVATION_EICR_PATH = "e2e/assets/namespace_preservation_eicr.xml"
+EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
+    (
+        "eicr_test",
+        ASSETS_FOLDER / "eicr_test" / "eicr_test.xml",
+        ASSETS_FOLDER / "eicr_test" / "eicr_test_schematron_errors.xml",
+    ),
+    (
+        "eicr_covid",
+        ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
+        ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
+    ),
+)
+FAIL_EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
+    (
+        "eicr_empty",
+        ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
+        ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
+    ),
+)
+
+NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
+    ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_schematron_errors.xml"
+)
+NAMESPACE_PRESERVATION_EICR_PATH = (
+    ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_eicr.xml"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -204,17 +229,17 @@ def infra(aws):
 
 @pytest.mark.e2e
 class TestEndToEndSimulated:
-    def test_upload_and_process(
+    def _run_eicr_pipeline(
         self,
         aws,
         infra,
-        snapshot: Snapshot,
-        mock_opensearch,
+        schematron_path: str,
+        eicr_path: str,
         mock_lambda_context,
-    ):
+    ) -> None:
         # Upload Schematron errors to S3
         with open(
-            Path(SCHEMATRON_PATH),
+            Path(schematron_path),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
@@ -225,7 +250,7 @@ class TestEndToEndSimulated:
 
         # Upload eICR to S3
         with open(
-            Path(EICR_PATH),
+            Path(eicr_path),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
@@ -235,7 +260,7 @@ class TestEndToEndSimulated:
             )
         # Upload message to S3
         with open(
-            Path(EICR_PATH),
+            Path(eicr_path),
             "rb",
         ) as schematron_errors_file:
             aws["s3"].upload_fileobj(
@@ -247,12 +272,18 @@ class TestEndToEndSimulated:
         # Read the auto-generated SQS message
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
 
+        assert q1 != []
+
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
         _ = ttc_handler(sqs_event, mock_lambda_context)
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
+
+        if q2 == []:
+            return
+
         sqs_event = _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME)
 
         with time_machine.travel(
@@ -260,30 +291,94 @@ class TestEndToEndSimulated:
         ):
             _ = augmentation_lambda(sqs_event, mock_lambda_context)
 
-        augmented_eicr = (
-            aws["s3"]
-            .get_object(Bucket=S3_BUCKET, Key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}")[
-                "Body"
-            ]
-            .read()
-            .decode("utf-8")
+    def _read_s3_object(self, aws, key: str) -> str:
+        return aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)["Body"].read().decode("utf-8")
+
+    def _assert_s3_object_not_found(self, aws, key: str, eicr_id: str) -> None:
+        with pytest.raises(ClientError) as exc_info:
+            aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)
+
+        assert exc_info.value.response["Error"]["Code"] == "NoSuchKey", eicr_id
+
+    @pytest.mark.parametrize(
+        ("eicr_id", "eicr_path", "schematron_path"),
+        EICR_CASES,
+        ids=[eicr_case[0] for eicr_case in EICR_CASES],
+    )
+    def test_upload_and_process(
+        self,
+        eicr_id: str,
+        eicr_path: str,
+        schematron_path: str,
+        aws,
+        infra,
+        snapshot: Snapshot,
+        mock_opensearch,
+        mock_lambda_context,
+    ):
+        self._run_eicr_pipeline(
+            aws,
+            infra,
+            schematron_path,
+            eicr_path,
+            mock_lambda_context,
         )
-        snapshot.assert_match(augmented_eicr, "augmented_eicr.xml")
+
+        augmented_eicr = self._read_s3_object(
+            aws,
+            f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
         # Validate augmented eICR
         actual_validation_results = validate_eicr(augmented_eicr)
         assert actual_validation_results == []  # Empty list means no errors.
 
-        augmentation_metadata = (
-            aws["s3"]
-            .get_object(
-                Bucket=S3_BUCKET, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
-            )["Body"]
-            .read()
-            .decode("utf-8")
+        augmentation_metadata = self._read_s3_object(
+            aws,
+            f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
 
-        snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")
+        snapshot.assert_match(augmentation_metadata, f"{eicr_id}_augmentation_metadata.json")
+
+    @pytest.mark.parametrize(
+        ("eicr_id", "eicr_path", "schematron_path"),
+        FAIL_EICR_CASES,
+        ids=[eicr_case[0] for eicr_case in FAIL_EICR_CASES],
+    )
+    def test_upload_and_process_failure_cases(
+        self,
+        eicr_id: str,
+        eicr_path: str,
+        schematron_path: str,
+        aws,
+        infra,
+        mock_opensearch,
+        mock_lambda_context,
+    ):
+        self._run_eicr_pipeline(
+            aws,
+            infra,
+            schematron_path,
+            eicr_path,
+            mock_lambda_context,
+        )
+
+        self._assert_s3_object_not_found(
+            aws,
+            f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            eicr_id,
+        )
+        self._assert_s3_object_not_found(
+            aws,
+            f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+            eicr_id,
+        )
+        self._assert_s3_object_not_found(
+            aws,
+            f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+            eicr_id,
+        )
 
 
 @pytest.mark.e2e
@@ -325,7 +420,9 @@ class TestNamespacePreservation:
             )
 
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
-        ttc_handler(_build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context)
+        ttc_handler(
+            _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context
+        )
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         with time_machine.travel(
