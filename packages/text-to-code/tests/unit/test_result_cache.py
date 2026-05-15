@@ -41,5 +41,5 @@ class TestResultCacheAPIs:
         )
 
         assert cached_result is not None
-        assert cached_result.cache_key == "1357924680"
-        assert cached_result.text == "Screening urine fentanyl detection"
+        assert cached_result["cache_key"] == "1357924680"
+        assert cached_result["text"] == "Screening urine fentanyl detection"
