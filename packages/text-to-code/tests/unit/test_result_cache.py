@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from shared_models import Code
 from text_to_code.services.result_cache import get_cached_result
@@ -6,11 +7,11 @@ from text_to_code.services.result_cache import get_cached_result
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
 
 
-def patch_opensearch_client(monkeypatch):
-    mock_client = object()
-
-    def mock_get() -> dict:
-        return {
+class TestResultCacheAPIs:
+    @patch("text_to_code.services.result_cache.opensearch")
+    def test_get(self, mock_opensearch_client):
+        mock_client = mock_opensearch_client.return_value
+        mock_client.get.return_value = {
             "index": RESULT_CACHE_INDEX_NAME,
             "id": "13579246680",
             "version": "1.0.0",
@@ -36,16 +37,8 @@ def patch_opensearch_client(monkeypatch):
             "fields": {},
         }
 
-    monkeypatch.setattr(mock_client, "get", mock_get)
-    return mock_client
+        cached_result = get_cached_result(mock_client, RESULT_CACHE_INDEX_NAME, "1357924680")
 
-
-class TestResultCacheAPIs:
-    def test_get(self, monkeypatch):
-        mock_client = patch_opensearch_client(monkeypatch)
-        cached_result = get_cached_result(
-            mock_client, RESULT_CACHE_INDEX_NAME, os_doc_id="1357924680"
-        )
         assert cached_result is not None
         assert cached_result.cache_key == "1357924680"
         assert cached_result.text == "Screening urine fentanyl detection"
