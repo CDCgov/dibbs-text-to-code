@@ -18,6 +18,7 @@ AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
 AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
+EXPECTED_ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -149,14 +150,14 @@ class TestHandler:
             Body=json.dumps(ttc_output).encode("utf-8"),
         )
 
-        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
+        augment_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter.augment")
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
-        augmenter_mock.assert_not_called()
+        augment_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -170,8 +171,8 @@ class TestHandler:
         )
         metadata = json.loads(metadata_raw)
 
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["nonstandard_codes"] == []
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
@@ -203,14 +204,14 @@ class TestHandler:
             Body=json.dumps(ttc_output).encode("utf-8"),
         )
 
-        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
+        augment_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter.augment")
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
-        augmenter_mock.assert_not_called()
+        augment_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -224,8 +225,8 @@ class TestHandler:
         )
         metadata = json.loads(metadata_raw)
 
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["nonstandard_codes"] == []
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] is None

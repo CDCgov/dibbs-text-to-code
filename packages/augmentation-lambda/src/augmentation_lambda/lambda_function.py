@@ -130,22 +130,9 @@ def _process_record(record: SQSRecord) -> None:
         ttc_output = _load_ttc_output(persistence_id, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, bucket_name)
 
-        if ttc_output.get("passthrough"):
-            passthrough_reason = _get_passthrough_reason(ttc_output)
-            _save_passthrough_outputs(
-                persistence_id=persistence_id,
-                original_eicr=original_eicr,
-                bucket_name=bucket_name,
-                passthrough_reason=passthrough_reason,
-            )
-            logger.info(
-                "Augmentation processing completed",
-                status="passthrough",
-                passthrough_reason=passthrough_reason,
-            )
-            return
-
-        nonstandard_codes = _parse_nonstandard_codes(ttc_output)
+        nonstandard_codes = (
+            [] if ttc_output.get("passthrough") else _parse_nonstandard_codes(ttc_output)
+        )
 
         augmenter_input = TTCAugmenterInput(
             persistence_id=persistence_id,
@@ -162,6 +149,28 @@ def _process_record(record: SQSRecord) -> None:
                 config=config,
                 deterministic_id_seed=augmenter_input.persistence_id,
             )
+            original_eicr_id = str(augmenter.original_eicr_id)
+
+            if ttc_output.get("passthrough"):
+                passthrough_reason = _get_passthrough_reason(ttc_output)
+                metadata = Metadata(
+                    original_eicr_id=original_eicr_id,
+                    augmented_eicr_id=original_eicr_id,
+                    nonstandard_codes=[],
+                )
+                _save_passthrough_outputs(
+                    persistence_id=persistence_id,
+                    original_eicr=original_eicr,
+                    metadata=metadata,
+                    bucket_name=bucket_name,
+                    passthrough_reason=passthrough_reason,
+                )
+                logger.info(
+                    "Augmentation processing completed",
+                    status="passthrough",
+                    passthrough_reason=passthrough_reason,
+                )
+                return
 
             metadata = augmenter.augment()
 
@@ -178,12 +187,18 @@ def _process_record(record: SQSRecord) -> None:
                 status="passthrough",
                 passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
             )
+            metadata = Metadata(
+                original_eicr_id=persistence_id,
+                augmented_eicr_id=persistence_id,
+                nonstandard_codes=[],
+                error=str(e),
+            )
             _save_passthrough_outputs(
                 persistence_id=persistence_id,
                 original_eicr=original_eicr,
+                metadata=metadata,
                 bucket_name=bucket_name,
                 passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
-                error=str(e),
             )
             logger.info(
                 "Augmentation processing completed",
@@ -199,25 +214,18 @@ def _process_record(record: SQSRecord) -> None:
 def _save_passthrough_outputs(
     persistence_id: str,
     original_eicr: str,
+    metadata: Metadata,
     bucket_name: str,
     passthrough_reason: PassthroughReason | None,
-    error: str | None = None,
 ) -> None:
     """Save original eICR and passthrough metadata to S3.
 
     :param persistence_id: The persistence ID for the S3 object key.
     :param original_eicr: The original eICR XML string.
+    :param metadata: The passthrough metadata.
     :param bucket_name: The S3 bucket name to write to.
     :param passthrough_reason: The reason augmentation was bypassed.
-    :param error: Optional error string for observability.
     """
-    metadata = Metadata(
-        original_eicr_id=persistence_id,
-        augmented_eicr_id=persistence_id,
-        nonstandard_codes=[],
-        error=error,
-    )
-
     output = TTCAugmenterOutput(
         persistence_id=persistence_id,
         augmented_eicr=original_eicr,
