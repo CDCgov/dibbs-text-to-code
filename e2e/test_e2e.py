@@ -13,6 +13,7 @@ from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
+from shared_models import PassthroughReason
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 from validation import validate_eicr
 
@@ -56,6 +57,13 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         "eicr_empty",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
+    ),
+    (
+        "patient_alliance",
+        ASSETS_FOLDER / "patient_alliance" / "eICR Sample Patient Alliance 03132020.xml",
+        ASSETS_FOLDER
+        / "patient_alliance"
+        / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
     ),
     (
         "sample9",
@@ -336,8 +344,28 @@ class TestEndToEndSimulated:
         snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
         # Validate augmented eICR
-        actual_validation_results = validate_eicr(augmented_eicr)
-        assert actual_validation_results == []  # Empty list means no errors.
+        augmentation_metadata = json.loads(
+            self._read_s3_object(
+                aws,
+                f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        )
+
+        if augmentation_metadata.get("passthrough"):
+            original_eicr = self._read_s3_object(
+                aws,
+                f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+            assert augmented_eicr == original_eicr
+            assert augmentation_metadata["passthrough_reason"] in [
+                PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
+                PassthroughReason.NO_CODE_MATCHES,
+                PassthroughReason.TTC_EXCEPTION,
+                PassthroughReason.AUGMENTATION_EXCEPTION,
+            ]
+        else:
+            actual_validation_results = validate_eicr(augmented_eicr)
+            assert actual_validation_results == []  # Empty list means no errors.
 
         augmentation_metadata = self._read_s3_object(
             aws,
