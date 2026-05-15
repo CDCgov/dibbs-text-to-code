@@ -2,6 +2,7 @@ from enum import Enum
 
 from shared_models import FrozenBaseModel
 from shared_models import NonstandardCodeInstance
+from shared_models import PassthroughReason
 
 
 class ApplicationCode(Enum):
@@ -46,3 +47,5 @@ class TTCAugmenterOutput(FrozenBaseModel):
     persistence_id: str
     augmented_eicr: str
     metadata: Metadata
+    passthrough: bool = False
+    passthrough_reason: PassthroughReason | None = None
