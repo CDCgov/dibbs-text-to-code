@@ -14,7 +14,7 @@
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]",
         "error_id": null,
         "error_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
-        "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
+        "error_test": "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Ordered",
         "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       },
@@ -38,7 +38,7 @@
         "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
         "error_id": null,
         "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
-        "error_test": " not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
+        "error_test": "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
         "field": "Lab Test Name Resulted",
         "reason": "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
       },

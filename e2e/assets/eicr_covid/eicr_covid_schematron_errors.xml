@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Results xmlns="urn:gov:nist:cdaGuideValidator">
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-001</assertionID>
+            <flag/>
+            <message>Fatal: SHALL contain exactly one [1..1] templateId (CONF:4482-96) such that it SHALL contain exactly one [1..1] @root="2.16.840.1.113883.10.20.15.2" eICR Initial Public Health Case Report Document (CONF:4482-95). SHALL contain exactly one [1..1] @extension="2022-05-01" (CONF:4482-96).</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:ClinicalDocument/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2'][@extension = '2022-05-01']) = 1</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-002</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code data element @code attribute is blank</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@code = '']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-004</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code data element @codeSystem attribute is blank</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@codeSystem = '']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultObservation-code-006</assertionID>
+            <flag/>
+            <message>Data Quality: Result observation code or translation data elements @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-clinicalDocument-author-028</assertionID>
+            <flag/>
+            <message>Data Quality: The author id data element has no @extension attribute</message>
+            <context>/ClinicalDocument[1]/author[1]/assignedAuthor[1]</context>
+            <test>not(cda:id) or cda:id[@nullFlavor] or (count(cda:id[@extension]) = count(cda:id))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-providerTelecom-003</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassing encounter provider telecom data element does not include an email value which is identified with prefix = "mailto:"</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/responsibleParty[1]/assignedEntity[1]</context>
+            <test>not(cda:telecom) or cda:telecom[@nullFlavor] or cda:telecom[contains(@value, 'mailto:')]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-healthCareFacilityTelecom-003</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassingEncounter healthCareFacility/serviceProviderOrganization telecom data element does not include an email value which is identified with prefix = "mailto:"</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]</context>
+            <test>not(cda:serviceProviderOrganization/cda:telecom) or cda:serviceProviderOrganization/cda:telecom[contains(@value, 'mailto:')]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-encompassingEncounter-healthCareFacilityName-001</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassingEncounter healthCareFacility name data element is not present</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]</context>
+            <test>count(cda:location/cda:name)&gt; 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-003</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element @code attribute is blank</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]</context>
+            <test>                     not(cda:code) or cda:code[@nullFlavor] or not(cda:code/@code)                     or count(cda:code[@code = '']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-005</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element @codeSystem attribute is blank</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@codeSystem = '']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-resultOrganizer-code-006</assertionID>
+            <flag/>
+            <message>Data Quality: Result organizer code data element AND translation are NOT 2.16.840.1.113883.6.1 (LOINC)</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]</context>
+            <test>not(cda:code) or cda:code[@nullFlavor] or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-serviceProviderOrganizationId-001</assertionID>
+            <flag/>
+            <message>Data Quality: The encompassingEncounter healthCareFacility/serviceProviderOrganization id data element is not present.</message>
+            <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]/serviceProviderOrganization[1]</context>
+            <test>cda:id</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultObservation</assertionID>
+            <flag/>
+            <message> 1 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.2']]/cda:code)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-resultOrganizer</assertionID>
+            <flag/>
+            <message> 1 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:organizer[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.1']])=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-plannedObservation</assertionID>
+            <flag/>
+            <message> 1 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation[cda:templateId[@root='2.16.840.1.113883.10.20.22.4.44']]/cda:code)=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCount-occupationObservation</assertionID>
+            <flag/>
+            <message> 1 </message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation/cda:code[@code='364703007'])=0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCheck-labResultTrigger</assertionID>
+            <flag/>
+            <message>DATA CHECK: this eICR has at least one Lab Result Trigger</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.2']) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_check">
+            <assertionID>dq-dataCheck-languageCommunication</assertionID>
+            <flag/>
+            <message>DATA CHECK: this eICR has at least one patient languageCommunication data element</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(//cda:languageCommunication) = 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="text_to_code">
+            <assertionID>ttc-labTestNameResulted-wrongCode</assertionID>
+            <flag/>
+            <message>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</message>
+            <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+            <test>                 not(cda:code/@code or cda:code/cda:translation/@code)                    or cda:code[@codeSystem = '2.16.840.1.113883.6.1']                  or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+</Results>

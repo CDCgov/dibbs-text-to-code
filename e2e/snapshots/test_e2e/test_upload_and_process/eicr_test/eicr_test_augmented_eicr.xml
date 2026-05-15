@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:cda="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc" xmlns:voc="http://www.lantanagroup.com/voc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
+    <!--DATA AUGMENTATION: eICR Data Augmentation Header -->
+    <templateId root="2.16.840.1.113883.10.20.15.2.1.3" extension="2025-11-01"/>
+    <!--DATA AUGMENTATION: new-document-id -->
+    <id root="d44dc1c6-8a0c-5236-906e-12f6475589ec" assigningAuthorityName="text-to-code"/>
+    <!--DATA AUGMENTATION: time of data augmentation operation -->
+    <effectiveTime value="20260213152757"/>
+    <!--DATA AUGMENTATION: new-document-setId -->
+    <setId root="2683d208-bbec-5d37-8886-3b46fb5ec908"/>
+    <!--DATA AUGMENTATION: new-document-versionNumber -->
+    <versionNumber value="1"/>
+    <component>
+        <structuredBody>
+            <component>
+                <section>
+                    <entry>
+                        <observation classCode="OBS" moodCode="INT">
+                            <templateId root="2.16.840.1.113883.10.20.22.4.44" extension="2014-06-09"/>
+                            <!--DATA AUGMENTATION: This data has been augmented with a standard LOINC code -->
+                            <!--DATA AUGMENTATION: The data in the code and code/originalText data elements is the original data -->
+                            <code displayName=" A custom code in display name. ">
+                                <originalText>
+                                    A custom code in original text.
+                                </originalText>
+                                <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
+                                <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="A custom code in display name."/>
+                            </code>
+                            <author>
+                                <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->
+                                <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
+                                <!--DATA AUGMENTATION: time of data augmentation operation -->
+                                <effectiveTime value="20260213152757"/>
+                                <assignedAuthor>
+                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+                                    <id nullFlavor="NA"/>
+                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+                                    <addr nullFlavor="NA"/>
+                                    <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+                                    <telecom nullFlavor="NA"/>
+                                    <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
+                                    <assignedAuthoringDevice>
+                                        <!--DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
+                                        <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
+                                    </assignedAuthoringDevice>
+                                </assignedAuthor>
+                            </author>
+                        </observation>
+                    </entry>
+                </section>
+            </component>
+        </structuredBody>
+    </component>
+    <author>
+        <assignedAuthor>
+            <assignedAuthoringDevice>
+                <softwareName>Test eCR Vendor Name</softwareName>
+            </assignedAuthoringDevice>
+        </assignedAuthor>
+    </author>
+    <!--DATA AUGMENTATION: typeCode 'XFRM' -->
+    <relatedDocument typeCode="XFRM">
+        <parentDocument>
+            <!--DATA AUGMENTATION: ClinicalDocument/id of the document to replace -->
+            <!--DATA AUGMENTATION: original-document-id -->
+            <id root="c8516bdc-8bb2-40aa-8dae-20a77546488f" assigningAuthorityName="original-document"/>
+            <!--DATA AUGMENTATION: input-document-setId -->
+            <setId extension="59dde121-a25e-486c-ac76-6209cf85a4d9" root="1.2.840.114350.1.13.380.3.7.1.1"/>
+            <!--DATA AUGMENTATION: input-document-versionNumber -->
+            <versionNumber value="1"/>
+        </parentDocument>
+    </relatedDocument>
+    <author>
+        <!--DATA AUGMENTATION: time of data augmentation operation -->
+        <effectiveTime value="20260213152757"/>
+        <assignedAuthor>
+            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+            <id nullFlavor="NA"/>
+            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+            <addr nullFlavor="NA"/>
+            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
+            <telecom nullFlavor="NA"/>
+            <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
+            <assignedAuthoringDevice>
+                <!--DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
+                <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
+            </assignedAuthoringDevice>
+        </assignedAuthor>
+    </author>
+</ClinicalDocument>
