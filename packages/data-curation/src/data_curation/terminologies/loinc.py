@@ -532,14 +532,18 @@ def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: 
 
         :returns: A dictionary that is a new instance of a LOINC Embedding record.
     """
-    embedding_record = {"loinc_code": loinc_axis["loinc_code"],
-                        "loinc_type": loinc_axis["loinc_type"],
-                        "loinc_name_type": loinc_term_type,
-                        "term": loinc_term,
-                        "time": loinc_axis["time"],
-                        "system": loinc_axis["system"],
-                        "scale": loinc_axis["scale"],
-                        "method": loinc_axis["method"],
-                        "class": loinc_axis["class"]
+    embedding_record = {
+        "id": "",
+        "description": loinc_term,
+        "description_vector": [],
+        "loinc_type": loinc_axis["loinc_type"],
+        "loinc_code": loinc_axis["loinc_code"],
+        "loinc_name_type": loinc_term_type,
+        "property": loinc_axis["property"],
+        "time_aspect": loinc_axis["time"],
+        "system": loinc_axis["system"],
+        "scale_type": loinc_axis["scale"],
+        "method_type": loinc_axis["method"],
+        "class_type": loinc_axis["class"]
     }
     return embedding_record

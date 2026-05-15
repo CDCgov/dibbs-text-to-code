@@ -2,7 +2,7 @@ from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
                                                      get_loinc_embedding_records)
 from data_curation.terminologies.general import (get_latest_extract_file_name, 
-                                                       get_date_from_latest_filename, 
+                                                       get_date_from_filename, 
                                                        load_extract_file_to_dict)
 
 
@@ -21,7 +21,7 @@ def update_loinc_embeddings():
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
-    file_date = get_date_from_latest_filename(current_loinc_file,"loinc")
+    file_date = get_date_from_filename(current_loinc_file,"loinc")
     if (file_date <= loinc_version_date):
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"Getting all updates from LOINC since {loinc_version_date}!")
