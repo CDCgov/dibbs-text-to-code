@@ -1,4 +1,4 @@
-#!/usr/bin/env python"""
+#!/usr/bin/env python
 
 """
 data_curation.terminologies.utils.general
@@ -30,7 +30,7 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
 def clean_text_string(value: str) -> str:
-    """Function that removes multile space characters from a string
+    """Function that removes multiple space characters from a string
         and returns it for further processing.
 
         :param value: Text string that needs to be clean.
@@ -44,11 +44,11 @@ def clean_text_string(value: str) -> str:
         return ""
 
 
-def get_date_from_latest_filename(filename: str, terminology: str) -> str:
+def get_date_from_filename(filename: str, terminology: str) -> str:
     """Function that extracts and formats the date from any of
-        the value set extract files based upon the pattern used
-        by terminology set in their 'meta' API call (get the latest
-        version and version date).
+        the value set extract files and formats the date string
+        into a pattern used by the terminology set in their Versioning API call
+        (ie. get the latest version and version date).
 
         :param filename: Text of the filename to extact the date from.
         :param terminology: The name of the value set in question as the
@@ -58,10 +58,19 @@ def get_date_from_latest_filename(filename: str, terminology: str) -> str:
         :returns: A formatted date string that can be used for comparison
             to determine if an update is required.
     """
-    file_date = re.search(r'\d{8}', filename).group()
+    match = re.search(r'\d{8}', filename)
+    if match is None:
+        raise ValueError(f"Unable to extract 8 digit date from file name: {filename}!")
+    
+    file_date = match.group()
 
+    # date comparison for LOINC requires date in YYYY-MM-DD format
     if terminology == 'loinc':
         return datetime.strptime(file_date, "%Y%m%d").strftime("%Y-%m-%d")
+    # for all other terminologies, yet to be determined
+    # return date from file in YYYYMMDD format
+    else:
+        return datetime.strptime(file_date, "%Y%m%d").strftime("%Y%m%d")
 
 
 def get_latest_extract_file_name(filename_prefix: str):
@@ -75,10 +84,15 @@ def get_latest_extract_file_name(filename_prefix: str):
         :returns: The file name and file path of the most recent value set
             extract file.
     """
+    if filename_prefix is None:
+        return None
+    
     files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(filename_prefix)]
-    if files:
+    if filename_prefix != "" and files:
         latest_file = max(files)
-    return latest_file
+        return latest_file
+    else:
+        raise FileNotFoundError(f"No file with prefix {filename_prefix} under {BASE_FOLDER}!")
 
 
 def load_extract_file_to_dict(filename: str) -> list[dict]:
@@ -86,15 +100,18 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
         it into an easier to process dictionary.
 
         :param filename: The filename of the file you wanted parsed
-            into a dictiary.
+            into a dictionary.
 
         :returns: A dictionary of the data pulled from a csv file.
     """
+    if not filename or filename =="":
+        return {}
     file_path = BASE_FOLDER / filename
     extract_dict = {}
-    with open(file_path, mode='r', encoding="utf-8") as file:
-        reader = csv.DictReader(file, delimiter="|")
-        extract_dict = {row['code']: row for row in reader}
+    if file_path.exists():
+        with open(file_path, mode='r', encoding="utf-8") as file:
+            reader = csv.DictReader(file, delimiter="|")
+            extract_dict = {row['code']: row for row in reader}
     
     return extract_dict
 

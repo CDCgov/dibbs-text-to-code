@@ -32,19 +32,19 @@ import os
 import sys
 import requests
 from data_curation.terminologies.loinc import (extract_full_loinc_lab_names,
-                                                     extract_full_loinc_lab_orders,
-                                                     extract_full_loinc_lab_results, 
-                                                     process_loincs_for_umls_urls, 
-                                                     LOINC_PARTS_ABBRV_SYNONYMS)
+                                               extract_full_loinc_lab_orders,
+                                               extract_full_loinc_lab_results,
+                                               process_loincs_for_umls_urls,
+                                               LOINC_PARTS_ABBRV_SYNONYMS)
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
 from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
 from data_curation.terminologies.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.general import (ENHANCEMENTS_DIRECTORY,
-                                                 TMP_DIRECTORY,
-                                                 UMLS_API_KEY,
-                                                 clean_text_string,
-                                                 save_json_file,
-                                                 save_valueset_csv_file)
+from data_curation.terminologies.general import (save_json_file,
+                                                save_valueset_csv_file,
+                                                clean_text_string,
+                                                TMP_DIRECTORY,
+                                                ENHANCEMENTS_DIRECTORY,
+                                                UMLS_API_KEY)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -83,7 +83,7 @@ def get_loinc_umls_related_results():  # noqa: D103
 
     # now use the UMLS URLS to call the UMLS and get the related names 
     # and store them in a file - first just a tmp file as the process takes a long time
-    # but if hte process fails, pick up the process from the last loinc code 
+    # but if the process fails, pick up the process from the last loinc code 
     # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")

@@ -1,35 +1,38 @@
 from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
-                                                     get_loinc_embedding_candidates,
+                                                     get_loinc_embedding_records,
                                                      extract_full_loinc_lab_names)
-from data_curation.terminologies.general import (get_latest_extract_file_name,
-                                                       get_date_from_latest_filename, 
-                                                       load_extract_file_to_dict,
-                                                       archive_valueset_file)
+from data_curation.terminologies.general import (get_latest_extract_file_name, 
+                                                       get_date_from_filename, 
+                                                       load_extract_file_to_dict)
 from text_to_code.services.embedder import embed
+
 
 # this current function is just set to work for
 # labnames, but can be modified to perform some or all
 # of the various LOINC valuesets
-def update_loinc_embeddings():    
+def update_loinc_embeddings():
     """Process to get the latest updates from LOINC and convert 
         all the new loinc codes and changes to existing loinc codes
         into embedding records that can be uploaded into TTC Opensearch.
 
         Returns nothing at this time.
+        TODO: Currently prints out progress and status
+            but we will need to convert that to logging statements 
+            in subsequent PRs
     """
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
-    file_date = get_date_from_latest_filename(current_loinc_file,"loinc")
+    file_date = get_date_from_filename(current_loinc_file,"loinc")
     if (file_date <= loinc_version_date):
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
-        loinc_updates = get_loinc_embedding_candidates(loinc_current_dict,
+        loinc_updates = get_loinc_embedding_records(loinc_current_dict,
                                                        loinc_version,
                                                        loinc_version_date,
                                                        current_loinc_file)
@@ -50,8 +53,8 @@ def update_loinc_embeddings():
         return
     # if all goes well archive the old file and 
     # write a new valueset file with all the existing codes
-    archive_valueset_file(current_loinc_file)
-    extract_full_loinc_lab_names()   
+    #archive_valueset_file(current_loinc_file)
+    extract_full_loinc_lab_names() 
 
 
 def main(all: bool = False, loinc=False):

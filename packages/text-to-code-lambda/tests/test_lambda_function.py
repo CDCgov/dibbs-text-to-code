@@ -108,12 +108,10 @@ class TestHandler:
             "schematron_errors": {},
             "processed_at": "<processed_at>",
         }
-        s3_client = lambda_handler.create_s3_client()
 
         lambda_function._save_ttc_metadata_output(
             persistence_id=mock_aws_setup.persistence_id,
             ttc_metadata_output=ttc_metadata_output,
-            s3_client=s3_client,
             bucket_name=S3_BUCKET,
         )
 
@@ -399,11 +397,8 @@ class TestHandler:
             return_value=None,
         )
 
-        s3_client = lambda_handler.create_s3_client()
-
         resp = lambda_function._process_record_pipeline(
             persistence_id=mock_aws_setup.persistence_id,
-            s3_client=s3_client,
             opensearch_client=mock_opensearch,
             bucket_name=S3_BUCKET,
         )

@@ -134,8 +134,7 @@ class TestCreateOpenSearchClient:
     def test_create_opensearch_client(self, moto_setup):
         """Test create OpenSearch client."""
         expected_port = 443  # The expected default port for the OpenSearch client.
-        auth = lambda_handler.create_aws_auth()
-        client = lambda_handler.create_opensearch_client(auth)
+        client = lambda_handler.create_opensearch_client()
 
         assert client.transport.hosts[0]["host"] == "test-opensearch-endpoint.com"
         assert client.transport.hosts[0]["port"] == expected_port
