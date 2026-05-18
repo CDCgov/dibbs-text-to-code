@@ -65,8 +65,7 @@ class TestResultCacheAPIs:
             mock_opensearch_client, RESULT_CACHE_INDEX_NAME, "1357924680"
         )
 
-        assert cached_result is not None
-        assert not cached_result["found"]
+        assert cached_result is None
 
     def test_put_cache_hit_success(self):
         """Tests the Result Cache service's PUT function when the result is created."""
