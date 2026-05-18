@@ -3,12 +3,14 @@ from unittest.mock import MagicMock
 
 from shared_models import Code
 from text_to_code.services.result_cache import get_cached_result
+from text_to_code.services.result_cache import put_new_cached_result
 
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
 
 
 class TestResultCacheAPIs:
-    def test_get(self):
+    def test_get_success(self):
+        """Tests the Result Cache's GET functionality when the document is present."""
         mock_opensearch_client = MagicMock()
         mock_opensearch_client.get.return_value = {
             "index": RESULT_CACHE_INDEX_NAME,
@@ -21,7 +23,7 @@ class TestResultCacheAPIs:
             "source": {
                 "cache_key": "1357924680",
                 "text": "Screening urine fentanyl detection",
-                "data_field": "field",
+                "data_field": "Lab Test Name Ordered",
                 "loinc_code": json.dumps(
                     Code(
                         code_system="2.16.840.1.113883.6.1",
@@ -43,3 +45,54 @@ class TestResultCacheAPIs:
         assert cached_result is not None
         assert cached_result["cache_key"] == "1357924680"
         assert cached_result["text"] == "Screening urine fentanyl detection"
+
+    def test_get_miss(self):
+        """Tests the Result Cache's GET functionality when the document is absent."""
+        mock_opensearch_client = MagicMock()
+        mock_opensearch_client.get.return_value = {
+            "index": RESULT_CACHE_INDEX_NAME,
+            "id": "",
+            "version": "",
+            "seq_no": "",
+            "primary_term": "",
+            "found": False,
+            "routing": "",
+            "source": {},
+            "fields": {},
+        }
+
+        cached_result = get_cached_result(
+            mock_opensearch_client, RESULT_CACHE_INDEX_NAME, "1357924680"
+        )
+
+        assert cached_result is not None
+        assert not cached_result["found"]
+
+    def test_put_cache_hit_success(self):
+        """Tests the Result Cache service's PUT function when the result is created."""
+        mock_opensearch_client = MagicMock()
+        mock_opensearch_client.index.return_value = {
+            "_index": RESULT_CACHE_INDEX_NAME,
+            "_id": "a652c34ac12",
+            "_version": "1.0.0",
+            "result": "created",
+        }
+
+        standard_loinc_code = Code(
+            code="6299-2",
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name="Urea nitrogen [Mass/volume] in Blood",
+        )
+
+        cache_result_created = put_new_cached_result(
+            mock_opensearch_client,
+            RESULT_CACHE_INDEX_NAME,
+            "blood urea nitrogen (BUN)",
+            "Lab Test Name Resulted",
+            standard_loinc_code,
+            0.97771,
+            0.8624,
+        )
+
+        assert cache_result_created

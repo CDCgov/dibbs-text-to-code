@@ -71,6 +71,9 @@ def get_cached_result(
 ) -> OpenSearchResultCacheSource | None:
     """Queries an OpenSearch Index by document ID.
 
+    Full details of the OpenSearch API's GET Response body can be found at
+    https://docs.opensearch.org/latest/api-reference/document-apis/get-documents/#response-body-fields
+
     :param opensearch_client: An instantiated client meant for communicating with
       the TTC OpenSearch instance.
     :param index: The namespace of the Index to check.
@@ -92,6 +95,9 @@ def put_new_cached_result(
     reranker_score: float,
 ) -> bool:
     """Stores a hit for a new nonstandard input in the Result Cache index in OpenSearch.
+
+    Full API documentation for the `.index()` method can be found at
+    https://docs.opensearch.org/latest/api-reference/document-apis/index-document/.
 
     :param opensearch_client: An instantiated client for communicating with OpenSearch.
     :param index: The index name to store the cache hit in.
