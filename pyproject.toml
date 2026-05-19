@@ -127,6 +127,10 @@ known-first-party = [
 "scripts/*.py" = [
   "T201", # print
 ]
+".github/scripts/*.py" = [
+  "S607", # `git` resolved from PATH is fine on GitHub-hosted runners
+  "T201", # prints surface as CI run logs intentionally
+]
 # Ignore the following rules in test files
 "**/test_*.py" = [
   "ANN001",  # missing type annotation for arguments from fixtures
