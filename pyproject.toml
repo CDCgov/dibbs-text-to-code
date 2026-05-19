@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
@@ -126,6 +126,10 @@ known-first-party = [
 # ignore scripts/ folder
 "scripts/*.py" = [
   "T201", # print
+]
+".github/scripts/*.py" = [
+  "S607", # `git` resolved from PATH is fine on GitHub-hosted runners
+  "T201", # prints surface as CI run logs intentionally
 ]
 # Ignore the following rules in test files
 "**/test_*.py" = [
