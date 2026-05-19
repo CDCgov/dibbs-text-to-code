@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from packages.utils.src import regex_patterns as rp
 
-PART_DESCRIPTION_EXTRACTS_FILE = "../data/snoinc_extracts/loinc_codes_with_part_descriptions.csv"
+PART_DESCRIPTION_EXTRACTS_FILE = "../data/snoinc_extracts/enhancements/loinc_codes_with_part_descriptions.csv"
 OUTPUT_SENTENCES_FILE = "../data/training_files/part_description_sentences.txt"
 
 
