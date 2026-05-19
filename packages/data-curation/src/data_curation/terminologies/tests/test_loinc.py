@@ -19,7 +19,7 @@ def test_create_embedding_record() -> None:
     loinc_axis["class"] = "TEST CLASS"
     loinc_term_type = "TEST TERM"
     expected = {
-        "id": "",
+        "id": 140,
         "description": "TEST NAME",
         "description_vector": [],
         "loinc_type": "Both",
@@ -32,10 +32,11 @@ def test_create_embedding_record() -> None:
         "method_type": "TEST METHOD",
         "class_type": "TEST CLASS"
     }
-    result = _create_embedding_record(loinc_term,loinc_term_type,loinc_axis)
+    result = _create_embedding_record(140,loinc_term,loinc_term_type,loinc_axis)    
     assert result == expected
 
 def test_create_embedding_records() -> None:
+    loinc_id1 = 155
     loinc_code = "12345-F"
     loinc_axis = {}
     loinc_axis["loinc_code"] = loinc_code
@@ -63,9 +64,9 @@ def test_create_embedding_records() -> None:
     loinc_row["scale_type"] = loinc_axis["scale"]
     loinc_row["method_type"] = loinc_axis["method"]
     loinc_row["class_type"] = loinc_axis["class"]
-    
+
     record_1 = {
-        "id": "",
+        "id": 156,
         "description": "TEST NAME",
         "description_vector": [],
         "loinc_type": loinc_axis["loinc_type"],
@@ -79,7 +80,7 @@ def test_create_embedding_records() -> None:
         "class_type": loinc_axis["class"]
     }
     record_2 = {
-        "id": "",
+        "id": 157,
         "description": "ANOTHER TEST NAME",
         "description_vector": [],
         "loinc_type": loinc_axis["loinc_type"],
@@ -93,5 +94,5 @@ def test_create_embedding_records() -> None:
         "class_type": loinc_axis["class"]
     }
     expected = [record_1,record_2]
-    result = _create_embedding_records(loinc_code,loinc_row,changes)
+    result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
     assert result == expected

@@ -41,19 +41,13 @@ def update_loinc_embeddings():
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
 
     # add embeddings to any of the candidates for the various descriptions
-    # if there are none, no looping will occur
-    my_test = embed("Weed Allerg Mix3 IgE Msmt Ser").tolist()
-    print(f"MY TEST: {my_test}")
-    
+    # if there are none, no looping will occur    
     for loinc_update_record in loinc_updates:
         if (loinc_update_record["description"].strip is not None):
             loinc_update_record["description_vector"] = embed(loinc_update_record["description"])
     
-        print(loinc_update_record)
-        return
-    # if all goes well archive the old file and 
-    # write a new valueset file with all the existing codes
-    #archive_valueset_file(current_loinc_file)
+    
+    # if all goes well write a new valueset file with all the existing codes
     extract_full_loinc_lab_names() 
 
 
