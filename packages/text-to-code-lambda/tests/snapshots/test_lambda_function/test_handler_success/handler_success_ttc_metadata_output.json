@@ -10,7 +10,7 @@
     "eicr_vendor": "Test eCR Vendor Name"
   },
   "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
-  "processed_at": "2026-05-14T20:19:13.804402Z",
+  "processed_at": "2026-01-01T01:01:00Z",
   "reason_for_skipping": null,
   "ttc_schematron_issues": [
     {

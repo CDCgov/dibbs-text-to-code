@@ -10,6 +10,7 @@ from aws_lambda_powertools.utilities.data_classes import SQSRecord
 from aws_lambda_powertools.utilities.data_classes import event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
+from pydantic import Field
 
 import lambda_handler
 from lambda_handler.models import OpenSearchResult
@@ -73,7 +74,7 @@ class TTCMetadata(FrozenBaseModel):
     eicr_metadata: EICRMetadata | None
     persistence_id: str
     ttc_schematron_issues: list[TTCSchematronIssueDetail] | None = None
-    processed_at: datetime = datetime.now(UTC)
+    processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     reason_for_skipping: str | None = None
 
 
@@ -237,15 +238,29 @@ def _build_nonstandard_code_instance(
 
 def _save_ttc_metadata_output(
     persistence_id: str,
-    ttc_metadata_output: TTCMetadata,
     bucket_name: str,
+    eicr_metadata: EICRMetadata,
+    schematron_issue_details: list[TTCSchematronIssueDetail] | None = None,
 ) -> None:
     """Save TTC metadata output to S3.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
-    :param ttc_metadata_output: The TTC metadata output dictionary.
     :param bucket_name: The S3 bucket name to write to.
+    :eicr_metadata: eICR metadata model
+    :schematron_issue_details: List of TTC Schematron issue details. If none a reason for skipping will be used.
     """
+    if schematron_issue_details:
+        ttc_metadata = TTCMetadata(
+            eicr_metadata=eicr_metadata,
+            persistence_id=persistence_id,
+            ttc_schematron_issues=schematron_issue_details,
+        )
+    else:
+        ttc_metadata = TTCMetadata(
+            eicr_metadata=eicr_metadata,
+            persistence_id=persistence_id,
+            reason_for_skipping=NO_DATA_FIELDS_MESSAGE,
+        )
     metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
 
     logger.info(
@@ -255,7 +270,7 @@ def _save_ttc_metadata_output(
         status="processing",
     )
     lambda_handler.put_file(
-        file_obj=BytesIO(ttc_metadata_output.model_dump_json().encode("utf-8")),
+        file_obj=BytesIO(ttc_metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=metadata_key,
     )
@@ -334,12 +349,7 @@ def _process_record_pipeline(
             "No data fields found from Schematron errors for TTC processing",
             status="skipped",
         )
-        ttc_metadata = TTCMetadata(
-            eicr_metadata=processor.eicr_metadata,
-            persistence_id=persistence_id,
-            reason_for_skipping=NO_DATA_FIELDS_MESSAGE,
-        )
-        _save_ttc_metadata_output(persistence_id, ttc_metadata, bucket_name)
+        _save_ttc_metadata_output(persistence_id, bucket_name, processor.eicr_metadata)
         logger.info("TTC processing completed", status="no_matches_found")
         return
 
@@ -349,6 +359,8 @@ def _process_record_pipeline(
         new_translation: Code | None = None
         unmatched_message: str | None = None
         data_field = error.field
+        opensearch_retrieved_scores: OpenSearchResult | None = None
+        ranked_results: list[ScoredResult] | None = None
         criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
 
         text_candidates = processor.get_text_candidates(error.error_context, data_field)
@@ -422,7 +434,6 @@ def _process_record_pipeline(
                 unmatched_message = "Opensearch query returned no hits."
         else:
             unmatched_message = "No candidate found."
-            continue
 
         ttc_schematron_issues_details.append(
             TTCSchematronIssueDetail(
@@ -443,14 +454,14 @@ def _process_record_pipeline(
         persistence_id=persistence_id,
         nonstandard_codes=nonstandard_code_replacements,
     )
-    ttc_metadata = TTCMetadata(
-        eicr_metadata=processor.eicr_metadata,
-        persistence_id=persistence_id,
-        ttc_schematron_issues=ttc_schematron_issues_details,
-    )
 
     _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
-    _save_ttc_metadata_output(persistence_id, ttc_metadata, bucket_name)
+    _save_ttc_metadata_output(
+        persistence_id,
+        bucket_name,
+        processor.eicr_metadata,
+        ttc_schematron_issues_details,
+    )
 
     if ttc_output.nonstandard_codes:
         logger.info("TTC processing completed", status="matched")

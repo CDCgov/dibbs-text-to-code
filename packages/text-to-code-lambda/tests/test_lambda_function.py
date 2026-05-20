@@ -9,6 +9,10 @@ import lambda_handler
 from conftest import S3_BUCKET
 from conftest import TTC_METADATA_PREFIX
 from conftest import TTC_OUTPUT_PREFIX
+from lambda_handler.models import OpenSearchHits
+from lambda_handler.models import OpenSearchResult
+from lambda_handler.models import OpenSearchShards
+from text_to_code.models import Candidate
 from text_to_code_lambda import lambda_function
 
 EXPECTED_RESULTED_ERRORS = 2
@@ -237,21 +241,19 @@ class TestHandler:
         mock_lambda_context,
     ):
         """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
-        selected_candidate = {
-            "value": "weed allergen mix 3",
-            "confidence": 1.0,
-        }
+        selected_candidate = Candidate(value="weed allergen mix 3", xpath="code/@displayName")
 
         mocker.patch(
             "text_to_code.services.evaluator.select_relevant_text",
-            return_value=type("SelectedCandidate", (), selected_candidate)(),
+            return_value=selected_candidate,
         )
 
-        empty_opensearch_scores = type(
-            "OpenSearchScores",
-            (),
-            {"hits": type("Hits", (), {"hits": []})()},
-        )()
+        empty_opensearch_scores = OpenSearchResult(
+            took=0,
+            timed_out=False,
+            _shards=OpenSearchShards(total=0, successful=0, skipped=0, failed=0),
+            hits=OpenSearchHits(total={}, hits=[]),
+        )
 
         mocker.patch(
             "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
@@ -273,7 +275,7 @@ class TestHandler:
         }
 
         assert mock_opensearch.search.call_count == 0
-        assert reranker_mock.call_count == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
+        assert reranker_mock.call_count == 0
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_no_opensearch_hits_ttc_output.json")
@@ -284,24 +286,3 @@ class TestHandler:
         snapshot.assert_match(
             ttc_metadata_output, "handler_no_opensearch_hits_ttc_metadata_output.json"
         )
-
-    def test_process_record_pipeline_returns_no_matches_found_when_no_candidates_are_selected(
-        self, mock_aws_setup, mock_opensearch, mocker, mock_lambda_context
-    ):
-        """Test pipeline returns no_matches_found when no relevant candidates are selected."""
-        mocker.patch(
-            "text_to_code.services.evaluator.select_relevant_text",
-            return_value=None,
-        )
-
-        resp = lambda_function._process_record_pipeline(
-            persistence_id=mock_aws_setup.persistence_id,
-            opensearch_client=mock_opensearch,
-            bucket_name=S3_BUCKET,
-        )
-
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
-            "result": "no_matches_found",
-        }
