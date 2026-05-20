@@ -1,0 +1,149 @@
+name: Build and push images (reusable)
+
+# Reusable workflow that builds all three Lambda images and pushes them to
+# GHCR and APHL ECR. Invoked from `docker-image-push.yml` (dev) and
+# `release.yml` (versioned releases).
+#
+# Callers pass `secrets: inherit` so the workflow can use HF_TOKEN, the APHL
+# AWS credentials, and the APHL ECR repository URL.
+
+on:
+  workflow_call:
+    inputs:
+      version_tag:
+        description: Full semver tag, e.g. v0.2.0 (release runs only)
+        type: string
+        required: false
+        default: ""
+      minor_tag:
+        description: Major.minor tag, e.g. v0.2 (release runs only)
+        type: string
+        required: false
+        default: ""
+      major_tag:
+        description: Major tag, e.g. v0 (release runs only)
+        type: string
+        required: false
+        default: ""
+      tag_latest:
+        description: Whether to emit the :latest tag
+        type: boolean
+        required: false
+        default: true
+      tag_branch:
+        description: Whether to emit the branch-name tag (dev runs)
+        type: boolean
+        required: false
+        default: false
+      extra_tag:
+        description: Optional ad-hoc tag (used by workflow_dispatch in dev flow)
+        type: string
+        required: false
+        default: ""
+      ref:
+        description: Git ref to check out (defaults to the calling workflow's ref)
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - name: index
+            dockerfile: Dockerfile.index
+          - name: ttc
+            dockerfile: Dockerfile.ttc
+          - name: augmentation
+            dockerfile: Dockerfile.augmentation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Make repo owner lowercase
+        id: repo
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ steps.repo.outputs.owner }}/dibbs-text-to-code/${{ matrix.name }}
+          tags: |
+            type=raw,value=${{ inputs.version_tag }},enable=${{ inputs.version_tag != '' }}
+            type=raw,value=${{ inputs.minor_tag }},enable=${{ inputs.minor_tag != '' }}
+            type=raw,value=${{ inputs.major_tag }},enable=${{ inputs.major_tag != '' }}
+            type=raw,value=${{ inputs.extra_tag }},enable=${{ inputs.extra_tag != '' }}
+            type=ref,event=branch,enable=${{ inputs.tag_branch }}
+            type=raw,value=latest,enable=${{ inputs.tag_latest }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          pull: true
+          platforms: linux/amd64
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          secrets: |
+            "huggingface_token=${{ secrets.HF_TOKEN }}"
+
+      - name: Configure APHL AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.APHL_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.APHL_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to APHL ECR
+        id: aphl-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push every tag to APHL ECR
+        env:
+          OWNER: ${{ steps.repo.outputs.owner }}
+          NAME: ${{ matrix.name }}
+          APHL_ECR: ${{ secrets.APHL_ECR_REPOSITORY_URL }}
+          META_JSON: ${{ steps.meta.outputs.json }}
+        run: |
+          set -euo pipefail
+          # Re-tag and push every tag the metadata action produced. Iterating
+          # over the metadata output keeps GHCR and APHL ECR exactly in sync;
+          # both registries receive the same set of (v0.2.0, v0.2, v0, latest)
+          # on releases, or (latest, main) on dev pushes.
+          for tag in $(jq -r '.tags[]' <<< "$META_JSON"); do
+            bare="${tag##*:}"
+            GHCR_IMAGE="ghcr.io/${OWNER}/dibbs-text-to-code/${NAME}:${bare}"
+            ECR_IMAGE="${APHL_ECR}/${NAME}:${bare}"
+            echo "Pushing ${ECR_IMAGE}"
+            docker pull "$GHCR_IMAGE"
+            docker tag "$GHCR_IMAGE" "$ECR_IMAGE"
+            docker push "$ECR_IMAGE"
+          done
