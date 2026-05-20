@@ -341,7 +341,6 @@ def _process_schematron_errors(
     # Evaluate candidates and select relevant text for each error in the eICR
     for error in schematron_data_fields:
         data_field = error.field
-        criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
 
         if data_field not in ttc_output["schematron_errors"]:
             ttc_output["schematron_errors"][data_field] = []
@@ -357,9 +356,7 @@ def _process_schematron_errors(
             status="processing",
         )
 
-        selected_candidate = evaluator.select_relevant_text(
-            candidates=text_candidates, criteria=criteria
-        )
+        selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
 
         error_with_candidate = error.model_copy(update={"candidate": selected_candidate})
 
