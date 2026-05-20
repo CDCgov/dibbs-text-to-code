@@ -98,8 +98,8 @@ def get_data_fields_from_schematron_error(
                     eicr_id=eicr_id,
                     field=err_data_field,
                     error=error_value,
-                    error_message=message_elem.text,
-                    error_context=context_elem.text,
+                    error_message=message_elem.text.strip(),
+                    error_context=context_elem.text.strip(),
                     error_test=test_elem.text if test_elem is not None else vr.get("test"),
                     error_id=(
                         id_elem.text

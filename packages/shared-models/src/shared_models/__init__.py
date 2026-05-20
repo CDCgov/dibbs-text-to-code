@@ -48,8 +48,6 @@ class Code(FrozenBaseModel):
 class NonstandardCodeInstance(FrozenBaseModel):
     """Model with the information needed to update a nonstandard code."""
 
-    schematron_error: str
-    """The text of the Schematron error. This is only needed so that the augmentation metadata can save it."""
     schematron_error_xpath: str
     """The XPath give by the Schematron error to the observation with a nonconforming code."""
     field_type: DataField
