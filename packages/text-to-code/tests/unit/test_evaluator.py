@@ -177,7 +177,12 @@ def test_select_relevant_text_selection_strategy_first(mocker):
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
             value="SARS-CoV-2 (COVID-19) RNA [Presence] in Specimen by NAA with probe detection",
             system=None,
-        )
+        ),
+        Candidate(
+            xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
+            value="Something else, but Loinc",
+            system="http://snomed.info/sct",
+        ),
     ]
 
     actual = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
@@ -185,7 +190,7 @@ def test_select_relevant_text_selection_strategy_first(mocker):
     assert actual == candidates[0]
 
 
-def test_select_relevant_text_no_systems(mocker):
+def test_select_relevant_text_no_systems():
     candidates = [
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
@@ -199,7 +204,7 @@ def test_select_relevant_text_no_systems(mocker):
     assert actual == candidates[0]
 
 
-def test_select_relevant_text_not_loinc_or_snomed_system(mocker):
+def test_select_relevant_text_not_loinc_or_snomed_system():
     candidates = [
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
