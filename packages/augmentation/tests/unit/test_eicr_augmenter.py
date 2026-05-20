@@ -60,7 +60,6 @@ class TestEicrAugmenter:
             BASIC_ECR,
             [
                 NonstandardCodeInstance(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -82,7 +81,6 @@ class TestEicrAugmenter:
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -99,7 +97,6 @@ class TestEicrAugmenter:
         """Tests augmenter run method."""
         nonstandard_codes = [
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -123,7 +120,6 @@ class TestEicrAugmenter:
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(

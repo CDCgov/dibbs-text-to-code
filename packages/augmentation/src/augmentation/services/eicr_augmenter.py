@@ -79,7 +79,6 @@ class EICRAugmenter(Augmenter):
 
             nonstandard_code_metadata.append(
                 NonstandardCodeInstanceMetadata(
-                    schematron_error=nonstandard_code_instance.schematron_error,
                     schematron_error_xpath=nonstandard_code_instance.schematron_error_xpath,
                     field_type=nonstandard_code_instance.field_type,
                     new_translation=nonstandard_code_instance.new_translation,
