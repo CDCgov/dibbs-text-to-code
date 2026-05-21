@@ -2,6 +2,8 @@ import os
 import random
 import sys
 
+import pytest
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import post_process
@@ -133,7 +135,7 @@ class TestModalityDropPostProcessing:
         assert dropped == "Creatinine [Mass/volume]"
 
 
-class TestPoundSignPosttProcessing:
+class TestPoundSignPostProcessing:
     def test_no_pound_signs(self):
         input = "Creatinine [Mass/volume] in Serum or Plasma"
         assert (
@@ -190,34 +192,36 @@ class TestTruncationPostProcessing:
 
 
 class TestDetermineEligiblePostProcessingOptions:
-    all_options = [
-        "poc",
-        "modality",
-        "delimiter",
-        "truncation",
-        "syntax",
-        "pound",
-        "deletion",
-        "dot",
-    ]
+    @pytest.fixture
+    def all_options(self):
+        return [
+            "poc",
+            "modality",
+            "delimiter",
+            "truncation",
+            "syntax",
+            "pound",
+            "deletion",
+            "dot",
+        ]
 
-    def test_ordinary_lcn(self):
+    def test_ordinary_lcn(self, all_options):
         input = "Barbiturates [Presence] in Urine by Screen method"
         options = post_process._determine_eligible_post_processing(
-            input, "Urine", LOINC_ENHANCEMENTS, self.all_options
+            input, "Urine", LOINC_ENHANCEMENTS, all_options
         )
         assert options == ["poc", "modality", "syntax", "deletion"]
 
-    def test_code_with_pounds_and_delimiters(self):
+    def test_code_with_pounds_and_delimiters(self, all_options):
         input = "Neutrophils+Leukocytes [Entitic #/volume] in Blood by Automated count"
         options = post_process._determine_eligible_post_processing(
-            input, "Bld", LOINC_ENHANCEMENTS, self.all_options
+            input, "Bld", LOINC_ENHANCEMENTS, all_options
         )
         assert options == ["poc", "modality", "delimiter", "syntax", "pound", "deletion"]
 
-    def test_code_with_dots_and_truncation(self):
+    def test_code_with_dots_and_truncation(self, all_options):
         input = "Myelin associated glycoprotein/Sulfated glucuronic paragloboside protein.total IgM Ab [Titer] in Serum by Immunoassay"
         options = post_process._determine_eligible_post_processing(
-            input, "Ser", LOINC_ENHANCEMENTS, self.all_options
+            input, "Ser", LOINC_ENHANCEMENTS, all_options
         )
         assert options == ["poc", "modality", "truncation", "syntax", "deletion", "dot"]
