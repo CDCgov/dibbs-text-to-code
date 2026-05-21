@@ -12,12 +12,13 @@ PART_DESCRIPTION_EXTRACTS_FILE = (
     "../data/snoinc_extracts/enhancements/loinc_codes_with_part_descriptions.csv"
 )
 OUTPUT_SENTENCES_FILE = "../data/training_files/part_description_sentences.txt"
+_MIN_NUM_WORDS = 4
 
 
 def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
-    """Constructs a collection of domain-adapted sentences fit for use with
-    unsupervised TSDAE (Transformer-based Sentence-Denoising Auto-Encoder)
-    pre-training. Applies a variety of preprocessing, formatting, and
+    """Constructs a collection of domain-adapted sentences fit for use with unsupervised TSDAE (Transformer-based Sentence-Denoising Auto-Encoder) pre-training.
+
+    Applies a variety of preprocessing, formatting, and
     cleaning operations to ensure that the resulting sentences are high-
     quality and free of artifacts (e.g. URLs, bracketed referential text,
     extraneous characters and spacing, etc.).
@@ -43,14 +44,13 @@ def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
         for loinc_line in fp:
             stripped_loinc_line = loinc_line.strip()
             if stripped_loinc_line != "":
-                if _line_starts_with_loinc_code(stripped_loinc_line):
+                if _line_starts_with_loinc_code(stripped_loinc_line) and curr_description != "":
                     # Can fully process a description when we know we've hit a new
                     # LOINC code and have all the text for the previous code
+                    curr_description = _preprocess_part_description(curr_description)
                     if curr_description != "":
-                        curr_description = _preprocess_part_description(curr_description)
-                        if curr_description != "":
-                            descriptions.add(curr_description)
-                        curr_description = ""
+                        descriptions.add(curr_description)
+                    curr_description = ""
 
                 curr_description += stripped_loinc_line + " "
 
@@ -73,9 +73,7 @@ def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
 
 
 def _line_is_citation(line: str) -> bool:
-    """Helper method to determine if a given line of string text is an academic
-    or institutional citation. A line is deemed a citation if it includes
-    a text group of the form.
+    """Helper method to determine if a given line of string text is an academic or institutional citation. A line is deemed a citation if it includes a text group of the form.
 
       "[YYYY] [MMM][optional: DD];publication_num(periodical_num):page-page
 
@@ -91,9 +89,9 @@ def _line_is_citation(line: str) -> bool:
 
 
 def _line_starts_with_loinc_code(line: str) -> Match | None:
-    """Helper method to determine if a line of string text begins with a
-    numerically formatted LOINC code (defined as a number of one or more
-    digits, followed by a dash, and then one digit). LOINC codes that
+    """Helper method to determine if a line of string text begins with a numerically formatted LOINC code (defined as a number of one or more digits, followed by a dash, and then one digit).
+
+    LOINC codes that
     represent new description entries are also followed by a comma, rather
     than whitespace, which signifies they are part of another description.
     """
@@ -104,6 +102,7 @@ def _line_starts_with_loinc_code(line: str) -> Match | None:
 
 def _preprocess_part_description(loinc_line: str) -> str:
     """Helper function to process a fully compiled passage from a Part Description.
+
     Whitespaces are standardized and handled, the LOINC numeric code proper is
     split off, and any extraneous character formatting around e.g. punctuation
     or details within the description are collapsed to a single string line.
@@ -152,8 +151,9 @@ def _preprocess_part_description(loinc_line: str) -> str:
 
 
 def _post_process_sentence(st: str) -> str:
-    """Helper function that applies post-processing cleanups to the result
-    of Spacy's sentence tokenizer. Some artifacts can't be caught in the
+    """Helper function that applies post-processing cleanups to the result of Spacy's sentence tokenizer.
+
+    Some artifacts can't be caught in the
     initial document compilation (where they could be split across lines
     or have other formatting in the way) so this post-check ensures that
     only high quality sentences make it into the training file.
@@ -177,13 +177,13 @@ def _post_process_sentence(st: str) -> str:
     # dataset by eliminating them, but we filter >100 bad structures.
     if rp.URL_RAW.search(st.strip()):
         return ""
-    # The above replacements can leave some kruft periods and commas,
+    # The above replacements can leave some cruft periods and commas,
     # clean those up
     if st in {".", ","}:
         return ""
     # Finally, if the whole "sentence" is either one misplaced word
     # or too short to have clinical context, ditch it
-    if len(st.strip().split()) < 4:
+    if len(st.strip().split()) < _MIN_NUM_WORDS:
         return ""
 
     return st
