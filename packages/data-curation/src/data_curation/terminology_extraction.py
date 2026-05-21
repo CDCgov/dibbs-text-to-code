@@ -30,12 +30,25 @@ import datetime
 import json
 import os
 import sys
+
 import requests
-from data_curation.terminologies.loinc import get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, process_loincs_for_umls_urls, LOINC_PARTS_ABBRV_SYNONYMS
+
+from data_curation.terminologies.general import BASE_FOLDER
+from data_curation.terminologies.general import ENHANCEMENTS_DIRECTORY
+from data_curation.terminologies.general import TMP_DIRECTORY
+from data_curation.terminologies.general import UMLS_API_KEY
+from data_curation.terminologies.general import clean_text_string
+from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes
+from data_curation.terminologies.hl7 import get_hl7_lab_interp
+from data_curation.terminologies.loinc import LOINC_PARTS_ABBRV_SYNONYMS
+from data_curation.terminologies.loinc import get_loinc_lab_names
+from data_curation.terminologies.loinc import get_loinc_lab_orders
+from data_curation.terminologies.loinc import get_loinc_lab_results
+from data_curation.terminologies.loinc import process_loincs_for_umls_urls
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
-from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
-from data_curation.terminologies.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.general import BASE_FOLDER, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
+from data_curation.terminologies.vsac import get_vsac_cvx_vaccines
+from data_curation.terminologies.vsac import get_vsac_rxnorm_medications
+from data_curation.terminologies.vsac import get_vsac_snomed_problems
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -83,7 +96,7 @@ def get_loinc_umls_related_results():  # noqa: D103
     # handle the first step of the process - find all the loinc codes
     # and generate the two different URLS specific for UMLS API
     # then store them in a file
-    if not os.path.exists(full_url_file_path):        
+    if not os.path.exists(full_url_file_path):
         umls_loinc_results = process_loincs_for_umls_urls()
         print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
         save_json_file(
@@ -92,9 +105,9 @@ def get_loinc_umls_related_results():  # noqa: D103
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
-    # now use the UMLS URLS to call the UMLS and get the related names 
+    # now use the UMLS URLS to call the UMLS and get the related names
     # and store them in a file - first just a tmp file as the process takes a long time
-    # but if the process fails, pick up the process from the last loinc code 
+    # but if the process fails, pick up the process from the last loinc code
     # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
     print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
@@ -113,7 +126,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
     # load UMLS URLS
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             umls_urls = json.load(file)
     except FileNotFoundError:
         print(f"Error: {file_path} not found. Please ensure the file exists.")
@@ -133,7 +146,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
 
     if os.path.exists(full_partial_file_path):
         try:
-            with open(full_partial_file_path, "r", newline="", encoding="utf-8") as file:
+            with open(full_partial_file_path, newline="", encoding="utf-8") as file:
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
                 print("STARTING LOINC CODE: " + starting_loinc_code)
@@ -187,9 +200,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                     for atom_result in umls_atom_results:
                         related_name = atom_result.get("name")
                         if related_name and related_name not in related_names:
-                            related_names.append(
-                                clean_text_string(related_name)
-                            )
+                            related_names.append(clean_text_string(related_name))
                             atom_row_count += 1
 
                     atom_page_num += 1
@@ -232,9 +243,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                             and related_name
                             and related_name not in related_names
                         ):
-                            related_names.append(
-                                clean_text_string(related_name)
-                            )
+                            related_names.append(clean_text_string(related_name))
                             crs_row_count += 1
 
                     crs_page_num += 1
@@ -364,12 +373,10 @@ def _get_loinc_abbrv_syns(
 
 
 def create_loinc_part_abbrv_syn_dicts():
-    """
-    Creates single file dictionary for each of the different
+    """Creates single file dictionary for each of the different
     LOINC parts, which contains each LOINC Part Code, Name
     and Abbreviations and Synonyms
     """
-    
     # Separate LOINC Part Dictionaries
     component_dict = {}
     method_dict = {}
@@ -386,7 +393,7 @@ def create_loinc_part_abbrv_syn_dicts():
 
     row_count = 1
 
-    with open(LOINC_PARTS_ABBRV_SYNONYMS, "r", encoding="utf-8") as file:
+    with open(LOINC_PARTS_ABBRV_SYNONYMS, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
             # NOTE: the below print statement can be used
@@ -500,7 +507,7 @@ def main(  # noqa: D103
     medication: bool,
     vaccine: bool,
     problem: bool,
-):  # noqa: D103
+):
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
         print("Getting LOINC Lab Orders...")

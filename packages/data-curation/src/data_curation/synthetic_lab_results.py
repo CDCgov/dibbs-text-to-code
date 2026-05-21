@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""
-Generate a CSV of synthetic lab results with labeled values.
+"""Generate a CSV of synthetic lab results with labeled values.
 
 Each row contains a randomized result word (e.g., "positive", "not detected")
 and a label: 1 for positive terms, 2 for negative terms. Optionally, the
@@ -52,23 +51,19 @@ negative_words = [
 
 
 def random_case(word):
-    """
-    Randomly change the case of a word.
-    """
+    """Randomly change the case of a word."""
     choice = random.choice(["upper", "lower", "capitalize", "none"])
     if choice == "upper":
         return word.upper()
-    elif choice == "lower":
+    if choice == "lower":
         return word.lower()
-    elif choice == "capitalize":
+    if choice == "capitalize":
         return word.capitalize()
     return word
 
 
 def introduce_typo(word):
-    """
-    Introduce a typo in a word.
-    """
+    """Introduce a typo in a word."""
     if len(word) < 2:
         return word
     typo_type = random.choice(["sub", "del", "ins"])
@@ -76,17 +71,15 @@ def introduce_typo(word):
     c = random.choice("abcdefghijklmnopqrstuvwxyz")
     if typo_type == "sub":
         return word[:idx] + c + word[idx + 1 :]
-    elif typo_type == "del":
+    if typo_type == "del":
         return word[:idx] + word[idx + 1 :]
-    elif typo_type == "ins":
+    if typo_type == "ins":
         return word[:idx] + c + word[idx:]
     return word
 
 
 def probability_float(x):
-    """
-    Validate a probability float.
-    """
+    """Validate a probability float."""
     try:
         x = float(x)
     except ValueError:
@@ -97,9 +90,7 @@ def probability_float(x):
 
 
 def main():
-    """
-    Generate synthetic lab result words.
-    """
+    """Generate synthetic lab result words."""
     parser = argparse.ArgumentParser(
         description="Generate synthetic lab result words with labels (1=positive, 2=negative)."
     )

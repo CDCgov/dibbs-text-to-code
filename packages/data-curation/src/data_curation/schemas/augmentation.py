@@ -1,20 +1,17 @@
-"""
-data_curation.schemas.augmentation
+"""data_curation.schemas.augmentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the schema definitions for the augmented data.
 """
 
-import enum
 import typing
+from typing import Annotated
 
 import pydantic
-from typing_extensions import Annotated
 
 
 class EnhancementOptions(pydantic.BaseModel):
-    """
-    The schema for a dictionary of probability settings used for input enhancement
+    """The schema for a dictionary of probability settings used for input enhancement
     during data augmentation.
     """
 
@@ -44,8 +41,7 @@ class EnhancementOptions(pydantic.BaseModel):
 
 
 class InsertionOptions(pydantic.BaseModel):
-    """
-    The schema for a dictionary of probability settings used for performing
+    """The schema for a dictionary of probability settings used for performing
     term insertion on a code string during data augmentation.
     """
 
@@ -82,8 +78,7 @@ class InsertionOptions(pydantic.BaseModel):
 
 
 class PermutationOptions(pydantic.BaseModel):
-    """
-    The schema for a dictionary of probability settings used for performing
+    """The schema for a dictionary of probability settings used for performing
     term permutation (swapping) on a code string during data augmentation.
     """
 
@@ -110,8 +105,7 @@ class PermutationOptions(pydantic.BaseModel):
 
 
 class DeletionOptions(pydantic.BaseModel):
-    """
-    The schema for a dictionary of probability settings used for performing
+    """The schema for a dictionary of probability settings used for performing
     character deletion on a code string during data augmentation.
     """
 
@@ -157,15 +151,14 @@ class DeletionOptions(pydantic.BaseModel):
 
 
 class AugmentationConfig(pydantic.BaseModel):
-    """
-    The schema for a dictionary of configuration options governing how to augment,
+    """The schema for a dictionary of configuration options governing how to augment,
     randomize, scramble, and otherwise create noisy interference in a text string
     for the purpose of creating synthetic data.
     """
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
-    enhancement_all: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_all: EnhancementOptions | None = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_all'. "
@@ -175,7 +168,7 @@ class AugmentationConfig(pydantic.BaseModel):
             "for or evaluated."
         ),
     )
-    enhancement_synonyms: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_synonyms: EnhancementOptions | None = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_synonyms'. "
@@ -184,7 +177,7 @@ class AugmentationConfig(pydantic.BaseModel):
             "defined, but can be used with enhancement_abbreviation."
         ),
     )
-    enhancement_abbreviation: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_abbreviation: EnhancementOptions | None = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_abbreviation'. "
@@ -200,8 +193,7 @@ class AugmentationConfig(pydantic.BaseModel):
 
 
 class LoincFileGenerationConfig(pydantic.BaseModel):
-    """
-    The schema for a dictionary of configuration options governing how to generate
+    """The schema for a dictionary of configuration options governing how to generate
     synthetic data specifically for LOINC short names, long common names, and display
     names.
     """

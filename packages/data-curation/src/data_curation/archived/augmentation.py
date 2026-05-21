@@ -11,6 +11,7 @@ from data_curation.archived import configs
 from data_curation.loinc_enhancement import enhance_loinc_str
 from data_curation.loinc_utils import scramble_word_order
 from data_curation.schemas import augmentation as schemas
+
 from utils import normalize
 from utils import path
 from utils import regex_patterns
@@ -53,7 +54,7 @@ def _word_deletion(
     return delete_indices
 
 
-def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> typing.Tuple[int, dict]:
+def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> tuple[int, dict]:
     for key, word_deets in word_details.items():
         if char_idx in range(int(word_deets["start"]), int(word_deets["end"]) + 1):
             return int(key), word_deets
@@ -105,8 +106,7 @@ def random_char_deletion(
     max_per_word: int = 2,
     method: typing.Literal["char", "word"] = "char",
 ) -> str:
-    """
-    This function randomly deletes characters from a string.  Two modes can be
+    """This function randomly deletes characters from a string.  Two modes can be
     selected.
     'word' mode will randomly select words, which will then have characters
     randomly selected for deletion as long as the number of deletions per each word
@@ -127,7 +127,6 @@ def random_char_deletion(
         The default is set to 'char'
     :return: The text with characters deleted.
     """
-
     words = text.strip().split()
     char_indices = [i for i, char in enumerate(text) if char not in (" ")]
     words_details = {}
@@ -175,8 +174,7 @@ def random_char_deletion(
 def insert_loinc_related_names(
     text: str, loinc_names: list[str], max_inserts: int, min_inserts: int = 1
 ) -> str:
-    """
-    Inserts 1 or more LOINC related names into the input text at random positions.
+    """Inserts 1 or more LOINC related names into the input text at random positions.
 
     :param text: The input text to modify.
     :param loinc_names: A list of LOINC related names to insert.
@@ -210,8 +208,7 @@ def generate_augmented_examples(
     num_examples: int,
     config: schemas.AugmentationConfig,
 ):
-    """
-    Given a LOINC code string, generates a specified number of augmented
+    """Given a LOINC code string, generates a specified number of augmented
     training examples, which are returned as a list. Each augmented example is
     probabilistically operated on by a scrambling or enhancement function
     above to create a semantically and syntactically variant instance. The
@@ -226,7 +223,6 @@ def generate_augmented_examples(
       thresholds, options, and probabilities used to modify the example.
     :returns: A list of augmented training examples.
     """
-
     augmented_examples = []
     for _ in range(num_examples):
         ex_code = input_code
@@ -315,8 +311,7 @@ def build_augmented_loinc_files(
     num_dn: int = 5,
     output_path_base: str = "../data/training_files/augmented_loinc",
 ) -> None:
-    """
-    Generates augmented LOINC data files for the long common names, short
+    """Generates augmented LOINC data files for the long common names, short
     common names, and display names based on the provided configurations.
 
     :param input_path: The path to the base LOINC name file.
@@ -328,7 +323,6 @@ def build_augmented_loinc_files(
     :param output_files_base: The base path for the output files.
     :return: None
     """
-
     num_map = {"short_name": num_sn, "long_common_name": num_lcn, "display_name": num_dn}
 
     # Read in data/loinc_lab_names_XXXX.csv

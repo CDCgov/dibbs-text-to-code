@@ -1,6 +1,10 @@
 import pytest
 
-from data_curation.terminologies.general import clean_text_string, get_date_from_filename, get_latest_extract_file_name, load_extract_file_to_dict
+from data_curation.terminologies.general import clean_text_string
+from data_curation.terminologies.general import get_date_from_filename
+from data_curation.terminologies.general import get_latest_extract_file_name
+from data_curation.terminologies.general import load_extract_file_to_dict
+
 
 def test_clean_text_string_empty() -> None:
     text = None
@@ -24,41 +28,39 @@ def test_clean_text_string_spaces() -> None:
 def test_get_date_from_filename_no_date() -> None:
     file_name = "my_valuset_extract.csv"
     with pytest.raises(
-        ValueError,
-        match=rf"Unable to extract 8 digit date from file name: {file_name}!"):
-        get_date_from_filename(file_name,"loinc")
+        ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
+    ):
+        get_date_from_filename(file_name, "loinc")
 
 
 def test_get_date_from_filename_no_file() -> None:
     file_name = ""
     with pytest.raises(
-        ValueError,
-        match=rf"Unable to extract 8 digit date from file name: {file_name}!"):
-        get_date_from_filename(file_name,"loinc")
+        ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
+    ):
+        get_date_from_filename(file_name, "loinc")
 
 
 def test_get_date_from_filename_valid_loinc() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = get_date_from_filename(file_name,"loinc")
-    assert result == '2026-05-14'
+    result = get_date_from_filename(file_name, "loinc")
+    assert result == "2026-05-14"
 
 
 def test_get_date_from_filename_valid_other() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = get_date_from_filename(file_name,"")
-    assert result == '20260514'
+    result = get_date_from_filename(file_name, "")
+    assert result == "20260514"
 
 
 def test_get_date_from_filename_invalid_date() -> None:
     file_name = "my_extract_file_20265555.csv"
-    with pytest.raises(
-        ValueError):
-        get_date_from_filename(file_name,"loinc")
+    with pytest.raises(ValueError):
+        get_date_from_filename(file_name, "loinc")
 
 
 def test_get_latest_extract_file_name_empty() -> None:
-    with pytest.raises(
-        FileNotFoundError):
+    with pytest.raises(FileNotFoundError):
         get_latest_extract_file_name("")
 
 
@@ -81,5 +83,3 @@ def test_load_extract_file_to_dict_no_file() -> None:
 def test_load_extract_file_to_dict_valid() -> None:
     result = load_extract_file_to_dict("hl7_lab_interp_20260223.csv")
     assert result != {}
-
-

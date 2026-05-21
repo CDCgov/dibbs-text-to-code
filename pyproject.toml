@@ -26,7 +26,6 @@ dev = [
   "ty>=0.0.33",
 ]
 
-
 [tool.coverage.run]
 source = ["packages"]
 omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
@@ -62,9 +61,7 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
-  "data-curation",
   "docs",
-  "model-tuning",
 ]
 line-length = 100
 indent-width = 4
