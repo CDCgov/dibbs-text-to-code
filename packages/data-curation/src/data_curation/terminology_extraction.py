@@ -50,6 +50,9 @@ from data_curation.terminologies.vsac import get_vsac_snomed_problems
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+_TIMEOUT = 61
+_PAGE_SIZE = 500
+
 
 def _extract_umls_full_snomed_lab_values() -> None:
     snomed_filename = f"snomed_lab_value_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
@@ -163,19 +166,18 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
 
                 # LOINC ATOMIC TERMS PROCESSING
                 atom_page_num = 1
-                page_size = 500
                 lang = "ENG"
                 params = {
                     "apiKey": UMLS_API_KEY,
                     "pageNumber": atom_page_num,
-                    "pageSize": page_size,
+                    "pageSize": _PAGE_SIZE,
                     "language": lang,
                 }
 
-                umls_atom_response = requests.get(umls_atom_url, params=params)
+                umls_atom_response = requests.get(umls_atom_url, params=params, timeout=_TIMEOUT)
                 atom_row_count = 0
 
-                while umls_atom_response.status_code == 200:
+                while umls_atom_response.status_code == requests.codes.ok:
                     # NOTE: the UMLS responses are a bit slow
                     #  you can use the print statement below to get a
                     #  better idea of the progress if needed.
@@ -192,33 +194,38 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
                     params = {
                         "apiKey": UMLS_API_KEY,
                         "pageNumber": atom_page_num,
-                        "pageSize": page_size,
+                        "pageSize": _PAGE_SIZE,
                         "language": lang,
                     }
 
-                    umls_atom_response = requests.get(umls_atom_url, params=params)
+                    umls_atom_response = requests.get(
+                        umls_atom_url, params=params, timeout=_TIMEOUT
+                    )
 
                 # LOINC CROSSWALK TERMS PROCESSING
                 crs_page_num = 1
-                page_size = 500
                 lang = "ENG"
                 params = {
                     "apiKey": UMLS_API_KEY,
                     "pageNumber": crs_page_num,
-                    "pageSize": page_size,
+                    "pageSize": _PAGE_SIZE,
                     "language": lang,
                 }
-                umls_crs_response = requests.get(umls_crs_url, params=params)
+                umls_crs_response = requests.get(
+                    umls_crs_url, params=params, timeout=_TIMEOUT
+                ).json()
                 crs_row_count = 0
                 max_page = 1
 
-                while umls_crs_response.status_code == 200 and crs_page_num <= max_page:
-                    max_page = umls_crs_response.json().get("pageCount")
+                while (
+                    umls_crs_response.status_code == requests.codes.ok and crs_page_num <= max_page
+                ):
+                    max_page = umls_crs_response.get("pageCount")
                     # NOTE: the UMLS responses are a bit slow
                     #  you can use the print statement below to get a
                     #  better idea of the progress if needed.
                     # print(f"Processing LOINC CROSSWALK page {crs_page_num}")
-                    umls_crs_results = umls_crs_response.json().get("result")
+                    umls_crs_results = umls_crs_response.get("result")
 
                     for crs_result in umls_crs_results:
                         related_name = crs_result.get("name")
@@ -235,15 +242,14 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
                     params = {
                         "apiKey": UMLS_API_KEY,
                         "pageNumber": crs_page_num,
-                        "pageSize": page_size,
+                        "pageSize": _PAGE_SIZE,
                         "language": lang,
                     }
 
-                    umls_crs_response = requests.get(umls_crs_url, params=params)
+                    umls_crs_response = requests.get(umls_crs_url, params=params, timeout=_TIMEOUT)
 
                 # add the record for the specific loinc code
-                related_names_row = {"code": loinc_code, "names": related_names}
-                umls_loinc_rows[long_name] = related_names_row
+                umls_loinc_rows[long_name] = {"code": loinc_code, "names": related_names}
             if starting_loinc_code != "" and long_name == starting_loinc_code:
                 process_loinc_code = True
     except:
@@ -273,8 +279,6 @@ def _save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool 
                 writer.writeheader()
             writer.writerows(contents)
 
-    except ValueError:
-        pass
     except Exception:
         pass
 
@@ -299,8 +303,6 @@ def _save_json_file(
         with open(full_file_path, file_method, encoding="utf-8") as dict_file:
             json.dump(contents, dict_file, indent=4)
 
-    except ValueError:
-        pass
     except Exception:
         pass
 
@@ -343,6 +345,16 @@ def _get_loinc_abbrv_syns(
     return loinc_row
 
 
+def jls_extract_def(
+    part_dict: dict, part_name: str, part_code: str, repl_name: str, pref_abrv: str, synonym: str
+) -> None:
+    existing_row = part_dict.get(part_name)
+    if not existing_row:
+        existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+        part_dict[part_name] = existing_row
+    _get_loinc_abbrv_syns(part_code, part_name, repl_name, pref_abrv, synonym, existing_row)
+
+
 def _create_loinc_part_abbrv_syn_dicts() -> None:
     """Creates single file dictionary for each of the different LOINC parts, which contains each LOINC Part Code, Name and Abbreviations and Synonyms."""
     # Separate LOINC Part Dictionaries
@@ -352,12 +364,12 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
     scale_dict = {}
     system_dict = {}
     time_dict = {}
-    component_file = f"loinc_component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    method_file = f"loinc_method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    property_file = f"loinc_property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    scale_file = f"loinc_scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    system_file = f"loinc_system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    time_file = f"loinc_time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    component_file = _json_file_name("loinc_component")
+    method_file = _json_file_name("loinc_method")
+    property_file = _json_file_name("loinc_property")
+    scale_file = _json_file_name("loinc_scale")
+    system_file = _json_file_name("loinc_system")
+    time_file = _json_file_name("loinc_time")
 
     row_count = 1
 
@@ -377,54 +389,27 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
             synonym = row.get("SYNONYM")
 
             # build various LOINC Part dicts
-            if axis_name == "COMPONENT":
-                existing_row = component_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    component_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "METHOD":
-                existing_row = method_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    method_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "PROPERTY":
-                existing_row = property_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    property_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "SYSTEM":
-                existing_row = system_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    system_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "TIME":
-                existing_row = time_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    time_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "SCALE":
-                existing_row = scale_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    scale_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
+            match axis_name:
+                case "COMPONENT":
+                    jls_extract_def(
+                        component_dict, part_name, part_code, repl_name, pref_abrv, synonym
+                    )
+                case "METHOD":
+                    jls_extract_def(
+                        method_dict, part_name, part_code, repl_name, pref_abrv, synonym
+                    )
+                case "PROPERTY":
+                    jls_extract_def(
+                        property_dict, part_name, part_code, repl_name, pref_abrv, synonym
+                    )
+                case "SYSTEM":
+                    jls_extract_def(
+                        system_dict, part_name, part_code, repl_name, pref_abrv, synonym
+                    )
+                case "TIME":
+                    jls_extract_def(time_dict, part_name, part_code, repl_name, pref_abrv, synonym)
+                case "SCALE":
+                    jls_extract_def(scale_dict, part_name, part_code, repl_name, pref_abrv, synonym)
     # write each dict out into it's own file
     _save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
@@ -432,6 +417,10 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
     _save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
+
+
+def _json_file_name(prefix: str) -> str:
+    return f"{prefix}_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
 
 def _extract_full_hl7_encounter_act_codes() -> None:
