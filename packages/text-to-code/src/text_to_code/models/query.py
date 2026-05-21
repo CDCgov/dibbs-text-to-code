@@ -1,10 +1,8 @@
 import typing
 
-from pydantic import Field
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
-from shared_models import DataField
-from shared_models import FrozenBaseModel
+from shared_models import DataField, FrozenBaseModel
 
 
 class DataFieldTypeMapping:

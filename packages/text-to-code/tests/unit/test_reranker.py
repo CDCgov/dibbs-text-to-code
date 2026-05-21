@@ -1,5 +1,4 @@
-from text_to_code.services.reranker import ScoredResult
-from text_to_code.services.reranker import rerank
+from text_to_code.services.reranker import ScoredResult, rerank
 
 
 class TestReranker:

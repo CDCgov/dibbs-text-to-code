@@ -1,9 +1,10 @@
 from shared_models import DataField
-from text_to_code.models.eicr import Candidate
-from text_to_code.models.eicr import LabXPaths
-from text_to_code.models.evaluator import LabTestNameResultedEvaluationCriteria
-from text_to_code.models.evaluator import TranslationPreference
-from text_to_code.models.evaluator import TranslationSelectionStrategy
+from text_to_code.models.eicr import Candidate, LabXPaths
+from text_to_code.models.evaluator import (
+    LabTestNameResultedEvaluationCriteria,
+    TranslationPreference,
+    TranslationSelectionStrategy,
+)
 from text_to_code.services.evaluator import select_relevant_text
 
 

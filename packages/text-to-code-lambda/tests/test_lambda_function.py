@@ -3,9 +3,7 @@ import json
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from conftest import S3_BUCKET
-from conftest import TTC_METADATA_PREFIX
-from conftest import TTC_OUTPUT_PREFIX
+from conftest import S3_BUCKET, TTC_METADATA_PREFIX, TTC_OUTPUT_PREFIX
 from shared_models import PassthroughReason
 from text_to_code_lambda import lambda_function
 

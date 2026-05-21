@@ -1,8 +1,6 @@
 from shared_models import DataField
 from text_to_code.models.query import VectorSearchParams
-from text_to_code.services.query import KNNQuery
-from text_to_code.services.query import QueryBuilder
-from text_to_code.services.query import TermsFilter
+from text_to_code.services.query import KNNQuery, QueryBuilder, TermsFilter
 
 
 class TestKNNQuery:

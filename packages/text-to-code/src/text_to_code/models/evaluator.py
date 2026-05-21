@@ -3,8 +3,7 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import DataField
-from shared_models import FrozenBaseModel
+from shared_models import DataField, FrozenBaseModel
 
 from ..models.eicr import LabXPaths
 
