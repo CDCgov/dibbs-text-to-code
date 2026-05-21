@@ -2,6 +2,7 @@ import json
 from datetime import UTC
 from datetime import datetime
 
+import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
@@ -11,8 +12,8 @@ from conftest import TTC_OUTPUT_PREFIX
 from lambda_handler.models import OpenSearchHits
 from lambda_handler.models import OpenSearchResult
 from lambda_handler.models import OpenSearchShards
-from text_to_code.models import Candidate
 from shared_models import PassthroughReason
+from text_to_code.models import Candidate
 from text_to_code_lambda import lambda_function
 
 EXPECTED_RESULTED_ERRORS = 2
@@ -40,6 +41,7 @@ def _assert_passthrough(
 ) -> None:
     assert output["passthrough"] is True
     assert output["passthrough_reason"] == passthrough_reason
+
 
 @pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 class TestHandler:
