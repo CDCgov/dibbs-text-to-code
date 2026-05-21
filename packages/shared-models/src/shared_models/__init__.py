@@ -62,3 +62,12 @@ class TTCAugmenterInput(FrozenBaseModel):
 
     persistence_id: str
     nonstandard_codes: list[NonstandardCodeInstance]
+
+
+class PassthroughReason(StrEnum):
+    """Reasons why augmentation was bypassed and the original eICR was passed through."""
+
+    NO_RELEVANT_SCHEMATRON_ERRORS = "no_relevant_schematron_errors"
+    NO_CODE_MATCHES = "no_code_matches"
+    TTC_EXCEPTION = "ttc_exception"
+    AUGMENTATION_EXCEPTION = "augmentation_exception"

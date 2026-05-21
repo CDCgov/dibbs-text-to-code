@@ -1,6 +1,8 @@
 from enum import Enum
 
-from shared_models import FrozenBaseModel, NonstandardCodeInstance
+from shared_models import FrozenBaseModel
+from shared_models import NonstandardCodeInstance
+from shared_models import PassthroughReason
 
 
 class ApplicationCode(Enum):
@@ -37,6 +39,8 @@ class Metadata(FrozenBaseModel):
     nonstandard_codes: list[NonstandardCodeInstanceMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None
+    passthrough: bool = False
+    passthrough_reason: PassthroughReason | None = None
 
 
 class TTCAugmenterOutput(FrozenBaseModel):
