@@ -43,7 +43,6 @@ EICR_PATH = "e2e/assets/test_eicr.xml"
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = "e2e/assets/namespace_preservation_schematron_errors.xml"
 NAMESPACE_PRESERVATION_EICR_PATH = "e2e/assets/namespace_preservation_eicr.xml"
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -274,13 +273,17 @@ class TestEndToEndSimulated:
         actual_validation_results = validate_eicr(augmented_eicr)
         assert actual_validation_results == []  # Empty list means no errors.
 
-        augmentation_metadata = (
-            aws["s3"]
-            .get_object(
-                Bucket=S3_BUCKET, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
-            )["Body"]
-            .read()
-            .decode("utf-8")
+        augmentation_metadata = json.dumps(
+            json.loads(
+                aws["s3"]
+                .get_object(
+                    Bucket=S3_BUCKET, Key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
+                )["Body"]
+                .read()
+                .decode("utf-8")
+            ),
+            indent=2,
+            sort_keys=True,
         )
 
         snapshot.assert_match(augmentation_metadata, "augmentation_metadata.json")
@@ -325,7 +328,9 @@ class TestNamespacePreservation:
             )
 
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
-        ttc_handler(_build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context)
+        ttc_handler(
+            _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context
+        )
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         with time_machine.travel(
