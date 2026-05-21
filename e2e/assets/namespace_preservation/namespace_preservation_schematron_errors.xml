@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report>
+    <ReportHeader>
+        <ValidationStatus>Complete</ValidationStatus>
+        <DateOfTest>20260507</DateOfTest>
+        <TimeOfTest>184337.0058 +0000</TimeOfTest>
+    </ReportHeader>
+    <Results severity="schemaViolation" specification="cda_r2"/>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator"/>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator"/>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <assertionID>a-81-7291-c</assertionID>
+                <flag/>
+                <message>SHALL contain at least one and not more than 4 streetAddressLine (CONF:81-7291).</message>
+                <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]/serviceProviderOrganization[1]/addr[1]</context>
+                <test>@nullFlavor or (count(cda:streetAddressLine) &gt;= 1 and count(cda:streetAddressLine) &lt;= 4)</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <assertionID>a-81-7292-c</assertionID>
+                <flag/>
+                <message>SHALL contain exactly one [1..1] city (CONF:81-7292).</message>
+                <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]/serviceProviderOrganization[1]/addr[1]</context>
+                <test>count(cda:city) = 1 or @nullFlavor</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <assertionID>a-81-10024-c</assertionID>
+                <flag/>
+                <message>If the country is US, the state element is required but SHOULD have @nullFlavor if the state is unknown. If country is not specified, it's assumed to be US. If country is something other than US, the state MAY be present but MAY be bound to different vocabularies (CONF:81-10024).</message>
+                <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]/serviceProviderOrganization[1]/addr[1]</context>
+                <test>@nullFlavor or (cda:country = 'US' and cda:state) or (cda:country != 'US') or (not(cda:country) and cda:state)</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <assertionID>a-81-10025-c</assertionID>
+                <flag/>
+                <message>If the country is US, the postalCode element is required but SHOULD have @nullFlavor if the postalCode is unknown. If country is not specified, it's assumed to be US. If country is something other than US, the postalCode MAY be present but MAY be bound to different vocabularies (CONF:81-10025).</message>
+                <context>/ClinicalDocument[1]/componentOf[1]/encompassingEncounter[1]/location[1]/healthCareFacility[1]/serviceProviderOrganization[1]/addr[1]</context>
+                <test>@nullFlavor or (cda:country = 'US' and cda:postalCode) or (cda:country != 'US') or (not(cda:country) and cda:postalCode)</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator"/>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="data_quality">
+                <assertionID>dq-resultObservation-code-001</assertionID>
+                <flag/>
+                <message>Data Quality: Result observation code data element has no @code attribute</message>
+                <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                <test>not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@code]) = 1</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCount-resultObservation</assertionID>
+                <flag/>
+                <message> 1 </message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']]/cda:code) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCount-resultOrganizer</assertionID>
+                <flag/>
+                <message> 1 </message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:organizer[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.1']]) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCount-plannedObservation</assertionID>
+                <flag/>
+                <message> 1 </message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation[cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.44']]/cda:code) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCount-occupationObservation</assertionID>
+                <flag/>
+                <message> 1 </message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation/cda:code[@code = '364703007']) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCount-dischargeDispositionCode</assertionID>
+                <flag/>
+                <message> 1 </message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:encounter/sdtc:dischargeDispositionCode) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCheck-labResultTrigger</assertionID>
+                <flag/>
+                <message>DATA CHECK: this eICR has at least one Lab Result Trigger</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.2']) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCheck-languageCommunication</assertionID>
+                <flag/>
+                <message>DATA CHECK: this eICR has at least one patient languageCommunication data element</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:languageCommunication) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCheck-resultObservation</assertionID>
+                <flag/>
+                <message>DATA CHECK: this eICR has at least one result observation</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.2']) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="data_check">
+                <assertionID>dq-dataCheck-plannedObservation</assertionID>
+                <flag/>
+                <message>DATA CHECK: this eICR has at least one planned observation</message>
+                <context>/ClinicalDocument[1]</context>
+                <test>count(//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.22.4.44']) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator">
+        <validationResult xmlns="">
+            <issue severity="text_to_code">
+                <assertionID>ttc-labTestNameResulted-noCode</assertionID>
+                <flag/>
+                <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                <test>           not(cda:code)           or cda:code/@code           or cda:code/cda:translation/@code</test>
+                <specification/>
+            </issue>
+        </validationResult>
+    </Results>
+    <Results xmlns="urn:gov:nist:cdaGuideValidator"/>
+</Report>

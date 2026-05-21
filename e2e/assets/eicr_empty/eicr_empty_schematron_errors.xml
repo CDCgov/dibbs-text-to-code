@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Results xmlns="urn:gov:nist:cdaGuideValidator">
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-001</assertionID>
+            <flag/>
+            <message>Fatal: SHALL contain exactly one [1..1] templateId (CONF:4482-96) such that it SHALL contain exactly one [1..1] @root="2.16.840.1.113883.10.20.15.2" eICR Initial Public Health Case Report Document (CONF:4482-95). SHALL contain exactly one [1..1] @extension="2022-05-01" (CONF:4482-96).</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:ClinicalDocument/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2'][@extension = '2022-05-01']) = 1</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-005</assertionID>
+            <flag/>
+            <message>Fatal Error (Missing Trigger Diagnosis, Result, Result Organizer, Lab Order, Medication Information, Immunization Medication Information, Planned Act, Planned Observation, Planned Procedure, Procedure Activity Act, Procedure Activity Observation, Procedure Activity Procedure, or Initiation Reason): An eICR must contain at least one of Initial Case Report Trigger Code Lab Test Order, Initial Case Report Trigger Code Problem Observation, Initial Case Report Trigger Code Result Observation, Initial Case Report Trigger Code Medication Information, Initial Case Report Trigger Code Result Organizer, Initial Case Report Trigger Code Immunization Medication Information, Initial Case Report Trigger Code Planned Act, Initial Case Report Trigger Code Planned Observation, Initial Case Report Trigger Code Planned Procedure, Initial Case Report Trigger Code Procedure Activity Act, Initial Case Report Trigger Code Procedure Activity Observation, Initial Case Report Trigger Code Procedure Activity Procedure, or Initial Case Report Initiation Reason Observation. (Rule: validate_one_trigger_presence)</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.4'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.3'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.2'] or //cda:organizer/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.35'] or //cda:manufacturedProduct/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.36'] or //cda:substanceAdministration/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.38'] or //cda:act/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.41'] or //cda:procedure/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.42'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.43'] or //cda:procedure/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.44'] or //cda:act/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.45'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.46'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.5']</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-004</assertionID>
+            <flag/>
+            <message>Fatal: An automatically initiated eICR SHALL contain at least one of Initial Case Report Trigger Code Lab Test Order, Initial Case Report Trigger Code Problem Observation, Initial Case Report Trigger Code Result Observation, Initial Case Report Trigger Code Medication Information, Initial Case Report Trigger Code Result Organizer, Initial Case Report Trigger Code Immunization Medication Information, Initial Case Report Trigger Code Planned Act, Initial Case Report Trigger Code Planned Observation, Initial Case Report Trigger Code Planned Procedure, Initial Case Report Trigger Code Procedure Activity Act, Initial Case Report Trigger Code Procedure Activity Observation, or Initial Case Report Trigger Code Procedure Activity Procedure. (Rule: validate_trigger_presence)</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>(cda:documentationOf/cda:serviceEvent/cda:code[@code = 'PHC1464'] or cda:documentationOf/cda:serviceEvent/cda:code[@code = 'PHC2235']) or ((not(cda:documentationOf/cda:serviceEvent/cda:code[@code = 'PHC1464']) and not(cda:documentationOf/cda:serviceEvent/cda:code[@code = 'PHC2235'])) and (//cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.4'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.3'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.2'] or //cda:organizer/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.35'] or //cda:manufacturedProduct/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.36'] or //cda:substanceAdministration/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.38'] or //cda:act/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.41'] or //cda:procedure/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.42'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.43'] or //cda:procedure/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.44'] or //cda:act/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.45'] or //cda:observation/cda:templateId[@root = '2.16.840.1.113883.10.20.15.2.3.46']))</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-006</assertionID>
+            <flag/>
+            <message>Fatal Error (Missing all Patient and Facility State and Zip): An eICR must contain at least one of (non-nullFlavor) Patient State or Patient Zip or Facility State or Facility Zip or Author State or Author Zip (Rule: validate_patient_provider_author state_zip)</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>//cda:patientRole/cda:addr/cda:state[text()][not(@nullFlavor)] or //cda:patientRole/cda:addr/cda:postalCode[text()][not(@nullFlavor)] or //cda:healthCareFacility/cda:location/cda:addr/cda:state[text()][not(@nullFlavor)] or //cda:healthCareFacility/cda:location/cda:addr/cda:postalCode[text()][not(@nullFlavor)] or //cda:author/cda:assignedAuthor/cda:addr/cda:postalCode[text()][not(@nullFlavor)] or //cda:author/cda:assignedAuthor/cda:addr/cda:state[text()][not(@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-007</assertionID>
+            <flag/>
+            <message>Fatal (Missing eICR id): An eICR SHALL contain exactly one [1..1] id and must have at least a root. Rule: (validate_id)</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:id/@root) = 1</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="fatals">
+            <assertionID>Fatal-011</assertionID>
+            <flag/>
+            <message>Fatal: SHALL contain exactly one [1..1] ClinicalDocument/componentOf/encompassingEncounter</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:componentOf/cda:encompassingEncounter) = 1</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="severe-warnings">
+            <assertionID>Severe-Warning-003</assertionID>
+            <flag/>
+            <message>Severe Warning (Missing Facility Address): An eICR SHALL contain an encompassingEncounter/location/healthCareFacility/location/addr, an author/assignedAuthor/representedOrganization/addr, or an author/assignedAuthor/addr and this addr SHALL contain both a non-empty, non-null state and a non-empty, non-null zip</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>cda:componentOf/cda:encompassingEncounter/cda:location/cda:healthCareFacility/cda:location/cda:addr[cda:postalCode[text()]][not(cda:postalCode/@nullFlavor)][cda:state[text()]][not(cda:state/@nullFlavor)] or cda:author/cda:assignedAuthor/cda:representedOrganization/cda:addr[cda:postalCode[text()]][not(cda:postalCode/@nullFlavor)][cda:state[text()]][not(cda:state/@nullFlavor)] or cda:author/cda:assignedAuthor/cda:addr[cda:postalCode[text()]][not(cda:postalCode/@nullFlavor)][cda:state[text()]][not(cda:state/@nullFlavor)]</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="severe-warnings">
+            <assertionID>Severe-Warning-004</assertionID>
+            <flag/>
+            <message>Severe Warning (Patient Id exists): SHALL contain at least one [1..*] ClinicalDocument/recordTarget/patientRole/id</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:recordTarget/cda:patientRole/cda:id) &gt; 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+    <validationResult xmlns="">
+        <issue severity="data_quality">
+            <assertionID>dq-assignedAuthoringDevice-005</assertionID>
+            <flag/>
+            <message>Data Quality: author assignedAuthoringDevice data element is not present</message>
+            <context>/ClinicalDocument[1]</context>
+            <test>count(cda:author/cda:assignedAuthor/cda:assignedAuthoringDevice) &gt; 0</test>
+            <specification/>
+        </issue>
+    </validationResult>
+</Results>

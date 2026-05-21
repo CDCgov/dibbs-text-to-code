@@ -132,6 +132,38 @@ class TestEicrAugmenter:
             ],
         )
 
+    def test_translation_xpath_adds_index_when_same_tag_siblings_exist(self):
+        """Tests translation XPath adds index when same tag siblings exist."""
+        nonstandard_codes = [
+            NonstandardCodeInstance(
+                schematron_error="text-to-code-test",
+                schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                field_type=DataField.LAB_TEST_NAME_RESULTED,
+                new_translation=Code(
+                    code="10101010",
+                    display_name="Chad new LOINC code",
+                    original_text="Loser old LOINC",
+                ),
+            ),
+            NonstandardCodeInstance(
+                schematron_error="text-to-code-test",
+                schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
+                field_type=DataField.LAB_TEST_NAME_RESULTED,
+                new_translation=Code(
+                    code="20202020",
+                    display_name="Second new LOINC code",
+                    original_text="Second old LOINC",
+                ),
+            ),
+        ]
+        augmenter = EICRAugmenter(BASIC_ECR, nonstandard_codes)
+
+        metadata = augmenter.augment()
+
+        assert metadata.nonstandard_codes[1].new_translation_xpath == (
+            "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation[2]"
+        )
+
     def test_get_old_document_id_preserves_assigning_authority_name_when_present(self):
         """Tests old document id preserves assigningAuthorityName when present."""
         eicr_with_assigning_authority_name = BASIC_ECR.replace(
