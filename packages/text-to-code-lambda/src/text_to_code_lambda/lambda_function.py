@@ -109,9 +109,9 @@ def _set_passthrough(
     error: str | None = None,
 ) -> None:
     ttc_output["passthrough"] = True
-    ttc_output["passthrough_reason"] = passthrough_reason.value
+    ttc_output["passthrough_reason"] = passthrough_reason
     ttc_metadata_output["passthrough"] = True
-    ttc_metadata_output["passthrough_reason"] = passthrough_reason.value
+    ttc_metadata_output["passthrough_reason"] = passthrough_reason
 
     if error:
         ttc_output["error"] = error
@@ -119,12 +119,18 @@ def _set_passthrough(
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
+    """Write TTC output with passthrough reason of TTC_EXCEPTION when an exception is raised during TTC processing.
+
+    :param record: The SQS record being processed when the exception was raised.
+    :param error: The exception that was raised during TTC processing.
+    :return: A boolean indicating whether the passthrough output was successfully written to S3.
+    """
     if not record.body:
         logger.warning(
             "Unable to write TTC exception passthrough output because SQS body is empty",
             message_id=record.message_id,
             status="skipped",
-            passthrough_reason=PassthroughReason.TTC_EXCEPTION.value,
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
         )
         return False
 
@@ -139,7 +145,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
                 "Unable to write TTC exception passthrough output because bucket name is missing",
                 message_id=record.message_id,
                 status="skipped",
-                passthrough_reason=PassthroughReason.TTC_EXCEPTION.value,
+                passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             )
             return False
 
@@ -160,7 +166,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             logger.warning(
                 "Writing TTC exception passthrough output",
                 status="passthrough",
-                passthrough_reason=PassthroughReason.TTC_EXCEPTION.value,
+                passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             )
             _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
 
@@ -170,7 +176,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             "Failed to write TTC exception passthrough output",
             message_id=record.message_id,
             status="error",
-            passthrough_reason=PassthroughReason.TTC_EXCEPTION.value,
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
         )
         return False
 
@@ -533,7 +539,7 @@ def _process_record_pipeline(
         logger.warning(
             "No data fields found from Schematron errors for TTC processing",
             status="skipped",
-            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS.value,
+            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
         )
         ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
         ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
@@ -546,7 +552,7 @@ def _process_record_pipeline(
         logger.info(
             "TTC processing completed",
             status="passthrough",
-            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS.value,
+            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
         )
         return {
             "statusCode": 200,
@@ -576,7 +582,7 @@ def _process_record_pipeline(
         logger.info(
             "TTC processing completed",
             status="passthrough",
-            passthrough_reason=PassthroughReason.NO_CODE_MATCHES.value,
+            passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
         )
         return {
             "statusCode": 200,
