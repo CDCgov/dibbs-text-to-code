@@ -143,9 +143,29 @@ def _process_record(record: SQSRecord) -> None:
         ttc_output = _load_ttc_output(persistence_id, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, bucket_name)
 
-        nonstandard_codes = (
-            [] if ttc_output.get("passthrough") else _parse_nonstandard_codes(ttc_output)
-        )
+        if ttc_output.get("passthrough"):
+            passthrough_reason = _get_passthrough_reason(ttc_output)
+            metadata = Metadata(
+                original_eicr_id=persistence_id,
+                augmented_eicr_id=persistence_id,
+                nonstandard_codes=[],
+                passthrough=True,
+                passthrough_reason=passthrough_reason,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=passthrough_reason,
+            )
+            return
+
+        nonstandard_codes = _parse_nonstandard_codes(ttc_output)
 
         augmenter_input = TTCAugmenterInput(
             persistence_id=persistence_id,
@@ -165,28 +185,6 @@ def _process_record(record: SQSRecord) -> None:
                 deterministic_id_seed=augmenter_input.persistence_id,
             )
             original_eicr_id = str(augmenter.original_eicr_id)
-
-            if ttc_output.get("passthrough"):
-                passthrough_reason = _get_passthrough_reason(ttc_output)
-                metadata = Metadata(
-                    original_eicr_id=original_eicr_id,
-                    augmented_eicr_id=original_eicr_id,
-                    nonstandard_codes=[],
-                    passthrough=True,
-                    passthrough_reason=passthrough_reason,
-                )
-                output = TTCAugmenterOutput(
-                    persistence_id=persistence_id,
-                    augmented_eicr=original_eicr,
-                    metadata=metadata,
-                )
-                _save_augmentation_outputs(persistence_id, output, bucket_name)
-                logger.info(
-                    "Augmentation processing completed",
-                    status="passthrough",
-                    passthrough_reason=passthrough_reason,
-                )
-                return
 
             metadata = augmenter.augment()
 
