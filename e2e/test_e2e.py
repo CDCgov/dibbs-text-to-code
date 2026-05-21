@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 import boto3
 import pytest
 import time_machine
-from botocore.exceptions import ClientError
 from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
@@ -311,12 +310,6 @@ class TestEndToEndSimulated:
 
     def _read_s3_object(self, aws, key: str) -> str:
         return aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)["Body"].read().decode("utf-8")
-
-    def _assert_s3_object_not_found(self, aws, key: str, eicr_id: str) -> None:
-        with pytest.raises(ClientError) as exc_info:
-            aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)
-
-        assert exc_info.value.response["Error"]["Code"] == "NoSuchKey", eicr_id
 
     @pytest.mark.parametrize(
         ("eicr_id", "eicr_path", "schematron_path"),

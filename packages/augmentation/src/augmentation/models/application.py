@@ -39,6 +39,8 @@ class Metadata(FrozenBaseModel):
     nonstandard_codes: list[NonstandardCodeInstanceMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None
+    passthrough: bool = False
+    passthrough_reason: PassthroughReason | None = None
 
 
 class TTCAugmenterOutput(FrozenBaseModel):
@@ -47,5 +49,3 @@ class TTCAugmenterOutput(FrozenBaseModel):
     persistence_id: str
     augmented_eicr: str
     metadata: Metadata
-    passthrough: bool = False
-    passthrough_reason: PassthroughReason | None = None
