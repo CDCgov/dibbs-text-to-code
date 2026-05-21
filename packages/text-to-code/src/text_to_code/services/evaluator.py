@@ -21,8 +21,6 @@ def _classify_translation_system(
         system identifier, otherwise None.
     """
     system = candidate.system
-    if system is None:
-        return None
 
     if system in preference.loinc_system_values:
         return CodeTranslation.LOINC
@@ -43,9 +41,6 @@ def _select_translation_candidate(
     :param preference: Translation system preference configuration.
     :returns: The selected Candidate, or None if no candidates are available.
     """
-    if not translation_candidates:
-        return None
-
     if preference.strategy == TranslationSelectionStrategy.FIRST:
         return translation_candidates[0]
 
@@ -92,11 +87,7 @@ def _resolve_best_for_xpath(
     return matches[0]
 
 
-def select_relevant_text(
-    *,
-    candidates: list[Candidate],
-    criteria: BaseEvaluationCriteria,
-) -> Candidate | None:
+def select_relevant_text(candidates: list[Candidate], field_type: DataField) -> Candidate | None:
     """Select the single most relevant viable text string from a list of candidates.
 
     Evaluation proceeds in priority order:
@@ -107,6 +98,7 @@ def select_relevant_text(
     :param criteria: The evaluation criteria defining priority order and translation behavior.
     :returns: The selected Candidate, or None if no candidate is viable.
     """
+    criteria = _get_evaluation_criteria_for_data_field(field_type)
     for priority in criteria.ordered_priorities():
         best_candidate = _resolve_best_for_xpath(
             candidates=candidates,
@@ -114,9 +106,6 @@ def select_relevant_text(
             preference=criteria.translation_preference,
         )
         if best_candidate is None:
-            continue
-
-        if best_candidate.value is None:
             continue
 
         if not best_candidate.value.strip():
@@ -127,7 +116,7 @@ def select_relevant_text(
     return None
 
 
-def get_evaluation_criteria_for_data_field(data_field: DataField) -> BaseEvaluationCriteria:
+def _get_evaluation_criteria_for_data_field(data_field: DataField) -> BaseEvaluationCriteria:
     """Retrieve a fresh evaluation criteria instance for the specified DataField.
 
     :param data_field: The data field being evaluated within the TTC module.

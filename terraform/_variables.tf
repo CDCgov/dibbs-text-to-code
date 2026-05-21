@@ -101,7 +101,13 @@ variable "ingestion_prefix" {
 variable "index_name" {
   type        = string
   default     = "ttc-index"
-  description = "The name of the index in OpenSearch created by the index lambda function at deployment time"
+  description = "The name of the Vector Search index in OpenSearch created by the index lambda function at deployment time"
+}
+
+variable "result_cache_index_name" {
+  type        = string
+  default     = "ttc-result-cache"
+  description = "The name of the Result Cache index in OpenSearch created by the index lambda function at deployment time"
 }
 
 ### S3 Prefix Variables (for TTC Lambda)

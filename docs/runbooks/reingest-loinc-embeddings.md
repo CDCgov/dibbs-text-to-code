@@ -37,11 +37,11 @@ aws s3 ls s3://<bucket>/reingestion/
 
 In the GitLab UI: **CI/CD → Pipelines → Run pipeline** for the re-ingestion project. Provide variables:
 
-| Variable | Example | Notes |
-|---|---|---|
-| `EXPECTED_DOC_COUNT` | `123456` | From the embeddings manifest. |
-| `ENVIRONMENT` | `prod` | Targets the right AWS account / OpenSearch domain. |
-| `STABILITY_POLLS` | `3` | Optional; default is 3 (90s of stable count before completion). |
+| Variable             | Example  | Notes                                                           |
+| -------------------- | -------- | --------------------------------------------------------------- |
+| `EXPECTED_DOC_COUNT` | `123456` | From the embeddings manifest.                                   |
+| `ENVIRONMENT`        | `prod`   | Targets the right AWS account / OpenSearch domain.              |
+| `STABILITY_POLLS`    | `3`      | Optional; default is 3 (90s of stable count before completion). |
 
 The pipeline runs the 7 steps below.
 
@@ -79,7 +79,7 @@ Drain is complete when this returns `0`.
 
 ### Step 3 — Drop and recreate the index
 
-**Expected duration:** < 30 s.
+**Expected duration:** < 60 s.
 
 ```sh
 aws lambda invoke \
@@ -89,7 +89,18 @@ aws lambda invoke \
   /tmp/index-out.json
 ```
 
-The pipeline asserts the response payload contains:
+Then,
+
+```sh
+aws lambda invoke \
+  --function-name ttc-index-lambda \
+  --payload '{"action":"clear_result_cache"}' \
+  --cli-binary-format raw-in-base64-out \
+  /tmp/index-out.json
+```
+
+For each command, the pipeline asserts the response payload contains:
+
 ```json
 { "statusCode": 200, "index_recreated": true }
 ```
@@ -129,10 +140,12 @@ curl -s -X GET "https://<opensearch-endpoint>/<index>/_count" \
 ```
 
 Completion criteria (both must hold):
+
 - Count is stable across `STABILITY_POLLS` consecutive polls (default 3 → 90 s).
 - Count ≥ `EXPECTED_DOC_COUNT`.
 
 **Watch:**
+
 - OpenSearch console → Indices → `ttc-index` doc count climbing.
 - OSIS pipeline metrics: `aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline` → look for `recordsIn` / `recordsOut`.
 - OSIS audit log group: `/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit`.
@@ -156,6 +169,7 @@ Completion criteria (both must hold):
 **Expected duration:** < 1 min.
 
 The pipeline:
+
 1. Runs a fixed KNN query against `ttc-index` and asserts ≥ 1 hit.
 2. Polls `ApproximateNumberOfMessages` on `ttc-lambda-queue` for 60 s and asserts the backlog is decreasing.
 3. Confirms `ApproximateNumberOfMessages` on `ttc-lambda-dlq` is unchanged from the pre-flight baseline.
@@ -164,28 +178,34 @@ The pipeline:
 
 ## Estimated total wall-clock
 
-| Phase | Time |
-|---|---|
-| Halt + drain | 0–20 min (typically 5–10) |
-| Drop + recreate index | < 1 min |
-| S3 swap | < 2 min |
-| OSIS ingest | 10–15 min |
-| Resume + verify | < 2 min |
-| **Total** | **~25–35 min** |
+| Phase                 | Time                      |
+| --------------------- | ------------------------- |
+| Halt + drain          | 0–20 min (typically 5–10) |
+| Drop + recreate index | < 1 min                   |
+| S3 swap               | < 2 min                   |
+| OSIS ingest           | 10–15 min                 |
+| Resume + verify       | < 2 min                   |
+| **Total**             | **~25–35 min**            |
 
 ## Manual rollback
 
-Use this if step 3, 4, or 5 fails *before* TTC has been resumed.
+Use this if step 3, 4, or 5 fails _before_ TTC has been resumed.
 
 ```sh
 # 1. Restore the previous embeddings
 aws s3 rm s3://<bucket>/ingestion/ --recursive
 aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
 
-# 2. Recreate the index from the backup contents (OSIS will reload them)
+# 2. Recreate both indices (Vector Search and Result Cache) from the backup contents (OSIS will reload them)
 aws lambda invoke \
   --function-name ttc-index-lambda \
   --payload '{"action":"clear_index"}' \
+  --cli-binary-format raw-in-base64-out \
+  /tmp/index-out.json
+
+aws lambda invoke \
+  --function-name ttc-index-lambda \
+  --payload '{"action":"clear_result_cache"}' \
   --cli-binary-format raw-in-base64-out \
   /tmp/index-out.json
 
@@ -200,15 +220,15 @@ aws lambda put-function-concurrency \
 
 ## Recovery — pipeline failed partway
 
-| Failed step | Recovery |
-|---|---|
-| Step 1 | No state changed. Re-run pipeline. |
-| Step 2 | Halt is in place; nothing destructive yet. Wait for the stuck Lambda to finish, then re-run pipeline. |
-| Step 3 | Index drop failed. Rollback (above) is a no-op (index hasn't been emptied) — just resume TTC manually and re-run pipeline. |
-| Step 4 | Sync partially complete. Run manual rollback to restore from `ingestion-backup-<ts>/`, then re-run pipeline. |
-| Step 5 | OSIS not catching up. Investigate first; rollback is the same as step 6. |
-| Step 6 | **TTC is stuck halted.** Run the two AWS CLI commands manually and page on-call. |
-| Step 7 | Smoke test failed but TTC is running. Investigate logs; do not auto-rollback. |
+| Failed step | Recovery                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Step 1      | No state changed. Re-run pipeline.                                                                                         |
+| Step 2      | Halt is in place; nothing destructive yet. Wait for the stuck Lambda to finish, then re-run pipeline.                      |
+| Step 3      | Index drop failed. Rollback (above) is a no-op (index hasn't been emptied) — just resume TTC manually and re-run pipeline. |
+| Step 4      | Sync partially complete. Run manual rollback to restore from `ingestion-backup-<ts>/`, then re-run pipeline.               |
+| Step 5      | OSIS not catching up. Investigate first; rollback is the same as step 6.                                                   |
+| Step 6      | **TTC is stuck halted.** Run the two AWS CLI commands manually and page on-call.                                           |
+| Step 7      | Smoke test failed but TTC is running. Investigate logs; do not auto-rollback.                                              |
 
 ### Redriving DLQ messages
 
@@ -221,6 +241,7 @@ aws sqs start-message-move-task \
 ```
 
 Monitor:
+
 ```sh
 aws sqs list-message-move-tasks \
   --source-arn arn:aws:sqs:<region>:<account>:ttc-lambda-dlq
