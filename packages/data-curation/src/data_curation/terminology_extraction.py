@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-"""This script provides the ability to pull down various medical terminology
-valusets required for processing eICR data, specifically adding codes to
-different data elements within an eICR message, such as Lab Order Name or
-Lab Result Interpretation.
+"""This script provides the ability to pull down various medical terminology valuesets required for processing eICR data, specifically adding codes to different data elements within an eICR message, such as Lab Order Name or Lab Result Interpretation.
 
 Current Available Valuesets:
     - Lab Names (Ordering & Resulting) - LOINC
@@ -53,39 +50,39 @@ from data_curation.terminologies.vsac import get_vsac_snomed_problems
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-def extract_umls_full_snomed_lab_values() -> None:  # noqa: D103
+def _extract_umls_full_snomed_lab_values() -> None:
     snomed_filename = f"snomed_lab_value_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     snomed_rows = get_umls_snomed_lab_values()
-    save_valueset_csv_file(snomed_filename, snomed_rows)
+    _save_valueset_csv_file(snomed_filename, snomed_rows)
 
 
-def extract_full_hl7_lab_interp() -> None:  # noqa: D103
+def _extract_full_hl7_lab_interp() -> None:
     hl7_filename = f"hl7_lab_interp_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_rows = get_hl7_lab_interp()
-    save_valueset_csv_file(hl7_filename, hl7_rows)
+    _save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
-def extract_full_loinc_lab_names() -> None:  # noqa: D103
+def _extract_full_loinc_lab_names() -> None:
     loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     all_loinc_rows = get_loinc_lab_names()
 
-    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+    _save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
 
 
-def extract_full_loinc_lab_orders() -> None:  # noqa: D103
+def _extract_full_loinc_lab_orders() -> None:
     loinc_filename = f"loinc_lab_orders_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_order_rows = get_loinc_lab_orders()
 
-    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
+    _save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
-def extract_full_loinc_lab_results() -> None:  # noqa: D103
+def _extract_full_loinc_lab_results() -> None:
     loinc_filename = f"loinc_lab_result_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_result_rows = get_loinc_lab_results()
-    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
+    _save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
-def get_loinc_umls_related_results() -> None:  # noqa: D103
+def _get_loinc_umls_related_results() -> None:
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
@@ -98,7 +95,7 @@ def get_loinc_umls_related_results() -> None:  # noqa: D103
     # then store them in a file
     if not os.path.exists(full_url_file_path):
         umls_loinc_results = process_loincs_for_umls_urls()
-        save_json_file(
+        _save_json_file(
             directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
         )
     else:
@@ -108,12 +105,12 @@ def get_loinc_umls_related_results() -> None:  # noqa: D103
     # and store them in a file - first just a tmp file as the process takes a long time
     # but if the process fails, pick up the process from the last loinc code
     # from the tmp file
-    umls_rows = process_loinc_codes_with_umls(full_url_file_path)
-    save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
+    umls_rows = _process_loinc_codes_with_umls(full_url_file_path)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
-def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
-    # ensure UMLS creds are available
+def _process_loinc_codes_with_umls(file_path: str) -> dict:
+    # ensure UMLS credentials are available
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
@@ -126,9 +123,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     try:
         with open(file_path) as file:
             umls_urls = json.load(file)
-    except FileNotFoundError:
-        raise
-    except json.JSONDecodeError:
+    except (FileNotFoundError, json.JSONDecodeError):
         raise
 
     umls_loinc_rows = {}
@@ -145,9 +140,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
                 process_loinc_code = False
-        except FileNotFoundError:
-            pass
-        except json.JSONDecodeError:
+        except (FileNotFoundError, json.JSONDecodeError):
             pass
 
     try:
@@ -165,7 +158,7 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 # in a temp file to ensure progress is not lost
                 # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
-                    save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
+                    _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
 
                 # LOINC ATOMIC TERMS PROCESSING
                 atom_page_num = 1
@@ -255,12 +248,12 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     except:
         # if exception occurs use all the rows in the existing list
         # to overwrite the entire partial file
-        save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
+        _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
         raise
     return umls_loinc_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:  # noqa: D103
+def _save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:
     if not filename.strip():
         return
 
@@ -273,8 +266,8 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         full_file_path = BASE_FOLDER / filename
         csv_headers = contents[0].keys()
 
-        with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
+        with open(full_file_path, file_method, newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, csv_headers, delimiter="|")
             if not (append_to_file):
                 writer.writeheader()
             writer.writerows(contents)
@@ -285,7 +278,7 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         pass
 
 
-def save_json_file(  # noqa: D103
+def _save_json_file(
     directory_path: str, filename: str, contents: dict, append_to_file: bool = False
 ) -> None:
     if not filename.strip() or not directory_path.strip():
@@ -302,8 +295,8 @@ def save_json_file(  # noqa: D103
     file_method = "a" if append_to_file else "w"
 
     try:
-        with open(full_file_path, file_method, encoding="utf-8") as dictfile:
-            json.dump(contents, dictfile, indent=4)
+        with open(full_file_path, file_method, encoding="utf-8") as dict_file:
+            json.dump(contents, dict_file, indent=4)
 
     except ValueError:
         pass
@@ -349,11 +342,8 @@ def _get_loinc_abbrv_syns(
     return loinc_row
 
 
-def create_loinc_part_abbrv_syn_dicts() -> None:
-    """Creates single file dictionary for each of the different
-    LOINC parts, which contains each LOINC Part Code, Name
-    and Abbreviations and Synonyms.
-    """
+def _create_loinc_part_abbrv_syn_dicts() -> None:
+    """Creates single file dictionary for each of the different LOINC parts, which contains each LOINC Part Code, Name and Abbreviations and Synonyms."""
     # Separate LOINC Part Dictionaries
     component_dict = {}
     method_dict = {}
@@ -435,42 +425,42 @@ def create_loinc_part_abbrv_syn_dicts() -> None:
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
     # write each dict out into it's own file
-    save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
-    save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
-    save_json_file(ENHANCEMENTS_DIRECTORY, property_file, property_dict)
-    save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
-    save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
-    save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, property_file, property_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
+    _save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
 
 
-def extract_full_hl7_encounter_act_codes() -> None:  # noqa: D103
+def _extract_full_hl7_encounter_act_codes() -> None:
     hl7_filename = f"hl7_encounter_code_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_rows = get_hl7_encounter_act_codes()
-    save_valueset_csv_file(hl7_filename, hl7_rows)
+    _save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
-def extract_full_vsac_rxnorm_medications() -> None:  # noqa: D103
+def _extract_full_vsac_rxnorm_medications() -> None:
     medication_filename = (
         f"vsac_rxnorm_medications_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     )
     data_rows = get_vsac_rxnorm_medications()
-    save_valueset_csv_file(medication_filename, data_rows)
+    _save_valueset_csv_file(medication_filename, data_rows)
 
 
-def extract_full_vsac_cvx_vaccines() -> None:  # noqa: D103
+def _extract_full_vsac_cvx_vaccines() -> None:
     vaccine_filename = f"vsac_cvx_vaccines_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     data_rows = get_vsac_cvx_vaccines()
-    save_valueset_csv_file(vaccine_filename, data_rows)
+    _save_valueset_csv_file(vaccine_filename, data_rows)
 
 
 # problems are also known as "Diagnosis/Symptom Codes"
-def extract_full_vsac_snomed_problems() -> None:  # noqa: D103
+def _extract_full_vsac_snomed_problems() -> None:
     problem_filename = f"vsac_snomed_problems_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     data_rows = get_vsac_snomed_problems()
-    save_valueset_csv_file(problem_filename, data_rows)
+    _save_valueset_csv_file(problem_filename, data_rows)
 
 
-def main(  # noqa: D103
+def main(
     all_vs: bool,
     lab_orders: bool,
     lab_obs: bool,
@@ -484,28 +474,29 @@ def main(  # noqa: D103
     vaccine: bool,
     problem: bool,
 ) -> None:
+    """Entry point."""
     if all_vs or lab_orders:
-        extract_full_loinc_lab_orders()
+        _extract_full_loinc_lab_orders()
     if all_vs or lab_obs:
-        extract_full_loinc_lab_results()
+        _extract_full_loinc_lab_results()
     if all_vs or lab_values:
-        extract_umls_full_snomed_lab_values()
+        _extract_umls_full_snomed_lab_values()
     if all_vs or lab_interp:
-        extract_full_hl7_lab_interp()
+        _extract_full_hl7_lab_interp()
     if all_vs or lab_names:
-        extract_full_loinc_lab_names()
+        _extract_full_loinc_lab_names()
     if all_vs or loinc_abbr_syn:
-        create_loinc_part_abbrv_syn_dicts()
+        _create_loinc_part_abbrv_syn_dicts()
     if all_vs or loinc_umls_syn:
-        get_loinc_umls_related_results()
+        _get_loinc_umls_related_results()
     if all_vs or encounter_code:
-        extract_full_hl7_encounter_act_codes()
+        _extract_full_hl7_encounter_act_codes()
     if all_vs or medication:
-        extract_full_vsac_rxnorm_medications()
+        _extract_full_vsac_rxnorm_medications()
     if all_vs or vaccine:
-        extract_full_vsac_cvx_vaccines()
+        _extract_full_vsac_cvx_vaccines()
     if all_vs or problem:
-        extract_full_vsac_snomed_problems()
+        _extract_full_vsac_snomed_problems()
 
 
 if __name__ == "__main__":
@@ -525,7 +516,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--loinc_abbr_syn",
         action="store_true",
-        help="For Loinc Part Abreviations and Synonyms",
+        help="For Loinc Part Abbreviations and Synonyms",
     )
     parser.add_argument(
         "--loinc_umls_syn",
