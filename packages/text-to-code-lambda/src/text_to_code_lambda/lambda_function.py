@@ -361,7 +361,6 @@ def _process_record_pipeline(
         data_field = error.field
         opensearch_retrieved_scores: OpenSearchResult | None = None
         ranked_results: list[ScoredResult] | None = None
-        criteria = evaluator.get_evaluation_criteria_for_data_field(data_field)
 
         text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
@@ -370,9 +369,7 @@ def _process_record_pipeline(
             status="processing",
         )
 
-        selected_candidate = evaluator.select_relevant_text(
-            candidates=text_candidates, criteria=criteria
-        )
+        selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
 
         logger.info(
             "Embedding the relevant text strings for each error in the eICR",

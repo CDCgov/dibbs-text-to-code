@@ -136,7 +136,6 @@ class TestEicrAugmenter:
         """Tests translation XPath adds index when same tag siblings exist."""
         nonstandard_codes = [
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -146,7 +145,6 @@ class TestEicrAugmenter:
                 ),
             ),
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(

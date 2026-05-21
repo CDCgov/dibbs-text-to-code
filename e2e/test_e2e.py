@@ -335,10 +335,8 @@ class TestEndToEndSimulated:
 
         augmentation_metadata = json.dumps(
             json.loads(
-                self._read_s3_object(
-                    aws,
-                    f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"
-                ),
+                self._read_s3_object(aws, f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}"),
+            ),
             indent=2,
             sort_keys=True,
         )
