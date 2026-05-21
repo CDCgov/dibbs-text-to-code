@@ -13,7 +13,7 @@
 
 This package contains the AWS Lambda handler for running document augmentation after Text-to-Code output is written to S3.
 
-Augmentation, specifically for the work in this repo, is related to eCR messages for various applications, such as Text-to-Code (TTC), eCR refinement, and Query Connector. This Lambda currently exists under the DIBBS-TEXT-TO-CODE project and product repo because TTC is the first application to leverage the augmentation functionality.
+Augmentation, specifically for the work in this repo, is related to eCR messages for Text-to-Code (TTC) This Lambda currently exists under the DIBBS-TEXT-TO-CODE project and product repo because TTC is the primary application to leverage the augmentation functionality, with potential development opportunities for other implementation.
 
 The Lambda package is intentionally kept separate from the core augmentation package. The core `augmentation` package owns the reusable XML augmentation behavior, while `augmentation-lambda` owns the AWS event handling, S3 reads and writes, and Lambda-specific orchestration.
 
@@ -81,7 +81,7 @@ The current TTC output shape is:
 ```json
 {
   "persistence_id": "<persistence id>",
-  "eicr_metadata": {},
+  "eicr_metadata": "eicr_id=CdaInstanceIdentifier(null_flavor=None, assigning_authority_name=None, displayable=None, root='a2e68734-045a-4136-b8f4-1bbf1fcd4e2e', extension=None) eicr_vendor='Test eCR Vendor Name'",
   "schematron_errors": {
     "<field type>": [
       {
@@ -260,7 +260,7 @@ The XML translation uses CDA-style XML attributes:
   code="<code>"
   codeSystem="2.16.840.1.113883.6.1"
   codeSystemName="LOINC"
-  DisplayName="<display name>"
+  displayName="<display name>"
   originalText="<original text>"/>
 ```
 
