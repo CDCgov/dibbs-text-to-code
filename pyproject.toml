@@ -95,6 +95,7 @@ ignore = [
   "D100",   # undocumented-public-module
   "E501",   # line-too-long - Handled by formatter
   "RET504", # unnecessary-assign
+  "S311",   # suspicious-non-cryptographic-random-usage
   "S314",   # recommend `defusedxml` over `xml` and `lxml`
 ]
 

@@ -15,7 +15,8 @@ from utils import regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
-assert len(LOINC_ENHANCEMENTS) > 0
+if len(LOINC_ENHANCEMENTS) <= 0:
+    sys.exit(1)
 
 MAX_AUGMENTATION_TRIES = 100
 
@@ -28,9 +29,10 @@ def enhance_loinc_str(
     min_enhancements: int = 1,
 ) -> str:
     """Enhances the input text by applying specified enhancement techniques.
+
     :param text: The input text to enhance.
     :param enhancement_type: The type of enhancement to apply. Options are:
-        - "abbrv": Replace words with their abbrveviations.
+        - "abbrv": Replace words with their abbreviations.
         - "synonyms": Replace words with semantically related terms.
         - "all": Apply all of the above techniques.
     :param max_enhancements: The maximum number of enhancements to apply.
@@ -46,11 +48,11 @@ def enhance_loinc_str(
 
     # Step 2: check each one for eligibility for a LOINC enhancement and
     # filter to only those that have one
-    enhancemenet_eligible_strings = _filter_candidates_for_enhancement(
+    enhancement_eligible_strings = _filter_candidates_for_enhancement(
         candidates, LOINC_ENHANCEMENTS
     )
 
-    if len(enhancemenet_eligible_strings) < 1:
+    if len(enhancement_eligible_strings) < 1:
         # We found no options in the LOINC dictionary at all, nothing more
         # to do
         return text
@@ -59,10 +61,10 @@ def enhance_loinc_str(
     # Because we've iteratively constructed substrings, it's possible that
     # some short substrings (e.g. indices [3,7]) are contained within longer
     # substrings ([3,9]). It's further possible that the set difference
-    # in containment is not itself a susbtring with a valid LOINC enhancement
+    # in containment is not itself a substring with a valid LOINC enhancement
     # ([8,9] in this case wouldn't occur). We thus need the maximum number of
     # non-intersecting, fully disjoint index sets.
-    maximal_candidate_set = _generate_disjoint_intervals(enhancemenet_eligible_strings)
+    maximal_candidate_set = _generate_disjoint_intervals(enhancement_eligible_strings)
 
     # Step 4: determine number of enhancements we can actually perform
     if len(maximal_candidate_set) < min_enhancements:
@@ -84,8 +86,9 @@ def _apply_enhancements(
     enhancement_type: typing.Annotated[schemas.EnhancementType, pydantic.Field()],
     num_enhancements: int,
 ) -> list[str, list[int]]:
-    """Apply LOINC enhancement to a provided tokenized copy of a code string. The
-    code string and a list of possible candidates that are eligible to be
+    """Apply LOINC enhancement to a provided tokenized copy of a code string.
+
+    The code string and a list of possible candidates that are eligible to be
     enhanced are used to randomly sample some strings for replacement, and
     then the original string is modified in reverse to leverage index-based
     token intervals.
@@ -127,7 +130,7 @@ def _apply_enhancements(
             continue
 
         if e_type_to_use == "all":
-            # Randomly choose between abbrveviation and synonyms, then
+            # Randomly choose between abbreviation and synonyms, then
             # randomly pick an enhancement from the available options
             e_type_to_use = random.choice(["abbrv", "synonyms"])
             # If there are no enhancements of the chosen type, switch to the other type
@@ -157,9 +160,9 @@ def _apply_enhancements(
 def _generate_disjoint_intervals(
     candidates: list[tuple[str, tuple[int, int]]],
 ) -> list[tuple[str, list[int]]]:
-    """Given a list of tuples that include string index intervals, construct the
-    largest possible list of those intervals such that no interval intersects
-    with or overlaps another. This allows us to combine both singleton tokens
+    """Given a list of tuples that include string index intervals, construct the largest possible list of those intervals such that no interval intersects with or overlaps another.
+
+    This allows us to combine both singleton tokens
     and substrings in the same enhancement search, so that we can perform both
     on a single string if there are enough candidates.
 
@@ -190,9 +193,7 @@ def _filter_candidates_for_enhancement(
     candidates: list[tuple[str, tuple[int, int]]],
     loinc_enhancements: dict,
 ) -> list[str, list[int]]:
-    """Given a list of candidate words and substrings, filter the list to only contain
-    tuples for which the candidate has one or more enhancements available in the
-    LOINC_ENHANCEMENTS dictionary.
+    """Given a list of candidate words and substrings, filter the list to only contain tuples for which the candidate has one or more enhancements available in the LOINC_ENHANCEMENTS dictionary.
 
     :param candidates: A list of tuples of words and their inclusive indices. Each
       such candidate will be checked independently for an eligible enhancement.
@@ -221,9 +222,9 @@ def _filter_candidates_for_enhancement(
 def _generate_enhancement_candidates(
     words: list[tuple[str, list[int]]],
 ) -> list[tuple[str, tuple[int, int]]]:
-    """From a tokenized string, generate a list of all possible candidate strings and
-    substrings that might have LOINC enhancements available to them. A substring
-    will be included in the final list if either: a) it is constructed of a single
+    """From a tokenized string, generate a list of all possible candidate strings and substrings that might have LOINC enhancements available to them.
+
+    A substring will be included in the final list if either: a) it is constructed of a single
     word (represented by an interval whose start and end indices are the same, e.g.
     [2,2]), or b) it is composed of 2 or more words.
 
