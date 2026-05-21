@@ -2,8 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import boto3
 import moto

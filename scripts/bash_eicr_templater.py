@@ -7,8 +7,7 @@
 import os
 import re
 import uuid
-from xml.sax.saxutils import escape
-from xml.sax.saxutils import quoteattr
+from xml.sax.saxutils import escape, quoteattr
 
 with open(os.environ["SOURCE_EICR"]) as fp:
     src = fp.read()

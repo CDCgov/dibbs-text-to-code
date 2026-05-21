@@ -1,7 +1,6 @@
 from enum import Enum
 
-from shared_models import FrozenBaseModel
-from shared_models import NonstandardCodeInstance
+from shared_models import FrozenBaseModel, NonstandardCodeInstance
 
 
 class ApplicationCode(Enum):

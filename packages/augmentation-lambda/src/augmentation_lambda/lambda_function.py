@@ -3,8 +3,7 @@ import json
 import os
 
 from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.data_classes import SQSEvent
-from aws_lambda_powertools.utilities.data_classes import event_source
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
@@ -12,8 +11,7 @@ import lambda_handler
 from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import NonstandardCodeInstance
-from shared_models import TTCAugmenterInput
+from shared_models import NonstandardCodeInstance, TTCAugmenterInput
 
 logger = Logger(service="augmentation-lambda")
 
