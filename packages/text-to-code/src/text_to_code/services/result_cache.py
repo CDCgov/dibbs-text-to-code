@@ -26,7 +26,7 @@ def get_cached_result(
     return None
 
 
-def put_new_cached_result(
+def put_new_cached_result(  # noqa: PLR0913
     opensearch_client: OpenSearch,
     index: str,
     candidate_input: str,
