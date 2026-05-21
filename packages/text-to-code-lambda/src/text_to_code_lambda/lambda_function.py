@@ -9,11 +9,8 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import Code
-from shared_models import NonstandardCodeInstance
-from shared_models import PassthroughReason
-from text_to_code.models import Candidate
-from text_to_code.models import SchematronErrorDetail
+from shared_models import Code, NonstandardCodeInstance, PassthroughReason
+from text_to_code.models import Candidate, SchematronErrorDetail
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed

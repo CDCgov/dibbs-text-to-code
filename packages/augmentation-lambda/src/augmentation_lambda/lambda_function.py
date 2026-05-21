@@ -9,12 +9,9 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
-from augmentation.models.application import Metadata
-from augmentation.models.application import TTCAugmenterOutput
+from augmentation.models.application import Metadata, TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import NonstandardCodeInstance
-from shared_models import PassthroughReason
-from shared_models import TTCAugmenterInput
+from shared_models import NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
 
 logger = Logger(service="augmentation-lambda")
 

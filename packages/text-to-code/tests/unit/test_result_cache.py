@@ -2,8 +2,7 @@ import json
 from unittest.mock import MagicMock
 
 from shared_models import Code
-from text_to_code.services.result_cache import get_cached_result
-from text_to_code.services.result_cache import put_new_cached_result
+from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
 
