@@ -32,6 +32,6 @@ def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
     """
     ranks = _RERANKER.rank(nonstandard_in, hits)
     sorted_ranks: list[ScoredResult] = [
-        {"code_string": hits[r["corpus_id"]], "score": r["score"]} for r in ranks
+        {"code_string": hits[r["corpus_id"]], "score": round(r["score"], 4)} for r in ranks
     ]
     return sorted_ranks
