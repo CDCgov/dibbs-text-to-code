@@ -3,11 +3,13 @@ FROM public.ecr.aws/lambda/python:3.12
 LABEL org.opencontainers.image.source=https://github.com/CDCgov/dibbs-text-to-code
 LABEL org.opencontainers.image.licenses=Apache-2.0
 
-# Update OS packages for CVE fixes, install build tools for compiling C++ extensions,
-# and drop the Runtime Interface Emulator (only used for local Lambda emulation).
+# Update OS packages for CVE fixes and drop the Runtime Interface Emulator
+# (only used for local Lambda emulation). All pip dependencies install from
+# prebuilt wheels, so no compiler toolchain is needed — keeping gcc-c++ out
+# of the image also keeps its build-time deps (kernel-headers, rust-toolset)
+# off the runtime layer, which is where the HIGH-severity CVEs come from.
 # --releasever=latest is required: AL2023 base images pin to a snapshot release.
 RUN microdnf update -y --releasever=latest \
-    && microdnf install -y --releasever=latest gcc-c++ make \
     && microdnf clean all \
     && rm -f /usr/local/bin/aws-lambda-rie
 
@@ -46,9 +48,6 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda" \
     && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
-
-# Remove build tools no longer needed at runtime
-RUN rpm -e --nodeps gcc-c++ gcc cpp make && microdnf clean all && rm -rf /var/cache/*
 
 # Clean up package source copies
 RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/utils ${LAMBDA_TASK_ROOT}/lambda-handler ${LAMBDA_TASK_ROOT}/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code-lambda
