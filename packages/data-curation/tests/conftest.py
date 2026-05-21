@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def set_random_seed():
+def set_random_seed() -> None:
     # Set a fixed random seed before each test for reproducibility
     random.seed(3141)
 

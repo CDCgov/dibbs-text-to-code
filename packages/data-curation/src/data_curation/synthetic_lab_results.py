@@ -89,7 +89,7 @@ def probability_float(x):
     return x
 
 
-def main():
+def main() -> None:
     """Generate synthetic lab result words."""
     parser = argparse.ArgumentParser(
         description="Generate synthetic lab result words with labels (1=positive, 2=negative)."

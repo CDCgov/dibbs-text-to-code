@@ -1,4 +1,4 @@
-"""data_curation.loinc_utils
+"""data_curation.loinc_utils.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to be used as
@@ -68,10 +68,7 @@ def _axis_is_valid(axis: str | None) -> bool:
     :param axis: The axis to determine the validity of.
     :returns: A boolean indicating whether the axis is valid.
     """
-    if axis is not None:
-        if axis != "" and axis != "-":
-            return True
-    return False
+    return bool(axis is not None and axis not in {"", "-"})
 
 
 def _choose_from_loinc_axis(axis: str | None, loinc_enhancements: dict) -> str:
@@ -107,7 +104,7 @@ def _clean_unpaired_parens(code_string: str) -> str:
     or closers from the string. For purposes of this function, bracketing
     characters are any of (), [], {}, or <>. Compresses nested bracketing
     by looking for the first instance of a character that would complete
-    a found pair. For instance, in the string
+    a found pair. For instance, in the string.
 
       'blah [blah (blah blah] blah)"
 
@@ -354,7 +351,7 @@ def _parenthetical_is_trailing_acronym(parenthetical: re.Match[str], code_string
     """Given a LOINC code string and a parenthetical appositive within that
     string, this function determines whether the content within those
     parentheses constitutes an acronym for one or more preceding words
-    in the code string. For example, in the phrase
+    in the code string. For example, in the phrase.
 
       Red Blood Cell (RBC) Count, Diff Panel
 

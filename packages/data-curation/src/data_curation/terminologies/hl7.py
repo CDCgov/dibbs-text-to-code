@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.hl7
+"""data_curation.terminologies.utils.hl7.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist
@@ -35,17 +35,12 @@ def get_hl7_encounter_act_codes() -> list[dict]:
 
     if hl7_response.status_code != 200:
         # TODO: In Subsequent PR update this to be a logging statement
-        print(
-            f"ERROR Retrieving HL7 Encounter Act Codes: {hl7_response.status_code}: {hl7_response.text}",
-            file=sys.stderr,
-        )
         sys.exit(1)
     hl7_codes = hl7_response.json().get("concept")
 
     if hl7_codes is not None:
-        record_count = len(hl7_codes)
+        len(hl7_codes)
         # TODO: In Subsequent PR update this to be a logging statement
-        print(f"HL7 ACT Codes to process through to get the Encounter Codes: {record_count}")
 
         for hl7_row in hl7_codes:
             hl7_code = hl7_row.get("code")
@@ -84,8 +79,8 @@ def get_hl7_encounter_act_codes() -> list[dict]:
         }
         hl7_rows.append(external_encounter)
         # TODO: In Subsequent PR update this to be a logging statement
-        print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
         return hl7_rows
+    return None
 
 
 def get_hl7_lab_interp() -> list[dict]:
@@ -101,17 +96,12 @@ def get_hl7_lab_interp() -> list[dict]:
 
     if hl7_response.status_code != 200:
         # TODO: In Subsequent PR update this to be a logging statement
-        print(
-            f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}",
-            file=sys.stderr,
-        )
         sys.exit(1)
     hl7_codes = hl7_response.json().get("concept")
 
     if hl7_codes is not None:
-        record_count = len(hl7_codes)
+        len(hl7_codes)
         # TODO: In Subsequent PR update this to be a logging statement
-        print(f"HL7 Lab Interpretation Record Count: {record_count}")
 
         for hl7_row in hl7_codes:
             hl7_code = hl7_row.get("code")

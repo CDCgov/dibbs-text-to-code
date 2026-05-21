@@ -75,7 +75,7 @@ def create_tsdae_data(nlp: spacy.Language, parts_fp: str, out_fp: str) -> None:
 def _line_is_citation(line: str) -> bool:
     """Helper method to determine if a given line of string text is an academic
     or institutional citation. A line is deemed a citation if it includes
-    a text group of the form
+    a text group of the form.
 
       "[YYYY] [MMM][optional: DD];publication_num(periodical_num):page-page
 
@@ -179,7 +179,7 @@ def _post_process_sentence(st: str) -> str:
         return ""
     # The above replacements can leave some kruft periods and commas,
     # clean those up
-    if st == "." or st == ",":
+    if st in {".", ","}:
         return ""
     # Finally, if the whole "sentence" is either one misplaced word
     # or too short to have clinical context, ditch it

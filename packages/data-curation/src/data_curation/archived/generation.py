@@ -17,7 +17,7 @@ def generate_positive_pairs(
     out_file: str,
     num_samples_per_code: int = 1,
     rckms: bool = False,
-):
+) -> None:
     """Given the location of one or more files of LOINC codes and some corresponding
     augmented examples for those codes, this function compiles a list of
     positive pairs that can be read for model training. A positive pair is a
@@ -62,7 +62,7 @@ def generate_positive_pairs(
         rckms_loincs = []
         with open(loinc_file) as f:
             loinc = json.load(f)
-            for code in loinc.keys():
+            for code in loinc:
                 rckms_loincs.append(code)
 
         # Filter the data pool to only include those codes
@@ -97,7 +97,7 @@ def generate_positive_pairs(
         fp.writelines(pair[0] + "|" + pair[1] + "|" + pair[2] + "\n" for pair in pairs)
 
 
-def _append_to_data_pool(csvfp: csv.DictReader, data_pool):
+def _append_to_data_pool(csvfp: csv.DictReader, data_pool) -> None:
     """Simple helper method to append non-empty data rows to a list representing
     a pool of aggregated data.
     """

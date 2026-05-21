@@ -128,7 +128,7 @@ def random_char_deletion(
     :return: The text with characters deleted.
     """
     words = text.strip().split()
-    char_indices = [i for i, char in enumerate(text) if char not in (" ")]
+    char_indices = [i for i, char in enumerate(text) if char != (" ")]
     words_details = {}
     delete_indices = []
 

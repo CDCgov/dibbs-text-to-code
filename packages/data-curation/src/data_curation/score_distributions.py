@@ -160,40 +160,19 @@ for k in wrong_answer_rank_gap:
         )
 
 
-print()
-print("Total Number of Queries in Set:", len(query_results))
-print("Total Number of Search Results in Set:", total_num_neighbors)
-print("Number of Correct Standardizations in Set:", num_right_answers)
-print()
-print("Frequency that Correct Standardization is at Rank K:")
 for k in right_answers_at_rank:
-    print(f"  {k}: {right_answers_at_rank[k]}")
-print()
-print("Top-K Accuracy If Results Include Up To K Neighbors:")
+    pass
 for k in top_k_accuracies_stopping_at:
-    print(f"  {k}: {top_k_accuracies_stopping_at[k]}")
-print()
-print("Mean Score At Rank K:")
+    pass
 for k in scores_at_rank:
-    print(f"  {k}: {scores_at_rank[k]}")
-print()
-print("Mean Score At Rank K When K Is Right:")
+    pass
 for k in right_answer_scores_at_rank:
-    print(f"  {k}: {right_answer_scores_at_rank[k]}")
-print()
-print("Mean Score At Rank K When K Is Wrong (and right answer is farther down ranked list):")
+    pass
 for k in wrong_scores_at_rank:
-    print(f"  {k}: {wrong_scores_at_rank[k]}")
-print()
-print("Mean Gap Between Rank K and Rank K+1:")
+    pass
 for k in score_gap_with_next_rank:
-    print(f"  {k}: {score_gap_with_next_rank[k]}")
-print()
-print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Correct:")
+    pass
 for k in right_answer_rank_gap:
-    print(f"  {k}: {right_answer_rank_gap[k]}")
-print()
-print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Wrong:")
+    pass
 for k in wrong_answer_rank_gap:
-    print(f"  {k}: {wrong_answer_rank_gap[k]}")
-print()
+    pass

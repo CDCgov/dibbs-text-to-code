@@ -52,7 +52,7 @@ class TestCharDeletion:
 
 
 @pytest.mark.parametrize(
-    "text, loinc_names, max_inserts, expected",
+    ("text", "loinc_names", "max_inserts", "expected"),
     [
         # Empty string
         ("", ["Blood", "Erythrocytes", "Calculation", "CalcRBC", "Volume fraction"], 3, ""),
@@ -84,7 +84,7 @@ class TestInsertLoincRelatedNames:
 
 
 @pytest.mark.parametrize(
-    "text, related_names, num_examples, config, expected",
+    ("text", "related_names", "num_examples", "config", "expected"),
     [
         # Augmentation without any enhancements
         (
@@ -157,7 +157,7 @@ class TestBuildAugmentedLoincFiles:
             with open(file_path, encoding="utf-8", newline="") as fp:
                 reader = csv.reader(fp, delimiter=":")
                 for row in reader:
-                    loinc_code, base_value, augmented_examples = row
+                    _loinc_code, _base_value, augmented_examples = row
                     augmented_examples = augmented_examples.split("|")
                     if key == "long_common_name":
                         assert len(augmented_examples) == num_lcn

@@ -1,4 +1,4 @@
-"""data_curation.post_process
+"""data_curation.post_process.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a suite of functions used for post-processing a
@@ -24,7 +24,7 @@ LOINC_DELIMITERS = ["+", "&"]
 # things (e.g. 'lymphocytes' and 'neutrocytes'), but might be used this
 # way in a supplied input (such as "lymphocytes/leukocytes"), so this
 # needs to be a valid "change to" target even if not a "change from"
-EXPANDED_LOINC_DELIMITERS = LOINC_DELIMITERS + ["/"]
+EXPANDED_LOINC_DELIMITERS = [*LOINC_DELIMITERS, "/"]
 
 
 def apply_deletion_post_processing(code_str: str, **kwargs) -> str:
@@ -276,15 +276,13 @@ def _determine_eligible_post_processing(
                 options.append(o)
 
         # Eligible if there's a pound sign in the code string
-        if o == "pound":
-            if "#" in code_str:
-                options.append(o)
+        if o == "pound" and "#" in code_str:
+            options.append(o)
 
         # Eligible as long as the code has at least two words, so we don't
         # delete everything present
-        if o == "deletion":
-            if len(code_str.split()) >= 2:
-                options.append(o)
+        if o == "deletion" and len(code_str.split()) >= 2:
+            options.append(o)
 
         # Eligible as long as the code has a dote notation expression
         if o == "dot":

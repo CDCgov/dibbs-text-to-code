@@ -1,4 +1,4 @@
-"""data_curation.schemas.loinc_struct
+"""data_curation.schemas.loinc_struct.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the schema definition for a LOINC code object
@@ -12,7 +12,7 @@ import enum
 import pydantic
 
 
-class LabType(str, enum.Enum):
+class LabType(enum.StrEnum):
     ORDER = "order"
     OBSERVATION = "observation"
     BOTH = "both"

@@ -20,7 +20,7 @@ class TestGenerateDisjointIntervals:
         """Test generate disjoint internals with 3 test cases:
         1) already disjoint intervals
         2) empty list
-        3) overlap with a singleton and interval
+        3) overlap with a singleton and interval.
         """
         # Test case 1: already disjoint intervals
         words = [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))]
@@ -69,7 +69,7 @@ class TestFilterCandidatesForEnhancement:
 
 
 @pytest.mark.parametrize(
-    "words, expected",
+    ("words", "expected"),
     [
         # Test case 1: Typical case with multiple words
         (

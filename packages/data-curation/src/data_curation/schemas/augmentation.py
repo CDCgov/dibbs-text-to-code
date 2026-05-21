@@ -1,4 +1,4 @@
-"""data_curation.schemas.augmentation
+"""data_curation.schemas.augmentation.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the schema definitions for the augmented data.

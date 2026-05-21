@@ -1,4 +1,4 @@
-"""data_curation.data_emulation
+"""data_curation.data_emulation.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the primary code for generating synthetic data samples
@@ -239,7 +239,7 @@ def build_vendor_formula_style_example(code_str: str, property_axis: str, system
     """Given a LOINC code string and a few of its properties, create a synthetic
     variant of that code string that conforms to a few common trends observed
     in production data. There is a particular format of some vendor-supplied
-    data that looks like
+    data that looks like.
 
       method_word modality core_component (acronym) measurement_word (unit text)
 
@@ -372,7 +372,7 @@ def create_synthetic_examples_for_code(loinc_code: schemas.LoincStruct) -> dict[
             # Here we'll handle the special cases for display names and consumer names
             # They don't have build patterns directly, so they'll get one extra
             # example each of a TTC enhanced code and a heuristics code
-            elif nv == "display_name" or nv == "consumer_name":
+            elif nv in {"display_name", "consumer_name"}:
                 variations = build_and_process_ttc_and_heuristics(
                     name, fsn, loinc_code.property, loinc_code.system, variations
                 )
@@ -830,7 +830,7 @@ def _codestring_is_valid_candidate(code_str: str | None, original_code: str) -> 
     :returns: A boolean indicating whether the synthetic example is
       a valid training example.
     """
-    return code_str is not None and code_str != "" and code_str != original_code
+    return code_str is not None and code_str not in ("", original_code)
 
 
 def _determine_eligible_pattern_heuristics(
@@ -840,7 +840,7 @@ def _determine_eligible_pattern_heuristics(
     axes, identify the kinds of semantic variation that can be applied
     to it, based on the text elements that are present. For example,
     Q-Group variation could be applied to a short name containing "Ql (U)"
-    but not to a long common name using the broader text "in Urine."
+    but not to a long common name using the broader text "in Urine.".
 
     :param code_str: The text string of a LOINC code name variant.
     :param property_axis: The Property axis of the LOINC code proper.

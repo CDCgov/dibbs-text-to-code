@@ -4,7 +4,7 @@ from data_curation.schemas import augmentation as schemas
 A configuration meant for generating a validation data set in which each base
 LOINC code has a single, highly processed text example associated with it.
 Enhancement is *always* performed to inject semantic variance and deviation,
-and additional operations are used to fine-tune data scrambling so that 
+and additional operations are used to fine-tune data scrambling so that
 models can't learn just word order but have to use meaning instead.
 This config works on the LLM theory that it is better to have a single,
 extremely high-quality representative of an output class than it is to have
@@ -29,8 +29,8 @@ ONE_SHOT_VALIDATION_AUGMENTATION: schemas.AugmentationConfig = {
 
 """
 A default augmentation configuration meant as a "representative" synthetic
-baseline for most cases. Slightly favors applying enhancement, but if 
-enhancement isn't performed, heavily skews towards insertion. This promotes 
+baseline for most cases. Slightly favors applying enhancement, but if
+enhancement isn't performed, heavily skews towards insertion. This promotes
 variance in semantic meaning in the input, which then undergoes a moderate
 level of skewing / corruption.
 """
@@ -102,7 +102,7 @@ AUGMENTATION_INDIVIDUALLY_SPECIFIED: schemas.AugmentationConfig = {
 
 """
 A configuration intended for the generation of augmented LOINC files, with
-granular control over the levels of enhancement at the individual type level. 
+granular control over the levels of enhancement at the individual type level.
 """
 LOINC_FILE_GENERATION_AUGMENTATION: schemas.LoincFileGenerationConfig = {
     "long_common_name": ONE_SHOT_VALIDATION_AUGMENTATION,

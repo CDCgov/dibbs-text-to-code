@@ -6,7 +6,7 @@ from data_curation.terminologies.loinc import get_loinc_current_version_data
 from data_curation.terminologies.loinc import get_loinc_embedding_records
 
 
-def update_loinc_embeddings():
+def update_loinc_embeddings() -> None:
     """Process to get the latest updates from LOINC and convert
     all the new loinc codes and changes to existing loinc codes
     into embedding records that can be uploaded into TTC Opensearch.
@@ -24,7 +24,6 @@ def update_loinc_embeddings():
     file_date = get_date_from_filename(current_loinc_file, "loinc")
     if file_date <= loinc_version_date:
         # TODO: In Subsequent PR update this to be a logging statement
-        print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
         loinc_updates = get_loinc_embedding_records(loinc_current_dict, loinc_version)
@@ -35,7 +34,6 @@ def update_loinc_embeddings():
             None
     else:
         # TODO: In Subsequent PR update this to be a logging statement
-        print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
         return
 
     # TODO: add a function here that will clean up
@@ -50,7 +48,7 @@ def update_loinc_embeddings():
     # Handled in Ticket #454
 
 
-def main(all: bool = False, loinc=False):
+def main(all: bool = False, loinc=False) -> None:
     """Currently the main entry into the process of updating medical
     terminologies leveraged by TTC.  We can change this into a
     different mechanism as we wrap this up into a Lambda.

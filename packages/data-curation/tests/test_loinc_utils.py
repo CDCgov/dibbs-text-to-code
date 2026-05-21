@@ -20,7 +20,7 @@ random.seed(3141)
 
 
 @pytest.mark.parametrize(
-    "text, max_perms, expected",
+    ("text", "max_perms", "expected"),
     [
         # Empty string
         ("", 3, ""),

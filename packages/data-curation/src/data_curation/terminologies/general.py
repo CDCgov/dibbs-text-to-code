@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.general
+"""data_curation.terminologies.utils.general.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist

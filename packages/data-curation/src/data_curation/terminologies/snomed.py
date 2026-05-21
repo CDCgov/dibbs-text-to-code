@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.snomed
+"""data_curation.terminologies.utils.snomed.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist
@@ -58,5 +58,4 @@ def get_umls_snomed_lab_values() -> list[dict]:
         umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
 
     # TODO: In Subsequent PR update this to be a logging statement
-    print(f"{snomed_row_count} Codes Extracted")
     return snomed_rows

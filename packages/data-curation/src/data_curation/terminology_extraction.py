@@ -53,39 +53,39 @@ from data_curation.terminologies.vsac import get_vsac_snomed_problems
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-def extract_umls_full_snomed_lab_values():  # noqa: D103
+def extract_umls_full_snomed_lab_values() -> None:  # noqa: D103
     snomed_filename = f"snomed_lab_value_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     snomed_rows = get_umls_snomed_lab_values()
     save_valueset_csv_file(snomed_filename, snomed_rows)
 
 
-def extract_full_hl7_lab_interp():  # noqa: D103
+def extract_full_hl7_lab_interp() -> None:  # noqa: D103
     hl7_filename = f"hl7_lab_interp_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_rows = get_hl7_lab_interp()
     save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
-def extract_full_loinc_lab_names():  # noqa: D103
+def extract_full_loinc_lab_names() -> None:  # noqa: D103
     loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     all_loinc_rows = get_loinc_lab_names()
 
     save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
 
 
-def extract_full_loinc_lab_orders():  # noqa: D103
+def extract_full_loinc_lab_orders() -> None:  # noqa: D103
     loinc_filename = f"loinc_lab_orders_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_order_rows = get_loinc_lab_orders()
 
     save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
-def extract_full_loinc_lab_results():  # noqa: D103
+def extract_full_loinc_lab_results() -> None:  # noqa: D103
     loinc_filename = f"loinc_lab_result_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_result_rows = get_loinc_lab_results()
     save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
-def get_loinc_umls_related_results():  # noqa: D103
+def get_loinc_umls_related_results() -> None:  # noqa: D103
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
 
@@ -98,19 +98,17 @@ def get_loinc_umls_related_results():  # noqa: D103
     # then store them in a file
     if not os.path.exists(full_url_file_path):
         umls_loinc_results = process_loincs_for_umls_urls()
-        print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
         save_json_file(
             directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
         )
     else:
-        print("LOINC UMLS URL File already exists!  Will use that for processing!")
+        pass
 
     # now use the UMLS URLS to call the UMLS and get the related names
     # and store them in a file - first just a tmp file as the process takes a long time
     # but if the process fails, pick up the process from the last loinc code
     # from the tmp file
     umls_rows = process_loinc_codes_with_umls(full_url_file_path)
-    print(f"LOINC UMLS Related Names Rows: {len(umls_rows)}")
     save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
@@ -129,13 +127,10 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
         with open(file_path) as file:
             umls_urls = json.load(file)
     except FileNotFoundError:
-        print(f"Error: {file_path} not found. Please ensure the file exists.")
         raise
     except json.JSONDecodeError:
-        print(f"Error: Invalid JSON format in {file_path}.")
         raise
 
-    print("Processing UMLS URLS for LOINC Codes!")
     umls_loinc_rows = {}
     loinc_code_count = 0
 
@@ -149,12 +144,11 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
             with open(full_partial_file_path, newline="", encoding="utf-8") as file:
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
-                print("STARTING LOINC CODE: " + starting_loinc_code)
                 process_loinc_code = False
         except FileNotFoundError:
-            print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
+            pass
         except json.JSONDecodeError:
-            print(f"Error: Invalid JSON format in {full_partial_file_path}.")
+            pass
 
     try:
         # loop through all the LOINC codes in dict along
@@ -172,9 +166,6 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
                 # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
                     save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
-                    print(
-                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
-                    )
 
                 # LOINC ATOMIC TERMS PROCESSING
                 atom_page_num = 1
@@ -262,8 +253,6 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
             if starting_loinc_code != "" and long_name == starting_loinc_code:
                 process_loinc_code = True
     except:
-        print("Unexpected error:", sys.exc_info()[0])
-        print(f"Saving {len(umls_loinc_rows)} records in file!")
         # if exception occurs use all the rows in the existing list
         # to overwrite the entire partial file
         save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
@@ -271,19 +260,14 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     return umls_loinc_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
+def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:  # noqa: D103
     if not filename.strip():
-        print("No filename supplied.  Failed to save CSV file!")
         return
 
     if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save CSV!")
         return
 
-    if append_to_file:
-        file_method = "a"
-    else:
-        file_method = "w"
+    file_method = "a" if append_to_file else "w"
 
     try:
         full_file_path = BASE_FOLDER / filename
@@ -294,23 +278,20 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
             if not (append_to_file):
                 writer.writeheader()
             writer.writerows(contents)
-        print(f"CSV File successfully saved as {full_file_path}")
 
-    except ValueError as e:
-        print(f"Error parsing Dict Contents: {e}")
-    except Exception as e:
-        print(f"An error occured: {e}")
+    except ValueError:
+        pass
+    except Exception:
+        pass
 
 
 def save_json_file(  # noqa: D103
     directory_path: str, filename: str, contents: dict, append_to_file: bool = False
-):
+) -> None:
     if not filename.strip() or not directory_path.strip():
-        print("No filename & path supplied.  Failed to save JSON File!")
         return
 
     if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save JSON File!")
         return
 
     if not os.path.exists(directory_path):
@@ -318,20 +299,16 @@ def save_json_file(  # noqa: D103
 
     full_file_path = directory_path / filename
 
-    if append_to_file:
-        file_method = "a"
-    else:
-        file_method = "w"
+    file_method = "a" if append_to_file else "w"
 
     try:
         with open(full_file_path, file_method, encoding="utf-8") as dictfile:
             json.dump(contents, dictfile, indent=4)
-        print(f"JSON File successfully saved as: {full_file_path}")
 
-    except ValueError as e:
-        print(f"Error parsing Dict Contents: {e}")
-    except Exception as e:
-        print(f"An error occured: {e}")
+    except ValueError:
+        pass
+    except Exception:
+        pass
 
 
 def _get_loinc_abbrv_syns(
@@ -372,10 +349,10 @@ def _get_loinc_abbrv_syns(
     return loinc_row
 
 
-def create_loinc_part_abbrv_syn_dicts():
+def create_loinc_part_abbrv_syn_dicts() -> None:
     """Creates single file dictionary for each of the different
     LOINC parts, which contains each LOINC Part Code, Name
-    and Abbreviations and Synonyms
+    and Abbreviations and Synonyms.
     """
     # Separate LOINC Part Dictionaries
     component_dict = {}
@@ -457,7 +434,6 @@ def create_loinc_part_abbrv_syn_dicts():
                 existing_row = _get_loinc_abbrv_syns(
                     part_code, part_name, repl_name, pref_abrv, synonym, existing_row
                 )
-    print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
     save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
     save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
@@ -467,13 +443,13 @@ def create_loinc_part_abbrv_syn_dicts():
     save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
 
 
-def extract_full_hl7_encounter_act_codes():  # noqa: D103
+def extract_full_hl7_encounter_act_codes() -> None:  # noqa: D103
     hl7_filename = f"hl7_encounter_code_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_rows = get_hl7_encounter_act_codes()
     save_valueset_csv_file(hl7_filename, hl7_rows)
 
 
-def extract_full_vsac_rxnorm_medications():  # noqa: D103
+def extract_full_vsac_rxnorm_medications() -> None:  # noqa: D103
     medication_filename = (
         f"vsac_rxnorm_medications_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     )
@@ -481,14 +457,14 @@ def extract_full_vsac_rxnorm_medications():  # noqa: D103
     save_valueset_csv_file(medication_filename, data_rows)
 
 
-def extract_full_vsac_cvx_vaccines():  # noqa: D103
+def extract_full_vsac_cvx_vaccines() -> None:  # noqa: D103
     vaccine_filename = f"vsac_cvx_vaccines_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     data_rows = get_vsac_cvx_vaccines()
     save_valueset_csv_file(vaccine_filename, data_rows)
 
 
 # problems are also known as "Diagnosis/Symptom Codes"
-def extract_full_vsac_snomed_problems():  # noqa: D103
+def extract_full_vsac_snomed_problems() -> None:  # noqa: D103
     problem_filename = f"vsac_snomed_problems_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     data_rows = get_vsac_snomed_problems()
     save_valueset_csv_file(problem_filename, data_rows)
@@ -507,40 +483,28 @@ def main(  # noqa: D103
     medication: bool,
     vaccine: bool,
     problem: bool,
-):
-    print("Starting Terminology ValueSet Sync...")
+) -> None:
     if all_vs or lab_orders:
-        print("Getting LOINC Lab Orders...")
         extract_full_loinc_lab_orders()
     if all_vs or lab_obs:
-        print("Getting LOINC Lab Observations...")
         extract_full_loinc_lab_results()
     if all_vs or lab_values:
-        print("Getting SNOMED Lab Result Values...")
         extract_umls_full_snomed_lab_values()
     if all_vs or lab_interp:
-        print("Getting HL7 Lab Result Interpretations...")
         extract_full_hl7_lab_interp()
     if all_vs or lab_names:
-        print("Getting LOINC Lab Names...")
         extract_full_loinc_lab_names()
     if all_vs or loinc_abbr_syn:
-        print("Getting LOINC Part Abreviations & Synonyms...")
         create_loinc_part_abbrv_syn_dicts()
     if all_vs or loinc_umls_syn:
-        print("Getting LOINC UMLS Related Names...")
         get_loinc_umls_related_results()
     if all_vs or encounter_code:
-        print("Getting HL7 Encounter Act Codes...")
         extract_full_hl7_encounter_act_codes()
     if all_vs or medication:
-        print("Getting VSAC RXNORM Medication Codes...")
         extract_full_vsac_rxnorm_medications()
     if all_vs or vaccine:
-        print("Getting VSAC CVX Vaccine Codes...")
         extract_full_vsac_cvx_vaccines()
     if all_vs or problem:
-        print("Getting VSAC SNOMED Problem (Diagnosis/Symptom) Codes...")
         extract_full_vsac_snomed_problems()
 
 
