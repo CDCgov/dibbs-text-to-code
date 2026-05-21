@@ -10,8 +10,11 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 import lambda_handler
 from augmentation.models import TTCAugmenterConfig
+from augmentation.models.application import Metadata
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
+from shared_models import NonstandardCodeInstance
+from shared_models import PassthroughReason
 from shared_models import TTCAugmenterInput
 
 logger = Logger(service="augmentation-lambda")
@@ -79,6 +82,39 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     return result
 
 
+def _get_passthrough_reason(ttc_output: dict[str, object]) -> PassthroughReason | None:
+    """Extract PassthroughReason from TTC output dictionary.
+
+    :param ttc_output: The TTC output dictionary from S3.
+    :return: The PassthroughReason if present, otherwise None.
+    """
+    passthrough_reason = ttc_output.get("passthrough_reason")
+
+    if passthrough_reason is None:
+        return None
+
+    if isinstance(passthrough_reason, PassthroughReason):
+        return passthrough_reason
+
+    if isinstance(passthrough_reason, str):
+        try:
+            return PassthroughReason(passthrough_reason)
+        except ValueError:
+            logger.warning(
+                "Invalid passthrough_reason in TTC output",
+                passthrough_reason=passthrough_reason,
+                status="passthrough_reason_ignored",
+            )
+            return None
+
+    logger.warning(
+        "Invalid passthrough_reason type in TTC output",
+        passthrough_reason_type=type(passthrough_reason).__name__,
+        status="passthrough_reason_ignored",
+    )
+    return None
+
+
 def _process_record(record: SQSRecord) -> None:
     """Process a single SQS record containing an S3 event.
 
@@ -108,28 +144,81 @@ def _process_record(record: SQSRecord) -> None:
         original_eicr = _load_original_eicr(persistence_id, bucket_name)
         nonstandard_codes = ttc_output.nonstandard_codes
 
+        if ttc_output.get("passthrough"):
+            passthrough_reason = _get_passthrough_reason(ttc_output)
+            metadata = Metadata(
+                original_eicr_id=persistence_id,
+                augmented_eicr_id=persistence_id,
+                nonstandard_codes=[],
+                passthrough=True,
+                passthrough_reason=passthrough_reason,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=passthrough_reason,
+            )
+            return
+
         augmenter_input = TTCAugmenterInput(
             persistence_id=persistence_id,
             nonstandard_codes=nonstandard_codes,
         )
 
-        # Currently only supports eICR augmentation. Other document types (e.g. from
-        # ecr-refiner or other services) may need different augmentation strategies.
-        config = TTCAugmenterConfig()
-        augmenter = EICRAugmenter(
-            document=original_eicr,
-            nonstandard_codes=augmenter_input.nonstandard_codes,
-            config=config,
-            deterministic_id_seed=augmenter_input.persistence_id,
-        )
+        original_eicr_id: str | None = None
 
-        metadata = augmenter.augment()
+        try:
+            # Currently only supports eICR augmentation. Other document types (e.g. from
+            # ecr-refiner or other services) may need different augmentation strategies.
+            config = TTCAugmenterConfig()
+            augmenter = EICRAugmenter(
+                document=original_eicr,
+                nonstandard_codes=augmenter_input.nonstandard_codes,
+                config=config,
+                deterministic_id_seed=augmenter_input.persistence_id,
+            )
+            original_eicr_id = str(augmenter.original_eicr_id)
 
-        output = TTCAugmenterOutput(
-            persistence_id=augmenter_input.persistence_id,
-            augmented_eicr=augmenter.augmented_xml,
-            metadata=metadata,
-        )
+            metadata = augmenter.augment()
+
+            output = TTCAugmenterOutput(
+                persistence_id=augmenter_input.persistence_id,
+                augmented_eicr=augmenter.augmented_xml,
+                metadata=metadata,
+            )
+        except Exception as e:
+            logger.exception(
+                "Augmentation failed; writing original eICR passthrough output",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            fallback_eicr_id = original_eicr_id or persistence_id
+            metadata = Metadata(
+                original_eicr_id=fallback_eicr_id,
+                augmented_eicr_id=fallback_eicr_id,
+                nonstandard_codes=[],
+                error=str(e),
+                passthrough=True,
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            return
 
         _save_augmentation_outputs(persistence_id, output, bucket_name)
         logger.info("Augmentation processing completed", status="success")
@@ -198,6 +287,8 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmented_eicr_key,
         status="success",
+        passthrough=output.metadata.passthrough,
+        passthrough_reason=output.metadata.passthrough_reason,
     )
 
     lambda_handler.put_file(
@@ -211,4 +302,6 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmentation_metadata_key,
         status="success",
+        passthrough=output.metadata.passthrough,
+        passthrough_reason=output.metadata.passthrough_reason,
     )

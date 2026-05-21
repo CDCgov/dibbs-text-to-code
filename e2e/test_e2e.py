@@ -7,12 +7,12 @@ from zoneinfo import ZoneInfo
 import boto3
 import pytest
 import time_machine
-from botocore.exceptions import ClientError
 from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
+from shared_models import PassthroughReason
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 from validation import validate_eicr
 
@@ -52,12 +52,29 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
     ),
-)
-FAIL_EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
         "eicr_empty",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
+    ),
+    (
+        "patient_alliance",
+        ASSETS_FOLDER / "patient_alliance" / "eICR Sample Patient Alliance 03132020.xml",
+        ASSETS_FOLDER
+        / "patient_alliance"
+        / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
+    ),
+    (
+        "sample7",
+        ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues.xml",
+        ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues_schematron_errors.xml",
+    ),
+    (
+        "sample9",
+        ASSETS_FOLDER / "sample9" / "eICR_Sample9_nullFlavorResultValues_localCodes.xml",
+        ASSETS_FOLDER
+        / "sample9"
+        / "eICR_Sample9_nullFlavorResultValues_localCodes_schematron_errors.xml",
     ),
 )
 
@@ -293,12 +310,6 @@ class TestEndToEndSimulated:
     def _read_s3_object(self, aws, key: str) -> str:
         return aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)["Body"].read().decode("utf-8")
 
-    def _assert_s3_object_not_found(self, aws, key: str, eicr_id: str) -> None:
-        with pytest.raises(ClientError) as exc_info:
-            aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)
-
-        assert exc_info.value.response["Error"]["Code"] == "NoSuchKey", eicr_id
-
     @pytest.mark.parametrize(
         ("eicr_id", "eicr_path", "schematron_path"),
         EICR_CASES,
@@ -329,9 +340,12 @@ class TestEndToEndSimulated:
         )
         snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
-        # Validate augmented eICR
-        actual_validation_results = validate_eicr(augmented_eicr)
-        assert actual_validation_results == []  # Empty list means no errors.
+        ttc_output = json.loads(
+            self._read_s3_object(
+                aws,
+                f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        )
 
         augmentation_metadata = json.dumps(
             json.loads(
@@ -341,45 +355,37 @@ class TestEndToEndSimulated:
             sort_keys=True,
         )
 
-        snapshot.assert_match(augmentation_metadata, f"{eicr_id}_augmentation_metadata.json")
+        if augmentation_metadata.get("passthrough"):
+            original_eicr = self._read_s3_object(
+                aws,
+                f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+            passthrough_reason = augmentation_metadata["passthrough_reason"]
 
-    @pytest.mark.parametrize(
-        ("eicr_id", "eicr_path", "schematron_path"),
-        FAIL_EICR_CASES,
-        ids=[eicr_case[0] for eicr_case in FAIL_EICR_CASES],
-    )
-    def test_upload_and_process_failure_cases(
-        self,
-        eicr_id: str,
-        eicr_path: str,
-        schematron_path: str,
-        aws,
-        infra,
-        mock_opensearch,
-        mock_lambda_context,
-    ):
-        self._run_eicr_pipeline(
-            aws,
-            infra,
-            schematron_path,
-            eicr_path,
-            mock_lambda_context,
+            assert augmented_eicr == original_eicr
+            assert passthrough_reason in [
+                PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
+                PassthroughReason.NO_CODE_MATCHES,
+                PassthroughReason.TTC_EXCEPTION,
+                PassthroughReason.AUGMENTATION_EXCEPTION,
+            ]
+
+            if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:
+                assert ttc_output["passthrough"] is True
+                assert ttc_output["passthrough_reason"] == passthrough_reason
+        else:
+            assert augmentation_metadata.get("passthrough") in [None, False]
+            assert augmented_eicr != ""
+
+        actual_validation_results = validate_eicr(augmented_eicr)
+        snapshot.assert_match(
+            json.dumps(actual_validation_results, indent=2, sort_keys=True),
+            f"{eicr_id}_validation_results.json",
         )
 
-        self._assert_s3_object_not_found(
-            aws,
-            f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
-        )
-        self._assert_s3_object_not_found(
-            aws,
-            f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
-        )
-        self._assert_s3_object_not_found(
-            aws,
-            f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-            eicr_id,
+        snapshot.assert_match(
+            json.dumps(augmentation_metadata, indent=2, sort_keys=True),
+            f"{eicr_id}_augmentation_metadata.json",
         )
 
 

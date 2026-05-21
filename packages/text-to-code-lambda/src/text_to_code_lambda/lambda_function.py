@@ -19,6 +19,7 @@ from shared_models import DataField
 from shared_models import FrozenBaseModel
 from shared_models import NonstandardCodeInstance
 from shared_models import TTCAugmenterInput
+from shared_models import PassthroughReason
 from text_to_code.models import Candidate
 from text_to_code.models import SchematronErrorDetail
 from text_to_code.models import query as query_models
@@ -104,7 +105,11 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
                 message_id=record.message_id,
                 status="error",
             )
-            failures.append({"message_id": record.message_id, "error": str(e)})
+            passthrough_written = _write_ttc_exception_passthrough_output(record, e)
+            if passthrough_written:
+                successes.append(record.message_id)
+            else:
+                failures.append({"message_id": record.message_id, "error": str(e)})
 
     result = (
         {
@@ -130,6 +135,85 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     )
 
     return result
+
+
+def _set_passthrough(
+    ttc_output: dict,
+    ttc_metadata_output: dict,
+    passthrough_reason: PassthroughReason,
+    error: str | None = None,
+) -> None:
+    ttc_output["passthrough"] = True
+    ttc_output["passthrough_reason"] = passthrough_reason
+    ttc_metadata_output["passthrough"] = True
+    ttc_metadata_output["passthrough_reason"] = passthrough_reason
+
+    if error:
+        ttc_output["error"] = error
+        ttc_metadata_output["error"] = error
+
+
+def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
+    """Write TTC output with passthrough reason of TTC_EXCEPTION when an exception is raised during TTC processing.
+
+    :param record: The SQS record being processed when the exception was raised.
+    :param error: The exception that was raised during TTC processing.
+    :return: A boolean indicating whether the passthrough output was successfully written to S3.
+    """
+    if not record.body:
+        logger.warning(
+            "Unable to write TTC exception passthrough output because SQS body is empty",
+            message_id=record.message_id,
+            status="skipped",
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
+        )
+        return False
+
+    try:
+        s3_event = json.loads(record.body)
+        eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
+        object_key = eventbridge_data["object_key"]
+        bucket_name = eventbridge_data.get("bucket_name")
+
+        if not bucket_name:
+            logger.warning(
+                "Unable to write TTC exception passthrough output because bucket name is missing",
+                message_id=record.message_id,
+                status="skipped",
+                passthrough_reason=PassthroughReason.TTC_EXCEPTION,
+            )
+            return False
+
+        persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+        ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
+        _set_passthrough(
+            ttc_output,
+            ttc_metadata_output,
+            PassthroughReason.TTC_EXCEPTION,
+            str(error),
+        )
+
+        with logger.append_context_keys(
+            persistence_id=persistence_id,
+            bucket_name=bucket_name,
+            trigger_s3_key=object_key,
+        ):
+            logger.warning(
+                "Writing TTC exception passthrough output",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.TTC_EXCEPTION,
+            )
+            _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
+
+        return True
+    except Exception:
+        logger.exception(
+            "Failed to write TTC exception passthrough output",
+            message_id=record.message_id,
+            status="error",
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
+        )
+        return False
 
 
 def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
@@ -348,10 +432,19 @@ def _process_record_pipeline(
         logger.warning(
             "No data fields found from Schematron errors for TTC processing",
             status="skipped",
+            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
         )
         _save_ttc_metadata_output(persistence_id, bucket_name, processor.eicr_metadata)
-        logger.info("TTC processing completed", status="no_matches_found")
-        return
+        logger.info(
+            "TTC processing completed",
+            status="passthrough",
+            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
+        )
+        return {
+            "statusCode": 200,
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
 
     nonstandard_code_replacements: list[NonstandardCodeInstance] = []
     ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
@@ -451,7 +544,6 @@ def _process_record_pipeline(
         persistence_id=persistence_id,
         nonstandard_codes=nonstandard_code_replacements,
     )
-
     _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
     _save_ttc_metadata_output(
         persistence_id,
@@ -459,10 +551,31 @@ def _process_record_pipeline(
         processor.eicr_metadata,
         ttc_schematron_issues_details,
     )
+    has_matches = any(len(matches) > 0 for matches in ttc_output["schematron_errors"].values())
 
-    if ttc_output.nonstandard_codes:
-        logger.info("TTC processing completed", status="matched")
-    else:
-        logger.info("TTC processing completed", status="no_matches_found")
+    if not has_matches:
+        _set_passthrough(
+            ttc_output,
+            ttc_metadata_output,
+            PassthroughReason.NO_CODE_MATCHES,
+        )
+        _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
+        logger.info(
+            "TTC processing completed",
+            status="passthrough",
+            passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
+        )
+        return {
+            "statusCode": 200,
+            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
+            "result": "no_matches_found",
+        }
 
-    return
+    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
+
+    logger.info("TTC processing completed", status="matched")
+    return {
+        "statusCode": 200,
+        "message": "TTC processed successfully with matches.",
+        "result": "matched",
+    }
