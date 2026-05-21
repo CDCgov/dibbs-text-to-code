@@ -1,13 +1,13 @@
-from typing import TypedDict
-
+from pydantic import field_serializer
 from sentence_transformers import CrossEncoder
 
+from shared_models import FrozenBaseModel
 from text_to_code.models.registry import TTC_RERANKER
 
 _RERANKER = CrossEncoder(TTC_RERANKER)
 
 
-class ScoredResult(TypedDict):
+class ScoredResult(FrozenBaseModel):
     """The search result with its score."""
 
     code_string: str
@@ -15,6 +15,11 @@ class ScoredResult(TypedDict):
     This is the code's display name.
     """
     score: float
+
+    @field_serializer("score")
+    def round_floats(self, v: float) -> float:
+        """When serialized to JSON only save the first 3 digits."""
+        return round(v, 3)
 
 
 def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
@@ -32,6 +37,6 @@ def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
     """
     ranks = _RERANKER.rank(nonstandard_in, hits)
     sorted_ranks: list[ScoredResult] = [
-        {"code_string": hits[r["corpus_id"]], "score": round(r["score"], 4)} for r in ranks
+        ScoredResult(code_string=hits[r["corpus_id"]], score=round(r["score"], 3)) for r in ranks
     ]
     return sorted_ranks
