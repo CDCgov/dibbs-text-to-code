@@ -18,5 +18,7 @@
       "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]"
     }
   ],
-  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f",
+  "passthrough": false,
+  "passthrough_reason": null
 }

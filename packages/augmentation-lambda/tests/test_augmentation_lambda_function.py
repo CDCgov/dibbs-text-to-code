@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import pytest
 import time_machine
 from pytest_snapshot.plugin import Snapshot
 
@@ -171,8 +170,8 @@ class TestHandler:
         )
         metadata = json.loads(metadata_raw)
 
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
         assert metadata["nonstandard_codes"] == []
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
@@ -225,8 +224,8 @@ class TestHandler:
         )
         metadata = json.loads(metadata_raw)
 
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
         assert metadata["nonstandard_codes"] == []
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] is None
@@ -244,6 +243,7 @@ class TestHandler:
         )
 
         augmenter = mocker.Mock()
+        augmenter.original_eicr_id = EXPECTED_ORIGINAL_EICR_ID
         augmenter.augment.side_effect = Exception("augmentation boom")
 
         mocker.patch(
@@ -269,8 +269,8 @@ class TestHandler:
         )
         metadata = json.loads(metadata_raw)
 
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["nonstandard_codes"] == []
         assert metadata["error"] == "augmentation boom"
         assert metadata["passthrough"] is True
@@ -283,11 +283,17 @@ class TestHandler:
 
         assert result == PassthroughReason.TTC_EXCEPTION
 
-    def test_get_passthrough_reason_raises_when_reason_has_invalid_type(self) -> None:
-        with pytest.raises(
-            TypeError, match="passthrough_reason must be a string or PassthroughReason"
-        ):
-            lambda_function._get_passthrough_reason({"passthrough_reason": 1})
+    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_type(self) -> None:
+        result = lambda_function._get_passthrough_reason({"passthrough_reason": 1})
+
+        assert result is None
+
+    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_value(self) -> None:
+        result = lambda_function._get_passthrough_reason(
+            {"passthrough_reason": "not_a_passthrough_reason"}
+        )
+
+        assert result is None
 
     def test_parse_nonstandard_codes_returns_empty_list_when_schematron_errors_is_not_dict(
         self,
