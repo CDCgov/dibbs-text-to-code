@@ -6,6 +6,8 @@ from text_to_code.models.registry import TTC_RERANKER
 
 _RERANKER = CrossEncoder(TTC_RERANKER)
 
+_PRECISION = 3
+
 
 class ScoredResult(FrozenBaseModel):
     """The search result with its score."""
@@ -19,7 +21,7 @@ class ScoredResult(FrozenBaseModel):
     @field_serializer("score")
     def round_floats(self, v: float) -> float:
         """When serialized to JSON only save the first 3 digits."""
-        return round(v, 3)
+        return round(v, _PRECISION)
 
 
 def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
@@ -37,6 +39,7 @@ def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
     """
     ranks = _RERANKER.rank(nonstandard_in, hits)
     sorted_ranks: list[ScoredResult] = [
-        ScoredResult(code_string=hits[r["corpus_id"]], score=round(r["score"], 3)) for r in ranks
+        ScoredResult(code_string=hits[r["corpus_id"]], score=round(r["score"], _PRECISION))
+        for r in ranks
     ]
     return sorted_ranks
