@@ -1,17 +1,12 @@
 import json
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from conftest import S3_BUCKET
-from conftest import TTC_METADATA_PREFIX
-from conftest import TTC_OUTPUT_PREFIX
-from lambda_handler.models import OpenSearchHits
-from lambda_handler.models import OpenSearchResult
-from lambda_handler.models import OpenSearchShards
+from conftest import S3_BUCKET, TTC_METADATA_PREFIX, TTC_OUTPUT_PREFIX
+from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from shared_models import PassthroughReason
 from text_to_code.models import Candidate
 from text_to_code_lambda import lambda_function
@@ -34,7 +29,6 @@ def _get_serialized_object(key: str) -> str:
     )
 
 
-@pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 def _assert_passthrough(
     output: dict[str, object],
     passthrough_reason: PassthroughReason,
@@ -288,6 +282,7 @@ class TestHandler:
         mock_opensearch,
         mocker,
         mock_lambda_context,
+        snapshot,
     ):
         """Test handler skips embedding and OpenSearch when no candidate is selected."""
         mocker.patch(

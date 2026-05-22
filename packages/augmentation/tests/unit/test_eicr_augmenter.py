@@ -6,16 +6,11 @@ from zoneinfo import ZoneInfo
 import pytest
 from pytest_snapshot.plugin import Snapshot
 
-from augmentation.models import Metadata
-from augmentation.models import NonstandardCodeInstanceMetadata
-from augmentation.models.config import ApplicationCode
-from augmentation.models.config import AugmenterConfig
-from augmentation.models.config import TTCAugmenterConfig
+from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
+from augmentation.models.config import ApplicationCode, AugmenterConfig, TTCAugmenterConfig
 from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import Code
-from shared_models import DataField
-from shared_models import NonstandardCodeInstance
+from shared_models import Code, DataField, NonstandardCodeInstance
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()

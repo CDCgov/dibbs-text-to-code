@@ -1,9 +1,15 @@
+import re
+
+import pytest
+
 from shared_models import DataField
-from text_to_code.models.eicr import Candidate
-from text_to_code.models.eicr import LabXPaths
-from text_to_code.models.evaluator import LabTestNameResultedEvaluationCriteria
-from text_to_code.models.evaluator import TranslationPreference
-from text_to_code.models.evaluator import TranslationSelectionStrategy
+from text_to_code.models.eicr import Candidate, LabXPaths
+from text_to_code.models.evaluator import (
+    LabTestNameResultedEvaluationCriteria,
+    TranslationPreference,
+    TranslationSelectionStrategy,
+)
+from text_to_code.services import evaluator as evaluator_service
 from text_to_code.services.evaluator import select_relevant_text
 
 
@@ -216,3 +222,17 @@ def test_select_relevant_text_not_loinc_or_snomed_system():
     actual = select_relevant_text(candidates, DataField.LAB_TEST_NAME_RESULTED)
 
     assert actual == candidates[0]
+
+
+def test_select_relevant_text_raises_for_unregistered_data_field(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_field = next(iter(evaluator_service.EVALUATION_REGISTRY.keys()))
+
+    monkeypatch.setattr(evaluator_service, "EVALUATION_REGISTRY", {})
+
+    with pytest.raises(
+        KeyError,
+        match=re.escape(f"No evaluation criteria registered for DataField {data_field}"),
+    ):
+        select_relevant_text(candidates=[], field_type=data_field)

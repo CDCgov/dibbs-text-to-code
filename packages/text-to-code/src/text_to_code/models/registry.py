@@ -2,9 +2,7 @@ import os
 
 from shared_models import DataField
 
-from .labs import BaseLabField
-from .labs import LabTestNameOrdered
-from .labs import LabTestNameResulted
+from .labs import BaseLabField, LabTestNameOrdered, LabTestNameResulted
 
 EICR_REGISTRY: dict[DataField, type[BaseLabField]] = {
     DataField.LAB_TEST_NAME_RESULTED: LabTestNameResulted,

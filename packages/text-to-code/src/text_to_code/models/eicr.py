@@ -1,7 +1,6 @@
 from enum import StrEnum
 
-from shared_models import CdaInstanceIdentifier
-from shared_models import FrozenBaseModel
+from shared_models import CdaInstanceIdentifier, FrozenBaseModel
 
 
 class LabXPaths(StrEnum):

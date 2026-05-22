@@ -1,7 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class FrozenBaseModel(BaseModel):

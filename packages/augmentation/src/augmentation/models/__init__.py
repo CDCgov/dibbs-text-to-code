@@ -1,9 +1,10 @@
-from .application import ApplicationCode
-from .application import Metadata
-from .application import NonstandardCodeInstanceMetadata
-from .application import TTCAugmenterOutput
-from .config import AugmenterConfig
-from .config import TTCAugmenterConfig
+from .application import (
+    ApplicationCode,
+    Metadata,
+    NonstandardCodeInstanceMetadata,
+    TTCAugmenterOutput,
+)
+from .config import AugmenterConfig, TTCAugmenterConfig
 from .document import DocumentType
 
 __all__ = [
