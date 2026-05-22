@@ -31,10 +31,8 @@ from text_to_code.services.reranker import ScoredResult, rerank
 # Initialize the logger
 logger = Logger(service="ttc")
 # Forward standard logs into Powertools' structured output
-logging.getLogger("text_to_code.services.evaluator").setLevel(logging.INFO)
-logging.getLogger("text_to_code.services.evaluator").addHandler(logger.handlers[0])
-logging.getLogger("text_to_code.services.embedder").setLevel(logging.INFO)
-logging.getLogger("text_to_code.services.embedder").addHandler(logger.handlers[0])
+logging.getLogger("text_to_code").setLevel(logging.INFO)
+logging.getLogger("text_to_code").addHandler(logger.handlers[0])
 
 # Environment variables
 SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", "ValidationResponseV2/")
