@@ -381,7 +381,7 @@ class TestEndToEndSimulated:
         )
 
         snapshot.assert_match(
-            augmentation_metadata.model_dump_json(indent=2),
+            json.dumps(augmentation_metadata.model_dump(), indent=2, sort_keys=True),
             f"{eicr_id}_augmentation_metadata.json",
         )
 
