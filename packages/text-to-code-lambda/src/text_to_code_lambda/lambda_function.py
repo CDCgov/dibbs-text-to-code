@@ -106,7 +106,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
                 successes.append(record.message_id)
             else:
                 failures.append({"message_id": record.message_id, "error": str(e)})
-            failures.append({"message_id": record.message_id, "error": str(e)})
 
     result = (
         {
@@ -188,8 +187,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
                 status="passthrough",
                 passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             )
-            _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
-            _save_ttc_metadata_output(persistence_id, ttc_metadata, bucket_name)
+            _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
 
         return True
     except Exception:
@@ -399,15 +397,16 @@ def _process_record_pipeline(
     processor = eicr_processor.EicrProcessor(original_eicr_content)
 
     schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
-
+    ttc_schematron_issues_details = None
+    nonstandard_code_replacements = None
     if schematron_data_fields:
         nonstandard_code_replacements: list[NonstandardCodeInstance] = []
         ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
         for error in schematron_data_fields:
-            new_translation: Code | None = None
-            unmatched_message: str | None = None
+            new_translation = None
+            unmatched_message = None
             data_field = error.field
-            opensearch_retrieved_scores: OpenSearchResult | None = None
+            opensearch_retrieved_scores = None
             ranked_results: list[ScoredResult] | None = None
             passthrough_reason: PassthroughReason | None = None
 
@@ -488,7 +487,9 @@ def _process_record_pipeline(
     else:
         passthrough_reason = PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
 
-    if all(x.unmatched_reason for x in ttc_schematron_issues_details):
+    if ttc_schematron_issues_details and all(
+        x.unmatched_reason for x in ttc_schematron_issues_details
+    ):
         passthrough_reason = PassthroughReason.NO_CODE_MATCHES
 
     ttc_output = TTCAugmenterInput(
@@ -499,16 +500,13 @@ def _process_record_pipeline(
     )
     ttc_metadata = TTCMetadata(
         persistence_id=persistence_id,
+        eicr_metadata=processor.eicr_metadata,
+        ttc_schematron_issues=ttc_schematron_issues_details,
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
     )
 
-    _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
-    _save_ttc_metadata_output(
-        persistence_id,
-        ttc_metadata,
-        bucket_name,
-    )
+    _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
 
     if ttc_output.nonstandard_codes:
         logger.info(
@@ -520,3 +518,14 @@ def _process_record_pipeline(
             status="no_matches_found",
             passthrough_reason=passthrough_reason,
         )
+
+
+def _save_outputs(
+    persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: TTCMetadata
+) -> None:
+    _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
+    _save_ttc_metadata_output(
+        persistence_id,
+        ttc_metadata,
+        bucket_name,
+    )
