@@ -9,6 +9,7 @@ from text_to_code.models.evaluator import (
     TranslationPreference,
     TranslationSelectionStrategy,
 )
+from text_to_code.services import evaluator as evaluator_service
 from text_to_code.services.evaluator import select_relevant_text
 
 
