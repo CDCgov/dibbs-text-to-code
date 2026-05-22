@@ -1,8 +1,7 @@
 import os
 
 from augmentation_lambda import lambda_function
-from shared_models import DataField
-from shared_models import NonstandardCodeInstance
+from shared_models import DataField, NonstandardCodeInstance
 
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
 

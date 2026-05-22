@@ -43,3 +43,5 @@ coverage.xml
 data/training_files/embeddings
 
 node_modules
+
+cov.xml

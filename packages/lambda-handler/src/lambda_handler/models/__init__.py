@@ -1,7 +1,4 @@
-from .opensearch import OpenSearchHit
-from .opensearch import OpenSearchHits
-from .opensearch import OpenSearchResult
-from .opensearch import OpenSearchShards
+from .opensearch import OpenSearchHit, OpenSearchHits, OpenSearchResult, OpenSearchShards
 
 __all__ = [
     "OpenSearchHit",
