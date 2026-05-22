@@ -150,23 +150,53 @@ def _process_record(record: SQSRecord) -> None:
             )
             return
 
-        # Currently only supports eICR augmentation. Other document types (e.g. from
-        # ecr-refiner or other services) may need different augmentation strategies.
-        config = TTCAugmenterConfig()
-        augmenter = EICRAugmenter(
-            document=original_eicr,
-            nonstandard_codes=augmenter_input.nonstandard_codes,
-            config=config,
-            deterministic_id_seed=augmenter_input.persistence_id,
-        )
+        try:
+            # Currently only supports eICR augmentation. Other document types (e.g. from
+            # ecr-refiner or other services) may need different augmentation strategies.
+            config = TTCAugmenterConfig()
+            augmenter = EICRAugmenter(
+                document=original_eicr,
+                nonstandard_codes=augmenter_input.nonstandard_codes,
+                config=config,
+                deterministic_id_seed=augmenter_input.persistence_id,
+            )
 
-        metadata = augmenter.augment()
+            original_eicr_id = str(augmenter.original_eicr_id)
 
-        output = TTCAugmenterOutput(
-            persistence_id=augmenter_input.persistence_id,
-            augmented_eicr=augmenter.augmented_xml,
-            metadata=metadata,
-        )
+            metadata = augmenter.augment()
+
+            output = TTCAugmenterOutput(
+                persistence_id=augmenter_input.persistence_id,
+                augmented_eicr=augmenter.augmented_xml,
+                metadata=metadata,
+            )
+        except Exception as e:
+            logger.exception(
+                "Augmentation failed; writing original eICR passthrough output",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            fallback_eicr_id = original_eicr_id or persistence_id
+            metadata = Metadata(
+                original_eicr_id=fallback_eicr_id,
+                augmented_eicr_id=fallback_eicr_id,
+                nonstandard_codes=[],
+                error=str(e),
+                passthrough=True,
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            return
 
         _save_augmentation_outputs(persistence_id, output, bucket_name)
         logger.info("Augmentation processing completed", status="success")
