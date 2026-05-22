@@ -55,13 +55,6 @@ class NonstandardCodeInstance(FrozenBaseModel):
     """The new translation."""
 
 
-class TTCAugmenterInput(FrozenBaseModel):
-    """Input for the augmentation service."""
-
-    persistence_id: str
-    nonstandard_codes: list[NonstandardCodeInstance]
-
-
 class PassthroughReason(StrEnum):
     """Reasons why augmentation was bypassed and the original eICR was passed through."""
 
@@ -69,3 +62,12 @@ class PassthroughReason(StrEnum):
     NO_CODE_MATCHES = "no_code_matches"
     TTC_EXCEPTION = "ttc_exception"
     AUGMENTATION_EXCEPTION = "augmentation_exception"
+
+
+class TTCAugmenterInput(FrozenBaseModel):
+    """Input for the augmentation service."""
+
+    persistence_id: str
+    nonstandard_codes: list[NonstandardCodeInstance] | None = None
+    passthrough: bool = False
+    passthrough_reason: PassthroughReason | None = None
