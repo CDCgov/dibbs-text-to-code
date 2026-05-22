@@ -40,22 +40,23 @@ LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
 
+
 def extract_full_loinc_lab_names():  # noqa: D103
-    loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_filename = f"{LAB_NAMES}_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     all_loinc_rows = get_loinc_lab_names()
 
     save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
 
 
 def extract_full_loinc_lab_orders():  # noqa: D103
-    loinc_filename = f"loinc_lab_orders_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_filename = f"{LAB_ORDERS}_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_order_rows = get_loinc_lab_orders()
 
     save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
 def extract_full_loinc_lab_results():  # noqa: D103
-    loinc_filename = f"loinc_lab_result_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_filename = f"{LAB_RESULT}_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     loinc_result_rows = get_loinc_lab_results()
     save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 

@@ -1,10 +1,13 @@
+from datetime import datetime
+
 from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
                                                      get_loinc_embedding_records,
                                                      extract_full_loinc_lab_names)
 from data_curation.terminologies.general import (get_latest_extract_file_name, 
                                                        get_date_from_filename, 
-                                                       load_extract_file_to_dict)
+                                                       load_extract_file_to_dict,
+                                                       save_jsonl_file)
 from text_to_code.services.embedder import embed
 
 
@@ -44,8 +47,10 @@ def update_loinc_embeddings():
     # if there are none, no looping will occur    
     for loinc_update_record in loinc_updates:
         if (loinc_update_record["description"].strip is not None):
-            loinc_update_record["description_vector"] = embed(loinc_update_record["description"])
-    
+            loinc_update_record["description_vector"] = embed(loinc_update_record["description"])    
+
+    ingestion_file_name = f"{LAB_NAMES}_{datetime.datetime.now().strftime('%Y%m%d')}.jsonl"
+    save_jsonl_file(ingestion_file_name,loinc_updates)
     
     # if all goes well write a new valueset file with all the existing codes
     extract_full_loinc_lab_names() 

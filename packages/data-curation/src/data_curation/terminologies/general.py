@@ -116,7 +116,22 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
     return extract_dict
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
+def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:
+    """Function that takes a filename, which includes the directory,
+        and contents (dictionary) for the file then writes the results out into
+        a standard csv file with a '|' delimiter - 
+        specifically for terminology extract files.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a csv file.  The keys will be the column name 
+            headers for the csv file.
+        :param append_to_file: Boolean - Do you want to overwrite the file or append?
+            Default is set to False, so overwrite the file.
+
+        :returns: Nothing.
+    """
     if not filename.strip():
         print("No filename supplied.  Failed to save CSV file!")
         return
@@ -147,9 +162,20 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print(f"An error occured: {e}")
 
 
-def save_json_file(  # noqa: D103
-    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
-):
+def save_json_file(directory_path: str, filename: str, contents: dict, append_to_file: bool = False) -> None:
+    """Function that takes a filename, directory path,
+        and contents (dictionary) for the file then writes the results out into
+        a basic JSON file using the dictionary as the structure.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a json file.
+        :param append_to_file: Boolean - Do you want to overwrite the file or append?
+            Default is set to False, so overwrite the file.
+
+        :returns: Nothing.
+    """
     if not filename.strip() or not directory_path.strip():
         print("No filename & path supplied.  Failed to save JSON File!")
         return
@@ -177,3 +203,19 @@ def save_json_file(  # noqa: D103
         print(f"Error parsing Dict Contents: {e}")
     except Exception as e:
         print(f"An error occured: {e}")
+
+
+def save_jsonl_file(filename: str, contents: list[dict]) -> None:
+    """Function that takes a filename, which includes the directory,
+        and contents (dictionary) for the file then writes the results out into
+        JSONL files that can be used for ingestion into OpenSearch.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a json file.
+
+        :returns: Nothing.
+    """
+    with open(filename, "w") as f:
+        f.writelines(json.dumps(doc) + "\n" for doc in contents)
