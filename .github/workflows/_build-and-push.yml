@@ -126,20 +126,30 @@ jobs:
         id: aphl-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push every tag to APHL ECR
+      - name: Push tags to APHL ECR
         env:
           OWNER: ${{ steps.repo.outputs.owner }}
           NAME: ${{ matrix.name }}
           APHL_ECR: ${{ secrets.APHL_ECR_REPOSITORY_URL }}
           META_JSON: ${{ steps.meta.outputs.json }}
+          MINOR_TAG: ${{ inputs.minor_tag }}
+          MAJOR_TAG: ${{ inputs.major_tag }}
         run: |
           set -euo pipefail
-          # Re-tag and push every tag the metadata action produced. Iterating
-          # over the metadata output keeps GHCR and APHL ECR exactly in sync;
-          # both registries receive the same set of (v0.2.0, v0.2, v0, latest)
-          # on releases, or (latest, main) on dev pushes.
+          # Re-tag and push tags the metadata action produced. APHL ECR has
+          # tag immutability enabled on everything except :latest, so we skip
+          # the floating vX.Y and vX tags (which would need to be re-pointed
+          # on each release). GHCR still receives the full set.
           for tag in $(jq -r '.tags[]' <<< "$META_JSON"); do
             bare="${tag##*:}"
+            if [ -n "$MINOR_TAG" ] && [ "$bare" = "$MINOR_TAG" ]; then
+              echo "Skipping floating tag ${bare} for APHL ECR (immutable)"
+              continue
+            fi
+            if [ -n "$MAJOR_TAG" ] && [ "$bare" = "$MAJOR_TAG" ]; then
+              echo "Skipping floating tag ${bare} for APHL ECR (immutable)"
+              continue
+            fi
             GHCR_IMAGE="ghcr.io/${OWNER}/dibbs-text-to-code/${NAME}:${bare}"
             ECR_IMAGE="${APHL_ECR}/${NAME}:${bare}"
             echo "Pushing ${ECR_IMAGE}"
