@@ -8,10 +8,10 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 import lambda_handler
-from augmentation.models import TTCAugmenterConfig
+from augmentation.models import Metadata, TTCAugmenterConfig
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import TTCAugmenterInput
+from shared_models import PassthroughReason, TTCAugmenterInput
 
 logger = Logger(service="augmentation-lambda")
 
@@ -103,14 +103,52 @@ def _process_record(record: SQSRecord) -> None:
     ):
         logger.info("Processing S3 object", status="processing")
 
-        ttc_output = _load_ttc_output(persistence_id, bucket_name)
+        augmenter_input = _load_ttc_output(persistence_id, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, bucket_name)
-        nonstandard_codes = ttc_output.nonstandard_codes
 
-        augmenter_input = TTCAugmenterInput(
-            persistence_id=persistence_id,
-            nonstandard_codes=nonstandard_codes,
-        )
+        if augmenter_input.passthrough:
+            passthrough_reason = augmenter_input.passthrough_reason
+            metadata = Metadata(
+                original_eicr_id=persistence_id,
+                augmented_eicr_id=persistence_id,
+                nonstandard_codes=[],
+                passthrough=True,
+                passthrough_reason=passthrough_reason,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=passthrough_reason,
+            )
+            return
+
+        if not augmenter_input.nonstandard_codes:
+            passthrough_reason = augmenter_input.passthrough_reason
+            metadata = Metadata(
+                original_eicr_id=persistence_id,
+                augmented_eicr_id=persistence_id,
+                nonstandard_codes=[],
+                passthrough=True,
+                passthrough_reason=passthrough_reason,
+            )
+            output = TTCAugmenterOutput(
+                persistence_id=persistence_id,
+                augmented_eicr=original_eicr,
+                metadata=metadata,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            return
 
         # Currently only supports eICR augmentation. Other document types (e.g. from
         # ecr-refiner or other services) may need different augmentation strategies.
