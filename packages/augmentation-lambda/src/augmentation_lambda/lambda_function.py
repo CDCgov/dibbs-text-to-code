@@ -12,6 +12,7 @@ from augmentation.models import TTCAugmenterConfig
 from augmentation.models.application import Metadata, TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
+from validation import ValidationResult, validate_eicr
 
 logger = Logger(service="augmentation-lambda")
 
@@ -109,6 +110,35 @@ def _get_passthrough_reason(ttc_output: dict[str, object]) -> PassthroughReason 
         status="passthrough_reason_ignored",
     )
     return None
+
+
+def _build_validation_failed_passthrough_output(
+    persistence_id: str,
+    original_eicr: str,
+    attempted_output: TTCAugmenterOutput,
+    validation_results: list[ValidationResult],
+) -> TTCAugmenterOutput:
+    """Build a passthrough output when the attempted augmented eICR fails validation.
+
+    :param persistence_id: The persistence ID for the eICR being processed.
+    :param original_eicr: The original eICR XML string.
+    :param attempted_output: The attempted augmentation output that failed validation.
+    :param validation_results: The validation errors returned by validate_eicr.
+    :return: The passthrough augmentation output.
+    """
+    metadata = Metadata(
+        original_eicr_id=attempted_output.metadata.original_eicr_id,
+        augmented_eicr_id=attempted_output.metadata.original_eicr_id,
+        nonstandard_codes=attempted_output.metadata.nonstandard_codes,
+        error=json.dumps(validation_results, default=str),
+        passthrough=True,
+        passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
+    )
+    return TTCAugmenterOutput(
+        persistence_id=persistence_id,
+        augmented_eicr=original_eicr,
+        metadata=metadata,
+    )
 
 
 def _process_record(record: SQSRecord) -> None:
@@ -214,6 +244,23 @@ def _process_record(record: SQSRecord) -> None:
                 "Augmentation processing completed",
                 status="passthrough",
                 passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            return
+
+        validation_results = validate_eicr(output.augmented_eicr)
+
+        if validation_results:
+            output = _build_validation_failed_passthrough_output(
+                persistence_id=persistence_id,
+                original_eicr=original_eicr,
+                attempted_output=output,
+                validation_results=validation_results,
+            )
+            _save_augmentation_outputs(persistence_id, output, bucket_name)
+            logger.info(
+                "Augmentation processing completed",
+                status="passthrough",
+                passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
             )
             return
 

@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import time_machine
@@ -9,7 +10,7 @@ from pytest_snapshot.plugin import Snapshot
 import lambda_handler
 from augmentation_lambda import lambda_function
 from shared_models import PassthroughReason
-from validation import validate_eicr
+from validation import ValidationResult, validate_eicr
 
 S3_BUCKET = os.environ["S3_BUCKET"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
@@ -275,6 +276,58 @@ class TestHandler:
         assert metadata["error"] == "augmentation boom"
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
+
+    def test_handler_writes_original_eicr_when_augmented_eicr_fails_validation(
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mocker,
+        mock_lambda_context,
+    ) -> None:
+        original_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
+        )
+
+        validation_results = cast(
+            list[ValidationResult],
+            [
+                {
+                    "error_id": "ttc-labResultValue-noCode",
+                    "location": "/ClinicalDocument[1]",
+                }
+            ],
+        )
+
+        validate_mock = mocker.patch(
+            "augmentation_lambda.lambda_function.validate_eicr",
+            return_value=validation_results,
+        )
+
+        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
+        validate_mock.assert_called_once()
+
+        augmented_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        assert augmented_eicr == original_eicr
+
+        metadata_raw = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        metadata: dict[str, object] = json.loads(metadata_raw)
+
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["error"] == json.dumps(validation_results, default=str)
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILED
 
     def test_get_passthrough_reason_returns_enum_when_reason_is_already_enum(self) -> None:
         result = lambda_function._get_passthrough_reason(

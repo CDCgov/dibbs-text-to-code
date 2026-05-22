@@ -496,13 +496,6 @@ class TestEndToEndSimulated:
         original_root = _parse_xml_document(original_eicr, "Original eICR", eicr_id)
         augmented_root = _parse_xml_document(augmented_eicr, "Augmented eICR", eicr_id)
 
-        ttc_output = json.loads(
-            self._read_s3_object(
-                aws,
-                f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            )
-        )
-
         augmentation_metadata = json.loads(
             self._read_s3_object(
                 aws,
@@ -523,11 +516,12 @@ class TestEndToEndSimulated:
                 PassthroughReason.NO_CODE_MATCHES,
                 PassthroughReason.TTC_EXCEPTION,
                 PassthroughReason.AUGMENTATION_EXCEPTION,
+                PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
             ]
 
             if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:
-                assert ttc_output["passthrough"] is True
-                assert ttc_output["passthrough_reason"] == passthrough_reason
+                assert augmentation_metadata.get("passthrough") is True
+                assert augmentation_metadata.get("passthrough_reason") == passthrough_reason
         else:
             assert augmentation_metadata.get("passthrough") in [None, False]
             assert augmented_eicr != ""
