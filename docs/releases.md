@@ -19,12 +19,16 @@ release link to Slack.
 4. The `release` workflow runs automatically on the merge commit:
    - tags the merge commit as `vX.Y.Z`
    - builds all three Lambda images for `linux/amd64`
-   - pushes `vX.Y.Z`, `vX.Y`, `vX`, and `latest` tags to both GHCR and APHL ECR
+   - pushes `vX.Y.Z`, `vX.Y`, `vX`, and `latest` tags to GHCR
+   - pushes `vX.Y.Z` and `latest` to APHL ECR (APHL ECR has tag
+     immutability enabled on everything but `latest`, so the floating
+     `vX.Y` / `vX` tags can't be re-pointed there)
    - publishes a GitHub Release named `vX.Y.Z` with auto-generated notes
    - posts the release link to Slack
 
-The `vX.Y` and `vX` tags float to the latest release within that line; the
-`vX.Y.Z` tag is immutable.
+On GHCR, the `vX.Y` and `vX` tags float to the latest release within that
+line; the `vX.Y.Z` tag is immutable. On APHL ECR every tag except
+`latest` is immutable.
 
 ### Hotfix
 
@@ -38,8 +42,10 @@ After merging a release PR, confirm:
 - [ ] **Actions tab**: the `release` workflow run on the merge commit is green.
 - [ ] **Tags**: `git fetch --tags && git tag -l "vX.Y.Z"` shows the new tag.
 - [ ] **GitHub Releases**: `vX.Y.Z` is published (not draft) with PR-list notes.
-- [ ] **APHL ECR**: each of `index`, `ttc`, `augmentation` has `vX.Y.Z`,
-      `vX.Y`, `vX`, and `latest` tags.
+- [ ] **APHL ECR**: each of `index`, `ttc`, `augmentation` has `vX.Y.Z`
+      and `latest` tags.
+- [ ] **GHCR**: each image additionally has `vX.Y` and `vX` floating tags
+      pointing at this release.
 - [ ] **Slack**: the release-notifications channel received the release link.
 
 ## Failure modes
