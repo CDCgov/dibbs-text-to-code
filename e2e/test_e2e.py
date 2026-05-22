@@ -493,6 +493,9 @@ class TestEndToEndSimulated:
         )
         snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
+        original_root = _parse_xml_document(original_eicr, "Original eICR", eicr_id)
+        augmented_root = _parse_xml_document(augmented_eicr, "Augmented eICR", eicr_id)
+
         ttc_output = json.loads(
             self._read_s3_object(
                 aws,
@@ -529,7 +532,14 @@ class TestEndToEndSimulated:
             assert augmentation_metadata.get("passthrough") in [None, False]
             assert augmented_eicr != ""
 
+            _assert_augmented_eicr_contains_expected_translations(augmented_root, eicr_id)
+            _assert_augmented_eicr_retains_original_content(original_root, augmented_root, eicr_id)
+
         actual_validation_results = validate_eicr(augmented_eicr)
+
+        if not augmentation_metadata.get("passthrough"):
+            assert actual_validation_results == [], actual_validation_results
+
         snapshot.assert_match(
             json.dumps(actual_validation_results, indent=2, sort_keys=True),
             f"{eicr_id}_validation_results.json",
