@@ -425,6 +425,7 @@ resource "aws_lambda_function" "lambda" {
     variables = {
       OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
       OPENSEARCH_INDEX        = var.index_name
+      RESULT_CACHE_INDEX      = var.result_cache_index_name
       REGION                  = var.region
       RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
       RERANKER_MODEL_PATH     = "/opt/reranker_model"
@@ -590,7 +591,8 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
   EOT
 
   depends_on = [
-    aws_lambda_invocation.index_bootstrap
+    aws_lambda_invocation.index_bootstrap,
+    aws_lambda_invocation.result_cache_index_bootstrap
   ]
 }
 
@@ -612,6 +614,16 @@ resource "aws_lambda_invocation" "index_bootstrap" {
   depends_on = [aws_lambda_function.index_lambda]
 }
 
+resource "aws_lambda_invocation" "result_cache_index_bootstrap" {
+  function_name = aws_lambda_function.index_lambda.function_name
+  input = jsonencode({
+    action = "create_result_cache"
+    index  = var.result_cache_index_name
+  })
+
+  depends_on = [aws_lambda_function.index_lambda]
+}
+
 resource "aws_lambda_function" "index_lambda" {
   function_name = var.index_lambda_function_name
   role          = aws_iam_role.index_lambda_role.arn
@@ -624,6 +636,7 @@ resource "aws_lambda_function" "index_lambda" {
       OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
       REGION                  = var.region
       INDEX_NAME              = var.index_name
+      RESULT_CACHE_INDEX_NAME = var.result_cache_index_name
       S3_BUCKET               = var.s3_bucket
     }
   }

@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
@@ -25,7 +25,6 @@ dev = [
   "ruff>=0.15.12",
   "ty>=0.0.33",
 ]
-
 
 [tool.coverage.run]
 source = ["packages"]
@@ -106,8 +105,6 @@ ignore = [
 mypy-init-return = true
 
 [tool.ruff.lint.isort]
-# The following settings reduce the number of changes from reorder-python-imports
-force-single-line = true
 known-first-party = [
   "augmentation",
   "augmentation_lambda",

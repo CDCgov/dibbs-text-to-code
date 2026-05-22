@@ -7,11 +7,13 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 ARG ENVIRONMENT=prod
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Update OS packages for CVE fixes, install build tools for compiling C++ extensions,
-# and drop the Runtime Interface Emulator (only used for local Lambda emulation).
+# Update OS packages for CVE fixes and drop the Runtime Interface Emulator
+# (only used for local Lambda emulation). All pip dependencies install from
+# prebuilt wheels, so no compiler toolchain is needed — keeping gcc-c++ out
+# of the image also keeps its build-time deps (kernel-headers, rust-toolset)
+# off the runtime layer, which is where the HIGH-severity CVEs come from.
 # --releasever=latest is required: AL2023 base images pin to a snapshot release.
 RUN microdnf update -y --releasever=latest \
-    && microdnf install -y --releasever=latest gcc-c++ make \
     && microdnf clean all \
     && rm -f /usr/local/bin/aws-lambda-rie
 

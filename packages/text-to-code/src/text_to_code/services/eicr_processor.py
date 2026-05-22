@@ -3,8 +3,7 @@ import logging
 from lxml import etree
 from lxml.etree import Element
 
-from shared_models import CdaInstanceIdentifier
-from shared_models import DataField
+from shared_models import CdaInstanceIdentifier, DataField
 from text_to_code.models import Candidate
 from text_to_code.models.eicr import Metadata
 from text_to_code.services.utils import get_config_for_data_field

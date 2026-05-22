@@ -3,12 +3,13 @@ from unittest.mock import patch
 
 from lxml import etree
 
-from shared_models import CdaInstanceIdentifier
-from shared_models import DataField
-from text_to_code.services.schematron_processor import _get_eicr_id
-from text_to_code.services.schematron_processor import _get_error_enum_value
-from text_to_code.services.schematron_processor import get_data_element_from_schematron_error
-from text_to_code.services.schematron_processor import get_data_fields_from_schematron_error
+from shared_models import CdaInstanceIdentifier, DataField
+from text_to_code.services.schematron_processor import (
+    _get_eicr_id,
+    _get_error_enum_value,
+    get_data_element_from_schematron_error,
+    get_data_fields_from_schematron_error,
+)
 
 current_dir = Path(__file__).parent.parent
 

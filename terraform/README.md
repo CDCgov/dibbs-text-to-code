@@ -67,9 +67,11 @@ Each Lambda function has its own IAM role scoped to least-privilege S3 permissio
 
 #### Index Bootstrap Lambda (`ttc-index-lambda`, `packages/index-lambda`)
 
-Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
+Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN Index and the OpenSearch Result Cache Index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
 
-The index it creates has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
+The first Index it creates–the Vector Search Index–has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
+
+The second Index it creates–the Result Cache Index–contains the hashed results of previously computed embeddings and nearest neighbor queries, so that when the pipeline later receives eICRs containing a previously hashed value, the correct standardized code can simply be looked-up, rather than re-embedded and re-ranked. The Result Cache Index shares handling with the `lambda_handler` using the same functions but different actions than the Vector Search Index.
 
 #### Main TTC Lambda (`ttc-lambda`, `Dockerfile.ttc`)
 
@@ -173,7 +175,7 @@ An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
 
-The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index exists before any data is loaded.
+The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index and the Result Cache Index exist before any data is loaded (wiping and refilling the Result Cache index as well as the normal Index for vector embeddings ensures that previously computed hashes do not survive either LOINC updates or model updates).
 
 Third-party deployers should ensure the following:
 
@@ -192,7 +194,7 @@ Terraform manages dependency ordering automatically, but conceptually the sequen
 3. Docker images built and pushed to ECR (in CI/CD, before full `terraform apply`)
 4. OpenSearch domain and VPC endpoint created
 5. Lambda IAM roles created (one per Lambda function)
-6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index in OpenSearch
+6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index and the Result Cache index in OpenSearch.
 7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
 8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
 9. Augmentation Lambda deployed with container image from ECR — ready to process augmentation requests
