@@ -27,6 +27,7 @@ import datetime
 import json
 import os
 import sys
+from argparse import Namespace
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
@@ -394,21 +395,24 @@ def _extract_full_vsac_snomed_problems() -> None:
 
 
 def main(
-    all_vs: bool,
-    lab_orders: bool,
-    lab_obs: bool,
-    lab_values: bool,
-    lab_interp: bool,
-    lab_names: bool,
-    loinc_abbr_syn: bool,
-    loinc_umls_syn: bool,
-    encounter_code: bool,
-    medication: bool,
-    vaccine: bool,
-    problem: bool,
+    args: Namespace,
 ) -> None:
     """Main entry point."""
     print("Starting Terminology ValueSet Sync...")
+
+    all_vs: bool = args.all
+    lab_orders: bool = args.lab_orders
+    lab_obs: bool = args.lab_obs
+    lab_values: bool = args.lab_values
+    lab_interp: bool = args.lab_interp
+    lab_names: bool = args.lab_names
+    loinc_abbr_syn: bool = args.loinc_abbr_syn
+    loinc_umls_syn: bool = args.loinc_umls_syn
+    encounter_code: bool = args.encounter_code
+    medication: bool = args.medication
+    vaccine: bool = args.vaccine
+    problem: bool = args.problem
+
     if all_vs or lab_orders:
         print("Getting LOINC Lab Orders...")
         _extract_full_loinc_lab_orders()
@@ -490,17 +494,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(
-        args.all,
-        args.lab_orders,
-        args.lab_obs,
-        args.lab_values,
-        args.lab_interp,
-        args.lab_names,
-        args.loinc_abbr_syn,
-        args.loinc_umls_syn,
-        args.encounter_code,
-        args.medication,
-        args.vaccine,
-        args.problem,
-    )
+    main(args)
