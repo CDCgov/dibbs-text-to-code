@@ -41,6 +41,7 @@ env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
+  "e2e/",
   "packages/augmentation-lambda/",
   "packages/augmentation/",
   "packages/index-lambda/",
