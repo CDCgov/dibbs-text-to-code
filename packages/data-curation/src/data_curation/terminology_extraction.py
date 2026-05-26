@@ -27,26 +27,32 @@ import datetime
 import json
 import os
 import sys
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
 import requests
 
-from data_curation.terminologies.general import BASE_FOLDER
-from data_curation.terminologies.general import ENHANCEMENTS_DIRECTORY
-from data_curation.terminologies.general import TMP_DIRECTORY
-from data_curation.terminologies.general import UMLS_API_KEY
-from data_curation.terminologies.general import clean_text_string
-from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes
-from data_curation.terminologies.hl7 import get_hl7_lab_interp
-from data_curation.terminologies.loinc import LOINC_PARTS_ABBRV_SYNONYMS
-from data_curation.terminologies.loinc import get_loinc_lab_names
-from data_curation.terminologies.loinc import get_loinc_lab_orders
-from data_curation.terminologies.loinc import get_loinc_lab_results
-from data_curation.terminologies.loinc import process_loincs_for_umls_urls
+from data_curation.terminologies.general import (
+    BASE_FOLDER,
+    ENHANCEMENTS_DIRECTORY,
+    TMP_DIRECTORY,
+    UMLS_API_KEY,
+    clean_text_string,
+)
+from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
+from data_curation.terminologies.loinc import (
+    LOINC_PARTS_ABBRV_SYNONYMS,
+    get_loinc_lab_names,
+    get_loinc_lab_orders,
+    get_loinc_lab_results,
+    process_loincs_for_umls_urls,
+)
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
-from data_curation.terminologies.vsac import get_vsac_cvx_vaccines
-from data_curation.terminologies.vsac import get_vsac_rxnorm_medications
-from data_curation.terminologies.vsac import get_vsac_snomed_problems
+from data_curation.terminologies.vsac import (
+    get_vsac_cvx_vaccines,
+    get_vsac_rxnorm_medications,
+    get_vsac_snomed_problems,
+)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -114,164 +120,115 @@ def _get_loinc_umls_related_results() -> None:
     _save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
-def _process_loinc_codes_with_umls(file_path: str) -> dict:
-    # ensure UMLS credentials are available
-    if UMLS_API_KEY is None:
-        raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
+def _load_json_file(path: str) -> dict:
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: {path} not found.")
+        raise
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON in {path}.")
+        raise
 
-    # ensure the tmp directory exists for both the UMLS URLS
-    # as well as the temp file to store progress
+
+def _umls_paged_results(url: str) -> Iterator[dict]:
+    """Yield items from a paginated UMLS endpoint until exhausted."""
+    page = 1
+    while True:
+        params = {
+            "apiKey": UMLS_API_KEY,
+            "pageNumber": page,
+            "pageSize": _PAGE_SIZE,
+            "language": "ENG",
+        }
+        response = requests.get(url, params=params, timeout=_TIMEOUT)
+        if response.status_code != requests.codes.ok:
+            return
+        payload = response.json()
+        yield from payload.get("result") or []
+        page_count = payload.get("pageCount")
+        if page_count is not None and page >= page_count:
+            return
+        page += 1
+
+
+def _atom_name(item: dict) -> str | None:
+    return item.get("name")
+
+
+def _crosswalk_name(item: dict) -> str | None:
+    if "LNC-" in (item.get("rootSource") or ""):
+        return None
+    return item.get("name")
+
+
+def _collect_unique_names(url: str, name_of: Callable[[dict], str | None]) -> list[str]:
+    """Walk a paged endpoint, extract names with `name_of`, dedupe and clean."""
+    seen: list[str] = []
+    for item in _umls_paged_results(url):
+        name = name_of(item)
+        if name and name not in seen:
+            seen.append(clean_text_string(name))
+    return seen
+
+
+def _related_names_for(urls: dict) -> list[str]:
+    """Combine UMLS atom + crosswalk related names for one LOINC code."""
+    names = _collect_unique_names(urls["atom"], _atom_name)
+    for name in _collect_unique_names(urls["crs"], _crosswalk_name):
+        if name not in names:
+            names.append(name)
+    return names
+
+
+def _process_loinc_codes_with_umls(file_path: str) -> dict:
+    if UMLS_API_KEY is None:
+        raise KeyError("UMLS_API_KEY environment variable must be set!")
     if not os.path.exists(TMP_DIRECTORY):
         raise KeyError("Directory where file is expected is missing!")
 
-    # load UMLS URLS
-    try:
-        with open(file_path) as file:
-            umls_urls = json.load(file)
-    except FileNotFoundError:
-        print(f"Error: {file_path} not found. Please ensure the file exists.")
-        raise
-    except json.JSONDecodeError:
-        print(f"Error: Invalid JSON format in {file_path}.")
-        raise
+    umls_urls = _load_json_file(file_path)
+    partial_path = TMP_DIRECTORY / "loinc_umls_related_names_PARTIAL.json"
 
+    if not os.path.exists(partial_path):
+        umls_loinc_rows = {}
+    try:
+        umls_loinc_rows = _load_json_file(partial_path)
+    except (FileNotFoundError, json.JSONDecodeError):
+        umls_loinc_rows = {}
+
+    if umls_loinc_rows:
+        print(f"Resuming — {len(umls_loinc_rows)} codes already processed.")
     print("Processing UMLS URLS for LOINC Codes!")
-    umls_loinc_rows = {}
-    loinc_code_count = 0
 
-    process_loinc_code = True
-    starting_loinc_code = ""
-    umls_filename_tmp = "loinc_umls_related_names_PARTIAL.json"
-    full_partial_file_path = TMP_DIRECTORY / umls_filename_tmp
-
-    if os.path.exists(full_partial_file_path):
-        try:
-            with open(full_partial_file_path, newline="", encoding="utf-8") as file:
-                umls_loinc_rows = json.load(file)
-                starting_loinc_code = list(umls_loinc_rows)[-1]
-                print("STARTING LOINC CODE: " + starting_loinc_code)
-                process_loinc_code = False
-        except FileNotFoundError:
-            print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
-        except json.JSONDecodeError:
-            print(f"Error: Invalid JSON format in {full_partial_file_path}.")
-
+    processed_count = 0
     try:
-        # loop through all the LOINC codes in dict along
-        # with all the correlated umls urls
         for loinc_code, urls_dict in umls_urls.items():
             long_name = urls_dict["long_name"]
-            if process_loinc_code:
-                umls_atom_url = urls_dict["atom"]
-                umls_crs_url = urls_dict["crs"]
-                related_names = []
-                loinc_code_count += 1
+            if long_name in umls_loinc_rows:
+                continue  # already processed in a previous run
 
-                # every 500 loinc code store the results
-                # in a temp file to ensure progress is not lost
-                # if we need to restart (typical run is 36 Hours)
-                if loinc_code_count % 500 == 0:
-                    _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
-                    print(
-                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
-                    )
+            related_names = _collect_unique_names(urls_dict["atom"], _atom_name)
+            for name in _collect_unique_names(urls_dict["crs"], _crosswalk_name):
+                if name not in related_names:
+                    related_names.append(name)
 
-                # LOINC ATOMIC TERMS PROCESSING
-                atom_page_num = 1
-                lang = "ENG"
-                params = {
-                    "apiKey": UMLS_API_KEY,
-                    "pageNumber": atom_page_num,
-                    "pageSize": _PAGE_SIZE,
-                    "language": lang,
-                }
+            umls_loinc_rows[long_name] = {"code": loinc_code, "names": related_names}
+            processed_count += 1
 
-                umls_atom_response = requests.get(umls_atom_url, params=params, timeout=_TIMEOUT)
-                atom_row_count = 0
-
-                while umls_atom_response.status_code == requests.codes.ok:
-                    # NOTE: the UMLS responses are a bit slow
-                    #  you can use the print statement below to get a
-                    #  better idea of the progress if needed.
-                    # print(f"Processing LOINC ATOM page {atom_page_num}")
-                    umls_atom_results = umls_atom_response.json().get("result")
-
-                    for atom_result in umls_atom_results:
-                        related_name = atom_result.get("name")
-                        if related_name and related_name not in related_names:
-                            related_names.append(clean_text_string(related_name))
-                            atom_row_count += 1
-
-                    atom_page_num += 1
-                    params = {
-                        "apiKey": UMLS_API_KEY,
-                        "pageNumber": atom_page_num,
-                        "pageSize": _PAGE_SIZE,
-                        "language": lang,
-                    }
-
-                    umls_atom_response = requests.get(
-                        umls_atom_url, params=params, timeout=_TIMEOUT
-                    )
-
-                # LOINC CROSSWALK TERMS PROCESSING
-                crs_page_num = 1
-                lang = "ENG"
-                params = {
-                    "apiKey": UMLS_API_KEY,
-                    "pageNumber": crs_page_num,
-                    "pageSize": _PAGE_SIZE,
-                    "language": lang,
-                }
-                umls_crs_response = requests.get(
-                    umls_crs_url, params=params, timeout=_TIMEOUT
-                ).json()
-                crs_row_count = 0
-                max_page = 1
-
-                while (
-                    umls_crs_response.status_code == requests.codes.ok and crs_page_num <= max_page
-                ):
-                    max_page = umls_crs_response.get("pageCount")
-                    # NOTE: the UMLS responses are a bit slow
-                    #  you can use the print statement below to get a
-                    #  better idea of the progress if needed.
-                    # print(f"Processing LOINC CROSSWALK page {crs_page_num}")
-                    umls_crs_results = umls_crs_response.get("result")
-
-                    for crs_result in umls_crs_results:
-                        related_name = crs_result.get("name")
-                        root_source = crs_result.get("rootSource")
-                        if (
-                            "LNC-" not in root_source
-                            and related_name
-                            and related_name not in related_names
-                        ):
-                            related_names.append(clean_text_string(related_name))
-                            crs_row_count += 1
-
-                    crs_page_num += 1
-                    params = {
-                        "apiKey": UMLS_API_KEY,
-                        "pageNumber": crs_page_num,
-                        "pageSize": _PAGE_SIZE,
-                        "language": lang,
-                    }
-
-                    umls_crs_response = requests.get(umls_crs_url, params=params, timeout=_TIMEOUT)
-
-                # add the record for the specific loinc code
-                related_names_row = {"code": loinc_code, "names": related_names}
-                umls_loinc_rows[long_name] = related_names_row
-            if starting_loinc_code != "" and long_name == starting_loinc_code:
-                process_loinc_code = True
-    except:
+            if processed_count % 500 == 0:
+                _save_json_file(TMP_DIRECTORY, partial_path.name, umls_loinc_rows, True)
+                print(
+                    f"{processed_count} new codes processed; "
+                    f"{len(umls_loinc_rows)} total records in temp file."
+                )
+    except Exception:
         print("Unexpected error:", sys.exc_info()[0])
         print(f"Saving {len(umls_loinc_rows)} records in file!")
-        # if exception occurs use all the rows in the existing list
-        # to overwrite the entire partial file
-        _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
+        _save_json_file(TMP_DIRECTORY, partial_path.name, umls_loinc_rows, False)
         raise
+
     return umls_loinc_rows
 
 

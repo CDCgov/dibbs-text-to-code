@@ -43,6 +43,7 @@ env_files_skip_if_set = false
 include = [
   "packages/augmentation-lambda/src",
   "packages/augmentation/src",
+  "packages/data-curation/src",
   "packages/index-lambda/src",
   "packages/lambda-handler/src",
   "packages/text-to-code-lambda/src",
@@ -105,7 +106,7 @@ mypy-init-return = true
 
 [tool.ruff.lint.isort]
 # The following settings reduce the number of changes from reorder-python-imports
-force-single-line = true
+force-single-line = false
 known-first-party = [
   "augmentation",
   "augmentation_lambda",

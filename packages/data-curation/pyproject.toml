@@ -25,5 +25,5 @@ extend = "../../pyproject.toml"
 
 [tool.ruff.lint]
 ignore = [
-  "T201" # print
+  "T201", # print
 ]
