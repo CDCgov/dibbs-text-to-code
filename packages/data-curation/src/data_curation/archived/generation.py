@@ -18,10 +18,7 @@ def generate_positive_pairs(
     num_samples_per_code: int = 1,
     rckms: bool = False,
 ) -> None:
-    """Given the location of one or more files of LOINC codes and some corresponding
-    augmented examples for those codes, this function compiles a list of
-    positive pairs that can be read for model training. A positive pair is a
-    tuple of the form (original_loinc_code, augmented_example_of_code).
+    """Given the location of one or more files of LOINC codes and some corresponding augmented examples for those codes, this function compiles a list of positive pairs that can be read for model training. A positive pair is a tuple of the form (original_loinc_code, augmented_example_of_code).
 
     :param file_handle: Either the path to a specific file of LOINC codes and
       examples, or the prefix path for multiple data files across name variants.
@@ -98,9 +95,7 @@ def generate_positive_pairs(
 
 
 def _append_to_data_pool(csvfp: csv.DictReader, data_pool) -> None:
-    """Simple helper method to append non-empty data rows to a list representing
-    a pool of aggregated data.
-    """
+    """Simple helper method to append non-empty data rows to a list representing a pool of aggregated data."""
     for row in csvfp:
         # Minimum one column for numeric code, original code string, variants
         if len(row) >= 3:

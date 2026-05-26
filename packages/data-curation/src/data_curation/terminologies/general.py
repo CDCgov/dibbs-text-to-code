@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """data_curation.terminologies.utils.general.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist
 with the process of extracting Medical Terminology codes and their terms
@@ -28,8 +27,7 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
 def clean_text_string(value: str) -> str:
-    """Function that removes multiple space characters from a string
-    and returns it for further processing.
+    """Function that removes multiple space characters from a string and returns it for further processing.
 
     :param value: Text string that needs to be clean.
 
@@ -42,10 +40,7 @@ def clean_text_string(value: str) -> str:
 
 
 def get_date_from_filename(filename: str, terminology: str) -> str:
-    """Function that extracts and formats the date from any of
-    the value set extract files and formats the date string
-    into a pattern used by the terminology set in their Versioning API call
-    (ie. get the latest version and version date).
+    """Function that extracts and formats the date from any of the value set extract files and formats the date string into a pattern used by the terminology set in their Versioning API call (ie. get the latest version and version date).
 
     :param filename: Text of the filename to extact the date from.
     :param terminology: The name of the value set in question as the
@@ -70,8 +65,7 @@ def get_date_from_filename(filename: str, terminology: str) -> str:
 
 
 def get_latest_extract_file_name(filename_prefix: str):
-    """Function that gets the most current/recent value set csv
-    file from the TTC code repo, by filename prefix.
+    """Function that gets the most current/recent value set csv file from the TTC code repo, by filename prefix.
 
     :param filename_prefix: The part of the filename that defines the
         terminology value set type (ie. loinc_lab_names) that you want
@@ -91,8 +85,7 @@ def get_latest_extract_file_name(filename_prefix: str):
 
 
 def load_extract_file_to_dict(filename: str) -> list[dict]:
-    """Function that takes a filename, finds the file and parses
-    it into an easier to process dictionary.
+    """Function that takes a filename, finds the file and parses it into an easier to process dictionary.
 
     :param filename: The filename of the file you wanted parsed
         into a dictionary.

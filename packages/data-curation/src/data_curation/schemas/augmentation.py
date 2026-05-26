@@ -1,5 +1,4 @@
 """data_curation.schemas.augmentation.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the schema definitions for the augmented data.
 """
@@ -11,9 +10,7 @@ import pydantic
 
 
 class EnhancementOptions(pydantic.BaseModel):
-    """The schema for a dictionary of probability settings used for input enhancement
-    during data augmentation.
-    """
+    """The schema for a dictionary of probability settings used for input enhancement during data augmentation."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -41,9 +38,7 @@ class EnhancementOptions(pydantic.BaseModel):
 
 
 class InsertionOptions(pydantic.BaseModel):
-    """The schema for a dictionary of probability settings used for performing
-    term insertion on a code string during data augmentation.
-    """
+    """The schema for a dictionary of probability settings used for performing term insertion on a code string during data augmentation."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -78,9 +73,7 @@ class InsertionOptions(pydantic.BaseModel):
 
 
 class PermutationOptions(pydantic.BaseModel):
-    """The schema for a dictionary of probability settings used for performing
-    term permutation (swapping) on a code string during data augmentation.
-    """
+    """The schema for a dictionary of probability settings used for performing term permutation (swapping) on a code string during data augmentation."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -105,9 +98,7 @@ class PermutationOptions(pydantic.BaseModel):
 
 
 class DeletionOptions(pydantic.BaseModel):
-    """The schema for a dictionary of probability settings used for performing
-    character deletion on a code string during data augmentation.
-    """
+    """The schema for a dictionary of probability settings used for performing character deletion on a code string during data augmentation."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -151,10 +142,7 @@ class DeletionOptions(pydantic.BaseModel):
 
 
 class AugmentationConfig(pydantic.BaseModel):
-    """The schema for a dictionary of configuration options governing how to augment,
-    randomize, scramble, and otherwise create noisy interference in a text string
-    for the purpose of creating synthetic data.
-    """
+    """The schema for a dictionary of configuration options governing how to augment, randomize, scramble, and otherwise create noisy interference in a text string for the purpose of creating synthetic data."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -193,10 +181,7 @@ class AugmentationConfig(pydantic.BaseModel):
 
 
 class LoincFileGenerationConfig(pydantic.BaseModel):
-    """The schema for a dictionary of configuration options governing how to generate
-    synthetic data specifically for LOINC short names, long common names, and display
-    names.
-    """
+    """The schema for a dictionary of configuration options governing how to generate synthetic data specifically for LOINC short names, long common names, and display names."""
 
     short_name: AugmentationConfig = AugmentationConfig()
     long_common_name: AugmentationConfig = AugmentationConfig()

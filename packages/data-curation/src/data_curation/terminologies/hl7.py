@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """data_curation.terminologies.utils.hl7.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist
 with the process of extracting HL7 Specific codes and their terms
@@ -22,9 +21,7 @@ HL7_ENCOUNTER_CODE_URL = "https://terminology.hl7.org/6.5.0/CodeSystem-v3-ActCod
 
 
 def get_hl7_encounter_act_codes() -> list[dict]:
-    """Function to get all the HL7 Codes and Terms for
-    Encounter Act via the HL7 Valueset CodeSystem JSON file
-    and organize the data into a list of dictionaries.
+    """Function to get all the HL7 Codes and Terms for Encounter Act via the HL7 Valueset CodeSystem JSON file and organize the data into a list of dictionaries.
 
     :returns: A list of dictionaries containing HL7 Encounter
         Act records including codes, text, and descriptions.
@@ -68,7 +65,7 @@ def get_hl7_encounter_act_codes() -> list[dict]:
                     result_row["description"] = clean_text_string(hl7_definition)
                     hl7_rows.append(result_row)
         # Hard coded external encounter
-        # This is the specified code, based upon the eICR specificiation, if an encounter is
+        # This is the specified code, based upon the eICR specification, if an encounter is
         # not associated with a specific 'patient visit'. You use the PHC2237 code for "External Encounter"
         # in an eICR when a public health trigger occurs outside of a specific patient encounter,
         # meaning it is not related to a particular visit or hospitalization
@@ -84,9 +81,7 @@ def get_hl7_encounter_act_codes() -> list[dict]:
 
 
 def get_hl7_lab_interp() -> list[dict]:
-    """Function to get all the HL7 Codes and Terms for
-    Lab Interpretations via the HL7 Valueset CodeSystem JSON file
-    and organize the data into a list of dictionaries.
+    """Function to get all the HL7 Codes and Terms for Lab Interpretations via the HL7 Valueset CodeSystem JSON file and organize the data into a list of dictionaries.
 
     :returns: A list of dictionaries containing HL7 Lab
         Interpretations records including codes and text.

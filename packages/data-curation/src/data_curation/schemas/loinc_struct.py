@@ -1,5 +1,4 @@
 """data_curation.schemas.loinc_struct.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the schema definition for a LOINC code object
 built out of data pulled from the LOINC API, the RELMA Database, and
@@ -19,7 +18,7 @@ class LabType(enum.StrEnum):
 
 
 class LoincStruct(pydantic.BaseModel):
-    """ """
+    """Model representing the Loinc structure."""
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
@@ -54,7 +53,7 @@ class LoincStruct(pydantic.BaseModel):
     class_type: str | None = pydantic.Field(
         default=None,
         description=(
-            "The laborary class extracted from the 'Basic Attributes' properties "
+            "The laboratory class extracted from the 'Basic Attributes' properties "
             "of the LOINC code, if they exist."
         ),
     )

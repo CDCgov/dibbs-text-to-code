@@ -1,5 +1,4 @@
 """data_curation.loinc_utils.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to be used as
 part of synthetic data generation. These functions are used both when
@@ -32,8 +31,7 @@ def scramble_word_order(
     max_perms: int,
     min_perms: int = 1,
 ) -> str:
-    """Scrambles the order of words in the input text by moving a specified
-    number of words to new positions.
+    """Scrambles the order of words in the input text by moving a specified number of words to new positions.
 
     :param text: The input text to scramble.
     :param max_perms: The maximum number of words to move.
@@ -59,11 +57,7 @@ def scramble_word_order(
 
 
 def _axis_is_valid(axis: str | None) -> bool:
-    """Determines whether a given string is a valid candidate for a LOINC
-    axis. A string might be a valid axis if it is non-null, not empty,
-    and is not a formatting dash. Note that this function does not
-    determine whether the given string is a proper axis, merely that
-    its formatting doesn't disqualify it.
+    """Determines whether a given string is a valid candidate for a LOINC axis. A string might be a valid axis if it is non-null, not empty, and is not a formatting dash. Note that this function does not determine whether the given string is a proper axis, merely that its formatting doesn't disqualify it.
 
     :param axis: The axis to determine the validity of.
     :returns: A boolean indicating whether the axis is valid.
@@ -72,11 +66,7 @@ def _axis_is_valid(axis: str | None) -> bool:
 
 
 def _choose_from_loinc_axis(axis: str | None, loinc_enhancements: dict) -> str:
-    """Given one of the six LOINC axes and a dictionary of axis-based enhancements,
-    randomly selects one possible replacement for the axis from its dictionary
-    entry. This choice includes both abbreviations and synonyms. If the axis
-    is invalid, has no enhancement entry, or has no related words, the empty
-    string is returned.
+    """Given one of the six LOINC axes and a dictionary of axis-based enhancements, randomly selects one possible replacement for the axis from its dictionary entry. This choice includes both abbreviations and synonyms. If the axis is invalid, has no enhancement entry, or has no related words, the empty string is returned.
 
     :param axis: The LOINC axis to search.
     :param loinc_enhancements: The dictionary of LOINC-axis-keywords to sets
@@ -100,11 +90,7 @@ def _choose_from_loinc_axis(axis: str | None, loinc_enhancements: dict) -> str:
 
 
 def _clean_unpaired_parens(code_string: str) -> str:
-    """Removes any unpaired "bracketing characters" that are either openers
-    or closers from the string. For purposes of this function, bracketing
-    characters are any of (), [], {}, or <>. Compresses nested bracketing
-    by looking for the first instance of a character that would complete
-    a found pair. For instance, in the string.
+    """Removes any unpaired "bracketing characters" that are either openers or closers from the string. For purposes of this function, bracketing characters are any of (), [], {}, or <>. Compresses nested bracketing by looking for the first instance of a character that would complete a found pair. For instance, in the string.
 
       'blah [blah (blah blah] blah)"
 
@@ -146,7 +132,7 @@ def _clean_unpaired_parens(code_string: str) -> str:
                 # openers from the stack between the end and that value, because
                 # they're now "dead characters" that have already been closed.
                 # They can't trigger later closures, because then you could have
-                # akward cases like 'a [b ( cde ] f)'.
+                # awkward cases like 'a [b ( cde ] f)'.
                 if paired_opening_idx != -1:
                     cleaned_chars.append((i, c))
                     for j in range(paired_opening_idx + 1, len(bracket_stack)):
@@ -168,11 +154,7 @@ def _clean_unpaired_parens(code_string: str) -> str:
 
 
 def _expand_measurement_property(msmt: str) -> str:
-    """LOINC has one Part-Code, `{Measurement}` (https://loinc.org/LP447904-6),
-    which is designed as a descriptive stand in for multiple equivalent
-    values. Since `{Measurement}` itself can't be enhanced as part of a code
-    string, this function replaces it where it occurs with a random choice
-    from the more specific eligible part codes.
+    """LOINC has one Part-Code, `{Measurement}` (https://loinc.org/LP447904-6), which is designed as a descriptive stand in for multiple equivalent values. Since `{Measurement}` itself can't be enhanced as part of a code string, this function replaces it where it occurs with a random choice from the more specific eligible part codes.
 
     :param msmt: The Property code to expand.
     :returns: The randomly chosen expansion. If `msmt` is not `{Measurement}`,
@@ -225,14 +207,7 @@ def _find_system_modality(
     include_parens: bool = False,
     include_preposition: bool = False,
 ) -> tuple[str, int, int] | None:
-    """Given a LOINC code string, this function locates the text in the string
-    representing the system modality of the code, if it exists. The modality
-    of a LOINC code is the "substance" (often a liquid like Blood or Plasma)
-    in which the test was performed. It can be formally defined by the System
-    axis property of the LOINC code, but the actual text with which it appears
-    might vary, including one or more related names. This function locates
-    the maximal group of words that make up the modality so that the whole
-    unit can be treated as a group.
+    """Given a LOINC code string, this function locates the text in the string representing the system modality of the code, if it exists. The modality of a LOINC code is the "substance" (often a liquid like Blood or Plasma) in which the test was performed. It can be formally defined by the System axis property of the LOINC code, but the actual text with which it appears might vary, including one or more related names. This function locates the maximal group of words that make up the modality so that the whole unit can be treated as a group.
 
     :param code_str: The LOINC code string in which to find the modality.
     :param system_axis: The System property of the LOINC code proper.
@@ -300,11 +275,7 @@ def _find_system_modality(
 
 
 def _get_component_axis_from_fsn(fsn: str) -> str:
-    """Identifies the Component axis of a LOINC code by parsing its Fully-
-    Specified Name. The component axis is a field not loaded as part of
-    the LOINC API extract, but it is uniquely identified by the FSN.
-    This function uses format specifications and edge case knowledge
-    to obtain the precise Component of a code.
+    """Identifies the Component axis of a LOINC code by parsing its Fully- Specified Name. The component axis is a field not loaded as part of the LOINC API extract, but it is uniquely identified by the FSN. This function uses format specifications and edge case knowledge to obtain the precise Component of a code.
 
     :param fsn: The Fully-Specified Name of the LOINC code.
     :returns: The Component axis, as a string.
@@ -334,10 +305,7 @@ def _get_component_axis_from_fsn(fsn: str) -> str:
 
 
 def _get_preceding_word(substring: str, string: str) -> str:
-    """Given a substring contained within another string, this function
-    finds and returns the word immediately preceding the substring, if
-    it exists.
-    """
+    """Given a substring contained within another string, this function finds and returns the word immediately preceding the substring, if it exists."""
     substring_idx = string.find(substring)
     if substring_idx != -1:
         preceding_string = string[:substring_idx].strip()
@@ -348,10 +316,7 @@ def _get_preceding_word(substring: str, string: str) -> str:
 
 
 def _parenthetical_is_trailing_acronym(parenthetical: re.Match[str], code_string: str) -> str:
-    """Given a LOINC code string and a parenthetical appositive within that
-    string, this function determines whether the content within those
-    parentheses constitutes an acronym for one or more preceding words
-    in the code string. For example, in the phrase.
+    """Given a LOINC code string and a parenthetical appositive within that string, this function determines whether the content within those parentheses constitutes an acronym for one or more preceding words in the code string. For example, in the phrase.
 
       Red Blood Cell (RBC) Count, Diff Panel
 
@@ -401,11 +366,7 @@ def _parenthetical_is_trailing_acronym(parenthetical: re.Match[str], code_string
 
 
 def _substring_is_contained_in_parens(string: str, start: int, end: int) -> bool:
-    """Determines whether the substring bounded by `start` and `end` is contained
-    within a closed set of brackets or parentheses. For purposes of this function,
-    start and end are assumed to work the same way sub-indexing a list or string
-    does, e.g. string[start:end] would include all characters in string from
-    `start` up to _but not including_ `end`.
+    """Determines whether the substring bounded by `start` and `end` is contained within a closed set of brackets or parentheses. For purposes of this function, start and end are assumed to work the same way sub-indexing a list or string does, e.g. string[start:end] would include all characters in string from `start` up to _but not including_ `end`.
 
     :param string: The string in which the parenthetical occurs.
     :param start: The index of the first character of the substring in question.
@@ -415,9 +376,7 @@ def _substring_is_contained_in_parens(string: str, start: int, end: int) -> bool
     """
     # No need to add 1 to end in this check (because during subindexing, the
     # second value is the first thing that doesn't get used).
-    if start - 1 >= 0 and end < len(string):
-        if (string[start - 1] == "(" and string[end] == ")") or (
-            string[start - 1] == "[" and string[end] == "]"
-        ):
-            return True
-    return False
+    return (start - 1 >= 0 and end < len(string)) and (
+        (string[start - 1] == "(" and string[end] == ")")
+        or (string[start - 1] == "[" and string[end] == "]")
+    )

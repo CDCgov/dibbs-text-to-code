@@ -15,7 +15,9 @@ assert len(LOINC_ENHANCEMENTS) > 0
 
 class TestGenerateDisjointIntervals:
     def test_generate_disjoint_intervals(self):
-        """Test generate disjoint internals with 3 test cases:
+        """Test generate disjoint internals with 3 test cases.
+
+        Test Cases:
         1) already disjoint intervals
         2) empty list
         3) overlap with a singleton and interval.

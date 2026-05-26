@@ -103,16 +103,7 @@ def random_char_deletion(
     max_per_word: int = 2,
     method: typing.Literal["char", "word"] = "char",
 ) -> str:
-    """This function randomly deletes characters from a string.  Two modes can be
-    selected.
-    'word' mode will randomly select words, which will then have characters
-    randomly selected for deletion as long as the number of deletions per each word
-    is below the max per word threshold.
-    'char' mode will randomly select a series characters from the string, skipping
-    any spaces, for deletion, ensuring that all words do not have more than the max
-    per word deletions selected.
-    The randomly select characters from both are removed from the input text and
-    the result is returned.
+    """This function randomly deletes characters from a string.  Two modes can be selected. 'word' mode will randomly select words, which will then have characters randomly selected for deletion as long as the number of deletions per each word is below the max per word threshold. 'char' mode will randomly select a series characters from the string, skipping any spaces, for deletion, ensuring that all words do not have more than the max per word deletions selected. The randomly select characters from both are removed from the input text and the result is returned.
 
     :param text: The input text to delete characters from.
     :param min_dels: The minimum number of characters to delete. Defaults to 1.
@@ -205,12 +196,7 @@ def generate_augmented_examples(
     num_examples: int,
     config: schemas.AugmentationConfig,
 ):
-    """Given a LOINC code string, generates a specified number of augmented
-    training examples, which are returned as a list. Each augmented example is
-    probabilistically operated on by a scrambling or enhancement function
-    above to create a semantically and syntactically variant instance. The
-    order of augmentation operations is always enhancement, insertion,
-    permutation, then deletion.
+    """Given a LOINC code string, generates a specified number of augmented training examples, which are returned as a list. Each augmented example is probabilistically operated on by a scrambling or enhancement function above to create a semantically and syntactically variant instance. The order of augmentation operations is always enhancement, insertion, permutation, then deletion.
 
     :param input_code: The LOINC code string to generate augmented copies of.
     :param related_names: A list of strings consisting of the LOINC "Related
@@ -308,8 +294,7 @@ def build_augmented_loinc_files(
     num_dn: int = 5,
     output_path_base: str = "../data/training_files/augmented_loinc",
 ) -> None:
-    """Generates augmented LOINC data files for the long common names, short
-    common names, and display names based on the provided configurations.
+    """Generates augmented LOINC data files for the long common names, short common names, and display names based on the provided configurations.
 
     :param input_path: The path to the base LOINC name file.
     :param configs: Configuration dictionaries for long common names, short

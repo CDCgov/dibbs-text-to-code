@@ -160,19 +160,19 @@ for k in wrong_answer_rank_gap:
         )
 
 
-for k in right_answers_at_rank:
+for _ in right_answers_at_rank:
     pass
-for k in top_k_accuracies_stopping_at:
+for _ in top_k_accuracies_stopping_at:
     pass
-for k in scores_at_rank:
+for _ in scores_at_rank:
     pass
-for k in right_answer_scores_at_rank:
+for _ in right_answer_scores_at_rank:
     pass
-for k in wrong_scores_at_rank:
+for _ in wrong_scores_at_rank:
     pass
-for k in score_gap_with_next_rank:
+for _ in score_gap_with_next_rank:
     pass
-for k in right_answer_rank_gap:
+for _ in right_answer_rank_gap:
     pass
-for k in wrong_answer_rank_gap:
+for _ in wrong_answer_rank_gap:
     pass

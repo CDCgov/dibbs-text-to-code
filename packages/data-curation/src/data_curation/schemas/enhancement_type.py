@@ -1,5 +1,4 @@
 """data_curation.schemas.enhancement_type.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A simple schema for defining the type of LOINC enhancement available
 during synthetic data generation.

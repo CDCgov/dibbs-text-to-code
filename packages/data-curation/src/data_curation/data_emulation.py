@@ -1,5 +1,4 @@
 """data_curation.data_emulation.
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the primary code for generating synthetic data samples
 designed to emulate production eCR data. The functions within employ a set
@@ -120,10 +119,7 @@ BASE_HEURISTIC_OPTIONS = ["measurement", "q group", "modality", "parens", "brack
 def build_and_process_ttc_and_heuristics(
     code_str: str, fsn: str, property_axis: str, system_axis: str, variations: list[str]
 ):
-    """Given a LOINC code string and some of its property information, construct
-    a TTC-style "enhanced" example of the code, then apply any eligible
-    post-processing. This function is primarily an orchestrator of its
-    internal functions.
+    """Given a LOINC code string and some of its property information, construct a TTC-style "enhanced" example of the code, then apply any eligible post-processing. This function is primarily an orchestrator of its internal functions.
 
     :param code_str: The text string of a LOINC code name variant.
     :param fsn: The fully specified name of the LOINC code.
@@ -158,12 +154,7 @@ def build_and_process_ttc_and_heuristics(
 def build_loinc_axis_example(
     loinc_code: schemas.LoincStruct, skip_time: bool = False, skip_scale: bool = False
 ) -> str:
-    """Given a LOINC code structure, directly construct a "LOINC-like" variant
-    for that code by repeatedly choosing a valid enhancement word for
-    that axis directly from our dictionary of axis-synonyms and
-    abbreviations. This build pattern represents getting a sample of data in
-    which everything is "close to" the correct code, but nothing is outright
-    the same.
+    """Given a LOINC code structure, directly construct a "LOINC-like" variant for that code by repeatedly choosing a valid enhancement word for that axis directly from our dictionary of axis-synonyms and abbreviations. This build pattern represents getting a sample of data in which everything is "close to" the correct code, but nothing is outright the same.
 
     :param loinc_code: A codified LOINC Struct object representing a LOINC
       code extracted from the API.
@@ -206,8 +197,7 @@ def build_loinc_axis_example(
 
 
 def build_short_name_hyphen_variant(code_str: str) -> str:
-    """Simple function that creates a variant of a short name obtained by
-    taking all code text that precedes a measurement-delimiting hyphen.
+    """Simple function that creates a variant of a short name obtained by taking all code text that precedes a measurement-delimiting hyphen.
 
     :param code_str: The text string of a LOINC code short name.
     :returns: The hyphen-truncated variation.
@@ -218,11 +208,7 @@ def build_short_name_hyphen_variant(code_str: str) -> str:
 
 
 def build_ttc_enhanced_example(code_str: str) -> str:
-    """Given a LOINC code string, generate a "TTC Enhanced" version of the
-    string. A TTC Enhanced code string contains one or more enhancements
-    made to the string (enhancements are abbreviation and acronym
-    substitutions based on the merged RELMA and UMLS database), followed
-    by one or more word swaps.
+    """Given a LOINC code string, generate a "TTC Enhanced" version of the string. A TTC Enhanced code string contains one or more enhancements made to the string (enhancements are abbreviation and acronym substitutions based on the merged RELMA and UMLS database), followed by one or more word swaps.
 
     :param code_str: A text string of a LOINC code name variant.
     :returns: A version of the string with enhancements performed.
@@ -236,10 +222,7 @@ def build_ttc_enhanced_example(code_str: str) -> str:
 
 
 def build_vendor_formula_style_example(code_str: str, property_axis: str, system_axis: str) -> str:
-    """Given a LOINC code string and a few of its properties, create a synthetic
-    variant of that code string that conforms to a few common trends observed
-    in production data. There is a particular format of some vendor-supplied
-    data that looks like.
+    """Given a LOINC code string and a few of its properties, create a synthetic variant of that code string that conforms to a few common trends observed in production data. There is a particular format of some vendor-supplied data that looks like.
 
       method_word modality core_component (acronym) measurement_word (unit text)
 
@@ -297,15 +280,7 @@ def build_vendor_formula_style_example(code_str: str, property_axis: str, system
 
 
 def create_synthetic_examples_for_code(loinc_code: schemas.LoincStruct) -> dict[str, list[str]]:
-    """Given a LOINC code structured object, perform a comprehensive panel of
-    synthetic data generation. For each name variant in the code structure
-    that is present, apply eligible forms of variation or direct build
-    patterns to create rich synthetic modifications of the original name
-    variant. Then, for each variant generated, apply post-processing to
-    further reduce standardization to the norm. All resulting synthetic
-    examples generated are stored in a dictionary structure mapping the
-    base name variant of the LOINC code to a list of generated synthetic
-    variants.
+    """Given a LOINC code structured object, perform a comprehensive panel of synthetic data generation. For each name variant in the code structure that is present, apply eligible forms of variation or direct build patterns to create rich synthetic modifications of the original name variant. Then, for each variant generated, apply post-processing to further reduce standardization to the norm. All resulting synthetic examples generated are stored in a dictionary structure mapping the base name variant of the LOINC code to a list of generated synthetic variants.
 
     :param loinc_code: A codified LOINC Struct object representing a LOINC
       code and its detailed information, extracted from the LOINC API.
@@ -396,11 +371,7 @@ def create_synthetic_examples_for_code(loinc_code: schemas.LoincStruct) -> dict[
 
 
 def get_bracket_variations(code_str: str) -> list[str]:
-    """Given a LOINC code string, generate semantic variations of that string
-    that modify how brackets within the string are used (or whether they
-    remain in the string at all). Bracket variance is one of the most
-    frequent departures-from-standard we see in production-grace code
-    strings.
+    """Given a LOINC code string, generate semantic variations of that string that modify how brackets within the string are used (or whether they remain in the string at all). Bracket variance is one of the most frequent departures-from-standard we see in production-grace code strings.
 
     :param code_str: The text string of a LOINC name variant.
     :returns: A list containing the synthetic versions of the LOINC code
@@ -419,18 +390,7 @@ def get_bracket_variations(code_str: str) -> list[str]:
 
 
 def get_measurement_variation(code_str: str, property_axis: str) -> list[str]:
-    """Given a LOINC code string and its associated property axis, create a
-    variant of the code string that includes a "measurement"-style word
-    inserted at the appropriate point. Measurement-style words include
-    things like "Detection," "Level," "Ratio," "Determination," and the
-    like. These words are often present in production data to denote a
-    specific instantiation or performance of a test, but the position of
-    these words is often a function of the rest of the code. This function
-    applies several common rules to locate it appropriately. Note that
-    while this function will only generate one variation of a code, the
-    return type is still a list to correspond to the established
-    convention that `get_XXX_variation` functions return an `Iterable`
-    from which elements can be randomly chosen.
+    """Given a LOINC code string and its associated property axis, create a variant of the code string that includes a "measurement"-style word inserted at the appropriate point. Measurement-style words include things like "Detection," "Level," "Ratio," "Determination," and the like. These words are often present in production data to denote a specific instantiation or performance of a test, but the position of these words is often a function of the rest of the code. This function applies several common rules to locate it appropriately. Note that while this function will only generate one variation of a code, the return type is still a list to correspond to the established convention that `get_XXX_variation` functions return an `Iterable` from which elements can be randomly chosen.
 
     :param code_str: The text string of a LOINC name variant.
     :param property_axis: The property axis of the LOINC code proper.
@@ -474,13 +434,7 @@ def get_measurement_variation(code_str: str, property_axis: str) -> list[str]:
 
 
 def get_modality_variations(code_str: str, system_axis: str) -> list[str]:
-    """Given a LOINC code string and its associated system axis, generates a list
-    of variations on that code string, each with a modified "modality" element.
-    Production data shows that one of the most common ways that nonstandard
-    codes are reported is by moving the modality of a test around in the code
-    string, or replacing it entirely. The four variations of modality text
-    this function generates allow us to capture the most common ways that labs
-    tend to send altered data.
+    """Given a LOINC code string and its associated system axis, generates a list of variations on that code string, each with a modified "modality" element. Production data shows that one of the most common ways that nonstandard codes are reported is by moving the modality of a test around in the code string, or replacing it entirely. The four variations of modality text this function generates allow us to capture the most common ways that labs tend to send altered data.
 
     :param code_str: The text string of a LOINC name variant.
     :param system_axis: The system axis of the LOINC code proper.
@@ -550,11 +504,7 @@ def get_modality_variations(code_str: str, system_axis: str) -> list[str]:
 
 
 def get_parens_variations(code_str: str) -> list[str]:
-    """Given a LOINC code string, generates variants of the string with any
-    parenthetical groups (parentheses and the text they enclose) either
-    wholly deleted, or turned into a trailing acronym. These modes of
-    using parentheses are derived from trends in how vendors often
-    communicate code strings.
+    """Given a LOINC code string, generates variants of the string with any parenthetical groups (parentheses and the text they enclose) either wholly deleted, or turned into a trailing acronym. These modes of using parentheses are derived from trends in how vendors often communicate code strings.
 
     :param code_string: The text string of a LOINC name variant.
     :returns: A list of variations on the string with parenthetical
@@ -576,12 +526,7 @@ def get_parens_variations(code_str: str) -> list[str]:
 
 
 def get_q_variations(code_str: str) -> list[str]:
-    """Given a LOINC code string, generates variations of the code string with
-    its "Q-Group" expanded. A Q-Group is a text chunk of the form "Ql OR Qn"
-    followed by a parenthetical with a liquid modality in it, like "(U)" or
-    "(Ser/Plas)". Analysis of production data has determined these can be
-    expanded to include full modalities, the full quantitative or qualitative
-    string, or both.
+    """Given a LOINC code string, generates variations of the code string with its "Q-Group" expanded. A Q-Group is a text chunk of the form "Ql OR Qn" followed by a parenthetical with a liquid modality in it, like "(U)" or "(Ser/Plas)". Analysis of production data has determined these can be expanded to include full modalities, the full quantitative or qualitative string, or both.
 
     :param code_str: The text of the LOINC code's name variant.
     :returns: A list of any generated q-group expansions.
@@ -634,16 +579,7 @@ def _allocate_generated_loincs_to_training_arrays(
     reranker_training_array: list[str],
     validation_array: list[str],
 ) -> tuple[list, list, list]:
-    """Once a LOINC code name variant has had multiple synthetic variations
-    generated, those variant examples must be distributed across different
-    model performance tasks, including training, reranking, and validation.
-    Discretely separating generated examples in this way ensures that no
-    data set has any overlap with any other, while also ensuring
-    comprehensive representation of LOINC codes across modeling tasks. This
-    function assigns a collection of synthetically generated LOINC strings
-    to the three modeling tasks highlighted above, storing each in a list
-    of tuples that pair the variant with the original code text, so that
-    those lists can be incrementally grown by future LOINC allocations.
+    """Once a LOINC code name variant has had multiple synthetic variations generated, those variant examples must be distributed across different model performance tasks, including training, reranking, and validation. Discretely separating generated examples in this way ensures that no data set has any overlap with any other, while also ensuring comprehensive representation of LOINC codes across modeling tasks. This function assigns a collection of synthetically generated LOINC strings to the three modeling tasks highlighted above, storing each in a list of tuples that pair the variant with the original code text, so that those lists can be incrementally grown by future LOINC allocations.
 
     :param code_string_base_name: The original, unaltered LOINC code text
       we started with, before any synthetic modification.
@@ -677,13 +613,7 @@ def _allocate_generated_loincs_to_training_arrays(
 
 
 def _choose_and_apply_heuristics(code_str: str, property_axis: str, system_axis: str) -> str:
-    """Given a LOINC code string (which should be either an LCN, DN, or CN, if
-    using them) and the corresponding property and system axes for the code,
-    determine which semantic variation heuristics can be applied to the code
-    and execute them. A semantic variation heuristic is valid for a code
-    if the heuristic can generate a new, modified form of the input. Note
-    that short names should not be supplied as input to this function, as
-    they lack the structure and content needed for semantic variation.
+    """Given a LOINC code string (which should be either an LCN, DN, or CN, if using them) and the corresponding property and system axes for the code, determine which semantic variation heuristics can be applied to the code and execute them. A semantic variation heuristic is valid for a code if the heuristic can generate a new, modified form of the input. Note that short names should not be supplied as input to this function, as they lack the structure and content needed for semantic variation.
 
     :param code_str: The text of a LOINC code name variant.
     :param property_axis: The Property axis of the LOINC code proper.
@@ -748,14 +678,7 @@ def _choose_and_apply_post_processing(
         ]
     ],
 ) -> str:
-    """Given a synthetically generated LOINC code string, this function
-    identifies valid post-processing functions which could be applied
-    to the string, and then randomly applies up to 2 of them. A post-
-    processing function is valid if applying it would result in an actual
-    change to the code string (e.g. pound sign variation for code strings
-    containing '[#/volume]'). If fewer than 2 post processors can be
-    applied, all found PPs are executed. If more than 2 are identified,
-    then 2 are randomly selected.
+    """Given a synthetically generated LOINC code string, this function identifies valid post-processing functions which could be applied to the string, and then randomly applies up to 2 of them. A post- processing function is valid if applying it would result in an actual change to the code string (e.g. pound sign variation for code strings containing '[#/volume]'). If fewer than 2 post processors can be applied, all found PPs are executed. If more than 2 are identified, then 2 are randomly selected.
 
     :param code_str: The text string for a LOINC code name variant.
     :param fsn: The fully-specified name for the LOINC code.
@@ -820,9 +743,7 @@ def _choose_and_apply_post_processing(
 
 
 def _codestring_is_valid_candidate(code_str: str | None, original_code: str) -> bool:
-    """Simple function for identifying whether a newly generated
-    synthetic code is a valid candidate to represent its original.
-    Valid means it's non-null, non-empty, and non-equal.
+    """Simple function for identifying whether a newly generated synthetic code is a valid candidate to represent its original. Valid means it's non-null, non-empty, and non-equal.
 
     :param code_str: The synthetically generated code string.
     :param original_code: The text of the LOINC code's original name
@@ -836,11 +757,7 @@ def _codestring_is_valid_candidate(code_str: str | None, original_code: str) -> 
 def _determine_eligible_pattern_heuristics(
     code_str: str, property_axis: str, system_axis: str
 ) -> list[str]:
-    """Given a LOINC code string and its corresponding property and system
-    axes, identify the kinds of semantic variation that can be applied
-    to it, based on the text elements that are present. For example,
-    Q-Group variation could be applied to a short name containing "Ql (U)"
-    but not to a long common name using the broader text "in Urine.".
+    """Given a LOINC code string and its corresponding property and system axes, identify the kinds of semantic variation that can be applied to it, based on the text elements that are present. For example, Q-Group variation could be applied to a short name containing "Ql (U)" but not to a long common name using the broader text "in Urine.".
 
     :param code_str: The text string of a LOINC code name variant.
     :param property_axis: The Property axis of the LOINC code proper.
@@ -874,10 +791,7 @@ def _determine_eligible_pattern_heuristics(
 
 
 def _get_single_word_method(code_str: str) -> tuple[str,]:
-    """Given a LOINC code string, determines if the included method-text in the
-    string can be represented as a "one-word test" (for example, condensing
-    'by screen method' into 'Screening.') This substitution is a known
-    template among some eCR vendors.
+    """Given a LOINC code string, determines if the included method-text in the string can be represented as a "one-word test" (for example, condensing 'by screen method' into 'Screening.') This substitution is a known template among some eCR vendors.
 
     :param code_str: The string text of a LOINC code name variant.
     :returns: A tuple containing the one-word method descriptor (or "",
@@ -905,15 +819,7 @@ def _get_single_word_method(code_str: str) -> tuple[str,]:
 def _get_measurement_unit_word(
     code_str: str, property_axis: str, return_symbol: bool = False
 ) -> str:
-    """Given a LOINC code string and its corresponding property axis, determines
-    an appropriate word that can be used to describe the measurement type or
-    unit of the code's hypothetical result. For example, a code that includes
-    the text 'by calculation' would have a result described as a 'Determination.'
-    A code string that had a '[Presence]' of a compound or organism would
-    have a result described as a 'Detection.' This "measurement-style" word
-    is used in a number of known eCR vendor templates for lab description,
-    so being able to reverse engineer them from code strings allows us to
-    train on that knowledge.
+    """Given a LOINC code string and its corresponding property axis, determines an appropriate word that can be used to describe the measurement type or unit of the code's hypothetical result. For example, a code that includes the text 'by calculation' would have a result described as a 'Determination.' A code string that had a '[Presence]' of a compound or organism would have a result described as a 'Detection.' This "measurement-style" word is used in a number of known eCR vendor templates for lab description, so being able to reverse engineer them from code strings allows us to train on that knowledge.
 
     :param code_str: The LOINC code string to determine the word for.
     :param property_axis: The Property axis of the LOINC code proper.
