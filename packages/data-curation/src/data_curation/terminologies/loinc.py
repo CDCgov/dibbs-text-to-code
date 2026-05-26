@@ -15,8 +15,7 @@ from datetime import datetime
 
 import requests
 
-from .general import BASE_FOLDER
-from .general import clean_text_string
+from .general import BASE_FOLDER, clean_text_string
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"

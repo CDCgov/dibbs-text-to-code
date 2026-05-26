@@ -2,10 +2,8 @@ import logging
 
 from lxml import etree
 
-from shared_models import CdaInstanceIdentifier
-from shared_models import DataField
-from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD
-from text_to_code.models.schematron import SchematronErrorDetail
+from shared_models import CdaInstanceIdentifier, DataField
+from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD, SchematronErrorDetail
 
 logger = logging.getLogger(__name__)
 

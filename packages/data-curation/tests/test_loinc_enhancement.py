@@ -6,9 +6,7 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import loinc_enhancement
-
-from utils import normalize
-from utils import path
+from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

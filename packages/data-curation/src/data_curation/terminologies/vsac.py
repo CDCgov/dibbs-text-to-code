@@ -10,8 +10,7 @@ codes and their terms to generate and maintain embeddings in Opensearch for TTC.
 
 import requests
 
-from .general import UMLS_API_KEY
-from .general import clean_text_string
+from .general import UMLS_API_KEY, clean_text_string
 
 # Terminology URLS
 VSAC_MEDICATIONS_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4/$expand"

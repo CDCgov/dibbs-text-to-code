@@ -1,8 +1,6 @@
 from enum import Enum
 
-from shared_models import CdaInstanceIdentifier
-from shared_models import DataField
-from shared_models import FrozenBaseModel
+from shared_models import CdaInstanceIdentifier, DataField, FrozenBaseModel
 from text_to_code.models.eicr import Candidate
 
 

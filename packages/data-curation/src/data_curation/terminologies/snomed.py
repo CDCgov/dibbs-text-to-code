@@ -10,8 +10,7 @@ to generate and maintain embeddings in Opensearch for TTC.
 
 import requests
 
-from .general import UMLS_API_KEY
-from .general import clean_text_string
+from .general import UMLS_API_KEY, clean_text_string
 
 # Terminology URLS
 UMLS_SNOMED_LAB_VALUES_URL = (

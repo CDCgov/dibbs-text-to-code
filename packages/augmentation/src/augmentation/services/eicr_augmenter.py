@@ -1,20 +1,15 @@
 from datetime import datetime
-from uuid import NAMESPACE_URL
-from uuid import uuid5
+from uuid import NAMESPACE_URL, uuid5
 
 from lxml import etree
 from lxml.etree import Element
 
-from augmentation.models import ApplicationCode
-from augmentation.models import Metadata
-from augmentation.models import TTCAugmenterConfig
+from augmentation.models import ApplicationCode, Metadata, TTCAugmenterConfig
 from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
 from shared_models import NonstandardCodeInstance
 
-from .eicr_utils import CDA_NS
-from .eicr_utils import CDA_NSMAP
-from .eicr_utils import cda_xpath
+from .eicr_utils import CDA_NS, CDA_NSMAP, cda_xpath
 
 
 def _cda_element(tag: str, parent: Element | None = None) -> Element:

@@ -1,9 +1,13 @@
-from data_curation.terminologies.general import get_date_from_filename
-from data_curation.terminologies.general import get_latest_extract_file_name
-from data_curation.terminologies.general import load_extract_file_to_dict
-from data_curation.terminologies.loinc import LAB_NAMES
-from data_curation.terminologies.loinc import get_loinc_current_version_data
-from data_curation.terminologies.loinc import get_loinc_embedding_records
+from data_curation.terminologies.general import (
+    get_date_from_filename,
+    get_latest_extract_file_name,
+    load_extract_file_to_dict,
+)
+from data_curation.terminologies.loinc import (
+    LAB_NAMES,
+    get_loinc_current_version_data,
+    get_loinc_embedding_records,
+)
 
 
 def update_loinc_embeddings() -> None:

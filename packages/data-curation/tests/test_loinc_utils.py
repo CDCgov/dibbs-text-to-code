@@ -7,10 +7,7 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import loinc_utils
-
-from utils import normalize
-from utils import path
-from utils import regex_patterns
+from utils import normalize, path, regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

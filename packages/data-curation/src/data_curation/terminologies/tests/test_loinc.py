@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from data_curation.terminologies.loinc import _create_embedding_record
-from data_curation.terminologies.loinc import _create_embedding_records
+from data_curation.terminologies.loinc import _create_embedding_record, _create_embedding_records
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"

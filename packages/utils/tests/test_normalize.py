@@ -1,7 +1,6 @@
 import pytest
 
-from utils.normalize import merge_enhancements
-from utils.normalize import merge_two_lists
+from utils.normalize import merge_enhancements, merge_two_lists
 
 
 @pytest.mark.parametrize(

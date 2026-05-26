@@ -1,25 +1,18 @@
 import io
 import json
 import os
-from datetime import UTC
-from datetime import datetime
+from datetime import UTC, datetime
 
 from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.data_classes import SQSEvent
-from aws_lambda_powertools.utilities.data_classes import SQSRecord
-from aws_lambda_powertools.utilities.data_classes import event_source
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, SQSRecord, event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import Code
-from shared_models import NonstandardCodeInstance
-from text_to_code.models import Candidate
-from text_to_code.models import SchematronErrorDetail
+from shared_models import Code, NonstandardCodeInstance
+from text_to_code.models import Candidate, SchematronErrorDetail
 from text_to_code.models import query as query_models
-from text_to_code.services import eicr_processor
-from text_to_code.services import evaluator
-from text_to_code.services import schematron_processor
+from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import rerank

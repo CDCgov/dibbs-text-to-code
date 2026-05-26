@@ -5,11 +5,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation import data_emulation
-from data_curation.schemas.loinc_struct import LabType
-from data_curation.schemas.loinc_struct import LoincStruct
-
-from utils import normalize
-from utils import path
+from data_curation.schemas.loinc_struct import LabType, LoincStruct
+from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

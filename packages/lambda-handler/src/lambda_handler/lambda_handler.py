@@ -7,16 +7,13 @@ from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
 from botocore.credentials import Credentials
 from botocore.exceptions import ClientError
-from opensearchpy import OpenSearch
-from opensearchpy import RequestsHttpConnection
+from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
 from lambda_handler.models.opensearch import OpenSearchHitSource
 from utils import get_env_variable
 
-from .models import OpenSearchHit
-from .models import OpenSearchHits
-from .models import OpenSearchResult
+from .models import OpenSearchHit, OpenSearchHits, OpenSearchResult
 
 logger = Logger(service="lambda-handler", child=True)
 

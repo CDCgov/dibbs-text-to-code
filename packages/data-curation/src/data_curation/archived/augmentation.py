@@ -11,10 +11,7 @@ from data_curation.archived import configs
 from data_curation.loinc_enhancement import enhance_loinc_str
 from data_curation.loinc_utils import scramble_word_order
 from data_curation.schemas import augmentation as schemas
-
-from utils import normalize
-from utils import path
-from utils import regex_patterns
+from utils import normalize, path, regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

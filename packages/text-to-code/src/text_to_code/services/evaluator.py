@@ -1,12 +1,13 @@
 from shared_models import DataField
-from text_to_code.models.evaluator import EVALUATION_REGISTRY
-from text_to_code.models.evaluator import BaseEvaluationCriteria
-from text_to_code.models.evaluator import CodeTranslation
-from text_to_code.models.evaluator import TranslationPreference
-from text_to_code.models.evaluator import TranslationSelectionStrategy
+from text_to_code.models.evaluator import (
+    EVALUATION_REGISTRY,
+    BaseEvaluationCriteria,
+    CodeTranslation,
+    TranslationPreference,
+    TranslationSelectionStrategy,
+)
 
-from ..models.eicr import Candidate
-from ..models.eicr import LabXPaths
+from ..models.eicr import Candidate, LabXPaths
 
 
 def _classify_translation_system(

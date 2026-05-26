@@ -46,30 +46,30 @@ import typing
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation.loinc_enhancement import enhance_loinc_str
-from data_curation.loinc_utils import _axis_is_valid
-from data_curation.loinc_utils import _choose_from_loinc_axis
-from data_curation.loinc_utils import _clean_unpaired_parens
-from data_curation.loinc_utils import _expand_measurement_property
-from data_curation.loinc_utils import _find_system_modality
-from data_curation.loinc_utils import _get_component_axis_from_fsn
-from data_curation.loinc_utils import _parenthetical_is_trailing_acronym
-from data_curation.loinc_utils import scramble_word_order
-from data_curation.post_process import _determine_eligible_post_processing
-from data_curation.post_process import apply_deletion_post_processing
-from data_curation.post_process import apply_delimiter_post_processing
-from data_curation.post_process import apply_dot_flip_post_processing
-from data_curation.post_process import apply_modality_drop_post_processing
-from data_curation.post_process import apply_point_of_care_post_processing
-from data_curation.post_process import apply_pound_sign_post_processing
-from data_curation.post_process import apply_syntax_post_processing
-from data_curation.post_process import apply_truncation_post_processing
+from data_curation.loinc_utils import (
+    _axis_is_valid,
+    _choose_from_loinc_axis,
+    _clean_unpaired_parens,
+    _expand_measurement_property,
+    _find_system_modality,
+    _get_component_axis_from_fsn,
+    _parenthetical_is_trailing_acronym,
+    scramble_word_order,
+)
+from data_curation.post_process import (
+    _determine_eligible_post_processing,
+    apply_deletion_post_processing,
+    apply_delimiter_post_processing,
+    apply_dot_flip_post_processing,
+    apply_modality_drop_post_processing,
+    apply_point_of_care_post_processing,
+    apply_pound_sign_post_processing,
+    apply_syntax_post_processing,
+    apply_truncation_post_processing,
+)
 from data_curation.schemas import loinc_struct as schemas
-from utils import normalize
-from utils import path
-from utils.regex_patterns import BRACKETED_TEXT
-from utils.regex_patterns import MULTIPLE_SPACE
-from utils.regex_patterns import PARENTHESES_TEXT
-from utils.regex_patterns import Q_GROUP
+from utils import normalize, path
+from utils.regex_patterns import BRACKETED_TEXT, MULTIPLE_SPACE, PARENTHESES_TEXT, Q_GROUP
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)

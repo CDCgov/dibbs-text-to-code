@@ -1,9 +1,11 @@
 import pytest
 
-from data_curation.terminologies.general import clean_text_string
-from data_curation.terminologies.general import get_date_from_filename
-from data_curation.terminologies.general import get_latest_extract_file_name
-from data_curation.terminologies.general import load_extract_file_to_dict
+from data_curation.terminologies.general import (
+    clean_text_string,
+    get_date_from_filename,
+    get_latest_extract_file_name,
+    load_extract_file_to_dict,
+)
 
 
 def test_clean_text_string_empty() -> None:
