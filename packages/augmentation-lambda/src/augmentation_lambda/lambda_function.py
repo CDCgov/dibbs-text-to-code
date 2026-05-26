@@ -265,12 +265,16 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmented_eicr_key,
         status="success",
+        passthrough=output.metadata.passthrough,
+        passthrough_reason=output.metadata.passthrough_reason,
     )
 
     lambda_handler.put_file(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=augmentation_metadata_key,
+        passthrough=output.metadata.passthrough,
+        passthrough_reason=output.metadata.passthrough_reason,
     )
 
     logger.info(

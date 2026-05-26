@@ -443,7 +443,7 @@ def _process_record_pipeline(
                         (
                             x
                             for x in results_list
-                            if x.source.description == ranked_results[0].code_string
+                            if x.source.description == ranked_results[0]["code_string"]
                         ),
                         None,
                     )
