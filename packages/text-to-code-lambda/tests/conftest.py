@@ -142,7 +142,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> Iterator[BaseClient]:
 @pytest.fixture(autouse=True)
 def reset_opensearch_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reset cached OpenSearch client before every test."""
-    monkeypatch.setattr(lambda_function, "_cached_opensearch_client", None)
+    monkeypatch.setattr(lambda_function, "_cached_opensearch_client", None, raising=False)
 
 
 @pytest.fixture(scope="function")
