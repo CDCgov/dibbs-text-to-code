@@ -8,6 +8,7 @@ import lambda_handler
 from conftest import S3_BUCKET, TTC_METADATA_PREFIX, TTC_OUTPUT_PREFIX
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from text_to_code.models import Candidate
+from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
 
 EXPECTED_RESULTED_ERRORS = 2
@@ -37,7 +38,25 @@ class TestHandler:
         mock_opensearch,
         snapshot: Snapshot,
         mock_lambda_context,
+        mocker,
     ):
+
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
+            {
+                "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                "score": 0.5247528553009033,
+            },
+            {
+                "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                "score": 0.35545864701271057,
+            },
+        ]
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.rerank",
+            return_value=ranked_results,
+        )
+
         """Test handler with no failures."""
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
@@ -258,7 +277,10 @@ class TestHandler:
         )
 
         retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
-        reranker_mock = mocker.patch.object(lambda_function, "rerank")
+        reranker_mock = mocker.patch.object(
+            lambda_function,
+            "rerank",
+        )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
