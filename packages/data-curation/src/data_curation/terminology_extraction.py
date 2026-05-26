@@ -27,6 +27,7 @@ import datetime
 import json
 import os
 import sys
+from dataclasses import dataclass
 
 import requests
 
@@ -331,134 +332,81 @@ def _save_json_file(
         print(f"An error occurred: {e}")
 
 
-def _get_loinc_abbrv_syns(
-    part_code: str,
-    part_name: str,
-    repl_name: str,
-    pref_abrv: str,
-    synonym: str,
-    loinc_row: dict,
-) -> dict:
-    filter_from_names = ["", "$"]
+_INVALID_VALUES = frozenset({None, "", "$"})
+_AXIS_NAMES = ("component", "method", "property", "scale", "system", "time")
 
-    if loinc_row.get("code") == part_code:
-        if (
-            repl_name is not None
-            and repl_name not in filter_from_names
-            and repl_name != part_name
-            and repl_name not in loinc_row.get("synonyms")
-        ):
-            loinc_row["synonyms"].append(repl_name)
-        if (
-            pref_abrv is not None
-            and pref_abrv not in filter_from_names
-            and pref_abrv != part_name
-            and pref_abrv not in loinc_row.get("synonyms")
-            and pref_abrv not in loinc_row.get("abbrv")
-        ):
-            loinc_row["abbrv"].append(pref_abrv)
 
-        if (
-            synonym is not None
-            and synonym not in filter_from_names
-            and synonym != part_name
-            and synonym not in loinc_row.get("synonyms")
-            and synonym not in loinc_row.get("abbrv")
-        ):
-            loinc_row["synonyms"].append(synonym)
-    return loinc_row
+@dataclass(frozen=True)
+class PartRecord:
+    """One row from the LOINC parts CSV, normalized."""
+
+    code: str
+    name: str
+    axis: str
+    repl_name: str | None
+    pref_abrv: str | None
+    synonym: str | None
+
+    @classmethod
+    def from_csv_row(cls, row: dict) -> "PartRecord":
+        """Create a PartRecord from a CSV row dictionary."""
+        return cls(
+            code=row.get("PART_NUM"),
+            name=row.get("PART"),
+            axis=(row.get("PART_TYPE_NAME_NAME") or "").lower(),
+            repl_name=row.get("PART_NAME"),
+            pref_abrv=row.get("PREF_ABRV"),
+            synonym=row.get("SYNONYM"),
+        )
+
+
+def _should_add(value: str | None, part_name: str, *existing_lists: list) -> bool:
+    """True if `value` is a real new entry: non-empty, not the part name itself, and not already present in any of the given lists."""
+    if value in _INVALID_VALUES or value == part_name:
+        return False
+    return all(value not in lst for lst in existing_lists)
 
 
 def _create_loinc_part_abbrv_syn_dicts() -> None:
-    """Creates single file dictionary for each of the different LOINC parts, which contains each LOINC Part Code, Name and Abbreviations and Synonyms."""
-    # Separate LOINC Part Dictionaries
-    component_dict = {}
-    method_dict = {}
-    property_dict = {}
-    scale_dict = {}
-    system_dict = {}
-    time_dict = {}
-    component_file = f"loinc_component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    method_file = f"loinc_method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    property_file = f"loinc_property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    scale_file = f"loinc_scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    system_file = f"loinc_system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
-    time_file = f"loinc_time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    """Creates one JSON file per LOINC part axis containing each Part Code, Name, Abbreviations and Synonyms."""
+    today = datetime.datetime.now().strftime("%Y%m%d")
+    part_dicts: dict[str, dict] = {axis: {} for axis in _AXIS_NAMES}
 
-    row_count = 1
-
+    row_count = 0
     with open(LOINC_PARTS_ABBRV_SYNONYMS, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for row in reader:
-            # NOTE: the below print statement can be used
-            # to track down errors within the access extract file
-            # for particular rows with character issues
-            # print(f"ROW_COUNT: {row_count}")
-            row_count = row_count + 1
-            part_code = row.get("PART_NUM")
-            axis_name = row.get("PART_TYPE_NAME_NAME")
-            part_name = row.get("PART")
-            repl_name = row.get("PART_NAME")
-            pref_abrv = row.get("PREF_ABRV")
-            synonym = row.get("SYNONYM")
+            row_count += 1
+            record = PartRecord.from_csv_row(row)
+            target = part_dicts.get(record.axis)
+            if target is None:
+                continue  # unknown axis — skip silently
 
-            # build various LOINC Part dicts
-            if axis_name == "COMPONENT":
-                existing_row = component_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    component_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "METHOD":
-                existing_row = method_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    method_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "PROPERTY":
-                existing_row = property_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    property_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "SYSTEM":
-                existing_row = system_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    system_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "TIME":
-                existing_row = time_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    time_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
-            elif axis_name == "SCALE":
-                existing_row = scale_dict.get(part_name)
-                if not existing_row:
-                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-                    scale_dict[part_name] = existing_row
-                existing_row = _get_loinc_abbrv_syns(
-                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
-                )
+            existing = target.setdefault(
+                record.name,
+                {"code": record.code, "abbrv": [], "synonyms": []},
+            )
+
+            if existing.get("code") != record.code:
+                target[record.name] = existing
+
+            synonyms = list(existing["synonyms"])
+            abbrv = list(existing["abbrv"])
+
+            if _should_add(record.repl_name, record.name, synonyms):
+                synonyms.append(record.repl_name)
+            if _should_add(record.pref_abrv, record.name, synonyms, abbrv):
+                abbrv.append(record.pref_abrv)
+            if _should_add(record.synonym, record.name, synonyms, abbrv):
+                synonyms.append(record.synonym)
+
+            target[record.name] = {**existing, "synonyms": synonyms, "abbrv": abbrv}
+
     print(f"Total Rows Processed: {row_count}")
-    # write each dict out into it's own file
-    _save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
-    _save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
-    _save_json_file(ENHANCEMENTS_DIRECTORY, property_file, property_dict)
-    _save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
-    _save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
-    _save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
+
+    for axis, data in part_dicts.items():
+        filename = f"loinc_{axis}_abbrv_syn_{today}.json"
+        _save_json_file(ENHANCEMENTS_DIRECTORY, filename, data)
 
 
 def _extract_full_hl7_encounter_act_codes() -> None:
@@ -501,7 +449,8 @@ def main(
     medication: bool,
     vaccine: bool,
     problem: bool,
-):
+) -> None:
+    """Main entry point."""
     print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
         print("Getting LOINC Lab Orders...")
