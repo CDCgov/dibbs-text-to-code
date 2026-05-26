@@ -41,14 +41,14 @@ env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
-  "packages/augmentation-lambda/src",
-  "packages/augmentation/src",
-  "packages/index-lambda/src",
-  "packages/lambda-handler/src",
-  "packages/text-to-code-lambda/src",
-  "packages/text-to-code/src",
-  "packages/utils/src",
-  "packages/validation/src",
+  "packages/augmentation-lambda/",
+  "packages/augmentation/",
+  "packages/index-lambda/",
+  "packages/lambda-handler/",
+  "packages/text-to-code-lambda/",
+  "packages/text-to-code/",
+  "packages/utils/",
+  "packages/validation/",
 ]
 
 [tool.ruff]

@@ -87,7 +87,7 @@ class BrokenSaxonProcessor:
 
 def test_validation():
     """Tests that the validate_eicr function correctly processes an eICR and returns expected validation results."""
-    with Path.open("packages/validation/tests/assets/test_eicr.xml") as f:
+    with Path("packages/validation/tests/assets/test_eicr.xml").open() as f:
         eicr = f.read()
     results = validate_eicr(eicr)
 
@@ -101,7 +101,7 @@ def test_validation():
 
 def test_validation_no_errors():
     """Tests that the validate_eicr function returns an empty list when there are no validation errors."""
-    with Path.open("e2e/snapshots/test_e2e/test_upload_and_process/augmented_eicr.xml") as f:
+    with Path("e2e/snapshots/test_e2e/test_upload_and_process/augmented_eicr.xml").open() as f:
         eicr = f.read()
     results = validate_eicr(eicr)
 
