@@ -328,7 +328,7 @@ def _save_json_file(
     except ValueError as e:
         print(f"Error parsing Dict Contents: {e}")
     except Exception as e:
-        print(f"An error occured: {e}")
+        print(f"An error occurred: {e}")
 
 
 def _get_loinc_abbrv_syns(
