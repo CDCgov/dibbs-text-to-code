@@ -349,19 +349,9 @@ def _process_schematron_errors(
 
         text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
-        logger.info(
-            "Evaluating candidates and selecting relevant text for each error in the eICR",
-            status="processing",
-        )
-
         selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
 
         error_with_candidate = error.model_copy(update={"candidate": selected_candidate})
-
-        logger.info(
-            "Embedding the relevant text strings for each error in the eICR",
-            status="processing",
-        )
 
         if selected_candidate is None:
             unmatched_error = error_with_candidate.model_dump()
