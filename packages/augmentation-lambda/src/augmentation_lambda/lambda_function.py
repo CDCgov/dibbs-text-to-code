@@ -273,8 +273,6 @@ def _save_augmentation_outputs(
         file_obj=io.BytesIO(output.metadata.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=augmentation_metadata_key,
-        passthrough=output.metadata.passthrough,
-        passthrough_reason=output.metadata.passthrough_reason,
     )
 
     logger.info(
@@ -282,4 +280,6 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmentation_metadata_key,
         status="success",
+        passthrough=output.metadata.passthrough,
+        passthrough_reason=output.metadata.passthrough_reason,
     )
