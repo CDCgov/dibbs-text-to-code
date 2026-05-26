@@ -299,7 +299,7 @@ def _save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool 
     except ValueError as e:
         print(f"Error parsing Dict Contents: {e}")
     except Exception as e:
-        print(f"An error occured: {e}")
+        print(f"An error occurred: {e}")
 
 
 def _save_json_file(
