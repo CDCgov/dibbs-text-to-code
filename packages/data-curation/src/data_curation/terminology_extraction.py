@@ -29,7 +29,6 @@ import os
 import sys
 
 import requests
-from argpase import Namespace
 
 from data_curation.terminologies.general import BASE_FOLDER
 from data_curation.terminologies.general import ENHANCEMENTS_DIRECTORY
@@ -99,11 +98,12 @@ def _get_loinc_umls_related_results() -> None:
     # then store them in a file
     if not os.path.exists(full_url_file_path):
         umls_loinc_results = process_loincs_for_umls_urls()
+        print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
         _save_json_file(
             directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
         )
     else:
-        pass
+        print("LOINC UMLS URL File already exists!  Will use that for processing!")
 
     # now use the UMLS URLS to call the UMLS and get the related names
     # and store them in a file - first just a tmp file as the process takes a long time
@@ -127,9 +127,14 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
     try:
         with open(file_path) as file:
             umls_urls = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found. Please ensure the file exists.")
+        raise
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON format in {file_path}.")
         raise
 
+    print("Processing UMLS URLS for LOINC Codes!")
     umls_loinc_rows = {}
     loinc_code_count = 0
 
@@ -143,9 +148,12 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
             with open(full_partial_file_path, newline="", encoding="utf-8") as file:
                 umls_loinc_rows = json.load(file)
                 starting_loinc_code = list(umls_loinc_rows)[-1]
+                print("STARTING LOINC CODE: " + starting_loinc_code)
                 process_loinc_code = False
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
+        except FileNotFoundError:
+            print(f"Error: {full_partial_file_path} not found. Please ensure the file exists.")
+        except json.JSONDecodeError:
+            print(f"Error: Invalid JSON format in {full_partial_file_path}.")
 
     try:
         # loop through all the LOINC codes in dict along
@@ -163,6 +171,9 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
                 # if we need to restart (typical run is 36 Hours)
                 if loinc_code_count % 500 == 0:
                     _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, True)
+                    print(
+                        f"{loinc_code_count} LOINC Codes have been processed and {len(umls_loinc_rows)} records have been written to a temp file!"
+                    )
 
                 # LOINC ATOMIC TERMS PROCESSING
                 atom_page_num = 1
@@ -249,10 +260,13 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
                     umls_crs_response = requests.get(umls_crs_url, params=params, timeout=_TIMEOUT)
 
                 # add the record for the specific loinc code
-                umls_loinc_rows[long_name] = {"code": loinc_code, "names": related_names}
+                related_names_row = {"code": loinc_code, "names": related_names}
+                umls_loinc_rows[long_name] = related_names_row
             if starting_loinc_code != "" and long_name == starting_loinc_code:
                 process_loinc_code = True
     except:
+        print("Unexpected error:", sys.exc_info()[0])
+        print(f"Saving {len(umls_loinc_rows)} records in file!")
         # if exception occurs use all the rows in the existing list
         # to overwrite the entire partial file
         _save_json_file(TMP_DIRECTORY, umls_filename_tmp, umls_loinc_rows, False)
@@ -262,9 +276,11 @@ def _process_loinc_codes_with_umls(file_path: str) -> dict:
 
 def _save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:
     if not filename.strip():
+        print("No filename supplied.  Failed to save CSV file!")
         return
 
     if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save CSV!")
         return
 
     file_method = "a" if append_to_file else "w"
@@ -278,18 +294,23 @@ def _save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool 
             if not (append_to_file):
                 writer.writeheader()
             writer.writerows(contents)
+        print(f"CSV File successfully saved as {full_file_path}")
 
-    except Exception:
-        pass
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
 
 
 def _save_json_file(
     directory_path: str, filename: str, contents: dict, append_to_file: bool = False
 ) -> None:
     if not filename.strip() or not directory_path.strip():
+        print("No filename & path supplied.  Failed to save JSON File!")
         return
 
     if contents is None and len(contents) == 0:
+        print("Empty file contents!  Failed to save JSON File!")
         return
 
     if not os.path.exists(directory_path):
@@ -302,9 +323,12 @@ def _save_json_file(
     try:
         with open(full_file_path, file_method, encoding="utf-8") as dict_file:
             json.dump(contents, dict_file, indent=4)
+        print(f"JSON File successfully saved as: {full_file_path}")
 
-    except Exception:
-        pass
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
 
 
 def _get_loinc_abbrv_syns(
@@ -345,16 +369,6 @@ def _get_loinc_abbrv_syns(
     return loinc_row
 
 
-def jls_extract_def(
-    part_dict: dict, part_name: str, part_code: str, repl_name: str, pref_abrv: str, synonym: str
-) -> None:
-    existing_row = part_dict.get(part_name)
-    if not existing_row:
-        existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
-        part_dict[part_name] = existing_row
-    _get_loinc_abbrv_syns(part_code, part_name, repl_name, pref_abrv, synonym, existing_row)
-
-
 def _create_loinc_part_abbrv_syn_dicts() -> None:
     """Creates single file dictionary for each of the different LOINC parts, which contains each LOINC Part Code, Name and Abbreviations and Synonyms."""
     # Separate LOINC Part Dictionaries
@@ -364,12 +378,12 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
     scale_dict = {}
     system_dict = {}
     time_dict = {}
-    component_file = _json_file_name("loinc_component")
-    method_file = _json_file_name("loinc_method")
-    property_file = _json_file_name("loinc_property")
-    scale_file = _json_file_name("loinc_scale")
-    system_file = _json_file_name("loinc_system")
-    time_file = _json_file_name("loinc_time")
+    component_file = f"loinc_component_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    method_file = f"loinc_method_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    property_file = f"loinc_property_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    scale_file = f"loinc_scale_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    system_file = f"loinc_system_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
+    time_file = f"loinc_time_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
     row_count = 1
 
@@ -389,27 +403,55 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
             synonym = row.get("SYNONYM")
 
             # build various LOINC Part dicts
-            match axis_name:
-                case "COMPONENT":
-                    jls_extract_def(
-                        component_dict, part_name, part_code, repl_name, pref_abrv, synonym
-                    )
-                case "METHOD":
-                    jls_extract_def(
-                        method_dict, part_name, part_code, repl_name, pref_abrv, synonym
-                    )
-                case "PROPERTY":
-                    jls_extract_def(
-                        property_dict, part_name, part_code, repl_name, pref_abrv, synonym
-                    )
-                case "SYSTEM":
-                    jls_extract_def(
-                        system_dict, part_name, part_code, repl_name, pref_abrv, synonym
-                    )
-                case "TIME":
-                    jls_extract_def(time_dict, part_name, part_code, repl_name, pref_abrv, synonym)
-                case "SCALE":
-                    jls_extract_def(scale_dict, part_name, part_code, repl_name, pref_abrv, synonym)
+            if axis_name == "COMPONENT":
+                existing_row = component_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    component_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "METHOD":
+                existing_row = method_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    method_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "PROPERTY":
+                existing_row = property_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    property_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SYSTEM":
+                existing_row = system_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    system_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "TIME":
+                existing_row = time_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    time_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+            elif axis_name == "SCALE":
+                existing_row = scale_dict.get(part_name)
+                if not existing_row:
+                    existing_row = {"code": part_code, "abbrv": [], "synonyms": []}
+                    scale_dict[part_name] = existing_row
+                existing_row = _get_loinc_abbrv_syns(
+                    part_code, part_name, repl_name, pref_abrv, synonym, existing_row
+                )
+    print(f"Total Rows Processed: {row_count}")
     # write each dict out into it's own file
     _save_json_file(ENHANCEMENTS_DIRECTORY, component_file, component_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, method_file, method_dict)
@@ -417,10 +459,6 @@ def _create_loinc_part_abbrv_syn_dicts() -> None:
     _save_json_file(ENHANCEMENTS_DIRECTORY, system_file, system_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, time_file, time_dict)
     _save_json_file(ENHANCEMENTS_DIRECTORY, scale_file, scale_dict)
-
-
-def _json_file_name(prefix: str) -> str:
-    return f"{prefix}_abbrv_syn_{datetime.datetime.now().strftime('%Y%m%d')}.json"
 
 
 def _extract_full_hl7_encounter_act_codes() -> None:
@@ -450,42 +488,53 @@ def _extract_full_vsac_snomed_problems() -> None:
     _save_valueset_csv_file(problem_filename, data_rows)
 
 
-def main(args: Namespace) -> None:
-    """Entry point."""
-    all_vs: bool = args.all
-    lab_orders: bool = args.lab_orders
-    lab_obs: bool = args.lab_obs
-    lab_values: bool = args.lab_values
-    lab_interp: bool = args.lab_interp
-    lab_names: bool = args.lab_names
-    loinc_abbr_syn: bool = args.loinc_abbr_syn
-    loinc_umls_syn: bool = args.loinc_umls_syn
-    encounter_code: bool = args.encounter_code
-    medication: bool = args.medication
-    vaccine: bool = args.vaccine
-    problem: bool = args.problem
-
+def main(
+    all_vs: bool,
+    lab_orders: bool,
+    lab_obs: bool,
+    lab_values: bool,
+    lab_interp: bool,
+    lab_names: bool,
+    loinc_abbr_syn: bool,
+    loinc_umls_syn: bool,
+    encounter_code: bool,
+    medication: bool,
+    vaccine: bool,
+    problem: bool,
+):
+    print("Starting Terminology ValueSet Sync...")
     if all_vs or lab_orders:
+        print("Getting LOINC Lab Orders...")
         _extract_full_loinc_lab_orders()
     if all_vs or lab_obs:
+        print("Getting LOINC Lab Observations...")
         _extract_full_loinc_lab_results()
     if all_vs or lab_values:
+        print("Getting SNOMED Lab Result Values...")
         _extract_umls_full_snomed_lab_values()
     if all_vs or lab_interp:
+        print("Getting HL7 Lab Result Interpretations...")
         _extract_full_hl7_lab_interp()
     if all_vs or lab_names:
+        print("Getting LOINC Lab Names...")
         _extract_full_loinc_lab_names()
     if all_vs or loinc_abbr_syn:
+        print("Getting LOINC Part Abbreviations & Synonyms...")
         _create_loinc_part_abbrv_syn_dicts()
     if all_vs or loinc_umls_syn:
+        print("Getting LOINC UMLS Related Names...")
         _get_loinc_umls_related_results()
     if all_vs or encounter_code:
+        print("Getting HL7 Encounter Act Codes...")
         _extract_full_hl7_encounter_act_codes()
     if all_vs or medication:
+        print("Getting VSAC RXNORM Medication Codes...")
         _extract_full_vsac_rxnorm_medications()
     if all_vs or vaccine:
+        print("Getting VSAC CVX Vaccine Codes...")
         _extract_full_vsac_cvx_vaccines()
     if all_vs or problem:
+        print("Getting VSAC SNOMED Problem (Diagnosis/Symptom) Codes...")
         _extract_full_vsac_snomed_problems()
 
 
@@ -535,4 +584,17 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args)
+    main(
+        args.all,
+        args.lab_orders,
+        args.lab_obs,
+        args.lab_values,
+        args.lab_interp,
+        args.lab_names,
+        args.loinc_abbr_syn,
+        args.loinc_umls_syn,
+        args.encounter_code,
+        args.medication,
+        args.vaccine,
+        args.problem,
+    )
