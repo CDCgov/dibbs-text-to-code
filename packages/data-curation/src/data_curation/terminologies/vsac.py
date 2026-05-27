@@ -74,6 +74,7 @@ def process_vsac_codes(api_url: str, vs_type: str) -> list[dict]:
             if total_records == 1:
                 total_records = vsac_expansion.get("total")
                 # TODO: In Subsequent PR update this to be a logging statement
+                print(f"Total {vs_type} to be processed: {total_records}")
             count_params = vsac_expansion.get("parameter")
             for vs_param in count_params:
                 if vs_param.get("name") and vs_param.get("name") == "count":
@@ -99,4 +100,5 @@ def process_vsac_codes(api_url: str, vs_type: str) -> list[dict]:
                 api_url, params=params, auth=("apikey", UMLS_API_KEY), timeout=_TIMEOUT
             )
     # TODO: In Subsequent PR update this to be a logging statement
+    print(f"{len(data_rows)} Codes Extracted")
     return data_rows

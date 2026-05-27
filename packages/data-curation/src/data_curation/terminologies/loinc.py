@@ -140,14 +140,19 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
     loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD), timeout=_TIMEOUT)
     if loinc_response.status_code != requests.codes.ok:
         # TODO: In Subsequent PR update this to be a logging statement
+        print(
+            f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
+        )
         return None
 
     loinc_codes = loinc_response.json()
     loinc_rows = []
     loinc_umls_urls = {}
 
+    record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
     loinc_codes["ResponseSummary"]["RecordsFound"]
     # TODO: In Subsequent PR update this to be a logging statement
+    print(f"{loinc_valueset_type} Record Count: {record_count}")
     current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
@@ -169,6 +174,9 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
             )
             if next_loinc_response.status_code != requests.codes.ok:
                 # TODO: In Subsequent PR update this to be a logging statement
+                print(
+                    f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
+                )
                 return None
             loinc_codes = next_loinc_response.json()
             current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
@@ -194,6 +202,7 @@ def process_loinc_results(loinc_results, loinc_rows) -> dict:
     """
     if len(loinc_results) == 0:
         # TODO: In Subsequent PR update this to be a logging statement
+        print("NO RESULTS TO PROCESS!")
         return loinc_rows
 
     for loinc_result in loinc_results:
@@ -342,6 +351,9 @@ def get_loinc_current_version_data() -> tuple[str, str]:
     )
     if loinc_response.status_code != requests.codes.ok:
         # TODO: In Subsequent PR update this to be a logging statement
+        print(
+            f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
+        )
         return None
     loinc_meta = json.loads(loinc_response.text)
     loinc_version_date = datetime.fromisoformat(loinc_meta["releaseDate"]).strftime("%Y-%m-%d")
@@ -418,6 +430,8 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> l
         )
     # TODO: In Subsequent PR update this to be a logging statement
     #  In PR for story #454 - this will be written to a file instead of printing
+    print(f"EMB recordS: {len(embedding_records)} see counts of the various changes below")
+    print(json.dumps(change_log, indent=4))
     return embedding_records
 
 

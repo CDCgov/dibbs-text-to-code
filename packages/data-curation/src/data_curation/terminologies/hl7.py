@@ -76,6 +76,7 @@ def get_hl7_encounter_act_codes() -> list[dict]:
         }
         hl7_rows.append(external_encounter)
         # TODO: In Subsequent PR update this to be a logging statement
+        print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
         return hl7_rows
     return None
 
@@ -89,8 +90,12 @@ def get_hl7_lab_interp() -> list[dict]:
     hl7_response = requests.get(HL7_LAB_INTERP_URL)
     hl7_rows = []
 
-    if hl7_response.status_code != 200:
+    if hl7_response.status_code != requests.status_codes.ok:
         # TODO: In Subsequent PR update this to be a logging statement
+        print(
+            f"ERROR Retrieving HL7 LAB Interpretation CODES: {hl7_response.status_code}: {hl7_response.text}",
+            file=sys.stderr,
+        )
         sys.exit(1)
     hl7_codes = hl7_response.json().get("concept")
 

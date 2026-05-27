@@ -36,6 +36,7 @@ def update_loinc_embeddings() -> None:
             pass
     else:
         # TODO: In Subsequent PR update this to be a logging statement
+        print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
         return
 
     # TODO: add a function here that will clean up

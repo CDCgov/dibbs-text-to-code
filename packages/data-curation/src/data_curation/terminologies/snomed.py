@@ -57,4 +57,5 @@ def get_umls_snomed_lab_values() -> list[dict]:
         umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params, timeout=_TIMEOUT)
 
     # TODO: In Subsequent PR update this to be a logging statement
+    print(f"{snomed_row_count} Codes Extracted")
     return snomed_rows

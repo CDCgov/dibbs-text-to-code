@@ -160,19 +160,40 @@ for k in wrong_answer_rank_gap:
         )
 
 
-for _ in right_answers_at_rank:
-    pass
-for _ in top_k_accuracies_stopping_at:
-    pass
-for _ in scores_at_rank:
-    pass
-for _ in right_answer_scores_at_rank:
-    pass
-for _ in wrong_scores_at_rank:
-    pass
-for _ in score_gap_with_next_rank:
-    pass
-for _ in right_answer_rank_gap:
-    pass
-for _ in wrong_answer_rank_gap:
-    pass
+print()
+print("Total Number of Queries in Set:", len(query_results))
+print("Total Number of Search Results in Set:", total_num_neighbors)
+print("Number of Correct Standardizations in Set:", num_right_answers)
+print()
+print("Frequency that Correct Standardization is at Rank K:")
+for k, v in right_answers_at_rank.items():
+    print(f"  {k}: {v}")
+print()
+print("Top-K Accuracy If Results Include Up To K Neighbors:")
+for k, v in top_k_accuracies_stopping_at.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Score At Rank K:")
+for k, v in scores_at_rank.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Score At Rank K When K Is Right:")
+for k, v in right_answer_scores_at_rank.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Score At Rank K When K Is Wrong (and right answer is farther down ranked list):")
+for k, v in wrong_scores_at_rank.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Gap Between Rank K and Rank K+1:")
+for k, v in score_gap_with_next_rank.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Correct:")
+for k, v in right_answer_rank_gap.items():
+    print(f"  {k}: {v}")
+print()
+print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Wrong:")
+for k, v in wrong_answer_rank_gap.items():
+    print(f"  {k}: {v}")
+print()
