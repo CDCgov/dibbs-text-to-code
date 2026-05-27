@@ -27,7 +27,7 @@ class ValidationResult(TypedDict):
     """Error ID and list."""
 
     error_id: str
-    locations: list[str]
+    location: list[str]
 
 
 def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
@@ -91,7 +91,7 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
                     errors.append(
                         ValidationResult(
                             error_id=x.get_attribute_value("id"),
-                            locations=[x.get_attribute_value("location")],
+                            location=[x.get_attribute_value("location")],
                         )
                     )
     except Exception as e:
