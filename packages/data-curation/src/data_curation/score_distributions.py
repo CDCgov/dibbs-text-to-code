@@ -112,53 +112,27 @@ top_k_accuracies_stopping_at = {
     for k in range(1, 11)
 }
 
-for k in right_answer_scores_at_rank:
-    if len(right_answer_scores_at_rank[k]) == 0:
-        right_answer_scores_at_rank[k] = "n/a"
-    else:
-        right_answer_scores_at_rank[k] = round(
-            float(sum(right_answer_scores_at_rank[k])) / float(len(right_answer_scores_at_rank[k])),
-            3,
-        )
+right_answer_scores_at_rank = {
+    k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in right_answer_scores_at_rank.items()
+}
 
-for k in scores_at_rank:
-    if len(scores_at_rank[k]) == 0:
-        scores_at_rank[k] = "n/a"
-    else:
-        scores_at_rank[k] = round(float(sum(scores_at_rank[k])) / float(len(scores_at_rank[k])), 3)
+scores_at_rank = {k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in scores_at_rank.items()}
 
-for k in wrong_scores_at_rank:
-    if len(wrong_scores_at_rank[k]) == 0:
-        wrong_scores_at_rank[k] = "n/a"
-    else:
-        wrong_scores_at_rank[k] = round(
-            float(sum(wrong_scores_at_rank[k])) / float(len(wrong_scores_at_rank[k])), 3
-        )
+wrong_scores_at_rank = {
+    k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in wrong_scores_at_rank.items()
+}
 
-for k in score_gap_with_next_rank:
-    if len(score_gap_with_next_rank[k]) == 0:
-        score_gap_with_next_rank[k] = "n/a"
-    else:
-        score_gap_with_next_rank[k] = round(
-            float(sum(score_gap_with_next_rank[k])) / float(len(score_gap_with_next_rank[k])), 3
-        )
+score_gap_with_next_rank = {
+    k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in score_gap_with_next_rank.items()
+}
 
-for k in right_answer_rank_gap:
-    if len(right_answer_rank_gap[k]) == 0:
-        right_answer_rank_gap[k] = "n/a"
-    else:
-        right_answer_rank_gap[k] = round(
-            float(sum(right_answer_rank_gap[k])) / float(len(right_answer_rank_gap[k])), 3
-        )
+right_answer_rank_gap = {
+    k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in right_answer_rank_gap.items()
+}
 
-for k in wrong_answer_rank_gap:
-    if len(wrong_answer_rank_gap[k]) == 0:
-        wrong_answer_rank_gap[k] = "n/a"
-    else:
-        wrong_answer_rank_gap[k] = round(
-            float(sum(wrong_answer_rank_gap[k])) / float(len(wrong_answer_rank_gap[k])), 3
-        )
-
+wrong_answer_rank_gap = {
+    k: round(sum(v) / len(v), 3) if v else "n/a" for k, v in wrong_answer_rank_gap.items()
+}
 
 print()
 print("Total Number of Queries in Set:", len(query_results))

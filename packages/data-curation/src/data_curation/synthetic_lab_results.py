@@ -50,7 +50,7 @@ negative_words = [
 ]
 
 
-def random_case(word):
+def random_case(word: str) -> str:
     """Randomly change the case of a word."""
     choice = random.choice(["upper", "lower", "capitalize", "none"])
     if choice == "upper":
@@ -62,9 +62,10 @@ def random_case(word):
     return word
 
 
-def introduce_typo(word):
+def introduce_typo(word: str) -> str:
     """Introduce a typo in a word."""
-    if len(word) < 2:
+    min_word_size = 2
+    if len(word) < min_word_size:
         return word
     typo_type = random.choice(["sub", "del", "ins"])
     idx = random.randint(0, len(word) - 1)
@@ -78,7 +79,7 @@ def introduce_typo(word):
     return word
 
 
-def probability_float(x):
+def probability_float(x: float) -> float:
     """Validate a probability float."""
     try:
         x = float(x)

@@ -30,7 +30,7 @@ def get_hl7_encounter_act_codes() -> list[dict]:
     encounter_act_code = "_ActEncounterCode"
     hl7_rows = []
 
-    if hl7_response.status_code != 200:
+    if hl7_response.status_code != requests.status_codes.ok:
         # TODO: In Subsequent PR update this to be a logging statement
         sys.exit(1)
     hl7_codes = hl7_response.json().get("concept")

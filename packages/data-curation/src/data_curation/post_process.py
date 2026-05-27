@@ -241,7 +241,8 @@ def _determine_eligible_post_processing(
                     break
 
         # Eligible if the string is long enough to be truncated
-        if o == "truncation" and len(code_str) > 85:
+        min_string_length_for_truncation = 85
+        if o == "truncation" and len(code_str) > min_string_length_for_truncation:
             options.append(o)
 
         # Eligible if the code contains commas or prepositions

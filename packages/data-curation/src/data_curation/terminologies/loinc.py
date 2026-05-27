@@ -121,7 +121,7 @@ def get_loinc_lab_results(version: str = ""):
     return loinc_result_rows
 
 
-def process_loinc_valueset(api_url, loinc_valueset_type):
+def process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> dict:
     """Function that makes the LOINC API calls based upon the url and the loinc_Valueset_type passed in.  It confirms that the LOINC User/PWD are configured, makes the calls and then passes the output into another function for more detailed processing. This function also performs the looping and row count maintenance as LOINC can only return 500 rows at a time.
 
     :param api_url: LOINC url for the specific API used for requesting

@@ -42,7 +42,7 @@ def clean_text_string(value: str) -> str:
 def get_date_from_filename(filename: str, terminology: str) -> str:
     """Function that extracts and formats the date from any of the value set extract files and formats the date string into a pattern used by the terminology set in their Versioning API call (ie. get the latest version and version date).
 
-    :param filename: Text of the filename to extact the date from.
+    :param filename: Text of the filename to extract the date from.
     :param terminology: The name of the value set in question as the
         date formats may have different requirements based upon
         the API response for said value set.

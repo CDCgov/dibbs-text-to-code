@@ -15,7 +15,9 @@ from utils import normalize, path, regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
-assert len(LOINC_ENHANCEMENTS) > 0
+
+if len(LOINC_ENHANCEMENTS) > 0:
+    raise Exception("No Loinc enhancements given.")
 
 MAX_AUGMENTATION_TRIES = 100
 
@@ -195,7 +197,7 @@ def generate_augmented_examples(
     related_names: list[str],
     num_examples: int,
     config: schemas.AugmentationConfig,
-):
+) -> list[str]:
     """Given a LOINC code string, generates a specified number of augmented training examples, which are returned as a list. Each augmented example is probabilistically operated on by a scrambling or enhancement function above to create a semantically and syntactically variant instance. The order of augmentation operations is always enhancement, insertion, permutation, then deletion.
 
     :param input_code: The LOINC code string to generate augmented copies of.

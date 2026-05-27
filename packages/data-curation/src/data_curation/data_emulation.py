@@ -118,7 +118,7 @@ BASE_HEURISTIC_OPTIONS = ["measurement", "q group", "modality", "parens", "brack
 
 def build_and_process_ttc_and_heuristics(
     code_str: str, fsn: str, property_axis: str, system_axis: str, variations: list[str]
-):
+) -> list[str]:
     """Given a LOINC code string and some of its property information, construct a TTC-style "enhanced" example of the code, then apply any eligible post-processing. This function is primarily an orchestrator of its internal functions.
 
     :param code_str: The text string of a LOINC code name variant.

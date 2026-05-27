@@ -1,6 +1,6 @@
-import csv
 import json
 import random
+from csv import DictReader, reader
 
 # sample run: python3 packages/data-curation/src/data_curation/generation.py
 BASE_FILE_PATH = "../../../../data/training_files/soft_lambda_loss_positives"
@@ -45,13 +45,13 @@ def generate_positive_pairs(
     if len(handle_parts) == 0 or handle_parts[-1] != "txt":
         for variant in ["long_common_name.csv", "short_name.csv", "display_name.csv"]:
             with open(file_handle + "_" + variant) as csvfp:
-                rows = csv.reader(csvfp, delimiter=":")
+                rows = reader(csvfp, delimiter=":")
                 _append_to_data_pool(rows, data_pool)
 
     # Handle is actually a file, can just open that
     else:
         with open(file_handle) as csvfp:
-            rows = csv.reader(csvfp, delimiter=":")
+            rows = reader(csvfp, delimiter=":")
             _append_to_data_pool(rows, data_pool)
 
     if rckms:
@@ -94,7 +94,7 @@ def generate_positive_pairs(
         fp.writelines(pair[0] + "|" + pair[1] + "|" + pair[2] + "\n" for pair in pairs)
 
 
-def _append_to_data_pool(csvfp: csv.DictReader, data_pool) -> None:
+def _append_to_data_pool(csvfp: DictReader, data_pool: list) -> None:
     """Simple helper method to append non-empty data rows to a list representing a pool of aggregated data."""
     for row in csvfp:
         # Minimum one column for numeric code, original code string, variants
