@@ -1,6 +1,6 @@
 import logging
-from dataclasses import dataclass
 from pathlib import Path
+from typing import TypedDict
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
 
@@ -23,8 +23,7 @@ XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ValidationResult:
+class ValidationResult(TypedDict):
     """Error ID and list."""
 
     error_id: str
