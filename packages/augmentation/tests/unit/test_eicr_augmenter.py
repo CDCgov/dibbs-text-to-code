@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -265,9 +266,10 @@ class TestEicrAugmenter:
         ):
             TestAugmenter(
                 BASIC_ECR,
-                InvalidConfig(),
+                cast(AugmenterConfig, InvalidConfig()),
             )
 
     def test_augment_base_method_returns_none(self):
         """Tests abstract base augment method body."""
-        assert Augmenter.augment(object()) is None
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+        assert Augmenter.augment(augmenter) is None

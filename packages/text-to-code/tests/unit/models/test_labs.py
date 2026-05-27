@@ -1,5 +1,6 @@
 import pytest
 
+from shared_models import DataField
 from text_to_code.models import (
     BaseLabField,
     LabTestNameOrdered,
@@ -17,7 +18,7 @@ class TestLabSchemas:
             ValueError, match=r"At least one Sub-XPath expression must be provided."
         ):
             BaseLabField(
-                data_field="Lab Test Name Resulted",
+                data_field=DataField.LAB_TEST_NAME_RESULTED,
                 min_word_count=2,
                 xpaths=[],
                 schematron_errors=[],
@@ -28,7 +29,7 @@ class TestLabSchemas:
         xpaths = [next(iter(LabXPaths))]
 
         lab_field = BaseLabField(
-            data_field="Lab Test Name Resulted",
+            data_field=DataField.LAB_TEST_NAME_RESULTED,
             min_word_count=2,
             xpaths=xpaths,
             schematron_errors=[],
@@ -39,9 +40,9 @@ class TestLabSchemas:
     def test_lab_test_name_resulted_defaults(self):
         """Tests default values for LabTestNameResulted schema."""
         lab_test = LabTestNameResulted(
-            schematron_errors=LabTestNameResultedSchematronErrors,
+            schematron_errors=list(LabTestNameResultedSchematronErrors),
         )
-        assert lab_test.data_field == "Lab Test Name Resulted"
+        assert lab_test.data_field == DataField.LAB_TEST_NAME_RESULTED
         assert lab_test.min_word_count == LabTestNameResulted.model_fields["min_word_count"].default
         assert lab_test.xpaths == list(LabXPaths)
         assert lab_test.schematron_errors == list(LabTestNameResultedSchematronErrors)
@@ -49,9 +50,9 @@ class TestLabSchemas:
     def test_lab_test_name_ordered_defaults(self):
         """Tests default values for LabTestNameOrdered schema."""
         lab_test = LabTestNameOrdered(
-            schematron_errors=LabTestNameOrderedSchematronErrors,
+            schematron_errors=list(LabTestNameOrderedSchematronErrors),
         )
-        assert lab_test.data_field == "Lab Test Name Ordered"
+        assert lab_test.data_field == DataField.LAB_TEST_NAME_ORDERED
         assert lab_test.min_word_count == LabTestNameOrdered.model_fields["min_word_count"].default
         assert lab_test.xpaths == list(LabXPaths)
         assert lab_test.schematron_errors == list(LabTestNameOrderedSchematronErrors)
