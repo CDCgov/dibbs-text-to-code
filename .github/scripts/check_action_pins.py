@@ -19,6 +19,7 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def find_violations() -> list[tuple[Path, int, str]]:
+    """Return `(path, lineno, ref)` for each unpinned external `uses:` reference."""
     violations: list[tuple[Path, int, str]] = []
     for path in sorted(WORKFLOW_DIR.glob("*.y*ml")):
         for lineno, line in enumerate(path.read_text().splitlines(), start=1):
@@ -38,6 +39,7 @@ def find_violations() -> list[tuple[Path, int, str]]:
 
 
 def main() -> int:
+    """Print any violations to stderr and return a non-zero exit code if found."""
     violations = find_violations()
     if not violations:
         return 0
