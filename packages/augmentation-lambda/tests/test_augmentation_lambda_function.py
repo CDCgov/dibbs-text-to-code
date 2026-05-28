@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime
-from typing import cast
 from zoneinfo import ZoneInfo
 
 import time_machine
@@ -289,15 +288,12 @@ class TestHandler:
             object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
 
-        validation_results = cast(
-            list[ValidationResult],
-            [
-                {
-                    "error_id": "ttc-labResultValue-noCode",
-                    "location": "/ClinicalDocument[1]",
-                }
-            ],
-        )
+        validation_results = [
+            ValidationResult(
+                error_id="ttc-labResultValue-noCode",
+                location="/ClinicalDocument[1]",
+            )
+        ]
 
         validate_mock = mocker.patch(
             "augmentation_lambda.lambda_function.validate_eicr",
@@ -325,7 +321,9 @@ class TestHandler:
 
         assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["error"] == json.dumps(validation_results, default=str)
+        assert metadata["error"] == json.dumps(
+            [result.model_dump() for result in validation_results]
+        )
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 

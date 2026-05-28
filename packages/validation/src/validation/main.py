@@ -36,6 +36,7 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
     logger.info("Starting eICR Validation")
     logger.info(f"For eICR: {eicr}")
     errors: list[ValidationResult] = []
+
     try:
         with PySaxonProcessor(license=False) as proc:
             logger.info(f"Saxon/C version: {proc.version}")
@@ -96,6 +97,7 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
                         )
                     )
     except Exception as e:
-        logger.error(f"An error occurred during validation: {e}")
+        logger.exception(f"An error occurred during validation: {e}")
+        raise
 
     return errors

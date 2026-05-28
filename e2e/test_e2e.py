@@ -43,9 +43,11 @@ ASSETS_FOLDER = BASE_FOLDER / "assets"
 
 CDA_NAMESPACE = "urn:hl7-org:v3"
 CDA_NAMESPACES: dict[str, str] = {"cda": CDA_NAMESPACE}
-REGENERATED_DOCUMENT_HEADER_TAGS: tuple[str, str] = (
+REGENERATED_DOCUMENT_HEADER_TAGS: tuple[str, str, str, str] = (
     f"{{{CDA_NAMESPACE}}}id",
     f"{{{CDA_NAMESPACE}}}effectiveTime",
+    f"{{{CDA_NAMESPACE}}}setId",
+    f"{{{CDA_NAMESPACE}}}versionNumber",
 )
 ElementSignature = tuple[str, tuple[tuple[str, str], ...], str]
 

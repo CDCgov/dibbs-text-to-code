@@ -168,14 +168,14 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
     assert validator_output.read_text() == "existing validator"
 
 
-def test_validation_returns_empty_list_when_validator_errors(
+def test_validation_raises_when_validator_errors(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ):
-    """Tests that the validate_eicr function returns an empty list and logs an error when the validator fails."""
+    """Tests that the validate_eicr function raises and logs an error when the validator fails."""
     monkeypatch.setattr(validation_main, "PySaxonProcessor", BrokenSaxonProcessor)
 
-    results = validate_eicr("<ClinicalDocument />")
+    with pytest.raises(RuntimeError, match="validator failed"):
+        validate_eicr("<ClinicalDocument />")
 
-    assert results == []
     assert "An error occurred during validation: validator failed" in caplog.text
