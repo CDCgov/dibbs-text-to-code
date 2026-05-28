@@ -516,7 +516,7 @@ class TestEndToEndSimulated:
                 PassthroughReason.NO_CODE_MATCHES,
                 PassthroughReason.TTC_EXCEPTION,
                 PassthroughReason.AUGMENTATION_EXCEPTION,
-                PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
+                PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             ]
 
             if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:

@@ -327,7 +327,7 @@ class TestHandler:
         assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["error"] == json.dumps(validation_results, default=str)
         assert metadata["passthrough"] is True
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILED
+        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
     def test_get_passthrough_reason_returns_enum_when_reason_is_already_enum(self) -> None:
         result = lambda_function._get_passthrough_reason(

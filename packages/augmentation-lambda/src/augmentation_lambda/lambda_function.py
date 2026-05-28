@@ -132,7 +132,7 @@ def _build_validation_failed_passthrough_output(
         nonstandard_codes=attempted_output.metadata.nonstandard_codes,
         error=json.dumps(validation_results, default=str),
         passthrough=True,
-        passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
+        passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
     )
     return TTCAugmenterOutput(
         persistence_id=persistence_id,
@@ -260,7 +260,7 @@ def _process_record(record: SQSRecord) -> None:
             logger.info(
                 "Augmentation processing completed",
                 status="passthrough",
-                passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILED,
+                passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             )
             return
 
