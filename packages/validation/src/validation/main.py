@@ -35,7 +35,7 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
     """Validate an eICR."""
     logger.info("Starting eICR Validation")
     logger.info(f"For eICR: {eicr}")
-    errors = []
+    errors: list[ValidationResult] = []
     try:
         with PySaxonProcessor(license=False) as proc:
             logger.info(f"Saxon/C version: {proc.version}")

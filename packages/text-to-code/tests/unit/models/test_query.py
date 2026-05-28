@@ -1,3 +1,5 @@
+from typing import cast
+
 import pydantic
 import pytest
 
@@ -21,7 +23,7 @@ class TestDataFieldTypeMapping:
     def test_to_filter_values_invalid_data_field(self):
         """Tests that a ValueError is raised for an invalid DataField enum value."""
         with pytest.raises(ValueError, match="No type mapping defined for invalid_value"):
-            DataFieldTypeMapping.to_filter_values("invalid_value")
+            DataFieldTypeMapping.to_filter_values(cast(DataField, "invalid_value"))
 
 
 class TestVectorSearchParams:
@@ -81,7 +83,7 @@ class TestVectorSearchParams:
     def test_vector_search_params_with_invalid_filter_value(self):
         """Tests that an invalid filter value raises a validation error in the VectorSearchParams model."""
         vector = [0.1, 0.2, 0.3]
-        data_field = "invalid_value"
+        data_field = cast(DataField, "invalid_value")
 
         with pytest.raises(pydantic.ValidationError):
             VectorSearchParams(

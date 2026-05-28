@@ -20,7 +20,7 @@ class TestParseNonstandardCodes:
         assert codes[0].new_translation.display_name == "Weed Allergen Mix 3 IgE Ab"
 
     def test_skips_entries_without_new_translation(self) -> None:
-        ttc_output = {
+        ttc_output: dict[str, object] = {
             "schematron_errors": {
                 "Lab Test Name Resulted": [
                     {
