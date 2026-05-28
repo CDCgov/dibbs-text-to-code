@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
+from validation import ValidationResult, validate_eicr
 from validation import main as validation_main
-from validation import validate_eicr
 
 
 class FakeAssert:
@@ -92,10 +92,10 @@ def test_validation():
     results = validate_eicr(eicr)
 
     assert results == [
-        {
-            "error_id": "ttc-labTestNameOrdered-noCode",
-            "location": "/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
-        }
+        ValidationResult(
+            error_id="ttc-labTestNameOrdered-noCode",
+            location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
+        )
     ]
 
 
@@ -130,10 +130,10 @@ def test_validation_redoes_all_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: 
     results = validate_eicr("<ClinicalDocument />", redo_all_steps=True)
 
     assert results == [
-        {
-            "error_id": "ttc-labTestNameOrdered-noCode",
-            "location": "/ClinicalDocument/component/structuredBody/component/section/entry/observation",
-        }
+        ValidationResult(
+            error_id="ttc-labTestNameOrdered-noCode",
+            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+        )
     ]
     assert stage1_output.read_text() == "<generated />"
     assert stage2_output.read_text() == "<generated />"
@@ -158,10 +158,10 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
     results = validate_eicr("<ClinicalDocument />")
 
     assert results == [
-        {
-            "error_id": "ttc-labTestNameOrdered-noCode",
-            "location": "/ClinicalDocument/component/structuredBody/component/section/entry/observation",
-        }
+        ValidationResult(
+            error_id="ttc-labTestNameOrdered-noCode",
+            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+        )
     ]
     assert stage1_output.read_text() == "existing stage 1"
     assert stage2_output.read_text() == "existing stage 2"

@@ -535,7 +535,11 @@ class TestEndToEndSimulated:
             assert actual_validation_results == [], actual_validation_results
 
         snapshot.assert_match(
-            json.dumps(actual_validation_results, indent=2, sort_keys=True),
+            json.dumps(
+                [result.model_dump() for result in actual_validation_results],
+                indent=2,
+                sort_keys=True,
+            ),
             f"{eicr_id}_validation_results.json",
         )
 

@@ -1,8 +1,9 @@
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
+
+from shared_models import FrozenBaseModel
 
 BASE_FOLDER = Path(__file__).parent / "eicr-validator"
 
@@ -23,12 +24,11 @@ XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ValidationResult:
-    """Error ID and list."""
+class ValidationResult(FrozenBaseModel):
+    """Error ID and location."""
 
     error_id: str
-    locations: list[str]
+    location: str
 
 
 def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
@@ -90,10 +90,10 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
             for x in result[0][0].children:
                 if x.local_name == "failed-assert":
                     errors.append(
-                        {
-                            "error_id": x.get_attribute_value("id"),
-                            "location": x.get_attribute_value("location"),
-                        }
+                        ValidationResult(
+                            error_id=x.get_attribute_value("id"),
+                            location=x.get_attribute_value("location"),
+                        )
                     )
     except Exception as e:
         logger.error(f"An error occurred during validation: {e}")
