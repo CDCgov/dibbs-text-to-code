@@ -1,4 +1,3 @@
-import json
 from unittest.mock import MagicMock
 
 from shared_models import Code
@@ -23,15 +22,23 @@ class TestResultCacheAPIs:
                 "cache_key": "1357924680",
                 "text": "Screening urine fentanyl detection",
                 "data_field": "Lab Test Name Ordered",
-                "loinc_code": json.dumps(
-                    Code(
-                        code_system="2.16.840.1.113883.6.1",
-                        code_system_name="LOINC",
-                        display_name="fentaNYL [Presence] in Urine by Screen method",
-                    ).__dict__
+                "loinc_code": Code(
+                    code_system="2.16.840.1.113883.6.1",
+                    code_system_name="LOINC",
+                    display_name="fentaNYL [Presence] in Urine by Screen method",
                 ),
                 "search_score": 0.9563,
                 "reranker_score": 0.6789,
+                "opensearch_retrieved_results": {
+                    "took": 234,
+                    "timed_out": False,
+                    "shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                    "hits": {
+                        "total": {},
+                        "hits": [],
+                    },
+                },
+                "reranker_processed_results": {"results": []},
                 "cached_at": "2026-05-15T18:14:45.020655+00:00",
             },
             "fields": {},
@@ -91,6 +98,16 @@ class TestResultCacheAPIs:
             standard_loinc_code,
             0.97771,
             0.8624,
+            {
+                "took": 234,
+                "timed_out": False,
+                "shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                "hits": {
+                    "total": {},
+                    "hits": [],
+                },
+            },
+            {"results": []},
         )
 
         assert cache_result_created
