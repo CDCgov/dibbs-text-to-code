@@ -23,6 +23,7 @@ import re
 BASE_FOLDER = Path(__file__).parents[5] / "data" / "snoinc_extracts"
 ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
 TMP_DIRECTORY = Path(__file__).parents[5] / "tmp"
+CHANGE_LOG_DIRECTORY = BASE_FOLDER / "change_log"
 
 # Keys - the UMLS key is used for more than 
 #   one terminology set so it's here in General
@@ -176,7 +177,7 @@ def save_json_file(directory_path: str, filename: str, contents: dict, append_to
 
         :returns: Nothing.
     """
-    if not filename.strip() or not directory_path.strip():
+    if not filename.strip() or not directory_path:
         print("No filename & path supplied.  Failed to save JSON File!")
         return
 

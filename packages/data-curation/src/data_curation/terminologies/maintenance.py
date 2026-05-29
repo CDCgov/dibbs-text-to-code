@@ -43,10 +43,12 @@ def update_loinc_embeddings():
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
 
-    # add embeddings to any of the candidates for the various descriptions
+    # add embeddings to any of the records for the various descriptions
     # if there are none, no looping will occur    
     for loinc_update_record in loinc_updates:
-        if (loinc_update_record["description"].strip is not None):
+        if (loinc_update_record.get("description") is not None
+            and loinc_update_record.get("description").strip() is not None
+        ):
             loinc_update_record["description_vector"] = embed(loinc_update_record["description"])    
 
     ingestion_file_name = f"{LAB_NAMES}_{datetime.datetime.now().strftime('%Y%m%d')}.jsonl"

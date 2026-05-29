@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 import os
 import requests
-from .general import clean_text_string, save_json_file, save_valueset_csv_file, BASE_FOLDER
+from .general import clean_text_string, save_json_file, save_valueset_csv_file, BASE_FOLDER, CHANGE_LOG_DIRECTORY
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -461,19 +461,29 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
             change_log["Changes"]["LOINC Type"] += 1
             changes.append("LOINC Type")
         else:
-            if current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip():
+            if (update_loinc_record["short_name"]
+                and current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip()
+            ):
                 change_log["Changes"]["short_name"] += 1
                 changes.append("short_name")
-            if current_loinc_record["long_name"].strip() != update_loinc_record["long_name"].strip():
+            if (current_loinc_record["long_name"]
+                and current_loinc_record["long_name"].strip() != current_loinc_record["long_name"].strip()
+            ):
                 change_log["Changes"]["long_name"] += 1
                 changes.append("long_name")
-            if current_loinc_record["display_name"].strip() != update_loinc_record["display_name"].strip():
+            if (update_loinc_record["display_name"]
+                and current_loinc_record["display_name"].strip() != update_loinc_record["display_name"].strip()
+            ):
                 change_log["Changes"]["display_name"] += 1
                 changes.append("display_name")
-            if current_loinc_record["full_name"].strip() != update_loinc_record["full_name"].strip():
+            if (update_loinc_record["full_name"]
+                and current_loinc_record["full_name"].strip() != update_loinc_record["full_name"].strip()
+            ):
                 change_log["Changes"]["full_name"] += 1
                 changes.append("full_name")
-            if current_loinc_record["consumer_name"].strip() != update_loinc_record["consumer_name"].strip():
+            if (update_loinc_record["consumer_name"]
+                and current_loinc_record["consumer_name"].strip() != update_loinc_record["consumer_name"].strip()
+            ):
                 change_log["Changes"]["consumer_name"] += 1
                 changes.append("consumer_name")
         new_embedding_records = _create_embedding_records(loinc_record_max_id, loinc_code,update_loinc_record,changes)
@@ -594,4 +604,4 @@ def _create_embedding_record(rec_id: int, loinc_term: str, loinc_term_type: str,
 
 
 def write_change_log_file(file_name: str, content: dict):
-    save_json_file(BASE_FOLDER, file_name, content)
+    save_json_file(CHANGE_LOG_DIRECTORY, file_name, content)
