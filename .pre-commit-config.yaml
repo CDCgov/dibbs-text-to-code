@@ -28,3 +28,12 @@ repos:
     rev: v0.9.3
     hooks:
       - id: taplo-format
+
+  - repo: local
+    hooks:
+      - id: check-action-pins
+        name: Check GitHub Actions are SHA-pinned
+        entry: python3 .github/scripts/check_action_pins.py
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false

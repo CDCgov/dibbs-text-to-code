@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: List open pull requests
       env:
@@ -38,7 +38,7 @@ jobs:
         fi
 
     - name: Post to Slack
-      uses: slackapi/slack-github-action@v3.0.3
+      uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
       if: ${{ env.SHOULD_POST_TO_SLACK == 'true' }}
       with:
         webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
