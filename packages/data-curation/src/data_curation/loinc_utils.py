@@ -39,7 +39,8 @@ def scramble_word_order(
     :return: The text with words scrambled.
     """
     words = text.split()
-    if len(words) < 2:
+    min_num_words = 2
+    if len(words) < min_num_words:
         return text
 
     # Ensure max_perms does not exceed the number of words
@@ -124,9 +125,9 @@ def _clean_unpaired_parens(code_string: str) -> str:
                 # something like '[blah ( blah2]', where the paren is actually
                 # wrong but the brackets are right.
                 paired_opening_idx = -1
-                for i in range(len(bracket_stack) - 1, -1, -1):
-                    if bracket_stack[i][1] == would_close_char:
-                        paired_opening_idx = i
+                for stack_idx in range(len(bracket_stack) - 1, -1, -1):
+                    if bracket_stack[stack_idx][1] == would_close_char:
+                        paired_opening_idx = stack_idx
                         break
                 # We found something would close it, so we need to remove all
                 # openers from the stack between the end and that value, because
@@ -284,9 +285,10 @@ def _get_component_axis_from_fsn(fsn: str) -> str:
         return ""
     axis_parts = fsn.strip().split(":")
     # Ordinary case where each part has no other colons
-    if len(axis_parts) == 6:
+    expected_num_axis_parts = 6
+    if len(axis_parts) == expected_num_axis_parts:
         return axis_parts[0].strip()
-    if len(axis_parts) > 6:
+    if len(axis_parts) > expected_num_axis_parts:
         # Three possibilities: survey question, chem reaction, or solution ratio
         if axis_parts[-1].isdigit() and axis_parts[-2].endswith("1"):
             # This is the case where a blood coagulant or serum ratio is
@@ -361,7 +363,7 @@ def _parenthetical_is_trailing_acronym(parenthetical: re.Match[str], code_string
                 break
         if is_acronym:
             return " ".join(acronym_candidates)
-    except:
+    except IndexError:
         return None
 
 

@@ -136,9 +136,11 @@ class TestBuildAugmentedLoincFiles:
         augmentation.build_augmented_loinc_files(
             input_path=input_path,
             config=config,
-            num_sn=num_sn,
-            num_lcn=num_lcn,
-            num_dn=num_dn,
+            num_examples={
+                "short_name": num_sn,
+                "long_common_name": num_lcn,
+                "display_name": num_dn,
+            },
             output_path_base=output_base_path,
         )
 

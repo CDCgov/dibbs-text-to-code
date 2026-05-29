@@ -56,7 +56,6 @@ from data_curation.loinc_utils import (
     scramble_word_order,
 )
 from data_curation.post_process import (
-    _determine_eligible_post_processing,
     apply_deletion_post_processing,
     apply_delimiter_post_processing,
     apply_dot_flip_post_processing,
@@ -65,6 +64,7 @@ from data_curation.post_process import (
     apply_pound_sign_post_processing,
     apply_syntax_post_processing,
     apply_truncation_post_processing,
+    determine_eligible_post_processing,
 )
 from data_curation.schemas import loinc_struct as schemas
 from utils import normalize, path
@@ -72,7 +72,6 @@ from utils.regex_patterns import BRACKETED_TEXT, MULTIPLE_SPACE, PARENTHESES_TEX
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
-assert len(LOINC_ENHANCEMENTS) > 0
 
 # Parameters for snoinc reading and ultimate data generation
 SNOINC_DATA_FILE = "../../../../data/snoinc_extracts/loinc_lab_names_20260223.csv"
@@ -363,10 +362,10 @@ def create_synthetic_examples_for_code(loinc_code: schemas.LoincStruct) -> dict[
     # Before we return, we'll de-duplicate the examples, just in case
     # we somehow randomly generated two that are the same
     # We'll also throw away any examples that are one word
-    for k in synthetic_examples:
-        single_spaced_exs = [MULTIPLE_SPACE.sub(" ", se).strip() for se in synthetic_examples[k]]
+    for key, examples in synthetic_examples.items():
+        single_spaced_exs = [MULTIPLE_SPACE.sub(" ", se).strip() for se in examples]
         multi_word_exs = [ex for ex in single_spaced_exs if len(ex.split()) > 1]
-        synthetic_examples[k] = list(set(multi_word_exs))
+        synthetic_examples[key] = list(set(multi_word_exs))
     return synthetic_examples
 
 
@@ -624,45 +623,27 @@ def _choose_and_apply_heuristics(code_str: str, property_axis: str, system_axis:
     eligible_heuristics = _determine_eligible_pattern_heuristics(
         code_str, property_axis, system_axis
     )
-    if len(eligible_heuristics) == 0:
+    if not eligible_heuristics:
         return ""
 
-    heuristics_to_perform = []
-    if len(eligible_heuristics) == 1:
-        heuristics_to_perform.append(eligible_heuristics[0])
-    else:
-        heuristics_to_perform = random.sample(eligible_heuristics, 2)
+    heuristics_to_perform = (
+        eligible_heuristics
+        if len(eligible_heuristics) == 1
+        else random.sample(eligible_heuristics, 2)
+    )
     modified_code = _clean_unpaired_parens(code_str)
 
+    variation_fns = {
+        "measurement": lambda code: get_measurement_variation(code, property_axis),
+        "q group": get_q_variations,
+        "modality": lambda code: get_modality_variations(code, system_axis),
+        "parens": get_parens_variations,
+        "brackets": get_bracket_variations,
+    }
+
     for h in heuristics_to_perform:
-        if h == "measurement":
-            variations = get_measurement_variation(modified_code, property_axis)
-            # At each stage, if we can't generate real variations due to a
-            # property error, at least use the previous step to keep future
-            # heuristics in order
-            if len(variations) == 0:
-                variations.append(modified_code)
-            modified_code = random.choice(variations)
-        if h == "q group":
-            variations = get_q_variations(modified_code)
-            if len(variations) == 0:
-                variations.append(modified_code)
-            modified_code = random.choice(variations)
-        if h == "modality":
-            variations = get_modality_variations(modified_code, system_axis)
-            if len(variations) == 0:
-                variations.append(modified_code)
-            modified_code = random.choice(variations)
-        if h == "parens":
-            variations = get_parens_variations(modified_code)
-            if len(variations) == 0:
-                variations.append(modified_code)
-            modified_code = random.choice(variations)
-        if h == "brackets":
-            variations = get_bracket_variations(modified_code)
-            if len(variations) == 0:
-                variations.append(modified_code)
-            modified_code = random.choice(variations)
+        variations = variation_fns[h](modified_code)
+        modified_code = random.choice(variations or [modified_code])
 
     return modified_code
 
@@ -692,7 +673,7 @@ def _choose_and_apply_post_processing(
     :returns: A new string with all valid and selected post processing
       applied.
     """
-    eligible_post_processing = _determine_eligible_post_processing(
+    eligible_post_processing = determine_eligible_post_processing(
         code_str, system_axis, loinc_enhancements, base_options
     )
 
@@ -816,7 +797,7 @@ def _get_single_word_method(code_str: str) -> tuple[str,]:
     return ("", None)
 
 
-def _get_measurement_unit_word(
+def _get_measurement_unit_word(  # noqa: PLR0911, PLR0912 - I could not come up with a refactor that resolves these issues that is not just splitting this into multiple single-use functions. This is just inherently complex logic. But feel free to give it a try yourself.
     code_str: str, property_axis: str, return_symbol: bool = False
 ) -> str:
     """Given a LOINC code string and its corresponding property axis, determines an appropriate word that can be used to describe the measurement type or unit of the code's hypothetical result. For example, a code that includes the text 'by calculation' would have a result described as a 'Determination.' A code string that had a '[Presence]' of a compound or organism would have a result described as a 'Detection.' This "measurement-style" word is used in a number of known eCR vendor templates for lab description, so being able to reverse engineer them from code strings allows us to train on that knowledge.
@@ -898,7 +879,8 @@ if __name__ == "__main__":
     for row in data:
         r = row.split("|")
         # Skip any malformed rows
-        if len(r) < 6:
+        expected_number_of_columns = 6
+        if len(r) < expected_number_of_columns:
             continue
 
         (

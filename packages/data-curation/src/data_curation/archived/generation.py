@@ -98,7 +98,8 @@ def _append_to_data_pool(csvfp: DictReader, data_pool: list) -> None:
     """Simple helper method to append non-empty data rows to a list representing a pool of aggregated data."""
     for row in csvfp:
         # Minimum one column for numeric code, original code string, variants
-        if len(row) >= 3:
+        minimum_expected_columns = 3
+        if len(row) >= minimum_expected_columns:
             data_pool.append(row)
 
 

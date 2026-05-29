@@ -28,7 +28,7 @@ LOINC_DELIMITERS = ["+", "&"]
 EXPANDED_LOINC_DELIMITERS = [*LOINC_DELIMITERS, "/"]
 
 
-def apply_deletion_post_processing(code_str: str, **kwargs) -> str:
+def apply_deletion_post_processing(code_str: str, **kwargs: dict[str, str]) -> str:
     """Applies random word deletion to a given code string, leaving intact the core concept of the string (via the Component axis). This ensures that any words needed for systematic identification are left in place (e.g. in the phrase Red Blood Cell, we don't accidentally delete Blood or Red). The number of words deleted from the string is automatically deduced from the number of non-Component words present in the code.
 
     :param code_str: The text of the LOINC code string.
@@ -81,7 +81,7 @@ def apply_deletion_post_processing(code_str: str, **kwargs) -> str:
     return " ".join([w for i, w in enumerate(words) if i not in idxs_to_delete])
 
 
-def apply_delimiter_post_processing(code_str: str, **kwargs) -> str:
+def apply_delimiter_post_processing(code_str: str) -> str:
     """Given a code-string, changes each conjoining delimiter into another, different delimiter. Conjoining delimiters are those that combine two or more concepts (e.g. '+' and '&').
 
     :param code_str: The code string in which to change the delimiters.
@@ -100,7 +100,7 @@ def apply_delimiter_post_processing(code_str: str, **kwargs) -> str:
     return new_code_str
 
 
-def apply_dot_flip_post_processing(code_str: str, **kwargs) -> str:
+def apply_dot_flip_post_processing(code_str: str) -> str:
     """Performs "dot notation" inversion on a given code string, if there are any dot-groups present. A dot-group is a word sequence of the form "X.Y", and the dot inversion of this group is the sequence "Y X". This typically occurs with adjectival descriptors attached directly to concept nouns, such as "protein.total" (which would become "total protein").
 
     :param code_str: The code string whose dot-groups to invert.
@@ -117,7 +117,7 @@ def apply_dot_flip_post_processing(code_str: str, **kwargs) -> str:
     return ""
 
 
-def apply_modality_drop_post_processing(code_str: str, **kwargs) -> str:
+def apply_modality_drop_post_processing(code_str: str, **kwargs: dict[str, str]) -> str:
     """Given a code string with a valid system modality, removes the modality and any associated parentheses or prepositions from the string to create a "lab simplified" version of the code. If the given code string does not contain a modality, the original, unmodified code string is returned.
 
     :param code_str: The code string from which to drop the modality.
@@ -143,12 +143,12 @@ def apply_modality_drop_post_processing(code_str: str, **kwargs) -> str:
     return code_str
 
 
-def apply_point_of_care_post_processing(code_str: str, **kwargs) -> str:
+def apply_point_of_care_post_processing(code_str: str) -> str:
     """Simple post-processor to create a "Point of Care" version of a code."""
     return "POC " + code_str
 
 
-def apply_pound_sign_post_processing(code_str: str, **kwargs) -> str:
+def apply_pound_sign_post_processing(code_str: str, **kwargs: dict[str, str]) -> str:
     """Given a code string, this function transforms all pound signs '#' according to whether or not those pound signs are enclosed by parentheses (inner #). Any pounds outside of parentheses are considered outer signs. To run correctly, this function **requires** that all unpaired parentheses have already been removed.
 
     :param code_str: The text of the LOINC code string to modify.
@@ -186,19 +186,19 @@ def apply_pound_sign_post_processing(code_str: str, **kwargs) -> str:
     return result_string.strip()
 
 
-def apply_syntax_post_processing(code_str: str, **kwargs) -> str:
+def apply_syntax_post_processing(code_str: str) -> str:
     """Simple function that removes commas and all non-lab prepositions from a code string."""
     code_str = code_str.replace(",", "")
     code_str = " ".join([w for w in code_str.split() if w not in LOINC_PREPOSITIONS])
     return code_str
 
 
-def apply_truncation_post_processing(code_str: str, **kwargs) -> str:
+def apply_truncation_post_processing(code_str: str) -> str:
     """Simple character-length enforcement of a given code-string."""
     return code_str[: min(MAX_CHARS_FOR_TRUNCATION, len(code_str))]
 
 
-def _determine_eligible_post_processing(
+def determine_eligible_post_processing(
     code_str: str,
     system_axis: str,
     loinc_enhancements: dict,

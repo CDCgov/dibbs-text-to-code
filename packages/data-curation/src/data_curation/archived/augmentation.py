@@ -16,8 +16,6 @@ from utils import normalize, path, regex_patterns
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
 
-if len(LOINC_ENHANCEMENTS) > 0:
-    raise Exception("No Loinc enhancements given.")
 
 MAX_AUGMENTATION_TRIES = 100
 
@@ -214,8 +212,7 @@ def generate_augmented_examples(
         performed_enhancement = False
 
         if "enhancement_all" in config:
-            prob = random.uniform(0.0, 1.0)
-            if prob <= config["enhancement_all"]["enhancement_prob"]:
+            if random.uniform(0.0, 1.0) <= config["enhancement_all"]["enhancement_prob"]:
                 performed_enhancement = True
                 ex_code = enhance_loinc_str(
                     text=ex_code,
@@ -223,35 +220,36 @@ def generate_augmented_examples(
                     max_enhancements=config["enhancement_all"]["max_enhances"],
                 )
         else:
-            if "enhancement_synonyms" in config:
-                prob = random.uniform(0.0, 1.0)
-                if prob <= config["enhancement_synonyms"]["enhancement_prob"]:
-                    performed_enhancement = True
-                    ex_code = enhance_loinc_str(
-                        text=ex_code,
-                        enhancement_type="synonyms",
-                        max_enhancements=config["enhancement_synonyms"]["max_enhances"],
-                    )
-            if "enhancement_abbreviation" in config:
-                prob = random.uniform(0.0, 1.0)
-                if prob <= config["enhancement_abbreviation"]["enhancement_prob"]:
-                    performed_enhancement = True
-                    ex_code = enhance_loinc_str(
-                        text=ex_code,
-                        enhancement_type="abbrv",
-                        max_enhancements=config["enhancement_abbreviation"]["max_enhances"],
-                    )
+            if (
+                "enhancement_synonyms" in config
+                and random.uniform(0.0, 1.0) <= config["enhancement_synonyms"]["enhancement_prob"]
+            ):
+                performed_enhancement = True
+                ex_code = enhance_loinc_str(
+                    text=ex_code,
+                    enhancement_type="synonyms",
+                    max_enhancements=config["enhancement_synonyms"]["max_enhances"],
+                )
+            if (
+                "enhancement_abbreviation" in config
+                and random.uniform(0.0, 1.0)
+                <= config["enhancement_abbreviation"]["enhancement_prob"]
+            ):
+                performed_enhancement = True
+                ex_code = enhance_loinc_str(
+                    text=ex_code,
+                    enhancement_type="abbrv",
+                    max_enhancements=config["enhancement_abbreviation"]["max_enhances"],
+                )
 
         # Use the right insertion probability threshold
         # Inserts come after enhancements so that the random index any related
         # names are inserted at doesn't interfere with substring searching
         # for acronyms or abbreviations
-        if performed_enhancement:
-            t = config["insertion"]["insert_prob_after_enhance"]
-        else:
-            t = config["insertion"]["insert_prob_without_enhance"]
-        prob = random.uniform(0.0, 1.0)
-        if prob <= t:
+        insert_key = (
+            "insert_prob_after_enhance" if performed_enhancement else "insert_prob_without_enhance"
+        )
+        if random.uniform(0.0, 1.0) <= config["insertion"][insert_key]:
             ex_code = insert_loinc_related_names(
                 ex_code,
                 related_names,
@@ -263,8 +261,7 @@ def generate_augmented_examples(
         # with deletions, but they have to come after enhancements for the
         # same reasons as insertions, and insertions have priority as the
         # only other mechanism to insert new semantic meaning
-        prob = random.uniform(0.0, 1.0)
-        if prob <= config["permutation"]["swap_prob"]:
+        if random.uniform(0.0, 1.0) <= config["permutation"]["swap_prob"]:
             ex_code = scramble_word_order(
                 ex_code, config["permutation"]["max_swaps"], config["permutation"]["min_swaps"]
             )
@@ -272,8 +269,7 @@ def generate_augmented_examples(
         # Last come the deletions: must be the final operation because
         # they're syntactically destructive, and other operations depend on
         # the full syntax of each token
-        prob = random.uniform(0.0, 1.0)
-        if prob <= config["deletion"]["deletion_prob"]:
+        if random.uniform(0.0, 1.0) <= config["deletion"]["deletion_prob"]:
             ex_code = random_char_deletion(
                 ex_code,
                 config["deletion"]["min_deletes"],
@@ -291,29 +287,24 @@ def generate_augmented_examples(
 def build_augmented_loinc_files(
     input_path: str,
     config: schemas.LoincFileGenerationConfig,
-    num_lcn: int = 5,
-    num_sn: int = 5,
-    num_dn: int = 5,
+    num_examples: dict[str, int] | None = None,
     output_path_base: str = "../data/training_files/augmented_loinc",
 ) -> None:
     """Generates augmented LOINC data files for the long common names, short common names, and display names based on the provided configurations.
 
     :param input_path: The path to the base LOINC name file.
-    :param configs: Configuration dictionaries for long common names, short
-        common names, and display names.
-    :param num_lcn: The number of augmented long common names to generate.
-    :param num_sn: The number of augmented short common names to generate.
-    :param num_dn: The number of augmented display names to generate.
-    :param output_files_base: The base path for the output files.
+    :param config: Configuration dictionary keyed by name type
+        ("short_name", "long_common_name", "display_name").
+    :param num_examples: Number of augmented examples to generate per name
+        type, keyed the same as ``config``. Defaults to 5 for each.
+    :param output_path_base: The base path for the output files.
     :return: None
     """
-    num_map = {"short_name": num_sn, "long_common_name": num_lcn, "display_name": num_dn}
+    if num_examples is None:
+        num_examples = {"short_name": 5, "long_common_name": 5, "display_name": 5}
 
     # Read in data/loinc_lab_names_XXXX.csv
-    with open(
-        input_path,
-        encoding="utf-8",
-    ) as fp:
+    with open(input_path, encoding="utf-8") as fp:
         data = fp.readlines()
 
     # First row of the data is a header
@@ -322,7 +313,8 @@ def build_augmented_loinc_files(
     for row in data:
         r = row.split("|")
         # skip any malformed rows
-        if len(r) < 6:
+        expected_number_of_columns = 6
+        if len(r) < expected_number_of_columns:
             continue
 
         loinc_code, short_name, long_name, display_name = r[0], r[2], r[3], r[4]
@@ -336,7 +328,7 @@ def build_augmented_loinc_files(
         for key, base_value in values.items():
             if base_value != "":
                 augmented_examples = generate_augmented_examples(
-                    base_value, related_names, num_map[key], config[key]
+                    base_value, related_names, num_examples[key], config[key]
                 )
 
                 # Append data to respective files
@@ -350,8 +342,6 @@ if __name__ == "__main__":
     build_augmented_loinc_files(
         "../../../../data/snoinc_extracts/loinc_lab_names_20251107.csv",
         configs.SWITCHED_ANCHOR_POSITIVE_AUGMENTATION,
-        num_lcn=1,
-        num_sn=1,
-        num_dn=1,
+        num_examples={"short_name": 1, "long_common_name": 1, "display_name": 1},
         output_path_base="../../../../data/training_files/switched_anchor_positives",
     )
