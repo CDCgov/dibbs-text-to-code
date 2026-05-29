@@ -7,7 +7,7 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
-from text_to_code.models import Candidate
+from text_to_code.models import Candidate, LabXPaths
 from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
 
@@ -318,7 +318,9 @@ class TestHandler:
         snapshot,
     ):
         """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
-        selected_candidate = Candidate(value="weed allergen mix 3", xpath="code/@displayName")
+        selected_candidate = Candidate(
+            value="weed allergen mix 3", xpath=LabXPaths.CODE_DISPLAY_NAME
+        )
 
         mocker.patch(
             "text_to_code.services.evaluator.select_relevant_text",

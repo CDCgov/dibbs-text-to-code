@@ -68,6 +68,6 @@ class TTCAugmenterInput(FrozenBaseModel):
     """Input for the augmentation service."""
 
     persistence_id: str
-    nonstandard_codes: list[NonstandardCodeInstance] | None = None
+    nonstandard_codes: list[NonstandardCodeInstance] = []
     passthrough: bool = False
     passthrough_reason: PassthroughReason | None = None

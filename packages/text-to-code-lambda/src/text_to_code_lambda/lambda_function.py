@@ -359,9 +359,8 @@ def _process_record_pipeline(
 
     schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
     ttc_schematron_issues_details = None
-    nonstandard_code_replacements = None
+    nonstandard_code_replacements: list[NonstandardCodeInstance] = []
     if schematron_data_fields:
-        nonstandard_code_replacements: list[NonstandardCodeInstance] = []
         ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
         passthrough_reason: PassthroughReason | None = None
         for error in schematron_data_fields:

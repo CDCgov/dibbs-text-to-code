@@ -140,7 +140,7 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> Iterator[BaseClient]:
 @pytest.fixture(scope="function")
 def mock_aws_setup_malformed_eicr_no_relevant_schematron(
     monkeypatch: pytest.MonkeyPatch,
-) -> boto3.client:
+) -> Iterator[BaseClient]:
     """Setup test AWS environment."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", AWS_REGION)
