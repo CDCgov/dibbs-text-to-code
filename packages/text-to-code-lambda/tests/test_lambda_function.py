@@ -378,11 +378,45 @@ class TestHandler:
         ttc_output = _get_serialized_object(
             f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id}"
         )
-        snapshot.assert_match(ttc_output, "malformed_eicr_with_no_schematron_issuesttc_output.json")
+        snapshot.assert_match(
+            ttc_output, "malformed_eicr_with_no_schematron_issues_ttc_output.json"
+        )
 
         ttc_metadata_output = _get_serialized_object(
             f"{TTC_METADATA_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id.removesuffix('.xml')}.json"
         )
         snapshot.assert_match(
             ttc_metadata_output, "malformed_eicr_with_no_schematron_issues_ttc_metadata_output.json"
+        )
+
+    def test_handler_reranker_returns_empty(
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_lambda_context,
+        snapshot,
+        mocker,
+        mock_opensearch,
+    ):
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.rerank",
+            return_value=[],
+        )
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "reranker_returns_empty_ttc_output.json")
+
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
+        )
+        snapshot.assert_match(
+            ttc_metadata_output, "reranker_returns_empty_ttc_metadata_output.json"
         )

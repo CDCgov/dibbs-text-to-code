@@ -386,16 +386,14 @@ def _process_record_pipeline(
                     retrieved_loinc_names = [hit.source.description for hit in results_list]
                     ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
 
-                    top_result = next(
-                        (
-                            x
-                            for x in results_list
-                            if x.source.description == ranked_results[0]["code_string"]
-                        ),
-                        None,
-                    )
-
-                    if top_result:
+                    if ranked_results:
+                        top_result = next(
+                            (
+                                x
+                                for x in results_list
+                                if x.source.description == ranked_results[0]["code_string"]
+                            ),
+                        )
                         new_translation = Code(
                             code=top_result.source.loinc_code,
                             code_system="2.16.840.1.113883.6.1",
