@@ -233,21 +233,23 @@ def _collect_element_signatures(root: etree._Element) -> dict[ElementSignature, 
     return signature_counts
 
 
-def _assert_augmented_eicr_contains_expected_translations(
-    augmented_root: etree._Element,
+def _assert_augmented_observation_contains_expected_translations(
+    augmented_observation: etree._Element,
     eicr_id: str,
 ) -> None:
-    """Assert that the augmented eICR contains <translation> elements in the CDA namespace, which the augmenter is expected to inject.
+    """Assert that an augmented observation contains <translation> elements in the CDA namespace, which the augmenter is expected to inject.
 
-    :param augmented_root: The root element of the augmented eICR XML tree.
+    :param augmented_observation: The root element of the augmented eICR observation where augmentation occurred.
     :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
     """
-    translations: list[etree._Element] = augmented_root.xpath(
-        "//cda:translation", namespaces=CDA_NAMESPACES
+    assert etree.QName(augmented_observation).localname == "observation", eicr_id
+
+    translations: list[etree._Element] = augmented_observation.xpath(
+        ".//cda:translation", namespaces=CDA_NAMESPACES
     )
 
     assert translations, (
-        f"Augmented eICR did not contain expected <translation> elements: {eicr_id}"
+        f"Augmented observation did not contain expected <translation> elements: {eicr_id}"
     )
 
     for translation in translations:
@@ -255,15 +257,22 @@ def _assert_augmented_eicr_contains_expected_translations(
 
 
 def _assert_augmented_eicr_retains_regenerated_document_header_elements(
+    original_root: etree._Element,
     augmented_root: etree._Element,
     eicr_id: str,
 ) -> None:
-    """Assert that the augmented eICR retains the document header elements that the augmenter regenerates, even though their content may differ.
+    """Assert that the augmented eICR retains original regenerated document header elements when present, even though their content may differ.
 
+    :param original_root: The root element of the original eICR XML tree.
     :param augmented_root: The root element of the augmented eICR XML tree.
     :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
     """
     for tag in REGENERATED_DOCUMENT_HEADER_TAGS:
+        original_matching_children = [child for child in original_root if child.tag == tag]
+
+        if original_matching_children == []:
+            continue
+
         matching_children = [child for child in augmented_root if child.tag == tag]
 
         assert matching_children != [], (
@@ -283,7 +292,11 @@ def _assert_augmented_eicr_retains_original_content(
     :param augmented_root: The root element of the augmented eICR XML tree.
     :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
     """
-    _assert_augmented_eicr_retains_regenerated_document_header_elements(augmented_root, eicr_id)
+    _assert_augmented_eicr_retains_regenerated_document_header_elements(
+        original_root,
+        augmented_root,
+        eicr_id,
+    )
 
     original_signatures = _collect_element_signatures(original_root)
     augmented_signatures = _collect_element_signatures(augmented_root)
@@ -498,12 +511,20 @@ class TestEndToEndSimulated:
         original_root = _parse_xml_document(original_eicr, "Original eICR", eicr_id)
         augmented_root = _parse_xml_document(augmented_eicr, "Augmented eICR", eicr_id)
 
+        ttc_output = json.loads(
+            self._read_s3_object(
+                aws,
+                f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        )
         augmentation_metadata = json.loads(
             self._read_s3_object(
                 aws,
                 f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
             )
         )
+
+        actual_validation_results = validate_eicr(augmented_eicr)
 
         if augmentation_metadata.get("passthrough"):
             original_eicr = self._read_s3_object(
@@ -521,19 +542,34 @@ class TestEndToEndSimulated:
                 PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             ]
 
-            if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:
-                assert augmentation_metadata.get("passthrough") is True
-                assert augmentation_metadata.get("passthrough_reason") == passthrough_reason
+            if passthrough_reason not in [
+                PassthroughReason.AUGMENTATION_EXCEPTION,
+                PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
+            ]:
+                assert ttc_output["passthrough"] is True
+                assert ttc_output["passthrough_reason"] == passthrough_reason
         else:
             assert augmentation_metadata.get("passthrough") in [None, False]
             assert augmented_eicr != ""
 
-            _assert_augmented_eicr_contains_expected_translations(augmented_root, eicr_id)
+            augmented_observations: list[etree._Element] = augmented_root.xpath(
+                "//cda:observation[.//cda:translation]",
+                namespaces=CDA_NAMESPACES,
+            )
+
+            assert augmented_observations, (
+                f"Augmented eICR did not contain observations with expected "
+                f"<translation> elements: {eicr_id}"
+            )
+
+            for augmented_observation in augmented_observations:
+                _assert_augmented_observation_contains_expected_translations(
+                    augmented_observation,
+                    eicr_id,
+                )
+
             _assert_augmented_eicr_retains_original_content(original_root, augmented_root, eicr_id)
 
-        actual_validation_results = validate_eicr(augmented_eicr)
-
-        if not augmentation_metadata.get("passthrough"):
             assert actual_validation_results == [], actual_validation_results
 
         snapshot.assert_match(
