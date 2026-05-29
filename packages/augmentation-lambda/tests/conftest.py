@@ -1,10 +1,12 @@
 import json
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import boto3
 import moto
 import pytest
+from botocore.client import BaseClient
 
 from augmentation_lambda import lambda_function
 
@@ -29,7 +31,7 @@ TEST_EICR_PATH = (
 
 
 @pytest.fixture
-def test_ttc_output() -> dict:
+def test_ttc_output() -> dict[str, object]:
     """A test example of the output of the TTC lambda."""
     return {
         "persistence_id": TEST_PERSISTENCE_ID,
@@ -52,7 +54,7 @@ def test_ttc_output() -> dict:
 
 
 @pytest.fixture
-def example_s3_event_payload() -> dict:
+def example_s3_event_payload() -> dict[str, object]:
     """EventBridge S3 event payload (what SQS body contains as JSON string)."""
     return {
         "version": "0",
@@ -80,7 +82,7 @@ def example_s3_event_payload() -> dict:
 
 
 @pytest.fixture(scope="function")
-def example_sqs_event(example_s3_event_payload: dict) -> dict:
+def example_sqs_event(example_s3_event_payload: dict[str, object]) -> dict[str, object]:
     """Full SQS event that mimics real Lambda input."""
     return {
         "Records": [
@@ -105,7 +107,9 @@ def example_sqs_event(example_s3_event_payload: dict) -> dict:
 
 
 @pytest.fixture(scope="function")
-def mock_aws_setup(monkeypatch: pytest.MonkeyPatch, test_ttc_output: dict) -> boto3.client:
+def mock_aws_setup(
+    monkeypatch: pytest.MonkeyPatch, test_ttc_output: dict[str, object]
+) -> Iterator[BaseClient]:
     """Setup test AWS environment with moto mock S3."""
     with moto.mock_aws():
         monkeypatch.setenv("AWS_REGION", AWS_REGION)
@@ -140,8 +144,8 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch, test_ttc_output: dict) -> bo
         )
 
         # Reset cached S3 client so Lambda creates a new one inside moto context
-        lambda_function._cached_s3_client = None
+        monkeypatch.setattr(lambda_function, "_cached_s3_client", None, raising=False)
 
         yield s3
 
-        lambda_function._cached_s3_client = None
+        monkeypatch.setattr(lambda_function, "_cached_s3_client", None, raising=False)

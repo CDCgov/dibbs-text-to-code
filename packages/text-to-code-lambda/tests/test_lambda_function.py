@@ -1,15 +1,20 @@
 import json
+import os
 from datetime import UTC, datetime
 
 import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from conftest import S3_BUCKET, TTC_METADATA_PREFIX, TTC_OUTPUT_PREFIX
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from text_to_code.models import Candidate
 from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
+
+S3_BUCKET = os.environ["S3_BUCKET"]
+TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
+
 
 EXPECTED_RESULTED_ERRORS = 2
 EXPECTED_ORDERED_ERRORS = 2
