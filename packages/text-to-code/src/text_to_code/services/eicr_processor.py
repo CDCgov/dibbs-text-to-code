@@ -124,14 +124,16 @@ class EicrProcessor:
         """Get the eICR ID from the XML."""
         id_element = self._xml_root.find(".//id")
         if id_element is None or id_element.get("nullFlavor") is not None:
-            raise ValueError("No ID element found in eICR XML.")
-        instance_identifier = CdaInstanceIdentifier(
-            root=id_element.get("root"),
-            extension=id_element.get("extension"),
-            assigning_authority_name=id_element.get("assigningAuthorityName"),
-            displayable=_to_bool(id_element.get("displayable")),
-            null_flavor=id_element.get("nullFlavor"),
-        )
+            logger.warn("No ID element found in eICR XML.")
+            instance_identifier = None
+        else:
+            instance_identifier = CdaInstanceIdentifier(
+                root=id_element.get("root"),
+                extension=id_element.get("extension"),
+                assigning_authority_name=id_element.get("assigningAuthorityName"),
+                displayable=_to_bool(id_element.get("displayable")),
+                null_flavor=id_element.get("nullFlavor"),
+            )
         vendor = self._xml_root.find(
             ".//author/assignedAuthor/assignedAuthoringDevice/softwareName"
         )
