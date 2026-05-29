@@ -1,32 +1,28 @@
 import json
 import logging
 import os
-from datetime import UTC, datetime
 from io import BytesIO
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, SQSRecord, event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
-from pydantic import Field
 
 import lambda_handler
-from lambda_handler.models import OpenSearchResult
 from shared_models import (
     Code,
-    DataField,
-    FrozenBaseModel,
     NonstandardCodeInstance,
     PassthroughReason,
     TTCAugmenterInput,
 )
 from text_to_code.models import Candidate, SchematronErrorDetail
 from text_to_code.models import query as query_models
-from text_to_code.models.eicr import Metadata as EICRMetadata
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import ScoredResult, rerank
+
+from .models.metadata import Metadata, TTCSchematronIssueDetail
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -43,36 +39,6 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
-
-
-class TTCSchematronIssueDetail(FrozenBaseModel):
-    """The data describing the TTC response to a relevant Schematron issue.
-
-    This is part of the TTC metadata.
-    """
-
-    candidate: Candidate | None
-    field_type: DataField
-    issue_context: str
-    issue_id: str | None
-    issue_message: str
-    issue_test: str | None
-    new_translation: Code | None
-    opensearch_retrieved_scores: OpenSearchResult | None
-    reranker_processed_results: list[ScoredResult] | None
-    unmatched_reason: str | None
-
-
-class TTCMetadata(FrozenBaseModel):
-    """Model to hold metadata about the TTC process."""
-
-    persistence_id: str
-    eicr_metadata: EICRMetadata | None = None
-    ttc_schematron_issues: list[TTCSchematronIssueDetail] | None = None
-    processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    passthrough: bool | None = None
-    passthrough_reason: str | None = None
-    error: str | None = None
 
 
 @event_source(data_class=SQSEvent)
@@ -165,7 +131,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             return False
 
         persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
-        ttc_metadata = TTCMetadata(
+        ttc_metadata = Metadata(
             persistence_id=persistence_id,
             passthrough=True,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
@@ -306,7 +272,7 @@ def _build_nonstandard_code_instance(
 
 def _save_ttc_metadata_output(
     persistence_id: str,
-    metadata_output: TTCMetadata,
+    metadata_output: Metadata,
     bucket_name: str,
 ) -> None:
     """Save TTC metadata output to S3.
@@ -498,7 +464,7 @@ def _process_record_pipeline(
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
     )
-    ttc_metadata = TTCMetadata(
+    ttc_metadata = Metadata(
         persistence_id=persistence_id,
         eicr_metadata=processor.eicr_metadata,
         ttc_schematron_issues=ttc_schematron_issues_details,
@@ -521,7 +487,7 @@ def _process_record_pipeline(
 
 
 def _save_outputs(
-    persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: TTCMetadata
+    persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: Metadata
 ) -> None:
     _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
     _save_ttc_metadata_output(
