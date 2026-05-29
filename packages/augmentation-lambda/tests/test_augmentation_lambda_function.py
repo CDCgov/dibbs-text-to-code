@@ -75,14 +75,7 @@ def _build_empty_body_event() -> dict[str, object]:
 class TestHandler:
     """Tests for the augmentation Lambda handler."""
 
-    def test_handler_success(self, example_sqs_event, mock_aws_setup, mock_lambda_context) -> None:
-        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
-
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
-
-    def test_handler_writes_outputs_to_s3(
+    def test_handler_success(
         self,
         example_sqs_event,
         mock_aws_setup,
@@ -123,11 +116,7 @@ class TestHandler:
         assert actual_validation_results == []  # Empty list means no errors.
 
     def test_handler_writes_original_eicr_when_ttc_output_is_passthrough(
-        self,
-        example_sqs_event,
-        mock_aws_setup,
-        mocker,
-        mock_lambda_context,
+        self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context, snapshot
     ) -> None:
         original_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -169,19 +158,13 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
-
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["nonstandard_codes"] == []
-        assert metadata["passthrough"] is True
-        assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
+        snapshot.assert_match(
+            _serialize_snapshot_value(metadata),
+            "ttc_passthrough.json",
+        )
 
     def test_handler_writes_original_eicr_when_ttc_output_passthrough_reason_is_missing(
-        self,
-        example_sqs_event,
-        mock_aws_setup,
-        mocker,
-        mock_lambda_context,
+        self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context, snapshot
     ) -> None:
         original_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -223,19 +206,13 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
-
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["nonstandard_codes"] == []
-        assert metadata["passthrough"] is True
-        assert metadata["passthrough_reason"] is None
+        snapshot.assert_match(
+            _serialize_snapshot_value(metadata),
+            "passthrough_reason_missing.json",
+        )
 
     def test_handler_writes_original_eicr_when_augmentation_fails(
-        self,
-        example_sqs_event,
-        mock_aws_setup,
-        mocker,
-        mock_lambda_context,
+        self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context, snapshot
     ) -> None:
         original_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -268,46 +245,10 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
-
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["nonstandard_codes"] == []
-        assert metadata["error"] == "augmentation boom"
-        assert metadata["passthrough"] is True
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
-
-    def test_get_passthrough_reason_returns_enum_when_reason_is_already_enum(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": PassthroughReason.TTC_EXCEPTION}
+        snapshot.assert_match(
+            _serialize_snapshot_value(metadata),
+            "augmentation_fails.json",
         )
-
-        assert result == PassthroughReason.TTC_EXCEPTION
-
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_type(self) -> None:
-        result = lambda_function._get_passthrough_reason({"passthrough_reason": 1})
-
-        assert result is None
-
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_value(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": "not_a_passthrough_reason"}
-        )
-
-        assert result is None
-
-    def test_parse_nonstandard_codes_returns_empty_list_when_schematron_errors_is_not_dict(
-        self,
-    ) -> None:
-        result = lambda_function._parse_nonstandard_codes({"schematron_errors": []})
-
-        assert result == []
-
-    def test_parse_nonstandard_codes_skips_entries_when_entries_is_not_list(self) -> None:
-        result = lambda_function._parse_nonstandard_codes(
-            {"schematron_errors": {"Lab Test Name Ordered": {}}}
-        )
-
-        assert result == []
 
     def test_handler_source_bucket_routing(
         self,

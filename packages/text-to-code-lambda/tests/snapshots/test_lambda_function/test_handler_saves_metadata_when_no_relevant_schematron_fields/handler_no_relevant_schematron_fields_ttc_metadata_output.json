@@ -1,7 +1,0 @@
-{
-  "eicr_metadata": {},
-  "persistence_id": "<persistence_id>",
-  "processed_at": "<processed_at>",
-  "reason_for_skipping": "No relevant data fields identified from Schematron errors for TTC processing",
-  "schematron_errors": {}
-}
