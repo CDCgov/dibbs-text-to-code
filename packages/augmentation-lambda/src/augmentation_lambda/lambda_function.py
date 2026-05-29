@@ -8,10 +8,10 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 import lambda_handler
-from augmentation.models import TTCAugmenterConfig
-from augmentation.models.application import Metadata, TTCAugmenterOutput
+from augmentation.models import Metadata, TTCAugmenterConfig
+from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
+from shared_models import PassthroughReason, TTCAugmenterInput
 from validation import ValidationResult, validate_eicr
 
 logger = Logger(service="augmentation-lambda")
@@ -170,11 +170,11 @@ def _process_record(record: SQSRecord) -> None:
     ):
         logger.info("Processing S3 object", status="processing")
 
-        ttc_output = _load_ttc_output(persistence_id, bucket_name)
+        augmenter_input = _load_ttc_output(persistence_id, bucket_name)
         original_eicr = _load_original_eicr(persistence_id, bucket_name)
 
-        if ttc_output.get("passthrough"):
-            passthrough_reason = _get_passthrough_reason(ttc_output)
+        if augmenter_input.passthrough:
+            passthrough_reason = augmenter_input.passthrough_reason
             metadata = Metadata(
                 original_eicr_id=persistence_id,
                 augmented_eicr_id=persistence_id,
@@ -195,15 +195,6 @@ def _process_record(record: SQSRecord) -> None:
             )
             return
 
-        nonstandard_codes = _parse_nonstandard_codes(ttc_output)
-
-        augmenter_input = TTCAugmenterInput(
-            persistence_id=persistence_id,
-            nonstandard_codes=nonstandard_codes,
-        )
-
-        original_eicr_id: str | None = None
-
         try:
             # Currently only supports eICR augmentation. Other document types (e.g. from
             # ecr-refiner or other services) may need different augmentation strategies.
@@ -214,6 +205,7 @@ def _process_record(record: SQSRecord) -> None:
                 config=config,
                 deterministic_id_seed=augmenter_input.persistence_id,
             )
+
             original_eicr_id = str(augmenter.original_eicr_id)
 
             metadata = augmenter.augment()
@@ -299,7 +291,7 @@ def _process_record(record: SQSRecord) -> None:
         logger.info("Augmentation processing completed", status="success")
 
 
-def _load_ttc_output(persistence_id: str, bucket_name: str) -> dict[str, object]:
+def _load_ttc_output(persistence_id: str, bucket_name: str) -> TTCAugmenterInput:
     """Load TTC output from S3.
 
     :param persistence_id: The persistence ID for the S3 object key.
@@ -317,7 +309,7 @@ def _load_ttc_output(persistence_id: str, bucket_name: str) -> dict[str, object]
     content = lambda_handler.get_file_content_from_s3(
         bucket_name=bucket_name, object_key=object_key
     )
-    return json.loads(content)
+    return TTCAugmenterInput.model_validate_json(content)
 
 
 def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
@@ -336,31 +328,6 @@ def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
         status="processing",
     )
     return lambda_handler.get_file_content_from_s3(bucket_name=bucket_name, object_key=object_key)
-
-
-def _parse_nonstandard_codes(ttc_output: dict[str, object]) -> list[NonstandardCodeInstance]:
-    """Parse nonstandard codes from TTC output.
-
-    The TTC Lambda writes NonstandardCodeInstance model dumps to the schematron_errors
-    field of the TTC output. This function validates and reconstructs them.
-
-    :param ttc_output: The TTC output dictionary from S3.
-    :return: A list of NonstandardCodeInstance objects.
-    """
-    codes = []
-    schematron_errors = ttc_output.get("schematron_errors", {})
-
-    if not isinstance(schematron_errors, dict):
-        return codes
-
-    for entries in schematron_errors.values():
-        if not isinstance(entries, list):
-            continue
-
-        for entry in entries:
-            if isinstance(entry, dict) and "new_translation" in entry:
-                codes.append(NonstandardCodeInstance.model_validate(entry))
-    return codes
 
 
 def _save_augmentation_outputs(

@@ -1,79 +1,62 @@
 import json
 import os
+from datetime import UTC, datetime
 
+import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from shared_models import PassthroughReason
+from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
+from text_to_code.models import Candidate, LabXPaths
+from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
 
 S3_BUCKET = os.environ["S3_BUCKET"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
 TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 
-
-EXPECTED_RESULTED_ERRORS = 2
-EXPECTED_ORDERED_ERRORS = 2
 EXPECTED_EXCEPTION_RESULTS = 2
 
 
-def _serialize_ttc_output_snapshot(ttc_output: dict[str, object]) -> str:
-    normalized = json.loads(json.dumps(ttc_output))
-    normalized["persistence_id"] = "<persistence_id>"
-    return json.dumps(normalized, indent=2, sort_keys=True)
+def _get_serialized_object(key: str) -> str:
+    return json.dumps(
+        json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=key,
+            )
+        ),
+        indent=2,
+        sort_keys=True,
+    )
 
 
-def _serialize_ttc_metadata_snapshot(ttc_metadata_output: dict[str, object]) -> str:
-    normalized = json.loads(json.dumps(ttc_metadata_output))
-    normalized["persistence_id"] = "<persistence_id>"
-    normalized["processed_at"] = "<processed_at>"
-
-    for field_errors in normalized.get("schematron_errors", {}).values():
-        for error in field_errors:
-            if (
-                "opensearch_retrieved_scores" in error
-                and error["opensearch_retrieved_scores"] is not None
-            ):
-                error["opensearch_retrieved_scores"] = "<opensearch_retrieved_scores>"
-
-            if (
-                "reranker_processed_results" in error
-                and error["reranker_processed_results"] is not None
-            ):
-                for result in error["reranker_processed_results"]:
-                    if "score" in result and result["score"] is not None:
-                        result["score"] = f"{float(result['score']):.3f}"
-
-    return json.dumps(normalized, indent=2, sort_keys=True)
-
-
-def _assert_passthrough(
-    output: dict[str, object],
-    passthrough_reason: PassthroughReason,
-) -> None:
-    assert output["passthrough"] is True
-    assert output["passthrough_reason"] == passthrough_reason
-
-
+@pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 class TestHandler:
     def test_handler_success(
         self,
         example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
-        mocker,
         snapshot: Snapshot,
         mock_lambda_context,
+        mocker,
     ):
         """Test handler with no failures."""
-        selected_candidate = {
-            "value": "weed allergen mix 3",
-            "confidence": 1.0,
-        }
-
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
+            {
+                "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                "score": 0.5247528553009033,
+            },
+            {
+                "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                "score": 0.35545864701271057,
+            },
+        ]
         mocker.patch(
-            "text_to_code.services.evaluator.select_relevant_text",
-            return_value=type("SelectedCandidate", (), selected_candidate)(),
+            "text_to_code_lambda.lambda_function.rerank",
+            return_value=ranked_results,
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -83,57 +66,13 @@ class TestHandler:
             "num_success_eicrs": 1,
         }
 
-        # Assert that the TTC output was saved to S3
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
-        )
-        assert ttc_output is not None
-        snapshot.assert_match(
-            _serialize_ttc_output_snapshot(ttc_output),
-            "handler_success_ttc_output.json",
-        )
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-        assert ttc_metadata_output is not None
-        snapshot.assert_match(
-            _serialize_ttc_metadata_snapshot(ttc_metadata_output),
-            "handler_success_ttc_metadata_output.json",
-        )
-
-    def test_save_ttc_metadata_output(
-        self,
-        mock_aws_setup,
-    ):
-        """Test saving TTC metadata output to S3."""
-        ttc_metadata_output = {
-            "persistence_id": mock_aws_setup.persistence_id,
-            "eicr_metadata": {},
-            "schematron_errors": {},
-            "processed_at": "<processed_at>",
-        }
-
-        lambda_function._save_ttc_metadata_output(
-            persistence_id=mock_aws_setup.persistence_id,
-            ttc_metadata_output=ttc_metadata_output,
-            bucket_name=S3_BUCKET,
-        )
-
-        result = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
-        )
-
-        assert result == ttc_metadata_output
+        snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch, mock_lambda_context):
         """Test handler with no records."""
@@ -184,6 +123,7 @@ class TestHandler:
         mock_opensearch,
         mocker,
         mock_lambda_context,
+        snapshot,
     ):
         """Test handler saves TTC metadata output when no relevant Schematron fields are found."""
         mocker.patch(
@@ -197,32 +137,15 @@ class TestHandler:
             "num_success_eicrs": 1,
         }
 
-        # Assert that the TTC output was saved to S3
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
-        )
-        assert ttc_output is not None
-        _assert_passthrough(ttc_output, PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS)
-        assert ttc_output["schematron_errors"] == {}
-        assert ttc_output["unmatched_schematron_errors"] == {}
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "no_relevant_schematron_fields_ttc_output.json")
 
-        # Assert that the TTC metadata output was saved to S3 with the expected content
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-        assert ttc_metadata_output is not None
-        _assert_passthrough(
-            ttc_metadata_output,
-            PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
+        snapshot.assert_match(
+            ttc_metadata_output, "no_relevant_schematron_fields_metadata_output.json"
         )
-        assert ttc_metadata_output["schematron_errors"] == {}
-        assert mock_opensearch.search.call_count == 0
 
     def test_handler_continues_processing_after_record_exception(
         self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
@@ -285,6 +208,7 @@ class TestHandler:
         mocker,
         mock_opensearch,
         mock_lambda_context,
+        snapshot,
     ):
         """Test handler writes passthrough TTC output when a record exception has a recoverable persistence ID."""
         process_record_mock = mocker.patch(
@@ -301,26 +225,13 @@ class TestHandler:
             "num_success_eicrs": 1,
         }
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
-        )
-        assert ttc_output is not None
-        _assert_passthrough(ttc_output, PassthroughReason.TTC_EXCEPTION)
-        assert ttc_output["error"] == "boom"
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "record_exception_id_ttc_output.json")
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-        assert ttc_metadata_output is not None
-        _assert_passthrough(ttc_metadata_output, PassthroughReason.TTC_EXCEPTION)
-        assert ttc_metadata_output["error"] == "boom"
-        assert mock_opensearch.search.call_count == 0
+        snapshot.assert_match(ttc_metadata_output, "record_exception_id_metadata_output.json")
 
     def test_handler_returns_failure_when_record_exception_has_empty_body(
         self,
@@ -358,6 +269,7 @@ class TestHandler:
         mock_opensearch,
         mocker,
         mock_lambda_context,
+        snapshot,
     ):
         """Test handler skips embedding and OpenSearch when no candidate is selected."""
         mocker.patch(
@@ -366,7 +278,10 @@ class TestHandler:
         )
 
         retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
-        reranker_mock = mocker.patch.object(lambda_function, "rerank")
+        reranker_mock = mocker.patch.object(
+            lambda_function,
+            "rerank",
+        )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
@@ -380,30 +295,15 @@ class TestHandler:
         reranker_mock.assert_not_called()
         assert mock_opensearch.search.call_count == 0
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
-        )
-        assert ttc_output is not None
-        _assert_passthrough(ttc_output, PassthroughReason.NO_CODE_MATCHES)
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "continues_selected_candidate_none_ttc_output.json")
 
-        unmatched_schematron_errors = ttc_output["unmatched_schematron_errors"]
-        assert isinstance(unmatched_schematron_errors, dict)
-        assert (
-            sum(len(errors) for errors in unmatched_schematron_errors.values())
-            == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        snapshot.assert_match(
+            ttc_metadata_output, "continues_selected_candidate_none_metadata_output.json"
         )
-        assert ttc_metadata_output is not None
-        _assert_passthrough(ttc_metadata_output, PassthroughReason.NO_CODE_MATCHES)
 
     def test_handler_adds_unmatched_error_when_selected_candidate_has_no_opensearch_hits(
         self,
@@ -412,23 +312,24 @@ class TestHandler:
         mock_opensearch,
         mocker,
         mock_lambda_context,
+        snapshot,
     ):
         """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
-        selected_candidate = {
-            "value": "weed allergen mix 3",
-            "confidence": 1.0,
-        }
+        selected_candidate = Candidate(
+            value="weed allergen mix 3", xpath=LabXPaths.CODE_DISPLAY_NAME
+        )
 
         mocker.patch(
             "text_to_code.services.evaluator.select_relevant_text",
-            return_value=type("SelectedCandidate", (), selected_candidate)(),
+            return_value=selected_candidate,
         )
 
-        empty_opensearch_scores = type(
-            "OpenSearchScores",
-            (),
-            {"hits": type("Hits", (), {"hits": []})()},
-        )()
+        empty_opensearch_scores = OpenSearchResult(
+            took=0,
+            timed_out=False,
+            _shards=OpenSearchShards(total=0, successful=0, skipped=0, failed=0),
+            hits=OpenSearchHits(total={}, hits=[]),
+        )
 
         mocker.patch(
             "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
@@ -450,68 +351,72 @@ class TestHandler:
         }
 
         assert mock_opensearch.search.call_count == 0
-        assert reranker_mock.call_count == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
+        assert reranker_mock.call_count == 0
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "no_opensearch_hits_ttc_output.json")
+
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-        assert ttc_output is not None
-        _assert_passthrough(ttc_output, PassthroughReason.NO_CODE_MATCHES)
+        snapshot.assert_match(ttc_metadata_output, "no_opensearch_hits_none_metadata_output.json")
 
-        unmatched_schematron_errors = ttc_output["unmatched_schematron_errors"]
-        assert isinstance(unmatched_schematron_errors, dict)
-        assert (
-            sum(len(errors) for errors in unmatched_schematron_errors.values())
-            == EXPECTED_RESULTED_ERRORS + EXPECTED_ORDERED_ERRORS
-        )
-
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
-        )
-        assert ttc_metadata_output is not None
-        _assert_passthrough(ttc_metadata_output, PassthroughReason.NO_CODE_MATCHES)
-
-    def test_process_record_pipeline_returns_no_matches_found_when_no_candidates_are_selected(
-        self, mock_aws_setup, mock_opensearch, mocker, mock_lambda_context
+    def test_handler_malformed_eicr_with_no_schematron_issues(
+        self,
+        example_sqs_event,
+        mock_aws_setup_malformed_eicr_no_relevant_schematron,
+        mock_lambda_context,
+        snapshot,
     ):
-        """Test pipeline returns no_matches_found when no relevant candidates are selected."""
-        mocker.patch(
-            "text_to_code.services.evaluator.select_relevant_text",
-            return_value=None,
-        )
-
-        resp = lambda_function._process_record_pipeline(
-            persistence_id=mock_aws_setup.persistence_id,
-            opensearch_client=mock_opensearch,
-            bucket_name=S3_BUCKET,
-        )
-
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
             "statusCode": 200,
-            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
-            "result": "no_matches_found",
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
         }
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}",
-            )
+        ttc_output = _get_serialized_object(
+            f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id}"
         )
-        assert ttc_output is not None
-        _assert_passthrough(ttc_output, PassthroughReason.NO_CODE_MATCHES)
+        snapshot.assert_match(
+            ttc_output, "malformed_eicr_with_no_schematron_issues_ttc_output.json"
+        )
 
-        ttc_metadata_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json",
-            )
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id.removesuffix('.xml')}.json"
         )
-        assert ttc_metadata_output is not None
-        _assert_passthrough(ttc_metadata_output, PassthroughReason.NO_CODE_MATCHES)
+        snapshot.assert_match(
+            ttc_metadata_output, "malformed_eicr_with_no_schematron_issues_ttc_metadata_output.json"
+        )
+
+    def test_handler_reranker_returns_empty(
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_lambda_context,
+        snapshot,
+        mocker,
+        mock_opensearch,
+    ):
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.rerank",
+            return_value=[],
+        )
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "reranker_returns_empty_ttc_output.json")
+
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
+        )
+        snapshot.assert_match(
+            ttc_metadata_output, "reranker_returns_empty_ttc_metadata_output.json"
+        )

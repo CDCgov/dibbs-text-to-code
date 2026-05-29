@@ -11,8 +11,9 @@ from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
 
+from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
-from shared_models import PassthroughReason
+from shared_models import PassthroughReason, TTCAugmenterInput
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 from validation import validate_eicr
 
@@ -94,7 +95,6 @@ NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
 NAMESPACE_PRESERVATION_EICR_PATH = (
     ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_eicr.xml"
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -511,27 +511,25 @@ class TestEndToEndSimulated:
         original_root = _parse_xml_document(original_eicr, "Original eICR", eicr_id)
         augmented_root = _parse_xml_document(augmented_eicr, "Augmented eICR", eicr_id)
 
-        ttc_output = json.loads(
+        ttc_output = TTCAugmenterInput.model_validate_json(
             self._read_s3_object(
                 aws,
                 f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
         )
-        augmentation_metadata = json.loads(
-            self._read_s3_object(
-                aws,
-                f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-            )
+
+        augmentation_metadata = AugmentationMetadata.model_validate_json(
+            self._read_s3_object(aws, f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}")
         )
 
         actual_validation_results = validate_eicr(augmented_eicr)
 
-        if augmentation_metadata.get("passthrough"):
+        if augmentation_metadata.passthrough:
             original_eicr = self._read_s3_object(
                 aws,
                 f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
-            passthrough_reason = augmentation_metadata["passthrough_reason"]
+            passthrough_reason = augmentation_metadata.passthrough_reason
 
             assert augmented_eicr == original_eicr
             assert passthrough_reason in [
@@ -546,10 +544,10 @@ class TestEndToEndSimulated:
                 PassthroughReason.AUGMENTATION_EXCEPTION,
                 PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             ]:
-                assert ttc_output["passthrough"] is True
-                assert ttc_output["passthrough_reason"] == passthrough_reason
+                assert ttc_output.passthrough is True
+                assert ttc_output.passthrough_reason == passthrough_reason
         else:
-            assert augmentation_metadata.get("passthrough") in [None, False]
+            assert augmentation_metadata.passthrough in [None, False]
             assert augmented_eicr != ""
 
             augmented_observations: list[etree._Element] = augmented_root.xpath(
@@ -582,7 +580,7 @@ class TestEndToEndSimulated:
         )
 
         snapshot.assert_match(
-            json.dumps(augmentation_metadata, indent=2, sort_keys=True),
+            json.dumps(augmentation_metadata.model_dump(), indent=2, sort_keys=True),
             f"{eicr_id}_augmentation_metadata.json",
         )
 

@@ -145,7 +145,7 @@ class TestBasicEicrProcessor:
             eicr_vendor="Test eCR Vendor Name",
         )
 
-    def test_metadata_raises_when_id_is_missing(self):
+    def test_metadata_when_id_is_missing(self):
         processor = EicrProcessor(
             """
             <ClinicalDocument>
@@ -160,10 +160,10 @@ class TestBasicEicrProcessor:
             """
         )
 
-        with pytest.raises(ValueError, match=NO_MATCH_FOUND_ERROR_MESSAGE):
-            _ = processor.eicr_metadata
+        expected = Metadata(eicr_id=None, eicr_vendor="Test eCR Vendor Name")
+        assert processor.eicr_metadata == expected
 
-    def test_metadata_raises_when_id_has_null_flavor(self):
+    def test_metadata_when_id_has_null_flavor(self):
         processor = EicrProcessor(
             """
             <ClinicalDocument>
@@ -179,8 +179,8 @@ class TestBasicEicrProcessor:
             """
         )
 
-        with pytest.raises(ValueError, match=NO_MATCH_FOUND_ERROR_MESSAGE):
-            _ = processor.eicr_metadata
+        expected = Metadata(eicr_id=None, eicr_vendor="Test eCR Vendor Name")
+        assert processor.eicr_metadata == expected
 
     def test_metadata_parses_false_displayable(self):
         processor = EicrProcessor(
