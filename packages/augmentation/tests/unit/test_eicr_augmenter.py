@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -55,7 +56,6 @@ class TestEicrAugmenter:
             BASIC_ECR,
             [
                 NonstandardCodeInstance(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -77,7 +77,6 @@ class TestEicrAugmenter:
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -94,7 +93,6 @@ class TestEicrAugmenter:
         """Tests augmenter run method."""
         nonstandard_codes = [
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -118,7 +116,6 @@ class TestEicrAugmenter:
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
-                    schematron_error="text-to-code-test",
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                     field_type=DataField.LAB_TEST_NAME_RESULTED,
                     new_translation=Code(
@@ -135,7 +132,6 @@ class TestEicrAugmenter:
         """Tests translation XPath adds index when same tag siblings exist."""
         nonstandard_codes = [
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -145,7 +141,6 @@ class TestEicrAugmenter:
                 ),
             ),
             NonstandardCodeInstance(
-                schematron_error="text-to-code-test",
                 schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
                 field_type=DataField.LAB_TEST_NAME_RESULTED,
                 new_translation=Code(
@@ -265,9 +260,10 @@ class TestEicrAugmenter:
         ):
             TestAugmenter(
                 BASIC_ECR,
-                InvalidConfig(),
+                cast(AugmenterConfig, InvalidConfig()),
             )
 
     def test_augment_base_method_returns_none(self):
         """Tests abstract base augment method body."""
-        assert Augmenter.augment(object()) is None
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+        assert Augmenter.augment(augmenter) is None

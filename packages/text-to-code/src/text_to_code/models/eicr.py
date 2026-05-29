@@ -24,5 +24,5 @@ class Candidate(FrozenBaseModel):
 class Metadata(FrozenBaseModel):
     """Model representing metadata about the eICR."""
 
-    eicr_id: CdaInstanceIdentifier
+    eicr_id: CdaInstanceIdentifier | None
     eicr_vendor: str | None = None

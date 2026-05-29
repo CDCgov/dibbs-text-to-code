@@ -1,16 +1,20 @@
 import json
 import logging
 import os
+from collections.abc import Iterator
 
 import boto3
 import moto
 import pytest
+from botocore.client import BaseClient
 
 from lambda_handler import reset_cached_clients
 
 
 @pytest.fixture(scope="function")
-def moto_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
+def mock_aws_setup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[BaseClient]:
     """Setup test AWS."""
     reset_cached_clients()
 
@@ -94,7 +98,7 @@ def example_sqs_event(example_s3_event_payload: dict) -> dict:
 
 
 @pytest.fixture
-def caplog_warning(caplog: pytest.LogCaptureFixture) -> logging.Logger:
+def caplog_warning(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
     """Capture log warnings for tests.
 
     :param caplog: Pytest fixture for capturing log output

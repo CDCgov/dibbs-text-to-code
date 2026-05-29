@@ -15,14 +15,16 @@ current_dir = Path(__file__).parent.parent
 
 
 class TestSchematronProcessor:
-    SCHEMATRON_ERROR_FILE = None
+    SCHEMATRON_ERROR_FILE: str | None = None
 
-    def file_setup(self) -> None:
+    def file_setup(self) -> str:
         if self.SCHEMATRON_ERROR_FILE is None:
             schematron_path = current_dir / "assets" / "test_schematron_errors.xml"
             with schematron_path.open() as f:
                 schematron_output = f.read()
             self.SCHEMATRON_ERROR_FILE = schematron_output
+
+        return self.SCHEMATRON_ERROR_FILE
 
     def test_get_data_element_from_schematron_error_returns_none_for_unknown_message(self):
         result = get_data_element_from_schematron_error("unknown schematron error")
@@ -58,9 +60,9 @@ class TestSchematronProcessor:
         assert result == CdaInstanceIdentifier(root="test-root", extension="test-extension")
 
     def test_get_schematron_error_data_fields(self):
-        self.file_setup()
+        schematron_error_file = self.file_setup()
         error_result = get_data_fields_from_schematron_error(
-            self.SCHEMATRON_ERROR_FILE,
+            schematron_error_file,
         )
 
         expected_lab_test_name_resulted = 2
@@ -77,11 +79,10 @@ class TestSchematronProcessor:
         assert len(lab_test_name_ordered_errors) == expected_lab_test_name_ordered
 
     def test_get_schematron_error_detail_fields(self):
-        self.file_setup()
+        schematron_error_file = self.file_setup()
         error_result = get_data_fields_from_schematron_error(
-            self.SCHEMATRON_ERROR_FILE,
+            schematron_error_file,
         )
-
         expected_total_errors = 4
 
         assert len(error_result) == expected_total_errors

@@ -1,7 +1,6 @@
-import io
 import json
 import os
-from datetime import UTC, datetime
+from io import BytesIO
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, SQSRecord, event_source
@@ -9,17 +8,22 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import Code, NonstandardCodeInstance, PassthroughReason
-from text_to_code.models import Candidate, SchematronErrorDetail
+from shared_models import (
+    Code,
+    NonstandardCodeInstance,
+    PassthroughReason,
+    TTCAugmenterInput,
+)
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import rerank
+from text_to_code.services.reranker import ScoredResult, rerank
+
+from .models.metadata import Metadata, TTCSchematronIssueDetail
 
 # Initialize the logger
 logger = Logger(service="ttc")
-
 # Environment variables
 SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", "ValidationResponseV2/")
 TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", "TextToCodeSubmissionV2/")
@@ -29,11 +33,6 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
-
-# Constants
-NO_DATA_FIELDS_MESSAGE = (
-    "No relevant data fields identified from Schematron errors for TTC processing"
-)
 
 
 @event_source(data_class=SQSEvent)
@@ -94,22 +93,6 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     return result
 
 
-def _set_passthrough(
-    ttc_output: dict,
-    ttc_metadata_output: dict,
-    passthrough_reason: PassthroughReason,
-    error: str | None = None,
-) -> None:
-    ttc_output["passthrough"] = True
-    ttc_output["passthrough_reason"] = passthrough_reason
-    ttc_metadata_output["passthrough"] = True
-    ttc_metadata_output["passthrough_reason"] = passthrough_reason
-
-    if error:
-        ttc_output["error"] = error
-        ttc_metadata_output["error"] = error
-
-
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
     """Write TTC output with passthrough reason of TTC_EXCEPTION when an exception is raised during TTC processing.
 
@@ -142,12 +125,16 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             return False
 
         persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
-        ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
-        _set_passthrough(
-            ttc_output,
-            ttc_metadata_output,
-            PassthroughReason.TTC_EXCEPTION,
-            str(error),
+        ttc_metadata = Metadata(
+            persistence_id=persistence_id,
+            passthrough=True,
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
+            error=str(error),
+        )
+        ttc_output = TTCAugmenterInput(
+            persistence_id=persistence_id,
+            passthrough=True,
+            passthrough_reason=PassthroughReason.TTC_EXCEPTION,
         )
 
         with logger.append_context_keys(
@@ -160,7 +147,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
                 status="passthrough",
                 passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             )
-            _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
+            _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
 
         return True
     except Exception:
@@ -209,30 +196,6 @@ def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
         _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
 
 
-def _initialize_ttc_outputs(persistence_id: str) -> tuple[dict, dict]:
-    """Initialize TTC output and metadata output dictionaries.
-
-    :param persistence_id: The persistence ID extracted from the S3 object key
-    :return: The TTC output and TTC metadata output dictionaries.
-    """
-    ttc_output: dict = {
-        "persistence_id": "",
-        "eicr_metadata": {},
-        "schematron_errors": {},
-        "unmatched_schematron_errors": {},
-    }
-    ttc_metadata_output: dict = {
-        "persistence_id": "",
-        "eicr_metadata": {},
-        "schematron_errors": {},
-        "processed_at": "",
-    }
-    ttc_output["persistence_id"] = persistence_id
-    ttc_metadata_output["persistence_id"] = persistence_id
-    ttc_metadata_output["processed_at"] = datetime.now(UTC).isoformat()
-    return ttc_output, ttc_metadata_output
-
-
 def _load_schematron_data_fields(persistence_id: str, bucket_name: str) -> list:
     """Load Schematron errors from S3 and extract relevant fields.
 
@@ -279,168 +242,16 @@ def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
     return original_eicr_content
 
 
-def _populate_eicr_metadata(
-    processor: eicr_processor.EicrProcessor,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
-) -> None:
-    """Populate eICR metadata on TTC outputs.
-
-    :param processor: The initialized EICR processor.
-    :param ttc_output: The TTC output dictionary.
-    :param ttc_metadata_output: The TTC metadata output dictionary.
-    """
-    # # Process the eICR for TTC
-    # Retrieve eICR Metadata
-    eicr_metadata = processor.eicr_metadata
-
-    ttc_output["eicr_metadata"] = eicr_metadata
-    ttc_metadata_output["eicr_metadata"] = eicr_metadata
-
-
-def _build_nonstandard_code_instance(
-    schematron_error: SchematronErrorDetail,
-    new_translation: Code,
-    selected_candidate: Candidate,
-) -> NonstandardCodeInstance:
-    """Build a NonstandardCodeInstance object for the TTC output.
-
-    :param schematron_error: The Schematron error being processed.
-    :param new_translation: The new translation retrieved from OpenSearch for the error.
-    :param selected_candidate: The text candidate that was selected as the most relevant for the error.
-    :return: A NonstandardCodeInstance object populated with the relevant information.
-    """
-    new_translation_with_text = new_translation.model_copy(
-        update={"original_text": selected_candidate.value}
-    )
-    return NonstandardCodeInstance(
-        schematron_error=schematron_error.error_message,
-        schematron_error_xpath=schematron_error.error_context,
-        field_type=schematron_error.field,
-        new_translation=new_translation_with_text,
-    )
-
-
-def _process_schematron_errors(
-    processor: eicr_processor.EicrProcessor,
-    schematron_data_fields: list,
-    opensearch_client: OpenSearch,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
-) -> None:
-    """Process Schematron errors for TTC.
-
-    :param processor: The initialized EICR processor.
-    :param schematron_data_fields: The relevant Schematron data fields for TTC processing.
-    :param opensearch_client: The OpenSearch client.
-    :param ttc_output: The TTC output dictionary.
-    :param ttc_metadata_output: The TTC metadata output dictionary.
-    """
-    # Evaluate candidates and select relevant text for each error in the eICR
-    for error in schematron_data_fields:
-        data_field = error.field
-
-        if data_field not in ttc_output["schematron_errors"]:
-            ttc_output["schematron_errors"][data_field] = []
-        if data_field not in ttc_output["unmatched_schematron_errors"]:
-            ttc_output["unmatched_schematron_errors"][data_field] = []
-        if data_field not in ttc_metadata_output["schematron_errors"]:
-            ttc_metadata_output["schematron_errors"][data_field] = []
-
-        text_candidates = processor.get_text_candidates(error.error_context, data_field)
-
-        logger.info(
-            "Evaluating candidates and selecting relevant text for each error in the eICR",
-            status="processing",
-        )
-
-        selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
-
-        error_with_candidate = error.model_copy(update={"candidate": selected_candidate})
-
-        logger.info(
-            "Embedding the relevant text strings for each error in the eICR",
-            status="processing",
-        )
-
-        if selected_candidate is None:
-            unmatched_error = error_with_candidate.model_dump()
-            unmatched_error["reason"] = "No relevant text candidate was selected"
-            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
-
-            metadata_error = error_with_candidate.model_dump()
-            metadata_error["reason"] = "No relevant text candidate was selected"
-            ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
-            continue
-
-        vector_embedding = embed(selected_candidate.value)
-
-        vector_parameters = query_models.VectorSearchParams(
-            vector=vector_embedding.tolist(), data_field=data_field
-        )
-
-        logger.info(
-            "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
-            status="processing",
-        )
-        query = QueryBuilder().with_vector_search(vector_parameters).build()
-
-        opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-            query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
-        )
-
-        # The OpenSearch results object has a couple levels of nesting,
-        # but all we care about for reranking is extracting the actual
-        # text strings of the ANN LOINC codes
-        results_list = opensearch_retrieved_scores.hits.hits
-        retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
-
-        top_result = next(
-            (x for x in results_list if x.source.description == ranked_results[0]["code_string"]),
-            None,
-        )
-
-        if top_result:
-            ttc_output["schematron_errors"][data_field].append(
-                _build_nonstandard_code_instance(
-                    schematron_error=error,
-                    new_translation=Code(
-                        code=top_result.source.loinc_code,
-                        code_system="2.16.840.1.113883.6.1",
-                        code_system_name="LOINC",
-                        display_name=top_result.source.description,
-                    ),
-                    selected_candidate=selected_candidate,
-                ).model_dump()
-            )
-        else:
-            unmatched_error = error.model_dump()
-            unmatched_error["reason"] = (
-                "Selected candidate found, OpenSearch query returned results, but reranker did not return results."
-            )
-            ttc_output["unmatched_schematron_errors"][data_field].append(unmatched_error)
-
-        metadata_error = error.model_dump()
-        metadata_error["opensearch_retrieved_scores"] = opensearch_retrieved_scores
-        metadata_error["reranker_processed_results"] = ranked_results
-        if not results_list:
-            metadata_error["reason"] = (
-                "Selected candidate found, but no OpenSearch code match was returned."
-            )
-        ttc_metadata_output["schematron_errors"][data_field].append(metadata_error)
-
-
 def _save_ttc_metadata_output(
     persistence_id: str,
-    ttc_metadata_output: dict,
+    metadata_output: Metadata,
     bucket_name: str,
 ) -> None:
     """Save TTC metadata output to S3.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
-    :param ttc_metadata_output: The TTC metadata output dictionary.
     :param bucket_name: The S3 bucket name to write to.
+    :param metadata_output: The metadata model to be saved.
     """
     metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
 
@@ -451,7 +262,7 @@ def _save_ttc_metadata_output(
         status="processing",
     )
     lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_metadata_output, default=str).encode("utf-8")),
+        file_obj=BytesIO(metadata_output.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=metadata_key,
     )
@@ -465,8 +276,7 @@ def _save_ttc_metadata_output(
 
 def _save_ttc_outputs(
     persistence_id: str,
-    ttc_output: dict,
-    ttc_metadata_output: dict,
+    ttc_output: TTCAugmenterInput,
     bucket_name: str,
 ) -> None:
     """Save TTC output and metadata output to S3.
@@ -484,7 +294,7 @@ def _save_ttc_outputs(
         status="processing",
     )
     lambda_handler.put_file(
-        file_obj=io.BytesIO(json.dumps(ttc_output, default=str).encode("utf-8")),
+        file_obj=BytesIO(ttc_output.model_dump_json().encode("utf-8")),
         bucket_name=bucket_name,
         object_key=f"{TTC_OUTPUT_PREFIX}{persistence_id}",
     )
@@ -495,15 +305,12 @@ def _save_ttc_outputs(
         status="success",
     )
 
-    # Save the TTC metadata output for completing model evaluation and analysis of TTC results
-    _save_ttc_metadata_output(persistence_id, ttc_metadata_output, bucket_name)
-
 
 def _process_record_pipeline(
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
-) -> dict:
+) -> None:
     """The main pipeline for processing each record.
 
     The pipeline includes:
@@ -522,71 +329,143 @@ def _process_record_pipeline(
     :param opensearch_client: The OpenSearch client.
     :param bucket_name: The S3 bucket name extracted from the triggering event.
     """
-    ttc_output, ttc_metadata_output = _initialize_ttc_outputs(persistence_id)
-
     logger.info("Starting TTC processing", status="processing")
-    schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
-
-    if not schematron_data_fields:
-        logger.warning(
-            "No data fields found from Schematron errors for TTC processing",
-            status="skipped",
-            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
-        )
-        ttc_output["message"] = NO_DATA_FIELDS_MESSAGE
-        ttc_metadata_output["reason_for_skipping"] = NO_DATA_FIELDS_MESSAGE
-        _set_passthrough(
-            ttc_output,
-            ttc_metadata_output,
-            PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
-        )
-        _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
-        logger.info(
-            "TTC processing completed",
-            status="passthrough",
-            passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
-        )
-        return {
-            "statusCode": 200,
-            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
-            "result": "no_matches_found",
-        }
 
     original_eicr_content = _load_original_eicr(persistence_id, bucket_name)
     processor = eicr_processor.EicrProcessor(original_eicr_content)
-    _populate_eicr_metadata(processor, ttc_output, ttc_metadata_output)
-    _process_schematron_errors(
-        processor,
-        schematron_data_fields,
-        opensearch_client,
-        ttc_output,
-        ttc_metadata_output,
+
+    schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
+    ttc_schematron_issues_details = None
+    nonstandard_code_replacements: list[NonstandardCodeInstance] = []
+    if schematron_data_fields:
+        ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
+        passthrough_reason: PassthroughReason | None = None
+        for error in schematron_data_fields:
+            new_translation = None
+            unmatched_message = None
+            data_field = error.field
+            opensearch_retrieved_scores = None
+            ranked_results: list[ScoredResult] | None = None
+
+            text_candidates = processor.get_text_candidates(error.error_context, data_field)
+
+            logger.info(
+                "Evaluating candidates and selecting relevant text for each error in the eICR",
+                status="processing",
+            )
+
+            selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
+
+            logger.info(
+                "Embedding the relevant text strings for each error in the eICR",
+                status="processing",
+            )
+
+            if selected_candidate:
+                vector_embedding = embed(selected_candidate.value)
+
+                vector_parameters = query_models.VectorSearchParams(
+                    vector=vector_embedding.tolist(), data_field=data_field
+                )
+
+                logger.info(
+                    "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
+                    status="processing",
+                )
+                query = QueryBuilder().with_vector_search(vector_parameters).build()
+
+                opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
+                    query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
+                )
+
+                # The OpenSearch results object has a couple levels of nesting,
+                # but all we care about for reranking is extracting the actual
+                # text strings of the ANN LOINC codes
+                results_list = opensearch_retrieved_scores.hits.hits
+                if results_list:
+                    retrieved_loinc_names = [hit.source.description for hit in results_list]
+                    ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
+
+                    if ranked_results:
+                        top_result = next(
+                            (
+                                x
+                                for x in results_list
+                                if x.source.description == ranked_results[0]["code_string"]
+                            ),
+                        )
+                        new_translation = Code(
+                            code=top_result.source.loinc_code,
+                            code_system="2.16.840.1.113883.6.1",
+                            code_system_name="LOINC",
+                            display_name=top_result.source.description,
+                            original_text=selected_candidate.value,
+                        )
+                        nonstandard_code_replacements.append(
+                            NonstandardCodeInstance(
+                                schematron_error_xpath=error.error_context,
+                                field_type=error.field,
+                                new_translation=new_translation,
+                            ),
+                        )
+                    else:
+                        unmatched_message = "Reranker did not return any results."
+                else:
+                    unmatched_message = "Opensearch query returned no hits."
+            else:
+                unmatched_message = "No candidate found."
+
+            ttc_schematron_issues_details.append(
+                TTCSchematronIssueDetail(
+                    candidate=selected_candidate,
+                    field_type=error.field,
+                    issue_context=error.error_context,
+                    issue_id=error.error_id,
+                    issue_message=error.error_message,
+                    issue_test=error.error_test,
+                    unmatched_reason=unmatched_message,
+                    new_translation=new_translation,
+                    opensearch_retrieved_scores=opensearch_retrieved_scores,
+                    reranker_processed_results=ranked_results,
+                ),
+            )
+    else:
+        passthrough_reason = PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
+
+    if ttc_schematron_issues_details and all(
+        x.unmatched_reason for x in ttc_schematron_issues_details
+    ):
+        passthrough_reason = PassthroughReason.NO_CODE_MATCHES
+
+    ttc_output = TTCAugmenterInput(
+        persistence_id=persistence_id,
+        nonstandard_codes=nonstandard_code_replacements,
+        passthrough=passthrough_reason is not None,
+        passthrough_reason=passthrough_reason,
     )
-    has_matches = any(len(matches) > 0 for matches in ttc_output["schematron_errors"].values())
+    ttc_metadata = Metadata(
+        persistence_id=persistence_id,
+        eicr_metadata=processor.eicr_metadata,
+        ttc_schematron_issues=ttc_schematron_issues_details,
+        passthrough=passthrough_reason is not None,
+        passthrough_reason=passthrough_reason,
+    )
 
-    if not has_matches:
-        _set_passthrough(
-            ttc_output,
-            ttc_metadata_output,
-            PassthroughReason.NO_CODE_MATCHES,
-        )
-        _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
-        logger.info(
-            "TTC processing completed",
-            status="passthrough",
-            passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
-        )
-        return {
-            "statusCode": 200,
-            "message": "TTC processed successfully, but no relevant candidates or code matches were found.",
-            "result": "no_matches_found",
-        }
+    _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
 
-    _save_ttc_outputs(persistence_id, ttc_output, ttc_metadata_output, bucket_name)
+    logger.info(
+        "TTC processing completed",
+        status="matched" if ttc_output.nonstandard_codes else "no_matches_found",
+        passthrough_reason=passthrough_reason,
+    )
 
-    logger.info("TTC processing completed", status="matched")
-    return {
-        "statusCode": 200,
-        "message": "TTC processed successfully with matches.",
-        "result": "matched",
-    }
+
+def _save_outputs(
+    persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: Metadata
+) -> None:
+    _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
+    _save_ttc_metadata_output(
+        persistence_id,
+        ttc_metadata,
+        bucket_name,
+    )

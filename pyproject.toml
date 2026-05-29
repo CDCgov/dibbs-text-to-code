@@ -23,7 +23,7 @@ dev = [
   "pytest>=9.0.3",
   "requests>=2.32.5",
   "ruff>=0.15.12",
-  "ty>=0.0.33",
+  "ty>=0.0.39",
 ]
 
 [tool.coverage.run]
@@ -41,14 +41,15 @@ env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
-  "packages/augmentation-lambda/src",
-  "packages/augmentation/src",
-  "packages/index-lambda/src",
-  "packages/lambda-handler/src",
-  "packages/text-to-code-lambda/src",
-  "packages/text-to-code/src",
-  "packages/utils/src",
-  "packages/validation/src",
+  "e2e/",
+  "packages/augmentation-lambda/",
+  "packages/augmentation/",
+  "packages/index-lambda/",
+  "packages/lambda-handler/",
+  "packages/text-to-code-lambda/",
+  "packages/text-to-code/",
+  "packages/utils/",
+  "packages/validation/",
 ]
 
 [tool.ruff]

@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -6,13 +7,13 @@ from text_to_code_lambda import lambda_function
 
 
 @pytest.fixture(autouse=True)
-def reset_opensearch_cache() -> None:
+def reset_opensearch_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reset cached OpenSearch client before every test."""
-    lambda_function._cached_opensearch_client = None
+    monkeypatch.setattr(lambda_function, "_cached_opensearch_client", None, raising=False)
 
 
 @pytest.fixture(scope="function")
-def mock_opensearch() -> None:
+def mock_opensearch() -> Iterator[MagicMock]:
     """Mock OpenSearch client.
 
     We have to use MagicMock here instead of moto because
