@@ -112,9 +112,9 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put test Schematron error file in the mock S3 bucket
-        with Path(
-            "packages/text-to-code-lambda/tests/assets/test_schematron_errors.xml"
-        ).open() as f:
+        current_dir = Path(__file__).parent
+        schematron_path = current_dir / "assets" / "test_schematron_errors.xml"
+        with Path(schematron_path).open() as f:
             schematron_output = f.read()
         s3.put_object(
             Bucket=S3_BUCKET,
@@ -123,7 +123,8 @@ def mock_aws_setup(monkeypatch: pytest.MonkeyPatch) -> boto3.client:
         )
 
         # Put test eCR message file in the mock S3 bucket
-        with Path("packages/text-to-code-lambda/tests/assets/test_eicr.xml").open() as f:
+        ecr_path = current_dir / "assets" / "test_eicr.xml"
+        with Path(ecr_path).open() as f:
             ecr_message = f.read()
         s3.put_object(
             Bucket=S3_BUCKET,
@@ -158,9 +159,9 @@ def mock_aws_setup_malformed_eicr_no_relevant_schematron(
         s3.persistence_id = TEST_PERSISTENCE_ID
 
         # Put test Schematron error file in the mock S3 bucket
-        with Path(
-            "packages/text-to-code-lambda/tests/assets/no_relevant_issues_schematron.xml"
-        ).open() as f:
+        current_dir = Path(__file__).parent
+        schematron_path = current_dir / "assets" / "no_relevant_issues_schematron.xml"
+        with Path(schematron_path).open() as f:
             schematron_output = f.read()
         s3.put_object(
             Bucket=S3_BUCKET,
@@ -169,7 +170,8 @@ def mock_aws_setup_malformed_eicr_no_relevant_schematron(
         )
 
         # Put test eCR message file in the mock S3 bucket
-        with Path("packages/text-to-code-lambda/tests/assets/malformed_eicr.xml").open() as f:
+        ecr_path = current_dir / "assets" / "malformed_eicr.xml"
+        with Path(ecr_path).open() as f:
             ecr_message = f.read()
         s3.put_object(
             Bucket=S3_BUCKET,

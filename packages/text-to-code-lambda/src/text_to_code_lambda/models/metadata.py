@@ -7,6 +7,7 @@ from shared_models import (
     Code,
     DataField,
     FrozenBaseModel,
+    PassthroughReason,
 )
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import Metadata as EICRMetadata
@@ -39,5 +40,5 @@ class Metadata(FrozenBaseModel):
     ttc_schematron_issues: list[TTCSchematronIssueDetail] | None = None
     processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     passthrough: bool | None = None
-    passthrough_reason: str | None = None
+    passthrough_reason: PassthroughReason | None = None
     error: str | None = None

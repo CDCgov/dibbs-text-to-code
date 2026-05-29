@@ -40,7 +40,7 @@ class TestHandler:
         mock_lambda_context,
         mocker,
     ):
-
+        """Test handler with no failures."""
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
             {
@@ -57,7 +57,6 @@ class TestHandler:
             return_value=ranked_results,
         )
 
-        """Test handler with no failures."""
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert resp == {
             "statusCode": 200,

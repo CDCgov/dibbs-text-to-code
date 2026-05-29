@@ -128,28 +128,6 @@ def _process_record(record: SQSRecord) -> None:
             )
             return
 
-        if not augmenter_input.nonstandard_codes:
-            passthrough_reason = augmenter_input.passthrough_reason
-            metadata = Metadata(
-                original_eicr_id=persistence_id,
-                augmented_eicr_id=persistence_id,
-                nonstandard_codes=[],
-                passthrough=True,
-                passthrough_reason=passthrough_reason,
-            )
-            output = TTCAugmenterOutput(
-                persistence_id=persistence_id,
-                augmented_eicr=original_eicr,
-                metadata=metadata,
-            )
-            _save_augmentation_outputs(persistence_id, output, bucket_name)
-            logger.info(
-                "Augmentation processing completed",
-                status="passthrough",
-                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
-            )
-            return
-
         try:
             # Currently only supports eICR augmentation. Other document types (e.g. from
             # ecr-refiner or other services) may need different augmentation strategies.

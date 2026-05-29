@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from io import BytesIO
 
@@ -26,10 +25,6 @@ from .models.metadata import Metadata, TTCSchematronIssueDetail
 
 # Initialize the logger
 logger = Logger(service="ttc")
-# Forward standard logs into Powertools' structured output
-logging.getLogger("text_to_code").setLevel(logging.INFO)
-logging.getLogger("text_to_code").addHandler(logger.handlers[0])
-
 # Environment variables
 SCHEMATRON_ERROR_PREFIX = os.getenv("SCHEMATRON_ERROR_PREFIX", "ValidationResponseV2/")
 TTC_INPUT_PREFIX = os.getenv("TTC_INPUT_PREFIX", "TextToCodeSubmissionV2/")
@@ -279,7 +274,7 @@ def _save_ttc_metadata_output(
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param bucket_name: The S3 bucket name to write to.
-    :metadata_output: The metadata model to be saved.
+    :param metadata_output: The metadata model to be saved.
     """
     metadata_key = f"{TTC_METADATA_PREFIX}{persistence_id.removesuffix('.xml')}.json"
 
@@ -368,17 +363,27 @@ def _process_record_pipeline(
     if schematron_data_fields:
         nonstandard_code_replacements: list[NonstandardCodeInstance] = []
         ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
+        passthrough_reason: PassthroughReason | None = None
         for error in schematron_data_fields:
             new_translation = None
             unmatched_message = None
             data_field = error.field
             opensearch_retrieved_scores = None
             ranked_results: list[ScoredResult] | None = None
-            passthrough_reason: PassthroughReason | None = None
 
             text_candidates = processor.get_text_candidates(error.error_context, data_field)
 
+            logger.info(
+                "Evaluating candidates and selecting relevant text for each error in the eICR",
+                status="processing",
+            )
+
             selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
+
+            logger.info(
+                "Embedding the relevant text strings for each error in the eICR",
+                status="processing",
+            )
 
             if selected_candidate:
                 vector_embedding = embed(selected_candidate.value)
@@ -474,16 +479,11 @@ def _process_record_pipeline(
 
     _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
 
-    if ttc_output.nonstandard_codes:
-        logger.info(
-            "TTC processing completed", status="matched", passthrough_reason=passthrough_reason
-        )
-    else:
-        logger.info(
-            "TTC processing completed",
-            status="no_matches_found",
-            passthrough_reason=passthrough_reason,
-        )
+    logger.info(
+        "TTC processing completed",
+        status="matched" if ttc_output.nonstandard_codes else "no_matches_found",
+        passthrough_reason=passthrough_reason,
+    )
 
 
 def _save_outputs(

@@ -124,7 +124,7 @@ class EicrProcessor:
         """Get the eICR ID from the XML."""
         id_element = self._xml_root.find(".//id")
         if id_element is None or id_element.get("nullFlavor") is not None:
-            logger.warn("No ID element found in eICR XML.")
+            logger.warning("No ID element found in eICR XML.")
             instance_identifier = None
         else:
             instance_identifier = CdaInstanceIdentifier(
