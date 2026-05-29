@@ -14,7 +14,6 @@ from shared_models import (
     PassthroughReason,
     TTCAugmenterInput,
 )
-from text_to_code.models import Candidate, SchematronErrorDetail
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
@@ -241,28 +240,6 @@ def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
     )
     logger.info("Retrieved eICR content", status="success")
     return original_eicr_content
-
-
-def _build_nonstandard_code_instance(
-    schematron_error: SchematronErrorDetail,
-    new_translation: Code,
-    selected_candidate: Candidate,
-) -> NonstandardCodeInstance:
-    """Build a NonstandardCodeInstance object for the TTC output.
-
-    :param schematron_error: The Schematron error being processed.
-    :param new_translation: The new translation retrieved from OpenSearch for the error.
-    :param selected_candidate: The text candidate that was selected as the most relevant for the error.
-    :return: A NonstandardCodeInstance object populated with the relevant information.
-    """
-    new_translation_with_text = new_translation.model_copy(
-        update={"original_text": selected_candidate.value}
-    )
-    return NonstandardCodeInstance(
-        schematron_error_xpath=schematron_error.error_context,
-        field_type=schematron_error.field,
-        new_translation=new_translation_with_text,
-    )
 
 
 def _save_ttc_metadata_output(
