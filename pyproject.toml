@@ -40,17 +40,7 @@ env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-include = [
-  "e2e/",
-  "packages/augmentation-lambda/",
-  "packages/augmentation/",
-  "packages/index-lambda/",
-  "packages/lambda-handler/",
-  "packages/text-to-code-lambda/",
-  "packages/text-to-code/",
-  "packages/utils/",
-  "packages/validation/",
-]
+exclude = ["azure_scripts/", "packages/data-curation/"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
