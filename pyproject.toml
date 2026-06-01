@@ -40,7 +40,12 @@ env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-exclude = ["azure_scripts/", "packages/data-curation/"]
+exclude = [
+  "azure_scripts/",
+  "packages/data-curation/src/data_curation/archived",
+
+  "packages/data-curation",
+]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
