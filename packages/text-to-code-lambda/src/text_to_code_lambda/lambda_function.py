@@ -1,5 +1,8 @@
 import json
 import os
+import typing
+from datetime import UTC, datetime
+from hashlib import sha256
 from io import BytesIO
 
 from aws_lambda_powertools import Logger
@@ -19,6 +22,7 @@ from text_to_code.services import eicr_processor, evaluator, schematron_processo
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import ScoredResult, rerank
+from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
@@ -33,6 +37,7 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
+RESULT_CACHE_INDEX = os.getenv("RESULT_CACHE_INDEX", "ttc-result-cache")
 
 
 @event_source(data_class=SQSEvent)
@@ -306,6 +311,30 @@ def _save_ttc_outputs(
     )
 
 
+def _get_cache_metric(hit_value: typing.Literal["hit", "miss"]) -> dict:
+    """Helper method for creating a cache-result metric dict.
+
+    Output is generated using Embedded Metric Format Specification.
+    :param hit_value: A string indicating whether the metric denotes a cache hit
+      or a cache miss.
+    :return: A dictionary in EMFS that can be emitted by the Logger.
+    """
+    return {
+        "_aws": {
+            "Timestamp": int(datetime.timestamp(datetime.now(UTC))),
+            "CloudWatchMetrics": [
+                {
+                    "Namespace": "ttc-lambda-cache-metrics",
+                    "Dimensions": [["lastLoincUpdate"]],
+                    "Metrics": [{"Name": "result_cache_value_status"}],
+                }
+            ],
+        },
+        "lastLoincUpdate": "02-23-2026",
+        "result_cache_value_status": hit_value,
+    }
+
+
 def _process_record_pipeline(
     persistence_id: str,
     opensearch_client: OpenSearch,
@@ -362,56 +391,104 @@ def _process_record_pipeline(
             )
 
             if selected_candidate:
-                vector_embedding = embed(selected_candidate.value)
-
-                vector_parameters = query_models.VectorSearchParams(
-                    vector=vector_embedding.tolist(), data_field=data_field
+                # Before we run the full embedding, searching, and reranking process,
+                # first let's check if we've seen this nonstandard input before
+                cache_key = sha256(
+                    (selected_candidate.value.strip().lower() + "|" + data_field).encode("utf-8")
+                ).hexdigest()
+                cached_result = get_cached_result(
+                    opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
                 )
 
-                logger.info(
-                    "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
-                    status="processing",
-                )
-                query = QueryBuilder().with_vector_search(vector_parameters).build()
+                # We've got a hit--no need to run our usual processes, we'll
+                # just pull out the fields we want to use directly
+                if cached_result is not None:
+                    cache_hit_metric = _get_cache_metric("hit")
+                    logger.info(cache_hit_metric)
 
-                opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-                    query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
-                )
+                    new_translation = cached_result["loinc_code"]
+                    nonstandard_code_replacements.append(
+                        NonstandardCodeInstance(
+                            schematron_error_xpath=error.error_context,
+                            field_type=error.field,
+                            new_translation=new_translation,
+                        ),
+                    )
+                    opensearch_retrieved_scores = cached_result["opensearch_retrieved_scores"]
+                    results_list = opensearch_retrieved_scores.hits.hits
+                    ranked_results = cached_result["reranker_processed_results"]
 
-                # The OpenSearch results object has a couple levels of nesting,
-                # but all we care about for reranking is extracting the actual
-                # text strings of the ANN LOINC codes
-                results_list = opensearch_retrieved_scores.hits.hits
-                if results_list:
-                    retrieved_loinc_names = [hit.source.description for hit in results_list]
-                    ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
-
-                    if ranked_results:
-                        top_result = next(
-                            (
-                                x
-                                for x in results_list
-                                if x.source.description == ranked_results[0]["code_string"]
-                            ),
-                        )
-                        new_translation = Code(
-                            code=top_result.source.loinc_code,
-                            code_system="2.16.840.1.113883.6.1",
-                            code_system_name="LOINC",
-                            display_name=top_result.source.description,
-                            original_text=selected_candidate.value,
-                        )
-                        nonstandard_code_replacements.append(
-                            NonstandardCodeInstance(
-                                schematron_error_xpath=error.error_context,
-                                field_type=error.field,
-                                new_translation=new_translation,
-                            ),
-                        )
-                    else:
-                        unmatched_message = "Reranker did not return any results."
+                # Cache miss, so log that, run everything normally, and then finally store
+                # the prediction in the cache for future use
                 else:
-                    unmatched_message = "Opensearch query returned no hits."
+                    cache_hit_metric = _get_cache_metric("miss")
+                    logger.info(cache_hit_metric)
+
+                    vector_embedding = embed(selected_candidate.value)
+
+                    vector_parameters = query_models.VectorSearchParams(
+                        vector=vector_embedding.tolist(), data_field=data_field
+                    )
+
+                    logger.info(
+                        "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
+                        status="processing",
+                    )
+                    query = QueryBuilder().with_vector_search(vector_parameters).build()
+
+                    opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
+                        query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
+                    )
+
+                    # The OpenSearch results object has a couple levels of nesting,
+                    # but all we care about for reranking is extracting the actual
+                    # text strings of the ANN LOINC codes
+                    results_list = opensearch_retrieved_scores.hits.hits
+                    if results_list:
+                        retrieved_loinc_names = [hit.source.description for hit in results_list]
+                        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
+
+                        if ranked_results:
+                            top_result = next(
+                                (
+                                    x
+                                    for x in results_list
+                                    if x.source.description == ranked_results[0]["code_string"]
+                                ),
+                            )
+                            new_translation = Code(
+                                code=top_result.source.loinc_code,
+                                code_system="2.16.840.1.113883.6.1",
+                                code_system_name="LOINC",
+                                display_name=top_result.source.description,
+                                original_text=selected_candidate.value,
+                            )
+                            nonstandard_code_replacements.append(
+                                NonstandardCodeInstance(
+                                    schematron_error_xpath=error.error_context,
+                                    field_type=error.field,
+                                    new_translation=new_translation,
+                                ),
+                            )
+
+                            # Make sure we save the results of a successful standardization
+                            # into the results cache for future use
+                            put_new_cached_result(
+                                opensearch_client,
+                                RESULT_CACHE_INDEX,
+                                selected_candidate.value,
+                                data_field,
+                                new_translation,
+                                top_result.score,
+                                ranked_results[0]["score"],
+                                opensearch_retrieved_scores,
+                                ranked_results,
+                            )
+                        else:
+                            unmatched_message = "Reranker did not return any results."
+                    else:
+                        unmatched_message = "Opensearch query returned no hits."
+
             else:
                 unmatched_message = "No candidate found."
 
