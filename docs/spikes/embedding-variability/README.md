@@ -14,9 +14,57 @@ The five environments under test:
 | `mac_mps`    | Re-embed locally with `device="mps"` (Apple Metal).                                        |
 | `aws_lambda` | Re-embed inside the production `Dockerfile.ttc` image (x86_64, CPU torch, baked model).    |
 
-The end product is `outputs/report.html` — a single self-contained Plotly page with
-pairwise cosine / L2 distributions, an outlier table, and a 5×5 downstream KNN top-1
-agreement matrix.
+The end product is `outputs/report.html` — a single self-contained Plotly page organized
+around the four questions below, with pairwise cosine / L2 distributions, an outlier table,
+and 5×5 downstream KNN agreement matrices (top-1, top-10 set, and top-10 ordering) plus
+per-candidate score stability and a search-engine determinism baseline.
+
+---
+
+## Findings & recommendation
+
+> TL;DR: **The compute environment is not a meaningful source of variability for the TTC
+> retriever on this corpus.** Recommendation: **no action** — don't re-embed the index on CPU,
+> and a CPU/GPU vector swap does not need to be raised with APHL.
+
+The investigation answers four questions about CPU-vs-GPU embedding variability. The
+production-relevant comparison throughout is `azure_gpu` (the vectors in the index) vs
+`aws_lambda` (the production Lambda runtime). Numbers below are from the 500-string subset.
+
+**Q1 — How different are the vectors?** Negligibly. Embedding the same string on Azure GPU vs
+AWS CPU differs by ~`6.5e-06` in L2 distance and ~`2.3e-11` in cosine distance — the float32
+precision floor. The model's normalization layer keeps vectors ~unit length, so an L2 move in
+the sixth decimal place is real at that scale but leaves cosine similarity virtually 1.0. The
+numbers still mean the same thing on CPU or GPU.
+
+**Q2 — Do those differences change the retriever's (OpenSearch) results?** No, in every way that
+matters. Across all 5 environments and 500 strings:
+
+| Signal | Result |
+| --- | --- |
+| Top-1 retrieved LOINC agreement | **100%** on every environment pair |
+| Top-10 candidate-set overlap (Jaccard) | 99.86% – 100% |
+| Top-10 exact-order agreement | 99.2% – 99.8% |
+| Per-candidate score delta vs `azure_gpu` (matched by doc id) | mean ~`1.3e-07`, max ~`2.3e-06` |
+
+Crucially, OpenSearch KNN is an *approximate* (HNSW) search: re-querying the **identical**
+`azure_gpu` vectors a second time already yields top-1 100% / set 99.975% / order 99.8% — so the
+deep-rank (4–10) reshuffles the review anticipated do occur, but at a rate **indistinguishable
+from the search engine's own re-query noise**, and never disturb the top-1. The one description
+that flipped top-1 in an earlier run (`"MR Hrt Cine for Flow VM"`) is an **exact score tie**
+between `39140-9` and `105173-9` (both ≈ 1.0, margin 0.00) — rank order is decided arbitrarily by
+index internals, not by the embedding.
+
+**Q3 — Are the final pipeline (retriever + reranker) predictions different?** Not measured. The
+reranker does its own internal embedding and could, in principle, re-score an identical candidate
+list differently across environments (an "embedding cascade"). Two facts bound the risk: (a) the
+retriever is the dominant, trusted component and is environment-invariant per Q1–Q2; (b) planned
+confidence/margin thresholds will short-circuit the reranker when the retriever is already
+confident. Flagged as an open item, not a blocker.
+
+**Q4 — Would swapping the index to Azure-CPU vectors help?** Not run. A proper answer is the
+brute-force pairwise experiment over all ~335k LOINC variants, which is disproportionate to the
+size of the concern given Q1–Q2. Revisit only if production data surfaces instability.
 
 ---
 
@@ -137,10 +185,14 @@ uv run python docs/spikes/embedding-variability/generate_report.py
 open docs/spikes/embedding-variability/outputs/report.html
 ```
 
-`--with-knn` issues 5 × 500 = 2500 KNN queries against the prod `ttc-index` (~1.7M docs)
-and records the top-1 LOINC code per (env, description) — the right default when prod is
-reachable, ~45 s per env. `--with-offline-knn` is a no-network fallback that builds an
-in-memory KNN over just the 500-row subset.
+`--with-knn` issues a top-10 KNN query for every (env, description) against the prod
+`ttc-index` (~335k docs), recording each hit's LOINC code, document id, and score (~45 s per
+env). From this it computes the top-1 agreement matrix, the top-10 set-Jaccard and
+exact-order agreement matrices, and the per-document score delta vs the `azure_gpu` reference.
+It also re-queries the reference env's vectors once more to establish the approximate-search
+**determinism baseline** (identical input, possibly different output) that the cross-env
+numbers are read against. `--with-offline-knn` is a no-network fallback that builds an
+in-memory top-1 KNN over just the 500-row subset.
 
 ---
 
@@ -156,5 +208,11 @@ in-memory KNN over just the 500-row subset.
 - **GPU non-determinism** — the Azure GPU vectors are a single snapshot. Running the
   same model on the same GPU twice is not bitwise deterministic; the report only captures
   the snapshot we have.
+- **Approximate-search determinism floor** — OpenSearch KNN (HNSW) is approximate, and the
+  prod index is a live, periodically re-ingested corpus. Re-querying identical vectors does
+  not return a perfectly identical result list, so cross-env retrieval differences are read
+  against a measured determinism baseline rather than assumed to be embedding drift.
+- **Reranker stage not measured (Q3)** — only the retriever (KNN) is exercised here; the
+  reranker's environment sensitivity is out of scope for this spike.
 - **MPS partial support** — `sentence-transformers` on Apple Metal occasionally hits
   unsupported ops; per-item failures are tolerated.
