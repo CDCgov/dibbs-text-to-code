@@ -41,21 +41,36 @@ LOINC_TEXT_TO_FILTER = [
 ]
 
 
-def extract_full_loinc_lab_names():  # noqa: D103
+def extract_full_loinc_lab_names():
+    """Function that extracts all the latest LOINC Lab Names (all loinc codes
+        regardless of being of type 'Order', 'Observation' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
     loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
     all_loinc_rows = get_loinc_lab_names()
 
     save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
 
 
-def extract_full_loinc_lab_orders():  # noqa: D103
+def extract_full_loinc_lab_orders():
+    """Function that extracts all the latest LOINC Orders
+        (only types of 'Order' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
     loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
     loinc_order_rows = get_loinc_lab_orders()
 
     save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
 
-def extract_full_loinc_lab_results():  # noqa: D103
+def extract_full_loinc_lab_results():
+    """Function that extracts all the latest LOINC Orders
+        (only types of 'Observations' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
     loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
     loinc_result_rows = get_loinc_lab_results()
     save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
