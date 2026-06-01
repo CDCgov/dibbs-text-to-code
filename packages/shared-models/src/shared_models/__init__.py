@@ -62,6 +62,7 @@ class PassthroughReason(StrEnum):
     NO_CODE_MATCHES = "no_code_matches"
     TTC_EXCEPTION = "ttc_exception"
     AUGMENTATION_EXCEPTION = "augmentation_exception"
+    AUGMENTATION_VALIDATION_FAILURE = "augmentation_validation_failure"
 
 
 class TTCAugmenterInput(FrozenBaseModel):

@@ -1,6 +1,6 @@
 {
-  "augmented_eicr_id": "d44dc1c6-8a0c-5236-906e-12f6475589ec",
-  "error": null,
+  "augmented_eicr_id": "2.16.840.1.113883.3.432.0.16.1.100.779.2",
+  "error": "[{\"error_id\": \"ttc-labResultValue-noCode\", \"location\": \"/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[8]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}organizer[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}observation[1]\"}]",
   "nonstandard_codes": [
     {
       "field_type": "Lab Test Name Resulted",
@@ -18,6 +18,6 @@
     }
   ],
   "original_eicr_id": "2.16.840.1.113883.3.432.0.16.1.100.779.2",
-  "passthrough": false,
-  "passthrough_reason": null
+  "passthrough": true,
+  "passthrough_reason": "augmentation_validation_failure"
 }
