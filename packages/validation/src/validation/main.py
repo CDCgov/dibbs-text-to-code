@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
-from typing import TypedDict
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
+
+from shared_models import FrozenBaseModel
 
 BASE_FOLDER = Path(__file__).parent / "eicr-validator"
 
@@ -23,11 +24,11 @@ XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 logger = logging.getLogger(__name__)
 
 
-class ValidationResult(TypedDict):
-    """Error ID and list."""
+class ValidationResult(FrozenBaseModel):
+    """Error ID and location."""
 
     error_id: str
-    location: list[str]
+    location: str
 
 
 def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
@@ -35,6 +36,7 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
     logger.info("Starting eICR Validation")
     logger.info(f"For eICR: {eicr}")
     errors: list[ValidationResult] = []
+
     try:
         with PySaxonProcessor(license=False) as proc:
             logger.info(f"Saxon/C version: {proc.version}")
@@ -91,10 +93,11 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
                     errors.append(
                         ValidationResult(
                             error_id=x.get_attribute_value("id"),
-                            location=[x.get_attribute_value("location")],
+                            location=x.get_attribute_value("location"),
                         )
                     )
     except Exception as e:
-        logger.error(f"An error occurred during validation: {e}")
+        logger.exception(f"An error occurred during validation: {e}")
+        raise
 
     return errors
