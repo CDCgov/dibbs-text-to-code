@@ -1,6 +1,5 @@
-from typing import TypedDict
-
 from sentence_transformers import CrossEncoder
+from typing_extensions import TypedDict
 
 from text_to_code.models.registry import TTC_RERANKER
 

@@ -85,7 +85,6 @@ class TestQueryBuilder:
             data_field=data_field,
             size=size,
             filter_field=filter_field,
-            filter_value=filter_value,
             vector_field=vector_field,
             k=k,
         )
@@ -161,7 +160,6 @@ class TestQueryBuilder:
             vector=vector,
             data_field=data_field,
             filter_field=filter_field,
-            filter_value=filter_value,
         )
         query = QueryBuilder().with_vector_search(params)
         assert query.build() == expected_query

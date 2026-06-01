@@ -1,3 +1,5 @@
+import json
+from typing import cast
 from unittest.mock import MagicMock
 
 from shared_models import Code
@@ -49,8 +51,9 @@ class TestResultCacheAPIs:
         )
 
         assert cached_result is not None
-        assert cached_result["cache_key"] == "1357924680"
-        assert cached_result["text"] == "Screening urine fentanyl detection"
+        cached_result_source = cast(dict[str, object], cached_result)
+        assert cached_result_source["cache_key"] == "1357924680"
+        assert cached_result_source["text"] == "Screening urine fentanyl detection"
 
     def test_get_miss(self):
         """Tests the Result Cache's GET functionality when the document is absent."""

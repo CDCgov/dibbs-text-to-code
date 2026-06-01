@@ -11,8 +11,9 @@ from lxml import etree
 from moto import mock_aws
 from pytest_snapshot.plugin import Snapshot
 
+from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
-from shared_models import PassthroughReason
+from shared_models import PassthroughReason, TTCAugmenterInput
 from text_to_code_lambda.lambda_function import handler as ttc_handler
 from validation import validate_eicr
 
@@ -40,6 +41,16 @@ TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 
 BASE_FOLDER = Path(__file__).parent
 ASSETS_FOLDER = BASE_FOLDER / "assets"
+
+CDA_NAMESPACE = "urn:hl7-org:v3"
+CDA_NAMESPACES: dict[str, str] = {"cda": CDA_NAMESPACE}
+REGENERATED_DOCUMENT_HEADER_TAGS: tuple[str, str, str, str] = (
+    f"{{{CDA_NAMESPACE}}}id",
+    f"{{{CDA_NAMESPACE}}}effectiveTime",
+    f"{{{CDA_NAMESPACE}}}setId",
+    f"{{{CDA_NAMESPACE}}}versionNumber",
+)
+ElementSignature = tuple[str, tuple[tuple[str, str], ...], str]
 
 EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
     (
@@ -84,7 +95,6 @@ NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
 NAMESPACE_PRESERVATION_EICR_PATH = (
     ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_eicr.xml"
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -145,6 +155,162 @@ def _drain_sqs_for_prefix(sqs_client, queue_url, prefix, max_messages=10) -> lis
     return [
         m for m in all_msgs if json.loads(m["Body"])["detail"]["object"]["key"].startswith(prefix)
     ]
+
+
+def _parse_xml_document(xml_document: str, document_label: str, eicr_id: str) -> etree._Element:
+    """Parse an XML document string into an lxml Element, failing the test if it's not well-formed.
+
+    :param xml_document: The XML document as a string.
+    :param document_label: A human-readable label for the document (e.g., "Original eICR") to use in error messages.
+    :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
+    :return: The root Element of the parsed XML document.
+    """
+    try:
+        return etree.fromstring(xml_document.encode("utf-8"))
+    except etree.XMLSyntaxError as exc:
+        pytest.fail(f"{document_label} XML is not well-formed for {eicr_id}: {exc}")
+
+
+def _normalized_xml_text(text: str | None) -> str:
+    """Normalize XML text content for comparison by stripping leading/trailing whitespace, or returning an empty string if None.
+
+    :param text: The XML text content to normalize, which may be None.
+    :return: Normalized text
+    """
+    if text is None:
+        return ""
+
+    return text.strip()
+
+
+def _is_regenerated_document_header_element(element: etree._Element) -> bool:
+    """Determine whether an element is one of the document header elements that the augmenter regenerates.
+
+    :param element: The XML element to check.
+    :return: True if the element is a regenerated document header element, False otherwise.
+    """
+    parent = element.getparent()
+
+    if parent is None:
+        return False
+
+    if parent.tag != f"{{{CDA_NAMESPACE}}}ClinicalDocument":
+        return False
+
+    return str(element.tag) in REGENERATED_DOCUMENT_HEADER_TAGS
+
+
+def _element_signature(element: etree._Element) -> ElementSignature:
+    """Generate a signature for an XML element based on its tag, sorted attributes, and normalized text content.
+
+    :param element: The XML element for which to generate a signature.
+    :return: A tuple representing the element's signature.
+    """
+    attributes: tuple[tuple[str, str], ...] = tuple(
+        sorted((str(key), value) for key, value in element.attrib.items())
+    )
+    return (str(element.tag), attributes, _normalized_xml_text(element.text))
+
+
+def _collect_element_signatures(root: etree._Element) -> dict[ElementSignature, int]:
+    """Traverse an XML tree and count the occurrences of each element signature, excluding regenerated document header elements.
+
+    :param root: The root element of the XML tree to traverse.
+    :return: A dictionary mapping element signatures to their occurrence counts.
+    """
+    signature_counts: dict[ElementSignature, int] = {}
+
+    for element in root.iter():
+        if not isinstance(element.tag, str):
+            continue
+
+        if _is_regenerated_document_header_element(element):
+            continue
+
+        signature = _element_signature(element)
+        signature_counts[signature] = signature_counts.get(signature, 0) + 1
+
+    return signature_counts
+
+
+def _assert_augmented_observation_contains_expected_translations(
+    augmented_observation: etree._Element,
+    eicr_id: str,
+) -> None:
+    """Assert that an augmented observation contains <translation> elements in the CDA namespace, which the augmenter is expected to inject.
+
+    :param augmented_observation: The root element of the augmented eICR observation where augmentation occurred.
+    :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
+    """
+    assert etree.QName(augmented_observation).localname == "observation", eicr_id
+
+    translations: list[etree._Element] = augmented_observation.xpath(
+        ".//cda:translation", namespaces=CDA_NAMESPACES
+    )
+
+    assert translations, (
+        f"Augmented observation did not contain expected <translation> elements: {eicr_id}"
+    )
+
+    for translation in translations:
+        assert etree.QName(translation).namespace == CDA_NAMESPACE, eicr_id
+
+
+def _assert_augmented_eicr_retains_regenerated_document_header_elements(
+    original_root: etree._Element,
+    augmented_root: etree._Element,
+    eicr_id: str,
+) -> None:
+    """Assert that the augmented eICR retains original regenerated document header elements when present, even though their content may differ.
+
+    :param original_root: The root element of the original eICR XML tree.
+    :param augmented_root: The root element of the augmented eICR XML tree.
+    :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
+    """
+    for tag in REGENERATED_DOCUMENT_HEADER_TAGS:
+        original_matching_children = [child for child in original_root if child.tag == tag]
+
+        if original_matching_children == []:
+            continue
+
+        matching_children = [child for child in augmented_root if child.tag == tag]
+
+        assert matching_children != [], (
+            f"Augmented eICR did not retain regenerated document header element for "
+            f"{eicr_id}: {tag}"
+        )
+
+
+def _assert_augmented_eicr_retains_original_content(
+    original_root: etree._Element,
+    augmented_root: etree._Element,
+    eicr_id: str,
+) -> None:
+    """Assert that the augmented eICR retains all original content except for the document header elements that the augmenter regenerates.
+
+    :param original_root: The root element of the original eICR XML tree.
+    :param augmented_root: The root element of the augmented eICR XML tree.
+    :param eicr_id: The ID of the eICR being tested, to include in error messages for context.
+    """
+    _assert_augmented_eicr_retains_regenerated_document_header_elements(
+        original_root,
+        augmented_root,
+        eicr_id,
+    )
+
+    original_signatures = _collect_element_signatures(original_root)
+    augmented_signatures = _collect_element_signatures(augmented_root)
+    missing_signatures: list[ElementSignature] = []
+
+    for signature, original_count in original_signatures.items():
+        augmented_count = augmented_signatures.get(signature, 0)
+
+        if augmented_count < original_count:
+            missing_signatures.append(signature)
+
+    assert missing_signatures == [], (
+        f"Augmented eICR did not retain all original content for {eicr_id}: {missing_signatures}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -335,32 +501,35 @@ class TestEndToEndSimulated:
             mock_lambda_context,
         )
 
+        original_eicr = Path(eicr_path).read_text(encoding="utf-8")
         augmented_eicr = self._read_s3_object(
             aws,
             f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         snapshot.assert_match(augmented_eicr, f"{eicr_id}_augmented_eicr.xml")
 
-        ttc_output = json.loads(
+        original_root = _parse_xml_document(original_eicr, "Original eICR", eicr_id)
+        augmented_root = _parse_xml_document(augmented_eicr, "Augmented eICR", eicr_id)
+
+        ttc_output = TTCAugmenterInput.model_validate_json(
             self._read_s3_object(
                 aws,
                 f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
         )
 
-        augmentation_metadata = json.loads(
-            self._read_s3_object(
-                aws,
-                f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-            )
+        augmentation_metadata = AugmentationMetadata.model_validate_json(
+            self._read_s3_object(aws, f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}")
         )
 
-        if augmentation_metadata.get("passthrough"):
+        actual_validation_results = validate_eicr(augmented_eicr)
+
+        if augmentation_metadata.passthrough:
             original_eicr = self._read_s3_object(
                 aws,
                 f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
-            passthrough_reason = augmentation_metadata["passthrough_reason"]
+            passthrough_reason = augmentation_metadata.passthrough_reason
 
             assert augmented_eicr == original_eicr
             assert passthrough_reason in [
@@ -368,23 +537,50 @@ class TestEndToEndSimulated:
                 PassthroughReason.NO_CODE_MATCHES,
                 PassthroughReason.TTC_EXCEPTION,
                 PassthroughReason.AUGMENTATION_EXCEPTION,
+                PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             ]
 
-            if passthrough_reason != PassthroughReason.AUGMENTATION_EXCEPTION:
-                assert ttc_output["passthrough"] is True
-                assert ttc_output["passthrough_reason"] == passthrough_reason
+            if passthrough_reason not in [
+                PassthroughReason.AUGMENTATION_EXCEPTION,
+                PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
+            ]:
+                assert ttc_output.passthrough is True
+                assert ttc_output.passthrough_reason == passthrough_reason
         else:
-            assert augmentation_metadata.get("passthrough") in [None, False]
+            assert augmentation_metadata.passthrough in [None, False]
             assert augmented_eicr != ""
 
-        actual_validation_results = validate_eicr(augmented_eicr)
+            augmented_observations: list[etree._Element] = augmented_root.xpath(
+                "//cda:observation[.//cda:translation]",
+                namespaces=CDA_NAMESPACES,
+            )
+
+            assert augmented_observations, (
+                f"Augmented eICR did not contain observations with expected "
+                f"<translation> elements: {eicr_id}"
+            )
+
+            for augmented_observation in augmented_observations:
+                _assert_augmented_observation_contains_expected_translations(
+                    augmented_observation,
+                    eicr_id,
+                )
+
+            _assert_augmented_eicr_retains_original_content(original_root, augmented_root, eicr_id)
+
+            assert actual_validation_results == [], actual_validation_results
+
         snapshot.assert_match(
-            json.dumps(actual_validation_results, indent=2, sort_keys=True),
+            json.dumps(
+                [result.model_dump() for result in actual_validation_results],
+                indent=2,
+                sort_keys=True,
+            ),
             f"{eicr_id}_validation_results.json",
         )
 
         snapshot.assert_match(
-            json.dumps(augmentation_metadata, indent=2, sort_keys=True),
+            json.dumps(augmentation_metadata.model_dump(), indent=2, sort_keys=True),
             f"{eicr_id}_augmentation_metadata.json",
         )
 
