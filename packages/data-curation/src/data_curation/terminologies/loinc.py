@@ -561,36 +561,51 @@ def _create_embedding_records(loinc_record_id: int, loinc_code: str, loinc_row: 
         "New LOINC" in element_changes or
         "short_name" in element_changes)
         and short_name):
-        new_id += 1
-        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=short_name, loinc_term_type="short_name", loinc_axis=loinc_axis_info)
+        if "LOINC Type" in element_changes:
+            os_id = ""
+        else:
+            os_id = new_id + 1
+        emb_rec = _create_embedding_record(rec_id=os_id, loinc_term=short_name, loinc_term_type="short_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "long_name" in element_changes)
         and long_name):
-        new_id += 1
-        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=long_name, loinc_term_type="long_name", loinc_axis=loinc_axis_info)
+        if "LOINC Type" in element_changes:
+            os_id = ""
+        else:
+            os_id = new_id + 1
+        emb_rec = _create_embedding_record(rec_id=os_id, loinc_term=long_name, loinc_term_type="long_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "display_name" in element_changes)
         and display_name):
-        new_id += 1
-        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=display_name, loinc_term_type="display_name", loinc_axis=loinc_axis_info)
+        if "LOINC Type" in element_changes:
+            os_id = ""
+        else:
+            os_id = new_id + 1
+        emb_rec = _create_embedding_record(rec_id=os_id, loinc_term=display_name, loinc_term_type="display_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "full_name" in element_changes)
         and full_name):
-        new_id += 1
-        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=full_name, loinc_term_type="full_name", loinc_axis=loinc_axis_info)
+        if "LOINC Type" in element_changes:
+            os_id = ""
+        else:
+            os_id = new_id + 1
+        emb_rec = _create_embedding_record(rec_id=os_id, loinc_term=full_name, loinc_term_type="full_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     if (("LOINC Type" in element_changes or
         "New LOINC" in element_changes or
         "consumer_name" in element_changes)
         and consumer_name):
-        new_id += 1
-        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=consumer_name, loinc_term_type="consumer_name", loinc_axis=loinc_axis_info)
+        if "LOINC Type" in element_changes:
+            os_id = ""
+        else:
+            os_id = new_id + 1
+        emb_rec = _create_embedding_record(rec_id=os_id, loinc_term=consumer_name, loinc_term_type="consumer_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     return emb_records
 
