@@ -1,5 +1,8 @@
 import logging
+import re
+from dataclasses import dataclass
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
 
@@ -23,6 +26,10 @@ XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 
 logger = logging.getLogger(__name__)
 
+# Saxon emits failed-assert locations in EQName (Clark) notation, e.g.
+# ``/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]``.
+_NAMESPACE_STEP = re.compile(r"Q\{[^}]*\}")
+
 
 class ValidationResult(FrozenBaseModel):
     """Error ID and location."""
@@ -31,16 +38,56 @@ class ValidationResult(FrozenBaseModel):
     location: str
 
 
-def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
-    """Validate an eICR."""
+@dataclass(frozen=True)
+class _RawAssert:
+    """A single failed-assert parsed from the validator's SVRL output."""
+
+    error_id: str
+    location: str
+    test: str
+    message: str
+
+
+def _normalize_location(location: str) -> str:
+    """Strip Saxon EQName namespace prefixes from a failed-assert location.
+
+    Downstream Text-to-Code processing strips namespaces from the eICR tree and
+    evaluates plain paths, so ``/Q{urn:hl7-org:v3}ClinicalDocument[1]/...`` must
+    be rewritten to ``/ClinicalDocument[1]/...``.
+
+    :param location: The raw Saxon location XPath.
+    :return: The location with ``Q{...}`` namespace prefixes removed.
+    """
+    return _NAMESPACE_STEP.sub("", location)
+
+
+def _normalize_whitespace(value: str | None) -> str:
+    """Collapse runs of whitespace to single spaces, or return empty for None.
+
+    :param value: The string to normalize, which may be None.
+    :return: The whitespace-normalized string.
+    """
+    return " ".join(value.split()) if value else ""
+
+
+def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawAssert]:
+    """Compile the schematron and run it against the eICR, returning failed asserts.
+
+    :param eicr: The eICR XML document as a string.
+    :param redo_all_steps: When True, regenerate the cached XSLT artifacts.
+    :return: The list of failed asserts emitted by the validator.
+    """
     logger.info("Starting eICR Validation")
     logger.info(f"For eICR: {eicr}")
-    errors: list[ValidationResult] = []
+    asserts: list[_RawAssert] = []
 
     try:
         with PySaxonProcessor(license=False) as proc:
             logger.info(f"Saxon/C version: {proc.version}")
             xsltproc = proc.new_xslt30_processor()
+            # The cached XSLT artifacts (steps 1-3) are written here. The wheel
+            # ships no output/ dir, so create it before the first write.
+            STAGE1_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
             if redo_all_steps:
                 logger.info("Remove all previous files generated at all steps")
                 STAGE1_OUTPUT.unlink(missing_ok=True)
@@ -90,14 +137,86 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
 
             for x in result[0][0].children:
                 if x.local_name == "failed-assert":
-                    errors.append(
-                        ValidationResult(
+                    # The human-readable message lives in the <svrl:text> child.
+                    message = ""
+                    for child in x.children:
+                        if child.local_name == "text":
+                            message = (child.string_value or "").strip()
+                            break
+                    asserts.append(
+                        _RawAssert(
                             error_id=x.get_attribute_value("id"),
                             location=x.get_attribute_value("location"),
+                            test=_normalize_whitespace(x.get_attribute_value("test")),
+                            message=message,
                         )
                     )
     except Exception as e:
         logger.exception(f"An error occurred during validation: {e}")
         raise
 
-    return errors
+    return asserts
+
+
+def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
+    """Validate an eICR.
+
+    :param eicr: The eICR XML document as a string.
+    :param redo_all_steps: When True, regenerate the cached XSLT artifacts.
+    :return: The list of validation errors found.
+    """
+    return [
+        ValidationResult(error_id=raw.error_id, location=raw.location)
+        for raw in _run_validator(eicr, redo_all_steps=redo_all_steps)
+    ]
+
+
+def _validation_result_xml(raw: _RawAssert) -> str:
+    """Serialize one failed assert into a NIST ``<validationResult>`` fragment.
+
+    The ``xmlns=""`` reset is required: the Text-to-Code reader locates the issue
+    fields with namespace-less ``find()`` calls.
+
+    :param raw: The failed assert to serialize.
+    :return: The XML fragment for the validation result.
+    """
+    return (
+        '        <validationResult xmlns="">\n'
+        '            <issue severity="errors">\n'
+        f"                <message>{escape(raw.message)}</message>\n"
+        f"                <context>{escape(_normalize_location(raw.location))}</context>\n"
+        f"                <test>{escape(raw.test)}</test>\n"
+        "                <specification />\n"
+        "            </issue>\n"
+        "        </validationResult>"
+    )
+
+
+def build_schematron_report_xml(eicr: str | None = None, redo_all_steps: bool = False) -> str:
+    """Validate an eICR and serialize the results as a NIST cdaGuideValidator ``<Report>``.
+
+    This is the shape the deployed TTC pipeline consumes from
+    ``s3://.../ValidationResponseV2/`` (parsed by
+    ``text_to_code.services.schematron_processor``): it locates ``validationResult``
+    elements and reads their namespace-less ``issue/message``, ``issue/context``
+    and ``issue/test`` children, matching the message text against known error
+    enums.
+
+    :param eicr: The eICR XML document as a string.
+    :param redo_all_steps: When True, regenerate the cached XSLT artifacts.
+    :return: The schematron validation report as a NIST ``<Report>`` XML string.
+    """
+    results = "\n".join(
+        _validation_result_xml(raw) for raw in _run_validator(eicr, redo_all_steps=redo_all_steps)
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<Report>\n"
+        "    <ReportHeader>\n"
+        "        <ValidationStatus>Complete</ValidationStatus>\n"
+        "    </ReportHeader>\n"
+        '    <Results xmlns="urn:gov:nist:cdaGuideValidator">\n'
+        f"{results}\n"
+        "    </Results>\n"
+        "</Report>"
+    )
