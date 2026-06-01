@@ -218,5 +218,13 @@ def save_jsonl_file(filename: str, contents: list[dict]) -> None:
 
         :returns: Nothing.
     """
-    with open(filename, "w") as f:
-        f.writelines(json.dumps(doc) + "\n" for doc in contents)
+    full_file_path = BASE_FOLDER / filename
+    try:
+        with open(full_file_path, "w") as f:
+            f.writelines(json.dumps(doc) + "\n" for doc in contents)
+        print(f"JSONL File successfully saved as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")

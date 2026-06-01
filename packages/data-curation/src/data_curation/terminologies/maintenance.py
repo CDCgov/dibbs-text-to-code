@@ -45,13 +45,15 @@ def update_loinc_embeddings():
 
     # add embeddings to any of the records for the various descriptions
     # if there are none, no looping will occur    
+    # TODO: In Subsequent PR update this to be a logging statement
+    print(f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}")
     for loinc_update_record in loinc_updates:
         if (loinc_update_record.get("description") is not None
             and loinc_update_record.get("description").strip() is not None
         ):
-            loinc_update_record["description_vector"] = embed(loinc_update_record["description"])    
-
-    ingestion_file_name = f"{LAB_NAMES}_{datetime.datetime.now().strftime('%Y%m%d')}.jsonl"
+            embedding = embed(loinc_update_record["description"])
+            loinc_update_record["description_vector"] = embedding.tolist()  
+    ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
     save_jsonl_file(ingestion_file_name,loinc_updates)
     
     # if all goes well write a new valueset file with all the existing codes
