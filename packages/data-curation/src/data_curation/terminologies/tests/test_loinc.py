@@ -128,7 +128,7 @@ def test_create_embedding_records_w_updates() -> None:
     loinc_row["class_type"] = loinc_axis["class"]
 
     record_1 = {
-        "id": 0,
+        "id": "",
         "description": "TEST NAME",
         "description_vector": [],
         "loinc_type": loinc_axis["loinc_type"],
@@ -142,7 +142,7 @@ def test_create_embedding_records_w_updates() -> None:
         "class_type": loinc_axis["class"]
     }
     record_2 = {
-        "id": 0,
+        "id": "",
         "description": "ANOTHER TEST NAME",
         "description_vector": [],
         "loinc_type": loinc_axis["loinc_type"],
