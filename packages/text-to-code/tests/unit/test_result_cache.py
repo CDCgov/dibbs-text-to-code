@@ -109,7 +109,7 @@ class TestResultCacheAPIs:
         )
         opensearch_hit = OpenSearchHit(
             _index=RESULT_CACHE_INDEX_NAME,
-            _id=139924673,
+            _id="139924673",
             _score=0.97771,
             _source=opensearch_hit_source,
         )
