@@ -448,7 +448,7 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
     #  then add 1
     loinc_record_max_id = (len(current_loinc_dict)*5)+1
     embedding_records = []
-    change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.csv"
+    change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.json"
     change_log = {
                 "New Loinc Version": f"{new_version} as of {loinc_version_date}",
                 "Compared to file": current_loinc_file,
@@ -482,7 +482,7 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
                 change_log["Changes"]["short_name"] += 1
                 changes.append("short_name")
             if (current_loinc_record["long_name"]
-                and current_loinc_record["long_name"].strip() != current_loinc_record["long_name"].strip()
+                and current_loinc_record["long_name"].strip() != update_loinc_record["long_name"].strip()
             ):
                 change_log["Changes"]["long_name"] += 1
                 changes.append("long_name")

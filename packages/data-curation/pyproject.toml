@@ -8,6 +8,7 @@ dependencies = [
   "requests",
   "spacy",
   "spacy-lookups-data",
+  "text-to-code",
 ]
 
 [tool.uv.sources]

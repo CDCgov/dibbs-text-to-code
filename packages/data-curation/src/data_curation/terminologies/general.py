@@ -137,7 +137,7 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print("No filename supplied.  Failed to save CSV file!")
         return
 
-    if contents is None and len(contents) == 0:
+    if contents is None or len(contents) == 0:
         print("Empty file contents!  Failed to save CSV!")
         return
 
@@ -181,7 +181,7 @@ def save_json_file(directory_path: str, filename: str, contents: dict, append_to
         print("No filename & path supplied.  Failed to save JSON File!")
         return
 
-    if contents is None and len(contents) == 0:
+    if contents is None or len(contents) == 0:
         print("Empty file contents!  Failed to save JSON File!")
         return
 

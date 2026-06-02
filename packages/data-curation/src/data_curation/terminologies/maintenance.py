@@ -42,22 +42,22 @@ def update_loinc_embeddings():
     else:
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
+        return
 
     # add embeddings to any of the records for the various descriptions
-    # if there are none, no looping will occur    
-    # TODO: In Subsequent PR update this to be a logging statement
-    print(f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}")
-    for loinc_update_record in loinc_updates:
-        if (loinc_update_record.get("description") is not None
-            and loinc_update_record.get("description").strip() is not None
-        ):
-            embedding = embed(loinc_update_record["description"])
-            loinc_update_record["description_vector"] = embedding.tolist()  
-    ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
-    save_jsonl_file(ingestion_file_name,loinc_updates)
-    
-    # if all goes well write a new valueset file with all the existing codes
-    extract_full_loinc_lab_names() 
+    if len(loinc_updates) > 0:
+        print(f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}")
+        for loinc_update_record in loinc_updates:
+            if (loinc_update_record.get("description") is not None
+                and loinc_update_record.get("description").strip()
+            ):
+                embedding = embed(loinc_update_record["description"])
+                loinc_update_record["description_vector"] = embedding.tolist()  
+        ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
+        save_jsonl_file(ingestion_file_name,loinc_updates)
+        
+        # if all goes well write a new valueset file with all the existing codes
+        extract_full_loinc_lab_names()
 
 
 def main(all: bool = False, loinc=False):
