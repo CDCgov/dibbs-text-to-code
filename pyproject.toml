@@ -28,7 +28,7 @@ dev = [
 
 [tool.coverage.run]
 source = ["packages"]
-omit = ["*/__pycache__/*", "*/test_*.py", "*/tests/*"]
+omit = ["*/__pycache__/*", "*/archived/*", "*/test_*.py", "*/tests/*"]
 
 [tool.pytest.ini_options]
 markers = ["e2e"]
@@ -40,11 +40,7 @@ env_files = [".env.test"]
 env_files_skip_if_set = false
 
 [tool.ty.src]
-exclude = [
-  "azure_scripts/",
-  "docs/",
-  "packages/data-curation/src/data_curation/archived",
-]
+exclude = ["**/archived/**", "azure_scripts/", "docs/"]
 
 [tool.ruff]
 # Wholesale ignoring several directories as I do not want to have to resolve everything in one PR,
