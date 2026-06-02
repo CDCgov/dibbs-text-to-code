@@ -1,4 +1,3 @@
-from typing import cast
 from unittest.mock import MagicMock
 
 from lambda_handler.models import (
@@ -40,7 +39,7 @@ class TestResultCacheAPIs:
                 "opensearch_retrieved_scores": {
                     "took": 234,
                     "timed_out": False,
-                    "shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                    "_shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
                     "hits": {
                         "total": {},
                         "hits": [],
@@ -57,9 +56,8 @@ class TestResultCacheAPIs:
         )
 
         assert cached_result is not None
-        cached_result_source = cast(dict[str, object], cached_result)
-        assert cached_result_source.cache_key == "1357924680"
-        assert cached_result_source.text == "Screening urine fentanyl detection"
+        assert cached_result.cache_key == "1357924680"
+        assert cached_result.text == "Screening urine fentanyl detection"
 
     def test_get_miss(self):
         """Tests the Result Cache's GET functionality when the document is absent."""

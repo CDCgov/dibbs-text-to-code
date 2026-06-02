@@ -7,7 +7,9 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from lambda_handler.models import (
+    OpenSearchHit,
     OpenSearchHits,
+    OpenSearchHitSource,
     OpenSearchResult,
     OpenSearchShards,
 )
@@ -106,52 +108,52 @@ class TestHandler:
             },
         ]
 
-        opensearch_retrieved_scores = {
-            "hits": {
-                "hits": [
-                    {
-                        "id": "rbLli5wBhppl0u9qtwLN",
-                        "index": "ttc_index",
-                        "score": 0.95,
-                        "source": {
-                            "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
-                            "id": 0,
-                            "loinc_code": "109224-6",
-                            "loinc_name_type": "Long Common Name",
-                            "loinc_type": "Order",
-                        },
-                    },
-                    {
-                        "id": "123455wBhppl0u9qtABC",
-                        "index": "ttc_index",
-                        "score": 0.88,
-                        "source": {
-                            "description": "Weed Allerg Mix3 IgE Qn",
-                            "id": 1,
-                            "loinc_code": "82041-5",
-                            "loinc_name_type": "Short Name",
-                            "loinc_type": "Order",
-                        },
-                    },
-                    {
-                        "id": "123455wBhppl0u9qtABC",
-                        "index": "ttc_index",
-                        "score": 0.65,
-                        "source": {
-                            "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
-                            "id": 4,
-                            "loinc_code": "15273-6",
-                            "loinc_name_type": "Fully-Specified Name",
-                            "loinc_type": "Both",
-                        },
-                    },
+        opensearch_retrieved_scores = OpenSearchResult(
+            hits=OpenSearchHits(
+                hits=[
+                    OpenSearchHit(
+                        id="rbLli5wBhppl0u9qtwLN",
+                        index="ttc_index",
+                        score=0.95,
+                        source=OpenSearchHitSource(
+                            description="Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                            id=0,
+                            loinc_code="109224-6",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        id="123455wBhppl0u9qtABC",
+                        index="ttc_index",
+                        score=0.88,
+                        source=OpenSearchHitSource(
+                            description="Weed Allerg Mix3 IgE Qn",
+                            id=1,
+                            loinc_code="82041-5",
+                            loinc_name_type="Short Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        id="123455wBhppl0u9qtABC",
+                        index="ttc_index",
+                        score=0.65,
+                        source=OpenSearchHitSource(
+                            description="(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                            id=4,
+                            loinc_code="15273-6",
+                            loinc_name_type="Fully-Specified Name",
+                            loinc_type="Both",
+                        ),
+                    ),
                 ],
-                "total": {"value": 3},
-            },
-            "shards": {"failed": 0, "skipped": 0, "successful": 1, "total": 1},
-            "timed_out": False,
-            "took": 57,
-        }
+                total={"value": 3},
+            ),
+            _shards={"failed": 0, "skipped": 0, "successful": 1, "total": 1},
+            timed_out=False,
+            took=57,
+        )
 
         mocker.patch(
             "text_to_code_lambda.lambda_function.get_cached_result",
