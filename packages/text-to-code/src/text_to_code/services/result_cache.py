@@ -34,7 +34,7 @@ def put_new_cached_result(  # noqa: PLR0913
     loinc_code: Code,
     search_score: float,
     reranker_score: float,
-    opensearch_retrieved_results: OpenSearchResult,
+    opensearch_retrieved_scores: OpenSearchResult,
     reranker_processed_results: list,
 ) -> bool:
     """Stores a hit for a new nonstandard input in the Result Cache index in OpenSearch.
@@ -53,7 +53,7 @@ def put_new_cached_result(  # noqa: PLR0913
       embedding comparisons.
     :param reranker_score: The cross-encoder score calculated by the reranker during
       final decision making on this input.
-    :param opensearch_retrieved_results: The collection of results returned by OpenSearch
+    :param opensearch_retrieved_scores: The collection of results returned by OpenSearch
       during the original processing of this input.
     :param reranker_processed_results: The list of ScoredResult objects produced by the
       reranker during original processing.
@@ -70,7 +70,7 @@ def put_new_cached_result(  # noqa: PLR0913
         loinc_code=loinc_code,
         search_score=search_score,
         reranker_score=reranker_score,
-        opensearch_retrieved_results=opensearch_retrieved_results,
+        opensearch_retrieved_scores=opensearch_retrieved_scores,
         reranker_processed_results={"results": reranker_processed_results},
     )
     put_response = opensearch_client.index(index=index, id=cache_key, body=new_cache_hit)

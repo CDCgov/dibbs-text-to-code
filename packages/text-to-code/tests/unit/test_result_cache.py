@@ -1,6 +1,13 @@
 from typing import cast
 from unittest.mock import MagicMock
 
+from lambda_handler.models import (
+    OpenSearchHit,
+    OpenSearchHits,
+    OpenSearchHitSource,
+    OpenSearchResult,
+    OpenSearchShards,
+)
 from shared_models import Code
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 
@@ -92,6 +99,28 @@ class TestResultCacheAPIs:
             display_name="Urea nitrogen [Mass/volume] in Blood",
         )
 
+        opensearch_shards = OpenSearchShards(total=1, successful=1, failed=0, skipped=0)
+        opensearch_hit_source = OpenSearchHitSource(
+            _id="a652c34ac12",
+            loinc_code="6299-2",
+            loinc_name_type="",
+            description="Urea nitrogen [Mass/volume] in Blood",
+            loinc_type="BOTH",
+        )
+        opensearch_hit = OpenSearchHit(
+            index=RESULT_CACHE_INDEX_NAME,
+            _id="a652c34ac12",
+            score=0.97771,
+            source=opensearch_hit_source,
+        )
+        opensearch_hits = OpenSearchHits(total={"hit": 1}, hits=[opensearch_hit])
+        opensearch_retrieved_scores = OpenSearchResult(
+            took=234,
+            timed_out=False,
+            shards=opensearch_shards,
+            hits=opensearch_hits,
+        )
+
         cache_result_created = put_new_cached_result(
             mock_opensearch_client,
             RESULT_CACHE_INDEX_NAME,
@@ -100,15 +129,7 @@ class TestResultCacheAPIs:
             standard_loinc_code,
             0.97771,
             0.8624,
-            {
-                "took": 234,
-                "timed_out": False,
-                "shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
-                "hits": {
-                    "total": {},
-                    "hits": [],
-                },
-            },
+            opensearch_retrieved_scores,
             [],
         )
 
