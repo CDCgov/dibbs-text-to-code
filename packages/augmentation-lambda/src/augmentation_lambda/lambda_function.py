@@ -8,7 +8,7 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 import lambda_handler
-from augmentation.models import Metadata, TTCAugmenterConfig
+from augmentation.models import Metadata
 from augmentation.models.application import TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import PassthroughReason, TTCAugmenterInput
@@ -196,13 +196,9 @@ def _process_record(record: SQSRecord) -> None:
             return
 
         try:
-            # Currently only supports eICR augmentation. Other document types (e.g. from
-            # ecr-refiner or other services) may need different augmentation strategies.
-            config = TTCAugmenterConfig()
             augmenter = EICRAugmenter(
                 document=original_eicr,
                 nonstandard_codes=augmenter_input.nonstandard_codes,
-                config=config,
                 deterministic_id_seed=augmenter_input.persistence_id,
             )
 
