@@ -13,6 +13,10 @@ Questions to answer:
 - when the right answer is at rank X, what is the gap between X and X+1, for each X
 '''
 
+ScoreValue = float | str
+ScoreBuckets = dict[int, list[float]]
+ScoreSummary = dict[int, ScoreValue]
+
 query_results = score_data["query_score_distribution"]
 
 # The "Auto-Classification" Threshold
@@ -65,15 +69,24 @@ for i in range(len(query_results)):
 
 num_right_answers = 0
 total_num_neighbors = 0
-right_answers_at_rank = { int(k): 0 for k in range(1, 11) }
-scores_at_rank = { int(k): [] for k in range(1, 11) }
-right_answer_scores_at_rank = { int(k): [] for k in range(1, 11) }
+right_answers_at_rank: dict[int, int] = { int(k): 0 for k in range(1, 11) }
+scores_at_rank: ScoreBuckets = { int(k): [] for k in range(1, 11) }
+right_answer_scores_at_rank: ScoreBuckets = { int(k): [] for k in range(1, 11) }
 # Note: only counts k values ranked above right answer's rank
 # Slots below the right answer don't' have the opportunity to be wrong
-wrong_scores_at_rank = { int(k): [] for k in range(1, 10) }
-score_gap_with_next_rank = { int(k): [] for k in range(1, 10) }
-right_answer_rank_gap = { int(k): [] for k in range(1, 10) }
-wrong_answer_rank_gap = { int(k): [] for k in range(1, 10) }
+wrong_scores_at_rank: ScoreBuckets = { int(k): [] for k in range(1, 10) }
+score_gap_with_next_rank: ScoreBuckets = { int(k): [] for k in range(1, 10) }
+right_answer_rank_gap: ScoreBuckets = { int(k): [] for k in range(1, 10) }
+wrong_answer_rank_gap: ScoreBuckets = { int(k): [] for k in range(1, 10) }
+
+
+def _mean_or_na(values: list[float]) -> ScoreValue:
+    if len(values) == 0:
+        return "n/a"
+    return round(
+        float(sum(values)) / float(len(values)), 3
+    )
+
 
 for query in query_results:
     neighbors = query["search_results"]
@@ -110,53 +123,29 @@ top_k_accuracies_stopping_at = {
     ) for k in range(1, 11)
 }
 
+mean_right_answer_scores_at_rank: ScoreSummary = {}
 for k in right_answer_scores_at_rank:
-    if len(right_answer_scores_at_rank[k]) == 0:
-        right_answer_scores_at_rank[k] = "n/a"
-    else:
-        right_answer_scores_at_rank[k] = round(
-            float(sum(right_answer_scores_at_rank[k])) / float(len(right_answer_scores_at_rank[k])), 3
-        )
+    mean_right_answer_scores_at_rank[k] = _mean_or_na(right_answer_scores_at_rank[k])
 
+mean_scores_at_rank: ScoreSummary = {}
 for k in scores_at_rank:
-    if len(scores_at_rank[k]) == 0:
-        scores_at_rank[k] = "n/a"
-    else:
-        scores_at_rank[k] = round(
-            float(sum(scores_at_rank[k])) / float(len(scores_at_rank[k])), 3
-        )
+    mean_scores_at_rank[k] = _mean_or_na(scores_at_rank[k])
 
+mean_wrong_scores_at_rank: ScoreSummary = {}
 for k in wrong_scores_at_rank:
-    if len(wrong_scores_at_rank[k]) == 0:
-        wrong_scores_at_rank[k] = "n/a"
-    else:
-        wrong_scores_at_rank[k] = round(
-            float(sum(wrong_scores_at_rank[k])) / float(len(wrong_scores_at_rank[k])), 3
-        )
+    mean_wrong_scores_at_rank[k] = _mean_or_na(wrong_scores_at_rank[k])
 
+mean_score_gap_with_next_rank: ScoreSummary = {}
 for k in score_gap_with_next_rank:
-    if len(score_gap_with_next_rank[k]) == 0:
-        score_gap_with_next_rank[k] = "n/a"
-    else:
-        score_gap_with_next_rank[k] = round(
-            float(sum(score_gap_with_next_rank[k])) / float(len(score_gap_with_next_rank[k])), 3
-        )
+    mean_score_gap_with_next_rank[k] = _mean_or_na(score_gap_with_next_rank[k])
 
+mean_right_answer_rank_gap: ScoreSummary = {}
 for k in right_answer_rank_gap:
-    if len(right_answer_rank_gap[k]) == 0:
-        right_answer_rank_gap[k] = "n/a"
-    else:
-        right_answer_rank_gap[k] = round(
-            float(sum(right_answer_rank_gap[k])) / float(len(right_answer_rank_gap[k])), 3
-        )
+    mean_right_answer_rank_gap[k] = _mean_or_na(right_answer_rank_gap[k])
 
+mean_wrong_answer_rank_gap: ScoreSummary = {}
 for k in wrong_answer_rank_gap:
-    if len(wrong_answer_rank_gap[k]) == 0:
-        wrong_answer_rank_gap[k] = "n/a"
-    else:
-        wrong_answer_rank_gap[k] = round(
-            float(sum(wrong_answer_rank_gap[k])) / float(len(wrong_answer_rank_gap[k])), 3
-        )
+    mean_wrong_answer_rank_gap[k] = _mean_or_na(wrong_answer_rank_gap[k])
 
     
 print()
@@ -173,26 +162,26 @@ for k in top_k_accuracies_stopping_at:
     print(f"  {k}: {top_k_accuracies_stopping_at[k]}")
 print()
 print("Mean Score At Rank K:")
-for k in scores_at_rank:
-    print(f"  {k}: {scores_at_rank[k]}")
+for k in mean_scores_at_rank:
+    print(f"  {k}: {mean_scores_at_rank[k]}")
 print()
 print("Mean Score At Rank K When K Is Right:")
-for k in right_answer_scores_at_rank:
-    print(f"  {k}: {right_answer_scores_at_rank[k]}")
+for k in mean_right_answer_scores_at_rank:
+    print(f"  {k}: {mean_right_answer_scores_at_rank[k]}")
 print()
 print("Mean Score At Rank K When K Is Wrong (and right answer is farther down ranked list):")
-for k in wrong_scores_at_rank:
-    print(f"  {k}: {wrong_scores_at_rank[k]}")
+for k in mean_wrong_scores_at_rank:
+    print(f"  {k}: {mean_wrong_scores_at_rank[k]}")
 print()
 print("Mean Gap Between Rank K and Rank K+1:")
-for k in score_gap_with_next_rank:
-    print(f"  {k}: {score_gap_with_next_rank[k]}")
+for k in mean_score_gap_with_next_rank:
+    print(f"  {k}: {mean_score_gap_with_next_rank[k]}")
 print()
 print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Correct:")
-for k in right_answer_rank_gap:
-    print(f"  {k}: {right_answer_rank_gap[k]}")
+for k in mean_right_answer_rank_gap:
+    print(f"  {k}: {mean_right_answer_rank_gap[k]}")
 print()
 print("Mean Gap Between Rank K and Rank K+1 When Rank K Is Wrong:")
-for k in wrong_answer_rank_gap:
-    print(f"  {k}: {wrong_answer_rank_gap[k]}")
+for k in mean_wrong_answer_rank_gap:
+    print(f"  {k}: {mean_wrong_answer_rank_gap[k]}")
 print()

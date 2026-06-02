@@ -48,6 +48,7 @@ import typing
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data_curation.loinc_enhancement import enhance_loinc_str
+from data_curation.schemas import EnhancementType
 from data_curation.post_process import (
     apply_deletion_post_processing,
     apply_delimiter_post_processing,
@@ -110,19 +111,33 @@ SINGLE_WORD_METHOD_MAPPINGS = {
     "by screen method": "Screening",
     "by automated count": "Automated"
 }
-BASE_POST_PROCESSING_OPTIONS = [
+PostProcessingOption = typing.Literal[
+    "poc",
+    "modality",
+    "delimiter",
+    "truncation",
+    "syntax",
+    "pound",
+    "deletion",
+    "dot"
+]
+TrainingPair = typing.Tuple[str, str]
+BASE_POST_PROCESSING_OPTIONS: typing.List[PostProcessingOption] = [
     "poc", "modality", "delimiter", "truncation", "syntax", "pound", "deletion", "dot"
+]
+SHORT_NAME_POST_PROCESSING_OPTIONS: typing.List[PostProcessingOption] = [
+    "dot", "poc", "pound", "modality"
 ]
 BASE_HEURISTIC_OPTIONS = ["measurement", "q group", "modality", "parens", "brackets"]
 
 
 def build_and_process_ttc_and_heuristics(
-        code_str: str,
-        fsn: str,
-        property_axis: str,
-        system_axis: str,
+        code_str: str | None,
+        fsn: str | None,
+        property_axis: str | None,
+        system_axis: str | None,
         variations: typing.List[str]
-    ):
+    ) -> typing.List[str]:
     """
     Given a LOINC code string and some of its property information, construct
     a TTC-style "enhanced" example of the code, then apply any eligible
@@ -136,6 +151,10 @@ def build_and_process_ttc_and_heuristics(
     :param variations: The iteratively built list of variations generated
       for this LOINC code, which the function will add to throughout.
     """
+    code_str = code_str or ""
+    fsn = fsn or ""
+    property_axis = property_axis or ""
+    system_axis = system_axis or ""
     ttc_build = build_ttc_enhanced_example(code_str)
     if _codestring_is_valid_candidate(ttc_build, code_str):
         variations.append(ttc_build)
@@ -197,7 +216,7 @@ def build_loinc_axis_example(
     """
     # Component wasn't pulled in the sheet so need to derive it from FSN
     component = _get_component_axis_from_fsn(
-        getattr(loinc_code, "fully_specified_name")
+        loinc_code.fully_specified_name or ""
     )
     if component == "":
         return ""
@@ -228,7 +247,7 @@ def build_loinc_axis_example(
     return built_code.strip()
 
 
-def build_short_name_hyphen_variant(code_str: str) -> str:
+def build_short_name_hyphen_variant(code_str: str | None) -> str:
     """
     Simple function that creates a variant of a short name obtained by
     taking all code text that precedes a measurement-delimiting hyphen.
@@ -236,12 +255,13 @@ def build_short_name_hyphen_variant(code_str: str) -> str:
     :param code_str: The text string of a LOINC code short name.
     :returns: The hyphen-truncated variation.
     """
+    code_str = code_str or ""
     if "-" in code_str:
         return code_str.split("-")[0]
     return ""
 
 
-def build_ttc_enhanced_example(code_str: str) -> str:
+def build_ttc_enhanced_example(code_str: str | None) -> str:
     """
     Given a LOINC code string, generate a "TTC Enhanced" version of the
     string. A TTC Enhanced code string contains one or more enhancements
@@ -252,18 +272,19 @@ def build_ttc_enhanced_example(code_str: str) -> str:
     :param code_str: A text string of a LOINC code name variant.
     :returns: A version of the string with enhancements performed.
     """
+    code_str = code_str or ""
     num_enhancements_to_attempt = 1 + math.ceil(
         float(len(code_str.split())) / 4.0
     )
     ex_code = enhance_loinc_str(
-        code_str, 'all', num_enhancements_to_attempt, num_enhancements_to_attempt
+        code_str, EnhancementType.ALL, num_enhancements_to_attempt, num_enhancements_to_attempt
     )
     ex_code = scramble_word_order(ex_code, 3)
     return ex_code
 
 
 def build_vendor_formula_style_example(
-        code_str: str, property_axis: str, system_axis: str
+        code_str: str | None, property_axis: str | None, system_axis: str | None
     ) -> str:
     """
     Given a LOINC code string and a few of its properties, create a synthetic
@@ -282,6 +303,9 @@ def build_vendor_formula_style_example(
     :param system_axis: The system axis of the LOINC code proper.
     :returns: A synthetic variant of the code that looks like the formula above.
     """
+    code_str = code_str or ""
+    property_axis = property_axis or ""
+    system_axis = system_axis or ""
     # Step 1: Identify the detection method, if any, before we mess with words
     detection_tuple = _get_single_word_method(code_str)
     detection_method_compressed = detection_tuple[0]
@@ -345,14 +369,14 @@ def create_synthetic_examples_for_code(
     synthetic_examples = {}
     # Component wasn't separately pulled down as data, but we can determine it
     # by parsing the FSN
-    fsn = loinc_code.fully_specified_name
+    fsn = loinc_code.fully_specified_name or ""
     for nv in NAME_VARIANTS:
         variations = []
 
         # Short names are the easiest to handle because they have only a small
         # block of options; just do it first
         if nv == "short_name":
-            sn = getattr(loinc_code, nv)
+            sn = getattr(loinc_code, nv) or ""
             # Short names' only direct build pattern is the hyphen
             hyphen_build = build_short_name_hyphen_variant(sn)
             if _codestring_is_valid_candidate(hyphen_build, sn):
@@ -362,15 +386,15 @@ def create_synthetic_examples_for_code(
             processed_sn = _choose_and_apply_post_processing(
                 sn,
                 fsn,
-                getattr(loinc_code, "system"),
+                getattr(loinc_code, "system") or "",
                 LOINC_ENHANCEMENTS,
-                ["dot", "poc", "pound", "modality"]
+                SHORT_NAME_POST_PROCESSING_OPTIONS
             )
             if _codestring_is_valid_candidate(processed_sn, sn):
                 variations.append(processed_sn)
 
         else:
-            name = getattr(loinc_code, nv)
+            name = getattr(loinc_code, nv) or ""
 
             # Lots of data points to add here, it's the most common variant
             # that inputs seem to key off of. We'll handle its special builds
@@ -388,8 +412,8 @@ def create_synthetic_examples_for_code(
                 # Then we'll apply the vendor build pattern
                 vendor_build = build_vendor_formula_style_example(
                     name,
-                    getattr(loinc_code, "property"),
-                    getattr(loinc_code, "system")
+                    getattr(loinc_code, "property") or "",
+                    getattr(loinc_code, "system") or ""
                 )
                 if _codestring_is_valid_candidate(vendor_build, name):
                     variations.append(vendor_build)
@@ -398,7 +422,7 @@ def create_synthetic_examples_for_code(
                     processed_vendor = _choose_and_apply_post_processing(
                         vendor_build,
                         fsn,
-                        getattr(loinc_code, "system"),
+                        getattr(loinc_code, "system") or "",
                         LOINC_ENHANCEMENTS,
                         BASE_POST_PROCESSING_OPTIONS
                     )
@@ -412,8 +436,8 @@ def create_synthetic_examples_for_code(
                 variations = build_and_process_ttc_and_heuristics(
                     name,
                     fsn,
-                    getattr(loinc_code, "property"),
-                    getattr(loinc_code, "system"),
+                    getattr(loinc_code, "property") or "",
+                    getattr(loinc_code, "system") or "",
                     variations
                 )
             
@@ -422,8 +446,8 @@ def create_synthetic_examples_for_code(
             variations = build_and_process_ttc_and_heuristics(
                 name,
                 fsn,
-                getattr(loinc_code, "property"),
-                getattr(loinc_code, "system"),
+                getattr(loinc_code, "property") or "",
+                getattr(loinc_code, "system") or "",
                 variations
             )
 
@@ -439,7 +463,7 @@ def create_synthetic_examples_for_code(
     return synthetic_examples
 
 
-def get_bracket_variations(code_str: str) -> typing.List[str]:
+def get_bracket_variations(code_str: str | None) -> typing.List[str]:
     """
     Given a LOINC code string, generate semantic variations of that string 
     that modify how brackets within the string are used (or whether they
@@ -451,6 +475,7 @@ def get_bracket_variations(code_str: str) -> typing.List[str]:
     :returns: A list containing the synthetic versions of the LOINC code 
       string, with use of brackets modified.
     """
+    code_str = code_str or ""
     variations = []
     bracketed_text = BRACKETED_TEXT.search(code_str)
     if bracketed_text is not None:
@@ -464,7 +489,7 @@ def get_bracket_variations(code_str: str) -> typing.List[str]:
 
 
 def get_measurement_variation(
-        code_str: str, property_axis: str
+        code_str: str | None, property_axis: str | None
     ) -> typing.List[str]:
     """
     Given a LOINC code string and its associated property axis, create a 
@@ -485,6 +510,8 @@ def get_measurement_variation(
     :returns: A list containing a synthetically generated example with a
       word denoting measurement added to it.
     """
+    code_str = code_str or ""
+    property_axis = property_axis or ""
     variations = []
     measurement_word = _get_measurement_unit_word(code_str, property_axis)
     bracketed_text = BRACKETED_TEXT.search(code_str)
@@ -494,7 +521,8 @@ def get_measurement_variation(
         # a special clause, so put the measurement before it
         if _get_single_word_method(code_str)[0] == "" and " by " in code_str:
             # As with method compression, want the last "by", so we reverse
-            words = code_str.split()
+            words: list[str] = []
+            words.extend(code_str.split())
             words.reverse()
             by_idx = words.index("by") + 1
             words.reverse()
@@ -517,7 +545,7 @@ def get_measurement_variation(
     return variations
 
 
-def get_modality_variations(code_str: str, system_axis: str) -> typing.List[str]:
+def get_modality_variations(code_str: str | None, system_axis: str | None) -> typing.List[str]:
     """
     Given a LOINC code string and its associated system axis, generates a list
     of variations on that code string, each with a modified "modality" element.
@@ -532,6 +560,8 @@ def get_modality_variations(code_str: str, system_axis: str) -> typing.List[str]
     :returns: A list of variations on the supplied code string with the 
       modality element altered in one or more ways.
     """
+    code_str = code_str or ""
+    system_axis = system_axis or ""
     variations = []
     modality = _find_system_modality(
         code_str, system_axis, LOINC_ENHANCEMENTS, include_parens=True, include_preposition=True
@@ -581,7 +611,7 @@ def get_modality_variations(code_str: str, system_axis: str) -> typing.List[str]
     return variations
 
 
-def get_parens_variations(code_str: str) -> typing.List[str]:
+def get_parens_variations(code_str: str | None) -> typing.List[str]:
     """
     Given a LOINC code string, generates variants of the string with any
     parenthetical groups (parentheses and the text they enclose) either
@@ -593,6 +623,7 @@ def get_parens_variations(code_str: str) -> typing.List[str]:
     :returns: A list of variations on the string with parenthetical 
       groups modified as appropriate.
     """
+    code_str = code_str or ""
     variations = []
     parens_text = PARENTHESES_TEXT.search(code_str)
     if parens_text is not None:
@@ -608,7 +639,7 @@ def get_parens_variations(code_str: str) -> typing.List[str]:
     return variations
 
 
-def get_q_variations(code_str: str) -> typing.List[str]:
+def get_q_variations(code_str: str | None) -> typing.List[str]:
     """
     Given a LOINC code string, generates variations of the code string with
     its "Q-Group" expanded. A Q-Group is a text chunk of the form "Ql OR Qn"
@@ -620,6 +651,7 @@ def get_q_variations(code_str: str) -> typing.List[str]:
     :param code_str: The text of the LOINC code's name variant.
     :returns: A list of any generated q-group expansions.
     """
+    code_str = code_str or ""
     variations = []
     q_group = Q_GROUP.search(code_str)
     if q_group is not None:
@@ -657,12 +689,12 @@ def get_q_variations(code_str: str) -> typing.List[str]:
 
 
 def _allocate_generated_loincs_to_training_arrays(
-        code_string_base_name: str,
-        generated_loincs: typing.List[str],
-        search_training_array: typing.List[str],
-        reranker_training_array: typing.List[str],
-        validation_array: typing.List[str],
-    ) -> typing.Tuple[typing.List, typing.List, typing.List]:
+        code_string_base_name: str | None,
+        generated_loincs: typing.Sequence[str | None],
+        search_training_array: typing.List[TrainingPair],
+        reranker_training_array: typing.List[TrainingPair],
+        validation_array: typing.List[TrainingPair],
+    ) -> typing.Tuple[typing.List[TrainingPair], typing.List[TrainingPair], typing.List[TrainingPair]]:
     """
     Once a LOINC code name variant has had multiple synthetic variations
     generated, those variant examples must be distributed across different
@@ -690,27 +722,29 @@ def _allocate_generated_loincs_to_training_arrays(
       model's overall standardization performance.
     :returns: A tuple with the three lists and their new appended elements.
     """
+    code_string_base_name = code_string_base_name or ""
+    generated_loincs = list(generated_loincs)
     # Priority order for each allocation will be:
     # Validation first, then search training, then reranker training
     random.shuffle(generated_loincs)
     if len(generated_loincs) > 0:
-        validation_array.append((code_string_base_name, generated_loincs[0]))
+        validation_array.append((code_string_base_name, generated_loincs[0] or ""))
         remaining_examples = len(generated_loincs) - 1
         if remaining_examples > 0:
             allocate_to_search = math.ceil(float(remaining_examples) / 2.0)
             for i in range(1, 1 + allocate_to_search):
                 search_training_array.append(
-                    (code_string_base_name, generated_loincs[i])
+                    (code_string_base_name, generated_loincs[i] or "")
                 )
             if remaining_examples - allocate_to_search > 0:
                 for j in range(1 + allocate_to_search, len(generated_loincs)):
                     reranker_training_array.append(
-                        (code_string_base_name, generated_loincs[j])
+                        (code_string_base_name, generated_loincs[j] or "")
                     )
     return search_training_array, reranker_training_array, validation_array
 
 
-def _choose_and_apply_heuristics(code_str: str, property_axis: str, system_axis: str) -> str:
+def _choose_and_apply_heuristics(code_str: str | None, property_axis: str | None, system_axis: str | None) -> str:
     """
     Given a LOINC code string (which should be either an LCN, DN, or CN, if
     using them) and the corresponding property and system axes for the code,
@@ -726,6 +760,9 @@ def _choose_and_apply_heuristics(code_str: str, property_axis: str, system_axis:
     :returns: A new version of the code string with variation applied, or
       the empty string if no variation can be performed.
     """
+    code_str = code_str or ""
+    property_axis = property_axis or ""
+    system_axis = system_axis or ""
     eligible_heuristics = _determine_eligible_pattern_heuristics(
         code_str, property_axis, system_axis
     )
@@ -773,20 +810,11 @@ def _choose_and_apply_heuristics(code_str: str, property_axis: str, system_axis:
 
 
 def _choose_and_apply_post_processing(
-        code_str: str,
-        fsn: str,
-        system_axis: str,
+        code_str: str | None,
+        fsn: str | None,
+        system_axis: str | None,
         loinc_enhancements: dict,
-        base_options: typing.List[typing.Literal[
-            "poc",
-            "modality",
-            "delimiter",
-            "truncation",
-            "syntax",
-            "pound",
-            "deletion",
-            "dot"
-        ]]
+        base_options: typing.List[PostProcessingOption]
     ) -> str:
     """
     Given a synthetically generated LOINC code string, this function
@@ -810,6 +838,9 @@ def _choose_and_apply_post_processing(
     :returns: A new string with all valid and selected post processing 
       applied.
     """
+    code_str = code_str or ""
+    fsn = fsn or ""
+    system_axis = system_axis or ""
     eligible_post_processing = _determine_eligible_post_processing(
         code_str, system_axis, loinc_enhancements, base_options
     )
@@ -861,7 +892,7 @@ def _choose_and_apply_post_processing(
 
 
 def _codestring_is_valid_candidate(
-        code_str: str | None, original_code: str
+        code_str: str | None, original_code: str | None
     ) -> bool:
     """
     Simple function for identifying whether a newly generated
@@ -874,12 +905,13 @@ def _codestring_is_valid_candidate(
     :returns: A boolean indicating whether the synthetic example is
       a valid training example.
     """
+    original_code = original_code or ""
     return code_str is not None and \
         code_str != "" and code_str != original_code
 
 
 def _determine_eligible_pattern_heuristics(
-        code_str: str, property_axis: str, system_axis: str
+        code_str: str | None, property_axis: str | None, system_axis: str | None
     ) -> typing.List[str]:
     """
     Given a LOINC code string and its corresponding property and system
@@ -894,6 +926,9 @@ def _determine_eligible_pattern_heuristics(
     :returns: A list of string short-hands for valid forms of semantic
       variation for this code string.
     """
+    code_str = code_str or ""
+    property_axis = property_axis or ""
+    system_axis = system_axis or ""
     eligible_heuristics = []
     for h in BASE_HEURISTIC_OPTIONS:
         if h == "measurement":
@@ -919,7 +954,7 @@ def _determine_eligible_pattern_heuristics(
     return eligible_heuristics
 
 
-def _get_single_word_method(code_str: str) -> typing.Tuple[str, ]:
+def _get_single_word_method(code_str: str | None) -> typing.Tuple[str, int | None]:
     """
     Given a LOINC code string, determines if the included method-text in the
     string can be represented as a "one-word test" (for example, condensing
@@ -932,6 +967,7 @@ def _get_single_word_method(code_str: str) -> typing.Tuple[str, ]:
       code string where the original method text occurs (so that it
       can be validated or replaced).
     """
+    code_str = code_str or ""
     # Use spaces here to make sure we don't capture prefixes or suffixes
     if " by " in code_str:
         words = code_str.split()
@@ -950,7 +986,7 @@ def _get_single_word_method(code_str: str) -> typing.Tuple[str, ]:
 
 
 def _get_measurement_unit_word(
-        code_str: str, property_axis: str, return_symbol: bool = False
+        code_str: str | None, property_axis: str | None, return_symbol: bool = False
     ) -> str:
     """
     Given a LOINC code string and its corresponding property axis, determines
@@ -970,6 +1006,8 @@ def _get_measurement_unit_word(
       example), if applicable.
     :returns: The single measurement-descriptive word for the code string.
     """
+    code_str = code_str or ""
+    property_axis = property_axis or ""
     if "by calculation" in code_str.lower():
         return "Determination"
     if "in specimen" in code_str.lower():
@@ -1064,7 +1102,7 @@ if __name__ == "__main__":
             display_name = display_name.strip(),
             consumer_name = consumer_name.strip(),
             fully_specified_name = fully_specified_name.strip(),
-            lab_type = lab_type.strip().lower(),
+            lab_type = schemas.LabType(lab_type.strip().lower()),
             class_type = class_type.strip(),
             property = property_axis.strip() if _axis_is_valid(property_axis.strip()) else None,
             time = time_axis.strip() if _axis_is_valid(time_axis.strip()) else None,
@@ -1104,7 +1142,7 @@ if __name__ == "__main__":
         # We'll have to randomize and divide up short names at the end,
         # there just aren't enough to apportion for each code
         for ex_string in synthetic_examples["short_name"]:
-            sns.append( (structured_loinc.short_name, ex_string) )
+            sns.append( (structured_loinc.short_name or "", ex_string) )
     
     # Now we'll divide up short names 50-30-20 across training and testing
     random.shuffle(sns)

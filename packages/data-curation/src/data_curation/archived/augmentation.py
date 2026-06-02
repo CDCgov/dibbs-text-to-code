@@ -103,7 +103,7 @@ def random_char_deletion(
     min_dels: int = 1,
     max_dels: int = 3,
     max_per_word: int = 2,
-    method: typing.Literal["char", "word"] = "char",
+    method: str = "char",
 ) -> str:
     """
     This function randomly deletes characters from a string.  Two modes can be
@@ -308,8 +308,8 @@ def generate_augmented_examples(
 
 
 def build_augmented_loinc_files(
-    input_path: str,
-    config: schemas.LoincFileGenerationConfig,
+    input_path: str | os.PathLike[str],
+    config: dict[str, schemas.AugmentationConfig],
     num_lcn: int = 5,
     num_sn: int = 5,
     num_dn: int = 5,

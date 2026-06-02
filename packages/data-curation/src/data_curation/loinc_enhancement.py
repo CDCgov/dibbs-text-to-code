@@ -19,11 +19,13 @@ assert len(LOINC_ENHANCEMENTS) > 0
 
 MAX_AUGMENTATION_TRIES = 100
 
+TokenSpan = typing.Tuple[int, int]
+EnhancementCandidate = typing.Tuple[str, TokenSpan]
 
 @pydantic.validate_call
 def enhance_loinc_str(
     text: str,
-    enhancement_type: schemas.EnhancementType,
+    enhancement_type: schemas.EnhancementType | str,
     max_enhancements: int,
     min_enhancements: int = 1,
 ) -> str:
@@ -42,7 +44,7 @@ def enhance_loinc_str(
         raise ValueError("max_enhancements must be greater than min_enhancements")
 
     # Step 1: build all substring candidates, including singletons
-    words = [(word.strip(), [i]) for i, word in enumerate(text.split())]
+    words = [(word.strip(), (i, i)) for i, word in enumerate(text.split())]
     candidates = _generate_enhancement_candidates(words)
 
     # Step 2: check each one for eligibility for a LOINC enhancement and
@@ -80,11 +82,11 @@ def enhance_loinc_str(
 
 
 def _apply_enhancements(
-    words: list[str, list[int]],
-    disjoint_candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
-    enhancement_type: typing.Annotated[schemas.EnhancementType, pydantic.Field()],
+    words: list[EnhancementCandidate],
+    disjoint_candidates: list[EnhancementCandidate],
+    enhancement_type: schemas.EnhancementType | str,
     num_enhancements: int,
-) -> list[str, list[int]]:
+) -> list[EnhancementCandidate]:
     """
     Apply LOINC enhancement to a provided tokenized copy of a code string. The
     code string and a list of possible candidates that are eligible to be
@@ -107,7 +109,7 @@ def _apply_enhancements(
     # work backwards by string index; otherwise, we could change single words
     # into multiples early in the string and ruin the indices of all words
     # that come later
-    enhancements_to_apply: list[typing.Tuple[list[int], str]] = []
+    enhancements_to_apply: list[typing.Tuple[typing.Tuple[int, int], str]] = []
     while enhancements_applied < num_enhancements and num_tries < MAX_AUGMENTATION_TRIES:
         num_tries += 1
 
@@ -157,8 +159,8 @@ def _apply_enhancements(
 
 
 def _generate_disjoint_intervals(
-    candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
-) -> list[typing.Tuple[str, list[int]]]:
+    candidates: list[EnhancementCandidate],
+) -> list[EnhancementCandidate]:
     """
     Given a list of tuples that include string index intervals, construct the
     largest possible list of those intervals such that no interval intersects
@@ -191,9 +193,9 @@ def _generate_disjoint_intervals(
 
 
 def _filter_candidates_for_enhancement(
-    candidates: list[typing.Tuple[str, typing.Tuple[int, int]]],
+    candidates: list[EnhancementCandidate],
     loinc_enhancements: dict,
-) -> list[str, list[int]]:
+) -> list[EnhancementCandidate]:
     """
     Given a list of candidate words and substrings, filter the list to only contain
     tuples for which the candidate has one or more enhancements available in the
@@ -224,8 +226,8 @@ def _filter_candidates_for_enhancement(
 
 
 def _generate_enhancement_candidates(
-    words: list[typing.Tuple[str, list[int]]],
-) -> list[typing.Tuple[str, typing.Tuple[int, int]]]:
+    words: typing.Sequence[EnhancementCandidate],
+) -> list[EnhancementCandidate]:
     """
     From a tokenized string, generate a list of all possible candidate strings and
     substrings that might have LOINC enhancements available to them. A substring
@@ -241,7 +243,8 @@ def _generate_enhancement_candidates(
     # a point rather than an interval (will need this later for maximally
     # disjoint interval computation)
     candidates = []
-    for word, [position] in words:
+    for word, positions in words:
+        position = positions[0]
         candidates.append((word, (position, position)))
 
     # Now build up all sequentially linear combinations of substrings

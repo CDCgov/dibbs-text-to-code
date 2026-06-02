@@ -70,6 +70,7 @@ def test_get_latest_extract_file_name_none() -> None:
 def test_get_latest_extract_file_name_valid() -> None:
     prefix = "loinc_lab_names"
     result = get_latest_extract_file_name(prefix)
+    assert result is not None
     assert prefix in result
 
 

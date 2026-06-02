@@ -30,6 +30,7 @@ import datetime
 import json
 import os
 import sys
+from pathlib import Path
 import requests
 from data_curation.terminologies.loinc import get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, process_loincs_for_umls_urls, LOINC_PARTS_ABBRV_SYNONYMS
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
@@ -101,7 +102,7 @@ def get_loinc_umls_related_results():  # noqa: D103
     save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
-def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
+def process_loinc_codes_with_umls(file_path: str | Path) -> dict:  # noqa: D103
     # ensure UMLS creds are available
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
@@ -262,12 +263,12 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     return umls_loinc_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
+def save_valueset_csv_file(filename: str, contents: list[dict] | None, append_to_file: bool = False):  # noqa: D103
     if not filename.strip():
         print("No filename supplied.  Failed to save CSV file!")
         return
 
-    if contents is None and len(contents) == 0:
+    if contents is None or len(contents) == 0:
         print("Empty file contents!  Failed to save CSV!")
         return
 
@@ -294,15 +295,17 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
 
 
 def save_json_file(  # noqa: D103
-    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
+    directory_path: str | Path, filename: str, contents: dict | None, append_to_file: bool = False
 ):
-    if not filename.strip() or not directory_path.strip():
+    if not filename.strip() or not str(directory_path).strip():
         print("No filename & path supplied.  Failed to save JSON File!")
         return
 
-    if contents is None and len(contents) == 0:
+    if contents is None or len(contents) == 0:
         print("Empty file contents!  Failed to save JSON File!")
         return
+
+    directory_path = Path(directory_path)
 
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
@@ -340,15 +343,15 @@ def _get_loinc_abbrv_syns(
             repl_name is not None
             and repl_name not in filter_from_names
             and repl_name != part_name
-            and repl_name not in loinc_row.get("synonyms")
+            and repl_name not in loinc_row["synonyms"]
         ):
             loinc_row["synonyms"].append(repl_name)
         if (
             pref_abrv is not None
             and pref_abrv not in filter_from_names
             and pref_abrv != part_name
-            and pref_abrv not in loinc_row.get("synonyms")
-            and pref_abrv not in loinc_row.get("abbrv")
+            and pref_abrv not in loinc_row["synonyms"]
+            and pref_abrv not in loinc_row["abbrv"]
         ):
             loinc_row["abbrv"].append(pref_abrv)
 
@@ -356,8 +359,8 @@ def _get_loinc_abbrv_syns(
             synonym is not None
             and synonym not in filter_from_names
             and synonym != part_name
-            and synonym not in loinc_row.get("synonyms")
-            and synonym not in loinc_row.get("abbrv")
+            and synonym not in loinc_row["synonyms"]
+            and synonym not in loinc_row["abbrv"]
         ):
             loinc_row["synonyms"].append(synonym)
     return loinc_row
@@ -394,12 +397,12 @@ def create_loinc_part_abbrv_syn_dicts():
             # for particular rows with character issues
             # print(f"ROW_COUNT: {row_count}")
             row_count = row_count + 1
-            part_code = row.get("PART_NUM")
-            axis_name = row.get("PART_TYPE_NAME_NAME")
-            part_name = row.get("PART")
-            repl_name = row.get("PART_NAME")
-            pref_abrv = row.get("PREF_ABRV")
-            synonym = row.get("SYNONYM")
+            part_code = row.get("PART_NUM") or ""
+            axis_name = row.get("PART_TYPE_NAME_NAME") or ""
+            part_name = row.get("PART") or ""
+            repl_name = row.get("PART_NAME") or ""
+            pref_abrv = row.get("PREF_ABRV") or ""
+            synonym = row.get("SYNONYM") or ""
 
             # build various LOINC Part dicts
             if axis_name == "COMPONENT":

@@ -190,7 +190,7 @@ def _expand_measurement_property(msmt: str) -> str:
 
 def _find_system_modality(
         code_str: str,
-        system_axis: str,
+        system_axis: str | None,
         loinc_enhancements: dict,
         include_parens: bool = False,
         include_preposition: bool = False
@@ -270,7 +270,7 @@ def _find_system_modality(
         return None
     
 
-def _get_component_axis_from_fsn(fsn: str) -> str:
+def _get_component_axis_from_fsn(fsn: str | None) -> str:
     """
     Identifies the Component axis of a LOINC code by parsing its Fully-
     Specified Name. The component axis is a field not loaded as part of
@@ -323,8 +323,8 @@ def _get_preceding_word(substring: str, string: str) -> str:
 
 
 def _parenthetical_is_trailing_acronym(
-        parenthetical: re.Match[str], code_string: str
-    ) -> str:
+        parenthetical: re.Match[str] | None, code_string: str
+    ) -> str | None:
     """
     Given a LOINC code string and a parenthetical appositive within that
     string, this function determines whether the content within those
@@ -341,6 +341,8 @@ def _parenthetical_is_trailing_acronym(
     :returns: A string comprised of the words for which the parenthetical
       is an acronym, or None if it isn't one.
     """
+    if parenthetical is None:
+        return None
     substring = parenthetical.group(0).replace('(', '').replace(')', '')
     paren_starts_at = parenthetical.span()[0]
     lookbacks = []
@@ -376,6 +378,7 @@ def _parenthetical_is_trailing_acronym(
             return " ".join(acronym_candidates)
     except:
         return None
+    return None
     
 
 def _substring_is_contained_in_parens(string: str, start: int, end: int) -> bool:
