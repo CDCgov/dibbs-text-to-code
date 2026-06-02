@@ -112,10 +112,10 @@ class TestHandler:
             hits=OpenSearchHits(
                 hits=[
                     OpenSearchHit(
-                        id="rbLli5wBhppl0u9qtwLN",
-                        index="ttc_index",
-                        score=0.95,
-                        source=OpenSearchHitSource(
+                        _id="rbLli5wBhppl0u9qtwLN",
+                        _index="ttc_index",
+                        _score=0.95,
+                        _source=OpenSearchHitSource(
                             description="Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
                             id=0,
                             loinc_code="109224-6",
@@ -124,10 +124,10 @@ class TestHandler:
                         ),
                     ),
                     OpenSearchHit(
-                        id="123455wBhppl0u9qtABC",
-                        index="ttc_index",
-                        score=0.88,
-                        source=OpenSearchHitSource(
+                        _id="123455wBhppl0u9qtABC",
+                        _index="ttc_index",
+                        _score=0.88,
+                        _source=OpenSearchHitSource(
                             description="Weed Allerg Mix3 IgE Qn",
                             id=1,
                             loinc_code="82041-5",
@@ -136,10 +136,10 @@ class TestHandler:
                         ),
                     ),
                     OpenSearchHit(
-                        id="123455wBhppl0u9qtABC",
-                        index="ttc_index",
-                        score=0.65,
-                        source=OpenSearchHitSource(
+                        _id="123455wBhppl0u9qtABC",
+                        _index="ttc_index",
+                        _score=0.65,
+                        _source=OpenSearchHitSource(
                             description="(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
                             id=4,
                             loinc_code="15273-6",
@@ -150,7 +150,7 @@ class TestHandler:
                 ],
                 total={"value": 3},
             ),
-            _shards={"failed": 0, "skipped": 0, "successful": 1, "total": 1},
+            _shards=OpenSearchShards(failed=0, skipped=0, successful=1, total=1),
             timed_out=False,
             took=57,
         )
