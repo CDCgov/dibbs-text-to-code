@@ -40,7 +40,8 @@ LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
 
-LoincRow = dict[str, str]
+LoincRow = dict[str, str | None]
+EmbeddingRecord = dict[str, object]
 
 
 def get_loinc_lab_names(version: str = ""):
@@ -191,7 +192,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         return loinc_umls_urls
 
 
-def process_loinc_results(loinc_results, loinc_rows) -> list[dict]:
+def process_loinc_results(loinc_results, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """Function that loops through the LOINC results, returned via the various
         API calls, and sends them into another function to extract and add
         all the different terms/names for each loinc code.
@@ -258,7 +259,7 @@ def process_loincs_for_umls_urls() -> dict:
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: LoincRow) -> LoincRow:
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """This function receives the most recent result from the LOINC API
         and extracts the various terms/names and adds to the list of records
         ready for consumption into TTC model DB.
@@ -378,7 +379,7 @@ def get_loinc_current_version_data() -> tuple[str, str]:
     return loinc_version, loinc_version_date
 
 
-def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> list[dict]:
+def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> list[EmbeddingRecord]:
     """Function compares New LOINC Version delta API response against the existing
         version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
         This function creates a change_log that will be used by another function to 
@@ -452,7 +453,7 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> l
     return embedding_records
 
 
-def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[EmbeddingRecord]:
     """This function takes the loinc_code and a list of changes from a change_log,
         created by a higher function that performs the LOINC change comparison, and
         generates a list of embedding records per LOINC Code.  As it is possible
@@ -523,7 +524,7 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
     return emb_records
 
 
-def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
+def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> EmbeddingRecord:
     """This function constructs a new basic instance of a LOINC Embedding record 
         from parameter inputs.
 
