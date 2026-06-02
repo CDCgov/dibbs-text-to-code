@@ -2,7 +2,8 @@ from datetime import UTC, datetime
 
 from pydantic import Field
 
-from shared_models import FrozenBaseModel
+from lambda_handler.models import OpenSearchResult
+from shared_models import Code, FrozenBaseModel
 
 
 class OpenSearchResultCacheSource(FrozenBaseModel):
@@ -16,7 +17,7 @@ class OpenSearchResultCacheSource(FrozenBaseModel):
         description="The data field from which the candidate text was retrieved during initial "
         "processing of this cache hit."
     )
-    loinc_code: dict = Field(description="The Code object for this cached input as a JSON dict.")
+    loinc_code: Code = Field(description="The Code object for this cached input as a JSON dict.")
     search_score: float = Field(
         description="The cosine similarity score calculated for this standardization during "
         "initial processing of this input."
@@ -25,7 +26,7 @@ class OpenSearchResultCacheSource(FrozenBaseModel):
         description="The cross-encoder score calculated for this standardization during initial "
         "processing of this input."
     )
-    opensearch_retrieved_scores: dict = Field(
+    opensearch_retrieved_scores: OpenSearchResult = Field(
         description="The serialized list of OpenSearch results returned during the initial "
         "processing of this input, as a JSON dict."
     )

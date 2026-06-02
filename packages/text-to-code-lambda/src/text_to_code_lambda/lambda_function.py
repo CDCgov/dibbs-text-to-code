@@ -17,6 +17,7 @@ from shared_models import (
     PassthroughReason,
     TTCAugmenterInput,
 )
+from text_to_code.models import OpenSearchResultCacheSource
 from text_to_code.models import query as query_models
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
@@ -396,7 +397,7 @@ def _process_record_pipeline(
                 cache_key = sha256(
                     (selected_candidate.value.strip().lower() + "|" + data_field).encode("utf-8")
                 ).hexdigest()
-                cached_result = get_cached_result(
+                cached_result: OpenSearchResultCacheSource | None = get_cached_result(
                     opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
                 )
 
@@ -406,7 +407,7 @@ def _process_record_pipeline(
                     cache_hit_metric = _get_cache_metric("hit")
                     logger.info(cache_hit_metric)
 
-                    new_translation = cached_result["loinc_code"]
+                    new_translation = cached_result.loinc_code
                     nonstandard_code_replacements.append(
                         NonstandardCodeInstance(
                             schematron_error_xpath=error.error_context,
@@ -414,9 +415,9 @@ def _process_record_pipeline(
                             new_translation=new_translation,
                         ),
                     )
-                    opensearch_retrieved_scores = cached_result["opensearch_retrieved_scores"]
+                    opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
                     results_list = opensearch_retrieved_scores.hits.hits
-                    ranked_results = cached_result["reranker_processed_results"]
+                    ranked_results = cached_result.reranker_processed_results
 
                 # Cache miss, so log that, run everything normally, and then finally store
                 # the prediction in the cache for future use

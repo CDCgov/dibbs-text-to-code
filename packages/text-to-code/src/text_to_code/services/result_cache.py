@@ -2,6 +2,7 @@ from hashlib import sha256
 
 from opensearchpy import OpenSearch
 
+from lambda_handler.models import OpenSearchResult
 from shared_models import Code
 from text_to_code.models.result_cache import OpenSearchResultCacheSource
 
@@ -33,7 +34,7 @@ def put_new_cached_result(  # noqa: PLR0913
     loinc_code: Code,
     search_score: float,
     reranker_score: float,
-    opensearch_retrieved_results: dict,
+    opensearch_retrieved_results: OpenSearchResult,
     reranker_processed_results: list,
 ) -> bool:
     """Stores a hit for a new nonstandard input in the Result Cache index in OpenSearch.

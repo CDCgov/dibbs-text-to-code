@@ -1,4 +1,3 @@
-import json
 from typing import cast
 from unittest.mock import MagicMock
 
@@ -110,7 +109,7 @@ class TestResultCacheAPIs:
                     "hits": [],
                 },
             },
-            {"results": []},
+            [],
         )
 
         assert cache_result_created
