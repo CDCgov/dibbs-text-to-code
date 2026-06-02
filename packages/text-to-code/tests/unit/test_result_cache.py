@@ -101,7 +101,7 @@ class TestResultCacheAPIs:
 
         opensearch_shards = OpenSearchShards(total=1, successful=1, failed=0, skipped=0)
         opensearch_hit_source = OpenSearchHitSource(
-            _id="a652c34ac12",
+            id="a652c34ac12",
             loinc_code="6299-2",
             loinc_name_type="",
             description="Urea nitrogen [Mass/volume] in Blood",
