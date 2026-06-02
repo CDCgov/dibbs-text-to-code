@@ -42,8 +42,9 @@ env_files_skip_if_set = false
 [tool.ty.src]
 exclude = [
   "azure_scripts/",
+  "docs/",
   "packages/data-curation/src/data_curation/archived",
-
+  # TODO: Once done with PR, remove packages/data-curation
   "packages/data-curation",
 ]
 
