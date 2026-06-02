@@ -37,7 +37,7 @@ class TestResultCacheAPIs:
                 ),
                 "search_score": 0.9563,
                 "reranker_score": 0.6789,
-                "opensearch_retrieved_results": {
+                "opensearch_retrieved_scores": {
                     "took": 234,
                     "timed_out": False,
                     "shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},

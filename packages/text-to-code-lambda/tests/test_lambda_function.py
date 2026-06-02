@@ -6,7 +6,12 @@ import pytest
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
-from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
+from lambda_handler.models import (
+    OpenSearchHits,
+    OpenSearchResult,
+    OpenSearchShards,
+)
+from shared_models import Code
 from text_to_code.models import Candidate, LabXPaths
 from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
@@ -43,7 +48,7 @@ class TestHandler:
         mock_lambda_context,
         mocker,
     ):
-        """Test handler with no failures."""
+        """Test handler with no failures when the result cache misses."""
         # We can directly mock the result cache's return value, since we're
         # testing the lambda's logic, not the result cache's
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
@@ -62,6 +67,120 @@ class TestHandler:
         mocker.patch(
             "text_to_code_lambda.lambda_function.rerank",
             return_value=ranked_results,
+        )
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+        assert resp == {
+            "statusCode": 200,
+            "message": "TTC processed successfully!",
+            "num_success_eicrs": 1,
+        }
+
+        ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
+
+        ttc_metadata_output = _get_serialized_object(
+            f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
+        )
+        snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
+
+    def test_handler_success_using_result_cache(
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mock_opensearch,
+        snapshot: Snapshot,
+        mock_lambda_context,
+        mocker,
+    ):
+        """Test handler with no failures when the result cache hits."""
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
+            {
+                "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                "score": 0.5247528553009033,
+            },
+            {
+                "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                "score": 0.35545864701271057,
+            },
+        ]
+
+        opensearch_retrieved_scores = {
+            "hits": {
+                "hits": [
+                    {
+                        "id": "rbLli5wBhppl0u9qtwLN",
+                        "index": "ttc_index",
+                        "score": 0.95,
+                        "source": {
+                            "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                            "id": 0,
+                            "loinc_code": "109224-6",
+                            "loinc_name_type": "Long Common Name",
+                            "loinc_type": "Order",
+                        },
+                    },
+                    {
+                        "id": "123455wBhppl0u9qtABC",
+                        "index": "ttc_index",
+                        "score": 0.88,
+                        "source": {
+                            "description": "Weed Allerg Mix3 IgE Qn",
+                            "id": 1,
+                            "loinc_code": "82041-5",
+                            "loinc_name_type": "Short Name",
+                            "loinc_type": "Order",
+                        },
+                    },
+                    {
+                        "id": "123455wBhppl0u9qtABC",
+                        "index": "ttc_index",
+                        "score": 0.65,
+                        "source": {
+                            "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                            "id": 4,
+                            "loinc_code": "15273-6",
+                            "loinc_name_type": "Fully-Specified Name",
+                            "loinc_type": "Both",
+                        },
+                    },
+                ],
+                "total": {"value": 3},
+            },
+            "shards": {"failed": 0, "skipped": 0, "successful": 1, "total": 1},
+            "timed_out": False,
+            "took": 57,
+        }
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.get_cached_result",
+            return_value={
+                "index": "ttc-result-cache",
+                "id": "13579246680",
+                "version": "1.0.0",
+                "seq_no": "2",
+                "primary_term": "3",
+                "found": True,
+                "routing": "",
+                "source": {
+                    "cache_key": "1357924680",
+                    "text": " A custom code in display name ",
+                    "data_field": "Lab Test Name Ordered",
+                    "loinc_code": Code(
+                        code="82041-5",
+                        code_system="2.16.840.1.113883.6.1",
+                        code_system_name="LOINC",
+                        display_name="Weed Allerg Mix3 IgE Qn",
+                    ),
+                    "search_score": 0.88,
+                    "reranker_score": 7127664685249329,
+                    "opensearch_retrieved_scores": opensearch_retrieved_scores,
+                    "reranker_processed_results": {"results": ranked_results},
+                    "cached_at": "2026-05-15T18:14:45.020655+00:00",
+                },
+                "fields": {},
+            },
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
