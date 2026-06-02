@@ -10,7 +10,7 @@ generating variations and applying post-processing.
 
 import random
 import re
-import typing
+from typing import Tuple
 
 from utils.regex_patterns import MULTIPLE_SPACE
 
@@ -194,7 +194,7 @@ def _find_system_modality(
         loinc_enhancements: dict,
         include_parens: bool = False,
         include_preposition: bool = False
-) -> typing.Tuple[str, int, int] | None:
+) -> Tuple[str, int, int] | None:
     """
     Given a LOINC code string, this function locates the text in the string
     representing the system modality of the code, if it exists. The modality

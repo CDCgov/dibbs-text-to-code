@@ -2,7 +2,7 @@ import os
 import random
 import re
 import sys
-import typing
+from typing import Sequence, Tuple
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -19,8 +19,8 @@ assert len(LOINC_ENHANCEMENTS) > 0
 
 MAX_AUGMENTATION_TRIES = 100
 
-TokenSpan = typing.Tuple[int, int]
-EnhancementCandidate = typing.Tuple[str, TokenSpan]
+TokenSpan = Tuple[int, int]
+EnhancementCandidate = Tuple[str, TokenSpan]
 
 @pydantic.validate_call
 def enhance_loinc_str(
@@ -109,7 +109,7 @@ def _apply_enhancements(
     # work backwards by string index; otherwise, we could change single words
     # into multiples early in the string and ruin the indices of all words
     # that come later
-    enhancements_to_apply: list[typing.Tuple[typing.Tuple[int, int], str]] = []
+    enhancements_to_apply: list[Tuple[Tuple[int, int], str]] = []
     while enhancements_applied < num_enhancements and num_tries < MAX_AUGMENTATION_TRIES:
         num_tries += 1
 
@@ -226,7 +226,7 @@ def _filter_candidates_for_enhancement(
 
 
 def _generate_enhancement_candidates(
-    words: typing.Sequence[EnhancementCandidate],
+    words: Sequence[EnhancementCandidate],
 ) -> list[EnhancementCandidate]:
     """
     From a tokenized string, generate a list of all possible candidate strings and

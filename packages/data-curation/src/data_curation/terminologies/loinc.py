@@ -40,6 +40,8 @@ LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
 
+LoincRow = dict[str, str]
+
 
 def get_loinc_lab_names(version: str = ""):
     """Process to get the all, or version specific, LOINC Codes and terms
@@ -256,8 +258,7 @@ def process_loincs_for_umls_urls() -> dict:
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
-
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> list[dict]:
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: LoincRow) -> LoincRow:
     """This function receives the most recent result from the LOINC API
         and extracts the various terms/names and adds to the list of records
         ready for consumption into TTC model DB.

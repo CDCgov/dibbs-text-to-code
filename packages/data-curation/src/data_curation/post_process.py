@@ -13,7 +13,7 @@ richer training examples.
 import math
 import random
 import re
-import typing
+from typing import List, Sequence
 
 from data_curation.loinc_utils import LOINC_PREPOSITIONS, _find_system_modality, _get_component_axis_from_fsn
 
@@ -236,8 +236,8 @@ def _determine_eligible_post_processing(
         code_str: str,
         system_axis: str,
         loinc_enhancements: dict,
-        base_options: typing.Sequence[str]
-    ) -> typing.List[str]:
+        base_options: Sequence[str]
+    ) -> List[str]:
     """
     Determines which types of post-processing can be successfully applied to
     a given code string. A post processing form is valid if it would result in

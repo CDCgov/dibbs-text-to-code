@@ -43,7 +43,7 @@ import math
 import os
 import random
 import sys
-import typing
+from typing import List, Literal, Sequence, Tuple
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -111,7 +111,7 @@ SINGLE_WORD_METHOD_MAPPINGS = {
     "by screen method": "Screening",
     "by automated count": "Automated"
 }
-PostProcessingOption = typing.Literal[
+PostProcessingOption = Literal[
     "poc",
     "modality",
     "delimiter",
@@ -121,11 +121,11 @@ PostProcessingOption = typing.Literal[
     "deletion",
     "dot"
 ]
-TrainingPair = typing.Tuple[str, str]
-BASE_POST_PROCESSING_OPTIONS: typing.List[PostProcessingOption] = [
+TrainingPair = Tuple[str, str]
+BASE_POST_PROCESSING_OPTIONS: List[PostProcessingOption] = [
     "poc", "modality", "delimiter", "truncation", "syntax", "pound", "deletion", "dot"
 ]
-SHORT_NAME_POST_PROCESSING_OPTIONS: typing.List[PostProcessingOption] = [
+SHORT_NAME_POST_PROCESSING_OPTIONS: List[PostProcessingOption] = [
     "dot", "poc", "pound", "modality"
 ]
 BASE_HEURISTIC_OPTIONS = ["measurement", "q group", "modality", "parens", "brackets"]
@@ -136,8 +136,8 @@ def build_and_process_ttc_and_heuristics(
         fsn: str | None,
         property_axis: str | None,
         system_axis: str | None,
-        variations: typing.List[str]
-    ) -> typing.List[str]:
+        variations: List[str]
+    ) -> List[str]:
     """
     Given a LOINC code string and some of its property information, construct
     a TTC-style "enhanced" example of the code, then apply any eligible
@@ -349,7 +349,7 @@ def build_vendor_formula_style_example(
 
 def create_synthetic_examples_for_code(
         loinc_code: schemas.LoincStruct
-    ) -> dict[str, typing.List[str]]:
+    ) -> dict[str, List[str]]:
     """
     Given a LOINC code structured object, perform a comprehensive panel of
     synthetic data generation. For each name variant in the code structure
@@ -463,7 +463,7 @@ def create_synthetic_examples_for_code(
     return synthetic_examples
 
 
-def get_bracket_variations(code_str: str | None) -> typing.List[str]:
+def get_bracket_variations(code_str: str | None) -> List[str]:
     """
     Given a LOINC code string, generate semantic variations of that string 
     that modify how brackets within the string are used (or whether they
@@ -490,7 +490,7 @@ def get_bracket_variations(code_str: str | None) -> typing.List[str]:
 
 def get_measurement_variation(
         code_str: str | None, property_axis: str | None
-    ) -> typing.List[str]:
+    ) -> List[str]:
     """
     Given a LOINC code string and its associated property axis, create a 
     variant of the code string that includes a "measurement"-style word 
@@ -545,7 +545,7 @@ def get_measurement_variation(
     return variations
 
 
-def get_modality_variations(code_str: str | None, system_axis: str | None) -> typing.List[str]:
+def get_modality_variations(code_str: str | None, system_axis: str | None) -> List[str]:
     """
     Given a LOINC code string and its associated system axis, generates a list
     of variations on that code string, each with a modified "modality" element.
@@ -611,7 +611,7 @@ def get_modality_variations(code_str: str | None, system_axis: str | None) -> ty
     return variations
 
 
-def get_parens_variations(code_str: str | None) -> typing.List[str]:
+def get_parens_variations(code_str: str | None) -> List[str]:
     """
     Given a LOINC code string, generates variants of the string with any
     parenthetical groups (parentheses and the text they enclose) either
@@ -639,7 +639,7 @@ def get_parens_variations(code_str: str | None) -> typing.List[str]:
     return variations
 
 
-def get_q_variations(code_str: str | None) -> typing.List[str]:
+def get_q_variations(code_str: str | None) -> List[str]:
     """
     Given a LOINC code string, generates variations of the code string with
     its "Q-Group" expanded. A Q-Group is a text chunk of the form "Ql OR Qn"
@@ -690,11 +690,11 @@ def get_q_variations(code_str: str | None) -> typing.List[str]:
 
 def _allocate_generated_loincs_to_training_arrays(
         code_string_base_name: str | None,
-        generated_loincs: typing.Sequence[str | None],
-        search_training_array: typing.List[TrainingPair],
-        reranker_training_array: typing.List[TrainingPair],
-        validation_array: typing.List[TrainingPair],
-    ) -> typing.Tuple[typing.List[TrainingPair], typing.List[TrainingPair], typing.List[TrainingPair]]:
+        generated_loincs: Sequence[str | None],
+        search_training_array: List[TrainingPair],
+        reranker_training_array: List[TrainingPair],
+        validation_array: List[TrainingPair],
+    ) -> Tuple[List[TrainingPair], List[TrainingPair], List[TrainingPair]]:
     """
     Once a LOINC code name variant has had multiple synthetic variations
     generated, those variant examples must be distributed across different
@@ -814,7 +814,7 @@ def _choose_and_apply_post_processing(
         fsn: str | None,
         system_axis: str | None,
         loinc_enhancements: dict,
-        base_options: typing.List[PostProcessingOption]
+        base_options: List[PostProcessingOption]
     ) -> str:
     """
     Given a synthetically generated LOINC code string, this function
@@ -912,7 +912,7 @@ def _codestring_is_valid_candidate(
 
 def _determine_eligible_pattern_heuristics(
         code_str: str | None, property_axis: str | None, system_axis: str | None
-    ) -> typing.List[str]:
+    ) -> List[str]:
     """
     Given a LOINC code string and its corresponding property and system
     axes, identify the kinds of semantic variation that can be applied
@@ -954,7 +954,7 @@ def _determine_eligible_pattern_heuristics(
     return eligible_heuristics
 
 
-def _get_single_word_method(code_str: str | None) -> typing.Tuple[str, int | None]:
+def _get_single_word_method(code_str: str | None) -> Tuple[str, int | None]:
     """
     Given a LOINC code string, determines if the included method-text in the
     string can be represented as a "one-word test" (for example, condensing
