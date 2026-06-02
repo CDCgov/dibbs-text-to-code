@@ -14,7 +14,7 @@ from lambda_handler.models import (
     OpenSearchShards,
 )
 from shared_models import Code
-from text_to_code.models import Candidate, LabXPaths
+from text_to_code.models import Candidate, LabXPaths, OpenSearchResultCacheSource
 from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
 
@@ -157,32 +157,22 @@ class TestHandler:
 
         mocker.patch(
             "text_to_code_lambda.lambda_function.get_cached_result",
-            return_value={
-                "index": "ttc-result-cache",
-                "id": "13579246680",
-                "version": "1.0.0",
-                "seq_no": "2",
-                "primary_term": "3",
-                "found": True,
-                "routing": "",
-                "source": {
-                    "cache_key": "1357924680",
-                    "text": " A custom code in display name ",
-                    "data_field": "Lab Test Name Ordered",
-                    "loinc_code": Code(
-                        code="82041-5",
-                        code_system="2.16.840.1.113883.6.1",
-                        code_system_name="LOINC",
-                        display_name="Weed Allerg Mix3 IgE Qn",
-                    ),
-                    "search_score": 0.88,
-                    "reranker_score": 7127664685249329,
-                    "opensearch_retrieved_scores": opensearch_retrieved_scores,
-                    "reranker_processed_results": {"results": ranked_results},
-                    "cached_at": "2026-05-15T18:14:45.020655+00:00",
-                },
-                "fields": {},
-            },
+            return_value=OpenSearchResultCacheSource(
+                cache_key="1357924680",
+                text=" A custom code in display name ",
+                data_field="Lab Test Name Ordered",
+                loinc_code=Code(
+                    code="82041-5",
+                    code_system="2.16.840.1.113883.6.1",
+                    code_system_name="LOINC",
+                    display_name="Weed Allerg Mix3 IgE Qn",
+                ),
+                search_score=0.88,
+                reranker_score=7127664685249329,
+                opensearch_retrieved_scores=opensearch_retrieved_scores,
+                reranker_processed_results={"results": ranked_results},
+                cached_at="2026-05-15T18:14:45.020655+00:00",
+            ),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
