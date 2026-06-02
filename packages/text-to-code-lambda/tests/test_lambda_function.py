@@ -15,6 +15,8 @@ S3_BUCKET = os.environ["S3_BUCKET"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
 TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 
+RESULT_CACHE_INDEX = os.environ["RESULT_CACHE_INDEX"]
+
 EXPECTED_EXCEPTION_RESULTS = 2
 
 
@@ -33,7 +35,7 @@ def _get_serialized_object(key: str) -> str:
 
 @pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
 class TestHandler:
-    def test_handler_success(
+    def test_handler_success_no_cache_hit(
         self,
         example_sqs_event,
         mock_aws_setup,
@@ -43,6 +45,10 @@ class TestHandler:
         mocker,
     ):
         """Test handler with no failures."""
+        # We can directly mock the result cache's return value, since we're
+        # testing the lambda's logic, not the result cache's
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
             {
