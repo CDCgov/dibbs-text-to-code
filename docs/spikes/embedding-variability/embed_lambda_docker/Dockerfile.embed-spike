@@ -1,0 +1,15 @@
+# Thin overlay on the production TTC Lambda image. Reuses the baked-in
+# `/opt/retriever_model` and the same Python/torch stack the Lambda runs.
+#
+# Build the base first:
+#   docker build --secret id=huggingface_token,env=HF_TOKEN -f Dockerfile.ttc -t ttc-embed:local .
+#
+# Then build this overlay from the same directory as embed_in_lambda.py:
+#   docker build -f Dockerfile.embed-spike -t ttc-embed-spike:local .
+FROM ttc-embed:local
+
+COPY embed_in_lambda.py /var/task/embed_in_lambda.py
+
+# AWS Lambda base image expects a handler CMD; override on `docker run` instead.
+ENTRYPOINT ["python"]
+CMD ["/var/task/embed_in_lambda.py"]
