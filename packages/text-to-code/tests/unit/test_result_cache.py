@@ -108,16 +108,16 @@ class TestResultCacheAPIs:
             loinc_type="BOTH",
         )
         opensearch_hit = OpenSearchHit(
-            index=RESULT_CACHE_INDEX_NAME,
+            _index=RESULT_CACHE_INDEX_NAME,
             _id="a652c34ac12",
-            score=0.97771,
-            source=opensearch_hit_source,
+            _score=0.97771,
+            _source=opensearch_hit_source,
         )
         opensearch_hits = OpenSearchHits(total={"hit": 1}, hits=[opensearch_hit])
         opensearch_retrieved_scores = OpenSearchResult(
             took=234,
             timed_out=False,
-            shards=opensearch_shards,
+            _shards=opensearch_shards,
             hits=opensearch_hits,
         )
 

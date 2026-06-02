@@ -417,7 +417,7 @@ def _process_record_pipeline(
                     )
                     opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
                     results_list = opensearch_retrieved_scores.hits.hits
-                    ranked_results = cached_result.reranker_processed_results
+                    ranked_results = cached_result.reranker_processed_results["results"]
 
                 # Cache miss, so log that, run everything normally, and then finally store
                 # the prediction in the cache for future use
