@@ -129,6 +129,21 @@ class TestEnhanceLoinc:
             == "Epidermal Allergen Mix Dander Ab.IgE [Measurement] panel - Urn"
         )  # noqa
 
+    def test_enhance_loinc_str_skips_candidate_without_requested_enhancement_type(self, monkeypatch):
+        monkeypatch.setattr(
+            loinc_enhancement,
+            "LOINC_ENHANCEMENTS",
+            {
+                "blood": {
+                    "synonyms": ["serum"],
+                }
+            },
+        )
+
+        result = loinc_enhancement.enhance_loinc_str("Blood", "abbrv", 1)
+
+        assert result == "Blood"
+
 
 class TestEnhanceLoincError:
     def test_enhance_loinc_str_raise_error(self):
