@@ -30,7 +30,7 @@ CHANGE_LOG_DIRECTORY = BASE_FOLDER / "change_log"
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
-def clean_text_string(value: str) -> str:
+def clean_text_string(value: str | None) -> str:
     """Function that removes multiple space characters from a string
         and returns it for further processing.
 
@@ -74,7 +74,7 @@ def get_date_from_filename(filename: str, terminology: str) -> str:
         return datetime.strptime(file_date, "%Y%m%d").strftime("%Y%m%d")
 
 
-def get_latest_extract_file_name(filename_prefix: str):
+def get_latest_extract_file_name(filename_prefix: str | None) -> str | None:
     """Function that gets the most current/recent value set csv 
         file from the TTC code repo, by filename prefix.
 
@@ -96,7 +96,7 @@ def get_latest_extract_file_name(filename_prefix: str):
         raise FileNotFoundError(f"No file with prefix {filename_prefix} under {BASE_FOLDER}!")
 
 
-def load_extract_file_to_dict(filename: str) -> list[dict]:
+def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]:
     """Function that takes a filename, finds the file and parses
         it into an easier to process dictionary.
 

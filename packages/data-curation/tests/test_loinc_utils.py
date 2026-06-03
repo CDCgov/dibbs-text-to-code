@@ -138,6 +138,10 @@ class TestFindSystemModality:
         code_string = "Oxygen saturation in Arterial blood"
         modality = loinc_utils._find_system_modality(code_string, "BldA", LOINC_ENHANCEMENTS)
         assert modality == ("Arterial blood", 21, 35)
+    def test_ser_plas_bld_multi_word_modality(self):
+        code_string = "Glucose in Serum, Plasma or Blood"
+        modality = loinc_utils._find_system_modality(code_string, "Ser/Plas/Bld", LOINC_ENHANCEMENTS)
+        assert modality == ("Serum, Plasma or Blood", 11, 33)
 
 class TestGetComponentAxisFromFSN:
     def test_no_fsn(self):
@@ -196,6 +200,11 @@ class TestParentheticalIsTrailingAcronym():
         acronym_parenthetical = regex_patterns.PARENTHESES_TEXT.search(code_string)
         acronym_expansion = loinc_utils._parenthetical_is_trailing_acronym(
             acronym_parenthetical, code_string
+        )
+        assert acronym_expansion is None
+    def test_no_parenthetical(self):
+        acronym_expansion = loinc_utils._parenthetical_is_trailing_acronym(
+            None, "Creatinine in Serum or Plasma"
         )
         assert acronym_expansion is None
 

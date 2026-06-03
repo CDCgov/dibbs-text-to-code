@@ -40,6 +40,9 @@ LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
 
+LoincRow = dict[str, str | None]
+EmbeddingRecord = dict[str, object]
+
 
 def extract_full_loinc_lab_names():
     """Function that extracts all the latest LOINC Lab Names (all loinc codes
@@ -224,7 +227,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         return loinc_umls_urls
 
 
-def process_loinc_results(loinc_results, loinc_rows) -> dict:
+def process_loinc_results(loinc_results, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """Function that loops through the LOINC results, returned via the various
         API calls, and sends them into another function to extract and add
         all the different terms/names for each loinc code.
@@ -291,8 +294,7 @@ def process_loincs_for_umls_urls() -> dict:
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
-
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> dict:
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """This function receives the most recent result from the LOINC API
         and extracts the various terms/names and adds to the list of records
         ready for consumption into TTC model DB.
@@ -403,7 +405,9 @@ def get_loinc_current_version_data() -> tuple[str, str]:
         print(
             f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
         )
-        return None
+        raise RuntimeError(
+            f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
+        )
     loinc_meta = json.loads(loinc_response.text)
     loinc_version_date = datetime.fromisoformat(loinc_meta["releaseDate"]).strftime("%Y-%m-%d")
     loinc_version = loinc_meta["version"]

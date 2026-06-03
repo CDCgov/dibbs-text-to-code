@@ -30,6 +30,7 @@ import datetime
 import json
 import os
 import sys
+from pathlib import Path
 import requests
 from data_curation.terminologies.loinc import (extract_full_loinc_lab_names,
                                                extract_full_loinc_lab_orders,
@@ -90,7 +91,7 @@ def get_loinc_umls_related_results():  # noqa: D103
     save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
-def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
+def process_loinc_codes_with_umls(file_path: str | Path) -> dict:  # noqa: D103
     # ensure UMLS creds are available
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
@@ -266,15 +267,15 @@ def _get_loinc_abbrv_syns(
             repl_name is not None
             and repl_name not in filter_from_names
             and repl_name != part_name
-            and repl_name not in loinc_row.get("synonyms")
+            and repl_name not in loinc_row["synonyms"]
         ):
             loinc_row["synonyms"].append(repl_name)
         if (
             pref_abrv is not None
             and pref_abrv not in filter_from_names
             and pref_abrv != part_name
-            and pref_abrv not in loinc_row.get("synonyms")
-            and pref_abrv not in loinc_row.get("abbrv")
+            and pref_abrv not in loinc_row["synonyms"]
+            and pref_abrv not in loinc_row["abbrv"]
         ):
             loinc_row["abbrv"].append(pref_abrv)
 
@@ -282,8 +283,8 @@ def _get_loinc_abbrv_syns(
             synonym is not None
             and synonym not in filter_from_names
             and synonym != part_name
-            and synonym not in loinc_row.get("synonyms")
-            and synonym not in loinc_row.get("abbrv")
+            and synonym not in loinc_row["synonyms"]
+            and synonym not in loinc_row["abbrv"]
         ):
             loinc_row["synonyms"].append(synonym)
     return loinc_row
@@ -320,12 +321,12 @@ def create_loinc_part_abbrv_syn_dicts():
             # for particular rows with character issues
             # print(f"ROW_COUNT: {row_count}")
             row_count = row_count + 1
-            part_code = row.get("PART_NUM")
-            axis_name = row.get("PART_TYPE_NAME_NAME")
-            part_name = row.get("PART")
-            repl_name = row.get("PART_NAME")
-            pref_abrv = row.get("PREF_ABRV")
-            synonym = row.get("SYNONYM")
+            part_code = row.get("PART_NUM") or ""
+            axis_name = row.get("PART_TYPE_NAME_NAME") or ""
+            part_name = row.get("PART") or ""
+            repl_name = row.get("PART_NAME") or ""
+            pref_abrv = row.get("PREF_ABRV") or ""
+            synonym = row.get("SYNONYM") or ""
 
             # build various LOINC Part dicts
             if axis_name == "COMPONENT":
