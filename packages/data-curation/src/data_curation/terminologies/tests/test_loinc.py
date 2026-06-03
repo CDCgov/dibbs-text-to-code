@@ -109,7 +109,7 @@ def test_create_embedding_records_w_updates() -> None:
     loinc_axis["scale"] = "TEST SCALE"
     loinc_axis["method"] = "TEST METHOD"
     loinc_axis["class"] = "TEST CLASS"
-    changes = ["LOINC Type"]
+    changes = ["loinc_type"]
 
     # loinc row return from our process that organizes
     # data from LOINC API call

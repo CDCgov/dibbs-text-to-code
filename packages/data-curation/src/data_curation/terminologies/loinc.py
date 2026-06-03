@@ -457,16 +457,16 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
                 "New Loinc Version": f"{new_version} as of {loinc_version_date}",
                 "Compared to file": current_loinc_file,
                 "Changes": {
-                    "New LOINC": 0,
+                    "new_loinc": 0,
                     "short_name": 0,
                     "long_name": 0,
                     "display_name": 0,
                     "full_name": 0,
                     "consumer_name": 0,
-                    "LOINC Type": 0,
+                    "loinc_type": 0,
                 }
+    }
 
-    }                  
     for update_loinc_record in delta_extract_rows:
         loinc_code = update_loinc_record['code']
         current_loinc_record = current_loinc_dict.get(loinc_code)
@@ -474,11 +474,11 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
 
         if current_loinc_record is None:
             # new loinc code
-            change_log["Changes"]["New LOINC"] += 1
-            changes.append("New LOINC")
+            change_log["Changes"]["new_loinc"] += 1
+            changes.append("new_loinc")
         elif current_loinc_record["lab_type"] != update_loinc_record["lab_type"]:
-            change_log["Changes"]["LOINC Type"] += 1
-            changes.append("LOINC Type")
+            change_log["Changes"]["loinc_type"] += 1
+            changes.append("loinc_type")
         else:
             if (update_loinc_record["short_name"]
                 and current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip()
@@ -547,7 +547,7 @@ def _create_embedding_records(loinc_record_id: int, loinc_code: str, loinc_row: 
         consumer_name = consumer_name.strip()
     else:
         consumer_name = ""
-    if "LOINC Type" in element_changes:
+    if "loinc_type" in element_changes:
         new_id = ""
     else:
         new_id = loinc_record_id
@@ -564,40 +564,40 @@ def _create_embedding_records(loinc_record_id: int, loinc_code: str, loinc_row: 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
     # the same, when it's a NEW LOINC or the LOINC TYPE changes
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "short_name" in element_changes)
         and short_name):
         if new_id:
             new_id += 1
         emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=short_name, loinc_term_type="short_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "long_name" in element_changes)
         and long_name):
         if new_id:
             new_id += 1
         emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=long_name, loinc_term_type="long_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "display_name" in element_changes)
         and display_name):
         if new_id:
             new_id += 1
         emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=display_name, loinc_term_type="display_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "full_name" in element_changes)
         and full_name):
         if new_id:
             new_id += 1
         emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=full_name, loinc_term_type="full_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "consumer_name" in element_changes)
         and consumer_name):
         if new_id:
