@@ -447,6 +447,9 @@ class TestHandler:
             hits=OpenSearchHits(total={}, hits=[]),
         )
 
+        # Just bypass the cache here to test the desired functionality
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+
         mocker.patch(
             "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
             return_value=empty_opensearch_scores,
@@ -470,6 +473,8 @@ class TestHandler:
         assert reranker_mock.call_count == 0
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
+        print("TTC OUTPUT")
+        print(ttc_output)
         snapshot.assert_match(ttc_output, "no_opensearch_hits_ttc_output.json")
 
         ttc_metadata_output = _get_serialized_object(

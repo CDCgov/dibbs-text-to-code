@@ -30,6 +30,7 @@ class TestResultCacheAPIs:
                 "text": "Screening urine fentanyl detection",
                 "data_field": "Lab Test Name Ordered",
                 "loinc_code": {
+                    "code": "51459-2",
                     "code_system": "2.16.840.1.113883.6.1",
                     "code_system_name": "LOINC",
                     "display_name": "fentaNYL [Presence] in Urine by Screen method",
