@@ -1,3 +1,3 @@
-from .main import validate_eicr
+from .main import ValidationResult, validate_eicr
 
-__all__ = ["validate_eicr"]
+__all__ = ["ValidationResult", "validate_eicr"]

@@ -4,12 +4,16 @@ from uuid import NAMESPACE_URL, uuid5
 from lxml import etree
 from lxml.etree import Element
 
-from augmentation.models import ApplicationCode, Metadata, TTCAugmenterConfig
+from augmentation.models import ApplicationCode, Metadata
 from augmentation.models.application import NonstandardCodeInstanceMetadata
 from augmentation.services.augmenter import Augmenter
 from shared_models import NonstandardCodeInstance
 
 from .eicr_utils import CDA_NS, CDA_NSMAP, cda_xpath
+
+_AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
+_AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
+_AUTHOR_FUNCTION_CODE_SYSTEM_NAME: str = "eCRDataAugmentation"
 
 
 def _cda_element(tag: str, parent: Element | None = None) -> Element:
@@ -28,13 +32,10 @@ class EICRAugmenter(Augmenter):
     automatically set various attributes specific to eICRs.
     """
 
-    config: TTCAugmenterConfig
-
     def __init__(
         self,
         document: str,
         nonstandard_codes: list[NonstandardCodeInstance],
-        config: TTCAugmenterConfig | None = None,
         augmentation_date: datetime | None = None,
         deterministic_id_seed: str | None = None,
     ):
@@ -43,10 +44,7 @@ class EICRAugmenter(Augmenter):
         For now only TTC is supported in Augmentation and the only document type for TTC is eICR.
         # TODO: for now just use hard coded TTC Config we will need to remove/change this once we have S3 config integrated
         """
-        if config is None:
-            config = TTCAugmenterConfig()
-
-        super().__init__(document, config, ApplicationCode.TEXT_TO_CODE, augmentation_date)
+        super().__init__(document, ApplicationCode.TEXT_TO_CODE, augmentation_date)
 
         self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
@@ -56,25 +54,18 @@ class EICRAugmenter(Augmenter):
 
     def augment(self) -> Metadata:
         """Apply augmentation to the eICR."""
-        # Document level rules
-        if "document_id_header" in self.config.rules["document"]:
-            self._handle_document_id_header()
-            self._handle_related_document_header()
-        if "author_header" in self.config.rules["document"]:
-            self._handle_author_header()
+        self._handle_document_id_header()
+        self._handle_related_document_header()
+        self._handle_author_header()
 
         nonstandard_code_metadata: list[NonstandardCodeInstanceMetadata] = []
 
         for nonstandard_code_instance in self.nonstandard_codes:
-            data_type_rules = self.config.rules[nonstandard_code_instance.field_type]
-            if "author_entry" in data_type_rules:
-                self._handle_author_entry(nonstandard_code_instance)
-            if "translation" in data_type_rules:
-                new_translation_path = self._handle_translation(nonstandard_code_instance)
+            self._handle_author_entry(nonstandard_code_instance)
+            new_translation_path = self._handle_translation(nonstandard_code_instance)
 
             nonstandard_code_metadata.append(
                 NonstandardCodeInstanceMetadata(
-                    schematron_error=nonstandard_code_instance.schematron_error,
                     schematron_error_xpath=nonstandard_code_instance.schematron_error_xpath,
                     field_type=nonstandard_code_instance.field_type,
                     new_translation=nonstandard_code_instance.new_translation,
@@ -243,15 +234,11 @@ class EICRAugmenter(Augmenter):
         # For now we are hard coding for code-text-to-code and observation in the comment
         if level != "header":
             function_code = _cda_element("functionCode", author)
-            function_code.set("code", value=self.config.author_function_code)
-            function_code.set("codeSystem", value=self.config.author_function_code_system)
-            function_code.set("codeSystemName", value=self.config.author_function_code_system_name)
+            function_code.set("code", value=_AUTHOR_FUNCTION_CODE)
+            function_code.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
+            function_code.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
             self._add_previous_element_comment(
-                (
-                    "functionCode specifies type of change "
-                    f"'{self.config.author_function_code}' which signifies that the code in this observation "
-                    "has been augmented with a code derived from the text in the code element "
-                ),
+                f"functionCode specifies type of change '{_AUTHOR_FUNCTION_CODE}' which signifies that the code in this observation has been augmented with a code derived from the text in the code element ",
                 function_code,
             )
         author_eff_time = self._get_new_effective_time()
@@ -283,8 +270,8 @@ class EICRAugmenter(Augmenter):
         )
         software_name = _cda_element("softwareName", assigned_authoring_device)
         software_name.set("code", value=self._get_application_code_value())
-        software_name.set("codeSystem", value=self.config.author_function_code_system)
-        software_name.set("codeSystemName", value=self.config.author_function_code_system_name)
+        software_name.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
+        software_name.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
         software_name.set("displayName", self._get_application_code_display())
         self._add_previous_element_comment(
             " assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool",

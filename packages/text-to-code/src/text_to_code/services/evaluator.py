@@ -1,3 +1,5 @@
+import logging
+
 from shared_models import DataField
 from text_to_code.models.evaluator import (
     EVALUATION_REGISTRY,
@@ -8,6 +10,8 @@ from text_to_code.models.evaluator import (
 )
 
 from ..models.eicr import Candidate, LabXPaths
+
+logger = logging.getLogger(__name__)
 
 
 def _classify_translation_system(
@@ -99,6 +103,10 @@ def select_relevant_text(candidates: list[Candidate], field_type: DataField) -> 
     :param criteria: The evaluation criteria defining priority order and translation behavior.
     :returns: The selected Candidate, or None if no candidate is viable.
     """
+    logger.info(
+        "Evaluating candidates and selecting relevant text",
+        extra={"status": "processing"},
+    )
     criteria = _get_evaluation_criteria_for_data_field(field_type)
     for priority in criteria.ordered_priorities():
         best_candidate = _resolve_best_for_xpath(

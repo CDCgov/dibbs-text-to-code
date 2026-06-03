@@ -14,9 +14,10 @@
         "value_set_version": null
       },
       "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation",
-      "schematron_error": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
       "schematron_error_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation"
     }
   ],
-  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f",
+  "passthrough": false,
+  "passthrough_reason": null
 }

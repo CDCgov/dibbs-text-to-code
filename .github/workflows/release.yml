@@ -2,9 +2,12 @@ name: release
 
 # Triggered on every push to `main`. Detects whether the merge commit bumps
 # the `version` field in the root `pyproject.toml`. If yes, tags the merge
-# commit, builds all three Lambda images, pushes them to GHCR and APHL ECR
-# with vX.Y.Z / vX.Y / vX / latest tags, publishes a GitHub Release with
-# auto-generated PR notes, and posts the link to Slack.
+# commit, builds all three Lambda images, pushes them to GHCR with
+# vX.Y.Z / vX.Y / vX / latest tags and to APHL ECR with vX.Y.Z / latest
+# only (APHL ECR has tag immutability enabled on everything but :latest, so
+# the floating vX.Y and vX tags would fail to re-point on each release).
+# Publishes a GitHub Release with auto-generated PR notes and posts the
+# link to Slack.
 #
 # The full release happens in a single workflow run; we do not rely on the
 # tag-push trigger (GITHUB_TOKEN-created tags do not fan out to other
@@ -29,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 2
 
@@ -80,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -121,7 +124,7 @@ jobs:
           echo "RELEASE_URL=$html_url" >> "$GITHUB_ENV"
 
       - name: Post release to Slack
-        uses: slackapi/slack-github-action@v3.0.3
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

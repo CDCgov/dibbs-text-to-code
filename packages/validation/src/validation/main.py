@@ -1,8 +1,10 @@
 import logging
-from dataclasses import dataclass
+import shutil
 from pathlib import Path
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
+
+from shared_models import FrozenBaseModel
 
 BASE_FOLDER = Path(__file__).parent / "eicr-validator"
 
@@ -16,6 +18,8 @@ APHL_SCHEMATRON = SCHEMA_FOLDER / "APHL_TextToCodeSchematron_09252025.sch"
 STAGE1_OUTPUT = OUTPUT_FOLDER / "stage1.sch.tmp"
 STAGE2_OUTPUT = OUTPUT_FOLDER / "stage2.sch.tmp"
 VALIDATOR_OUTPUT = OUTPUT_FOLDER / "validator.xsl.tmp"
+VOC_OUTPUT = OUTPUT_FOLDER / "voc_ttc.xml"
+VOC_SOURCE = SCHEMA_FOLDER / "voc_ttc.xml"
 XSLT_COMPILE = XSLT_FOLDER / "compile-for-svrl.xsl"
 XSLT_EXPAND = XSLT_FOLDER / "expand.xsl"
 XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
@@ -23,19 +27,19 @@ XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ValidationResult:
-    """Error ID and list."""
+class ValidationResult(FrozenBaseModel):
+    """Error ID and location."""
 
     error_id: str
-    locations: list[str]
+    location: str
 
 
 def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list[ValidationResult]:
     """Validate an eICR."""
     logger.info("Starting eICR Validation")
     logger.info(f"For eICR: {eicr}")
-    errors = []
+    errors: list[ValidationResult] = []
+
     try:
         with PySaxonProcessor(license=False) as proc:
             logger.info(f"Saxon/C version: {proc.version}")
@@ -78,6 +82,9 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
                     output_file=str(VALIDATOR_OUTPUT),
                 )
 
+            # Ensure document()-referenced vocab sits next to the generated stylesheet
+            shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
+
             # Step 4: Apply the generated XSLT to the source XML
             # Parse the XML string into an XDM node
             xml_node = proc.parse_xml(xml_text=eicr)
@@ -90,12 +97,13 @@ def validate_eicr(eicr: str | None = None, redo_all_steps: bool = False) -> list
             for x in result[0][0].children:
                 if x.local_name == "failed-assert":
                     errors.append(
-                        {
-                            "error_id": x.get_attribute_value("id"),
-                            "location": x.get_attribute_value("location"),
-                        }
+                        ValidationResult(
+                            error_id=x.get_attribute_value("id"),
+                            location=x.get_attribute_value("location"),
+                        )
                     )
     except Exception as e:
-        logger.error(f"An error occurred during validation: {e}")
+        logger.exception(f"An error occurred during validation: {e}")
+        raise
 
     return errors

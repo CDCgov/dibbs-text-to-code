@@ -1,0 +1,87 @@
+{
+  "eicr_metadata": {
+    "eicr_id": {
+      "assigning_authority_name": null,
+      "displayable": null,
+      "extension": null,
+      "null_flavor": null,
+      "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+    },
+    "eicr_vendor": "Test eCR Vendor Name"
+  },
+  "error": null,
+  "passthrough": true,
+  "passthrough_reason": "no_code_matches",
+  "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "processed_at": "2026-01-01T01:01:00Z",
+  "ttc_schematron_issues": [
+    {
+      "candidate": {
+        "system": null,
+        "value": "A custom code in display name.",
+        "xpath": "code/@displayName"
+      },
+      "field_type": "Lab Test Name Ordered",
+      "issue_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]",
+      "issue_id": null,
+      "issue_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
+      "issue_test": "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
+      "new_translation": null,
+      "opensearch_retrieved_scores": {
+        "hits": {
+          "hits": [
+            {
+              "id": "rbLli5wBhppl0u9qtwLN",
+              "index": "ttc_index",
+              "score": 0.95,
+              "source": {
+                "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                "id": 0,
+                "loinc_code": "109224-6",
+                "loinc_name_type": "Long Common Name",
+                "loinc_type": "Order"
+              }
+            },
+            {
+              "id": "123455wBhppl0u9qtABC",
+              "index": "ttc_index",
+              "score": 0.88,
+              "source": {
+                "description": "Weed Allerg Mix3 IgE Qn",
+                "id": 1,
+                "loinc_code": "82041-5",
+                "loinc_name_type": "Short Name",
+                "loinc_type": "Order"
+              }
+            },
+            {
+              "id": "123455wBhppl0u9qtABC",
+              "index": "ttc_index",
+              "score": 0.65,
+              "source": {
+                "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                "id": 4,
+                "loinc_code": "15273-6",
+                "loinc_name_type": "Fully-Specified Name",
+                "loinc_type": "Both"
+              }
+            }
+          ],
+          "total": {
+            "value": 3
+          }
+        },
+        "shards": {
+          "failed": 0,
+          "skipped": 0,
+          "successful": 1,
+          "total": 1
+        },
+        "timed_out": false,
+        "took": 57
+      },
+      "reranker_processed_results": [],
+      "unmatched_reason": "Reranker did not return any results."
+    }
+  ]
+}

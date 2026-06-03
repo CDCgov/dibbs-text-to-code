@@ -47,8 +47,6 @@ class Code(FrozenBaseModel):
 class NonstandardCodeInstance(FrozenBaseModel):
     """Model with the information needed to update a nonstandard code."""
 
-    schematron_error: str
-    """The text of the Schematron error. This is only needed so that the augmentation metadata can save it."""
     schematron_error_xpath: str
     """The XPath give by the Schematron error to the observation with a nonconforming code."""
     field_type: DataField
@@ -57,8 +55,20 @@ class NonstandardCodeInstance(FrozenBaseModel):
     """The new translation."""
 
 
+class PassthroughReason(StrEnum):
+    """Reasons why augmentation was bypassed and the original eICR was passed through."""
+
+    NO_RELEVANT_SCHEMATRON_ERRORS = "no_relevant_schematron_errors"
+    NO_CODE_MATCHES = "no_code_matches"
+    TTC_EXCEPTION = "ttc_exception"
+    AUGMENTATION_EXCEPTION = "augmentation_exception"
+    AUGMENTATION_VALIDATION_FAILURE = "augmentation_validation_failure"
+
+
 class TTCAugmenterInput(FrozenBaseModel):
     """Input for the augmentation service."""
 
     persistence_id: str
-    nonstandard_codes: list[NonstandardCodeInstance]
+    nonstandard_codes: list[NonstandardCodeInstance] = []
+    passthrough: bool = False
+    passthrough_reason: PassthroughReason | None = None

@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
@@ -23,7 +23,7 @@ dev = [
   "pytest>=9.0.3",
   "requests>=2.32.5",
   "ruff>=0.15.12",
-  "ty>=0.0.33",
+  "ty>=0.0.39",
 ]
 
 [tool.coverage.run]
@@ -41,15 +41,16 @@ env_files_skip_if_set = false
 
 [tool.ty.src]
 include = [
-  "packages/augmentation-lambda/src",
-  "packages/augmentation/src",
-  "packages/data-curation/src",
-  "packages/index-lambda/src",
-  "packages/lambda-handler/src",
-  "packages/text-to-code-lambda/src",
-  "packages/text-to-code/src",
-  "packages/utils/src",
-  "packages/validation/src",
+  "e2e/",
+  "packages/augmentation-lambda/",
+  "packages/augmentation/",
+  "packages/data-curation/",
+  "packages/index-lambda/",
+  "packages/lambda-handler/",
+  "packages/text-to-code-lambda/",
+  "packages/text-to-code/",
+  "packages/utils/",
+  "packages/validation/",
 ]
 
 [tool.ruff]
@@ -105,7 +106,6 @@ ignore = [
 mypy-init-return = true
 
 [tool.ruff.lint.isort]
-# The following settings reduce the number of changes from reorder-python-imports
 force-single-line = false
 known-first-party = [
   "augmentation",
@@ -118,6 +118,7 @@ known-first-party = [
   "utils",
   "validation",
 ]
+
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D"]
