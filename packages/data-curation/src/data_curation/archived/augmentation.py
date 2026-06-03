@@ -3,7 +3,7 @@ import os
 import random
 import re
 import sys
-import typing
+from typing import Tuple
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -53,7 +53,7 @@ def _word_deletion(
     return delete_indices
 
 
-def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> typing.Tuple[int, dict]:
+def _get_word_detail_by_char_range(word_details: dict, char_idx: int) -> Tuple[int, dict]:
     for key, word_deets in word_details.items():
         if char_idx in range(int(word_deets["start"]), int(word_deets["end"]) + 1):
             return int(key), word_deets
@@ -103,7 +103,7 @@ def random_char_deletion(
     min_dels: int = 1,
     max_dels: int = 3,
     max_per_word: int = 2,
-    method: typing.Literal["char", "word"] = "char",
+    method: str = "char",
 ) -> str:
     """
     This function randomly deletes characters from a string.  Two modes can be
@@ -308,8 +308,8 @@ def generate_augmented_examples(
 
 
 def build_augmented_loinc_files(
-    input_path: str,
-    config: schemas.LoincFileGenerationConfig,
+    input_path: str | os.PathLike[str],
+    config: dict[str, schemas.AugmentationConfig],
     num_lcn: int = 5,
     num_sn: int = 5,
     num_dn: int = 5,

@@ -20,6 +20,8 @@ def update_loinc_embeddings():
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
+    if current_loinc_file is None:
+        return
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_filename(current_loinc_file,"loinc")
     if (file_date <= loinc_version_date):
