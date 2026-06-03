@@ -151,7 +151,6 @@ The Lambda passes those values into `EICRAugmenter` as:
 
 - `document`: the original eICR XML string.
 - `nonstandard_codes`: the parsed list of `NonstandardCodeInstance` objects.
-- `config`: `TTCAugmenterConfig`.
 - `deterministic_id_seed`: the persistence ID.
 
 ### eICR augmentation behavior
