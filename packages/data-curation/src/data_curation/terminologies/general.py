@@ -117,7 +117,7 @@ def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]
     return extract_dict
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False) -> None:
+def save_valueset_csv_file(filename: str, contents: list[dict], append_to_file: bool = False) -> None:
     """Function that takes a filename, which includes the directory,
         and contents (dictionary) for the file then writes the results out into
         a standard csv file with a '|' delimiter - 
@@ -163,7 +163,7 @@ def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool =
         print(f"An error occured: {e}")
 
 
-def save_json_file(directory_path: str, filename: str, contents: dict, append_to_file: bool = False) -> None:
+def save_json_file(directory_path: str | Path, filename: str, contents: dict, append_to_file: bool = False) -> None:
     """Function that takes a filename, directory path,
         and contents (dictionary) for the file then writes the results out into
         a basic JSON file using the dictionary as the structure.
@@ -188,7 +188,7 @@ def save_json_file(directory_path: str, filename: str, contents: dict, append_to
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
 
-    full_file_path = directory_path / filename
+    full_file_path = Path(directory_path) / filename
 
     if append_to_file:
         file_method = "a"

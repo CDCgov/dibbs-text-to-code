@@ -607,7 +607,7 @@ def _create_embedding_records(loinc_record_id: int, loinc_code: str, loinc_row: 
     return emb_records
 
 
-def _create_embedding_record(rec_id: int, loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
+def _create_embedding_record(rec_id: int | str, loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
     """This function constructs a new basic instance of a LOINC Embedding record 
         from parameter inputs.
 
@@ -638,4 +638,4 @@ def _create_embedding_record(rec_id: int, loinc_term: str, loinc_term_type: str,
 
 
 def write_change_log_file(file_name: str, content: dict):
-    save_json_file(CHANGE_LOG_DIRECTORY, file_name, content)
+    save_json_file(str(CHANGE_LOG_DIRECTORY), file_name, content)
