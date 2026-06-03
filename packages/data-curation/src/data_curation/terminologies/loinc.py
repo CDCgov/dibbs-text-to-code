@@ -450,7 +450,7 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loin
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
     #  then add 1
-    loinc_record_max_id = (len(current_loinc_dict)*5)+1
+    loinc_record_max_id = (len(current_loinc_dict)*5)
     embedding_records = []
     change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.json"
     change_log = {
