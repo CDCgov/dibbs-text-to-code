@@ -78,7 +78,7 @@ def get_cached_result(
             reranker_score=response_source["reranker_score"],
             opensearch_retrieved_scores=opensearch_retrieved_scores,
             reranker_processed_results=response_source["reranker_processed_results"],
-            cached_at=response["cached_at"],
+            cached_at=response_source["cached_at"],
         )
 
     return None

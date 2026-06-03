@@ -110,6 +110,7 @@ class TestHandler:
 
         opensearch_retrieved_scores = OpenSearchResult(
             hits=OpenSearchHits(
+                total={"value": 3},
                 hits=[
                     OpenSearchHit(
                         _id="rbLli5wBhppl0u9qtwLN",
@@ -148,7 +149,6 @@ class TestHandler:
                         ),
                     ),
                 ],
-                total={"value": 3},
             ),
             _shards=OpenSearchShards(failed=0, skipped=0, successful=1, total=1),
             timed_out=False,
