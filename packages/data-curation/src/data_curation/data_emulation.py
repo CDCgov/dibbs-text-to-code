@@ -1007,6 +1007,7 @@ def _get_measurement_unit_word(
     :returns: The single measurement-descriptive word for the code string.
     """
     code_str = code_str or ""
+    property_axis = property_axis or ""
     if "by calculation" in code_str.lower():
         return "Determination"
     if "in specimen" in code_str.lower():
