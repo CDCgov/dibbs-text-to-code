@@ -521,6 +521,9 @@ class TestHandler:
         mock_opensearch,
     ):
 
+        # Bypass the cache to force us down the reranker path so this test makes sense
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+
         mocker.patch(
             "text_to_code_lambda.lambda_function.rerank",
             return_value=[],
