@@ -5,7 +5,7 @@ from typing import Mapping
 import pytest
 
 from data_curation.terminologies import loinc
-from data_curation.terminologies.loinc import _create_embedding_record, _create_embedding_records, get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, LOINC_BASE_URL, process_loinc_valueset, requests, UMLS_LOINC_LAB_ATOMS_URL, UMLS_LOINC_LAB_CROSSWALK_URL, get_loinc_current_version_data, get_all_loinc_terms_per_code, get_loinc_consumer_names, LOINC_LAB_NAMES_QUERY, LOINC_LAB_ORDER_QUERY, LOINC_LAB_RESULT_QUERY, process_loinc_results, _filter_loinc_term, LOINC_TEXT_TO_FILTER, process_loincs_for_umls_urls, get_loinc_embedding_records
+from data_curation.terminologies.loinc import _create_embedding_record, _create_embedding_records
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"
