@@ -11,3 +11,7 @@ e2e *ARGS:
 [doc("Run all tests, forwarding optional arguments to pytest")]
 all *ARGS:
     uv run pytest {{ ARGS }}
+
+[doc("Run tests with coverage, specifcying the package to measure coverage for")]
+coverage *ARGS:
+    uv run pytest {{ ARGS }} --cov={{ARGS}} --cov-report=term-missing
