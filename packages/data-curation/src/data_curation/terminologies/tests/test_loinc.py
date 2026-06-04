@@ -76,6 +76,78 @@ def _loinc_row(
     }
 
 
+def test_extract_full_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = [_loinc_row()]
+    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
+
+    def mock_get_loinc_lab_names() -> list[dict[str, str]]:
+        return rows
+
+    def mock_save_valueset_csv_file(
+        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
+    ) -> None:
+        saved_files.append((filename, contents, append_to_file))
+
+    monkeypatch.setattr(loinc, "get_loinc_lab_names", mock_get_loinc_lab_names)
+    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
+
+    loinc.extract_full_loinc_lab_names()
+
+    assert len(saved_files) == 1
+    assert saved_files[0][0].startswith("loinc_lab_names_")
+    assert saved_files[0][0].endswith(".csv")
+    assert saved_files[0][1] == rows
+    assert saved_files[0][2] is False
+
+
+def test_extract_full_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = [_loinc_row()]
+    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
+
+    def mock_get_loinc_lab_orders() -> list[dict[str, str]]:
+        return rows
+
+    def mock_save_valueset_csv_file(
+        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
+    ) -> None:
+        saved_files.append((filename, contents, append_to_file))
+
+    monkeypatch.setattr(loinc, "get_loinc_lab_orders", mock_get_loinc_lab_orders)
+    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
+
+    loinc.extract_full_loinc_lab_orders()
+
+    assert len(saved_files) == 1
+    assert saved_files[0][0].startswith("loinc_lab_orders_")
+    assert saved_files[0][0].endswith(".csv")
+    assert saved_files[0][1] == rows
+    assert saved_files[0][2] is False
+
+
+def test_extract_full_loinc_lab_results(monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = [_loinc_row()]
+    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
+
+    def mock_get_loinc_lab_results() -> list[dict[str, str]]:
+        return rows
+
+    def mock_save_valueset_csv_file(
+        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
+    ) -> None:
+        saved_files.append((filename, contents, append_to_file))
+
+    monkeypatch.setattr(loinc, "get_loinc_lab_results", mock_get_loinc_lab_results)
+    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
+
+    loinc.extract_full_loinc_lab_results()
+
+    assert len(saved_files) == 1
+    assert saved_files[0][0].startswith("loinc_lab_result_")
+    assert saved_files[0][0].endswith(".csv")
+    assert saved_files[0][1] == rows
+    assert saved_files[0][2] is False
+
+
 def test_get_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: dict[str, str] = {}
     rows = [_loinc_row()]
@@ -484,13 +556,24 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
         _loinc_row(code="TERM-CHANGE"),
         _loinc_row(code="NO-CHANGE"),
     ]
+    change_log: dict[str, object] = {}
 
     def mock_get_loinc_lab_names(new_version: str) -> list[dict[str, str]]:
         return delta_rows
 
-    monkeypatch.setattr(loinc, "get_loinc_lab_names", mock_get_loinc_lab_names)
+    def mock_write_change_log_file(file_name: str, content: dict) -> None:
+        change_log["file_name"] = file_name
+        change_log["content"] = content
 
-    result = loinc.get_loinc_embedding_records(current_loinc_dict, "2.80")
+    monkeypatch.setattr(loinc, "get_loinc_lab_names", mock_get_loinc_lab_names)
+    monkeypatch.setattr(loinc, "write_change_log_file", mock_write_change_log_file)
+
+    result = loinc.get_loinc_embedding_records(
+        current_loinc_dict,
+        "2.80",
+        "2026-02-23",
+        "loinc_lab_names_20260223.csv",
+    )
     descriptions = [record.get("description") for record in result]
 
     assert "TEST SHORT NAME" in descriptions
@@ -498,8 +581,9 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "TEST DISPLAY" in descriptions
     assert "TEST FULL NAME" in descriptions
     assert "TEST CONSUMER NAME" in descriptions
-    assert len(result) == 18
-
+    assert len(result) == 15
+    assert "file_name" in change_log
+    assert "content" in change_log
 
 def test_create_embedding_record() -> None:
     loinc_code = "12345-F"
@@ -530,7 +614,6 @@ def test_create_embedding_record() -> None:
     }
     result = _create_embedding_record(140,loinc_term,loinc_term_type,loinc_axis)    
     assert result == expected
-
 
 def test_create_embedding_records() -> None:
     loinc_id1 = 155
@@ -593,6 +676,7 @@ def test_create_embedding_records() -> None:
     expected = [record_1,record_2]
     result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
     assert result == expected
+
 
 def test_create_embedding_records_w_updates() -> None:
     loinc_id1 = 155
@@ -697,3 +781,39 @@ def test_create_embedding_records_w_updates() -> None:
     expected = [record_1,record_2,record_3,record_4,record_5]
     result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
     assert result == expected
+
+
+def test_create_embedding_records_with_no_consumer_name() -> None:
+    loinc_id1 = 155
+    loinc_code = "12345-F"
+    loinc_row: dict[str, object] = dict(_loinc_row())
+    loinc_row["consumer_name"] = None
+
+    result = _create_embedding_records(
+        loinc_id1,
+        loinc_code,
+        loinc_row,
+        ["consumer_name"],
+    )
+
+    assert result == []
+
+
+def test_write_change_log_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    saved_files: list[tuple[str, str, dict]] = []
+    content = {"Changes": {"new_loinc": 1}}
+
+    def mock_save_json_file(directory_path: str, filename: str, contents: dict) -> None:
+        saved_files.append((directory_path, filename, contents))
+
+    monkeypatch.setattr(loinc, "save_json_file", mock_save_json_file)
+
+    loinc.write_change_log_file("loinc_lab_names_DELTA_20260604.json", content)
+
+    assert saved_files == [
+        (
+            str(loinc.CHANGE_LOG_DIRECTORY),
+            "loinc_lab_names_DELTA_20260604.json",
+            content,
+        )
+    ]
