@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 import os
 import requests
-from .general import clean_text_string, BASE_FOLDER
+from .general import clean_text_string, save_json_file, save_valueset_csv_file, BASE_FOLDER, CHANGE_LOG_DIRECTORY
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -39,6 +39,44 @@ LAB_RESULT = "loinc_lab_result"
 LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
+
+LoincRow = dict[str, str | None]
+EmbeddingRecord = dict[str, object]
+
+
+def extract_full_loinc_lab_names():
+    """Function that extracts all the latest LOINC Lab Names (all loinc codes
+        regardless of being of type 'Order', 'Observation' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
+    loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
+    all_loinc_rows = get_loinc_lab_names()
+
+    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+
+
+def extract_full_loinc_lab_orders():
+    """Function that extracts all the latest LOINC Orders
+        (only types of 'Order' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
+    loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_order_rows = get_loinc_lab_orders()
+
+    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
+
+
+def extract_full_loinc_lab_results():
+    """Function that extracts all the latest LOINC Orders
+        (only types of 'Observations' or 'Both')
+        and organizes them into a '|' delimited CSV file in a local folder 
+        in our repo.
+    """
+    loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
+    loinc_result_rows = get_loinc_lab_results()
+    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
 def get_loinc_lab_names(version: str = ""):
@@ -189,7 +227,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         return loinc_umls_urls
 
 
-def process_loinc_results(loinc_results, loinc_rows) -> dict:
+def process_loinc_results(loinc_results, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """Function that loops through the LOINC results, returned via the various
         API calls, and sends them into another function to extract and add
         all the different terms/names for each loinc code.
@@ -256,8 +294,7 @@ def process_loincs_for_umls_urls() -> dict:
     umls_loinc_results = process_loinc_valueset(loinc_api_url, "UMLS Atoms")
     return umls_loinc_results
 
-
-def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> dict:
+def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """This function receives the most recent result from the LOINC API
         and extracts the various terms/names and adds to the list of records
         ready for consumption into TTC model DB.
@@ -368,14 +405,16 @@ def get_loinc_current_version_data() -> tuple[str, str]:
         print(
             f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
         )
-        return None
+        raise RuntimeError(
+            f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
+        )
     loinc_meta = json.loads(loinc_response.text)
     loinc_version_date = datetime.fromisoformat(loinc_meta["releaseDate"]).strftime("%Y-%m-%d")
     loinc_version = loinc_meta["version"]
     return loinc_version, loinc_version_date
 
 
-def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> list[dict]:
+def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str, loinc_version_date: str, current_loinc_file: str) -> list[dict]:
     """Function compares New LOINC Version delta API response against the existing
         version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
         This function creates a change_log that will be used by another function to 
@@ -399,20 +438,35 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> l
             csv file, loaded into an easier to compare dictionary structure.
         :param new_version: The string of the NEW LOINC version number to be used to 
             get the delta from the LOINC API call.
+        :param loinc_version_date: The date string of the new loinc version number
+            used for documenting changes in delta file.
+        param current_loinc_file: The file name of the current loinc csv file to document
+            which file was used for comparison in change log.
 
-        :returns: boolean - true if it should be filtered and false if not
+        :returns: List of embedding records (dictionaries).
     """
     delta_extract_rows = get_loinc_lab_names(new_version)
+    # get the max number to ensure no id collisions in Opensearch
+    # by getting the max loinc codes in the current file *5 for all the
+    # different 'names/text' that will be used to create embeddings
+    #  then add 1
+    loinc_record_max_id = (len(current_loinc_dict)*5)
     embedding_records = []
+    change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.json"
     change_log = {
-                "New LOINC": 0,
-                "short_name": 0,
-                "long_name": 0,
-                "display_name": 0,
-                "full_name": 0,
-                "consumer_name": 0,
-                "LOINC Type": 0,
-    }                  
+                "New Loinc Version": f"{new_version} as of {loinc_version_date}",
+                "Compared to file": current_loinc_file,
+                "Changes": {
+                    "new_loinc": 0,
+                    "short_name": 0,
+                    "long_name": 0,
+                    "display_name": 0,
+                    "full_name": 0,
+                    "consumer_name": 0,
+                    "loinc_type": 0,
+                }
+    }
+
     for update_loinc_record in delta_extract_rows:
         loinc_code = update_loinc_record['code']
         current_loinc_record = current_loinc_dict.get(loinc_code)
@@ -420,36 +474,45 @@ def get_loinc_embedding_records(current_loinc_dict: dict, new_version: str) -> l
 
         if current_loinc_record is None:
             # new loinc code
-            change_log["New LOINC"] += 1
-            changes.append("New LOINC")
+            change_log["Changes"]["new_loinc"] += 1
+            changes.append("new_loinc")
         elif current_loinc_record["lab_type"] != update_loinc_record["lab_type"]:
-            change_log["LOINC Type"] += 1
-            changes.append("LOINC Type")
+            change_log["Changes"]["loinc_type"] += 1
+            changes.append("loinc_type")
         else:
-            if current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip():
-                change_log["short_name"] += 1
+            if (update_loinc_record["short_name"]
+                and current_loinc_record["short_name"].strip() != update_loinc_record["short_name"].strip()
+            ):
+                change_log["Changes"]["short_name"] += 1
                 changes.append("short_name")
-            if current_loinc_record["long_name"] != update_loinc_record["long_name"]:
-                change_log["long_name"] += 1
+            if (current_loinc_record["long_name"]
+                and current_loinc_record["long_name"].strip() != update_loinc_record["long_name"].strip()
+            ):
+                change_log["Changes"]["long_name"] += 1
                 changes.append("long_name")
-            if current_loinc_record["display_name"] != update_loinc_record["display_name"]:
-                change_log["display_name"] += 1
+            if (update_loinc_record["display_name"]
+                and current_loinc_record["display_name"].strip() != update_loinc_record["display_name"].strip()
+            ):
+                change_log["Changes"]["display_name"] += 1
                 changes.append("display_name")
-            if current_loinc_record["full_name"] != update_loinc_record["full_name"]:
-                change_log["full_name"] += 1
+            if (update_loinc_record["full_name"]
+                and current_loinc_record["full_name"].strip() != update_loinc_record["full_name"].strip()
+            ):
+                change_log["Changes"]["full_name"] += 1
                 changes.append("full_name")
-            if current_loinc_record["consumer_name"] != update_loinc_record["consumer_name"]:
-                change_log["consumer_name"] += 1
+            if (update_loinc_record["consumer_name"]
+                and current_loinc_record["consumer_name"].strip() != update_loinc_record["consumer_name"].strip()
+            ):
+                change_log["Changes"]["consumer_name"] += 1
                 changes.append("consumer_name")
-        embedding_records.extend(_create_embedding_records(loinc_code,update_loinc_record,changes))
-    # TODO: In Subsequent PR update this to be a logging statement
-    #  In PR for story #454 - this will be written to a file instead of printing
-    print(f"EMB recordS: {len(embedding_records)} see counts of the various changes below")
-    print(json.dumps(change_log, indent=4))
+        new_embedding_records = _create_embedding_records(loinc_record_max_id, loinc_code,update_loinc_record,changes)
+        embedding_records.extend(new_embedding_records)
+        loinc_record_max_id += len(new_embedding_records)
+    # store the record of changes
+    write_change_log_file(change_log_filename, change_log)
     return embedding_records
 
-
-def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
+def _create_embedding_records(loinc_record_id: int, loinc_code: str, loinc_row: dict, element_changes: list[str]) -> list[dict]:
     """This function takes the loinc_code and a list of changes from a change_log,
         created by a higher function that performs the LOINC change comparison, and
         generates a list of embedding records per LOINC Code.  As it is possible
@@ -462,6 +525,9 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
         will simply update that field 'lab_type' via the Opensearch Index Load
         process.
 
+        :param loinc_record_id: The number for the Opensearch record id for each
+            loinc embedding record.  Start from the maximum from the last loinc
+            csv file.
         :param loinc_code: The LOINC code that is either new or the existing one
             where changes are required.
         :param loinc_row: The actual LOINC data from the API for the LOINC code
@@ -472,11 +538,19 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
     """
     emb_records = []
     loinc_axis_info = {}
-    short_name = loinc_row["short_name"]
-    long_name = loinc_row["long_name"]
-    display_name = loinc_row["display_name"]
-    full_name = loinc_row["full_name"]
+    short_name = loinc_row["short_name"].strip()
+    long_name = loinc_row["long_name"].strip()
+    display_name = loinc_row["display_name"].strip()
+    full_name = loinc_row["full_name"].strip()
     consumer_name = loinc_row["consumer_name"]
+    if consumer_name is not None:
+        consumer_name = consumer_name.strip()
+    else:
+        consumer_name = ""
+    if "loinc_type" in element_changes:
+        new_id = ""
+    else:
+        new_id = loinc_record_id
 
     loinc_axis_info["loinc_code"] = loinc_code
     loinc_axis_info["loinc_type"] = loinc_row["lab_type"]
@@ -485,45 +559,59 @@ def _create_embedding_records(loinc_code: str, loinc_row: dict, element_changes:
     loinc_axis_info["system"] = loinc_row["system"]
     loinc_axis_info["scale"] = loinc_row["scale_type"]
     loinc_axis_info["method"] = loinc_row["method_type"]
-    loinc_axis_info["class"] = loinc_row["class_type"]
+    loinc_axis_info["class"] = loinc_row["class_type"]    
 
     # just add the whole row for each of the different 
     # terms used for embedding with the other fields
     # the same, when it's a NEW LOINC or the LOINC TYPE changes
-    if (("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
         "short_name" in element_changes)
-        and short_name ):
-        emb_rec = _create_embedding_record(short_name, "short_name", loinc_axis_info)
+        and short_name):
+        if new_id:
+            new_id += 1
+        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=short_name, loinc_term_type="short_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if ("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
-        "long_name" in element_changes):
-        emb_rec = _create_embedding_record(long_name, "long_name", loinc_axis_info)
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
+        "long_name" in element_changes)
+        and long_name):
+        if new_id:
+            new_id += 1
+        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=long_name, loinc_term_type="long_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if ("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
-        "display_name" in element_changes):
-        emb_rec = _create_embedding_record(display_name, "display_name", loinc_axis_info)
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
+        "display_name" in element_changes)
+        and display_name):
+        if new_id:
+            new_id += 1
+        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=display_name, loinc_term_type="display_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-        emb_records.append(loinc_axis_info)
-    if ("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
-        "full_name" in element_changes):
-        emb_rec = _create_embedding_record(full_name, "full_name", loinc_axis_info)
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
+        "full_name" in element_changes)
+        and full_name):
+        if new_id:
+            new_id += 1
+        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=full_name, loinc_term_type="full_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
-    if ("LOINC Type" in element_changes or
-        "New LOINC" in element_changes or
-        "consumer_name" in element_changes):
-        emb_rec = _create_embedding_record(consumer_name, "consumer_name", loinc_axis_info)
+    if (("loinc_type" in element_changes or
+        "new_loinc" in element_changes or
+        "consumer_name" in element_changes)
+        and consumer_name):
+        if new_id:
+            new_id += 1
+        emb_rec = _create_embedding_record(rec_id=new_id, loinc_term=consumer_name, loinc_term_type="consumer_name", loinc_axis=loinc_axis_info)
         emb_records.append(emb_rec)
     return emb_records
 
 
-def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
+def _create_embedding_record(rec_id: int | str, loinc_term: str, loinc_term_type: str, loinc_axis: dict) -> dict:
     """This function constructs a new basic instance of a LOINC Embedding record 
         from parameter inputs.
 
+        :param rec_id: The unique numeric record id for each embedding.
         :param loinc_term: The LOINC term used for the embedding.
         :param loinc_term_type: The text to identify the term type (ie. short_name,
             long_name, consumer_name, etc...)
@@ -533,7 +621,7 @@ def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: 
         :returns: A dictionary that is a new instance of a LOINC Embedding record.
     """
     embedding_record = {
-        "id": "",
+        "id": rec_id,
         "description": loinc_term,
         "description_vector": [],
         "loinc_type": loinc_axis["loinc_type"],
@@ -547,3 +635,7 @@ def _create_embedding_record(loinc_term: str, loinc_term_type: str, loinc_axis: 
         "class_type": loinc_axis["class"]
     }
     return embedding_record
+
+
+def write_change_log_file(file_name: str, content: dict):
+    save_json_file(str(CHANGE_LOG_DIRECTORY), file_name, content)

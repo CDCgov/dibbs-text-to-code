@@ -1,5 +1,6 @@
 import logging
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -20,6 +21,8 @@ APHL_SCHEMATRON = SCHEMA_FOLDER / "APHL_TextToCodeSchematron_09252025.sch"
 STAGE1_OUTPUT = OUTPUT_FOLDER / "stage1.sch.tmp"
 STAGE2_OUTPUT = OUTPUT_FOLDER / "stage2.sch.tmp"
 VALIDATOR_OUTPUT = OUTPUT_FOLDER / "validator.xsl.tmp"
+VOC_OUTPUT = OUTPUT_FOLDER / "voc_ttc.xml"
+VOC_SOURCE = SCHEMA_FOLDER / "voc_ttc.xml"
 XSLT_COMPILE = XSLT_FOLDER / "compile-for-svrl.xsl"
 XSLT_EXPAND = XSLT_FOLDER / "expand.xsl"
 XSLT_INCLUDE = XSLT_FOLDER / "include.xsl"
@@ -125,6 +128,9 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
                     stylesheet_file=str(XSLT_COMPILE),
                     output_file=str(VALIDATOR_OUTPUT),
                 )
+
+            # Ensure document()-referenced vocab sits next to the generated stylesheet
+            shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
 
             # Step 4: Apply the generated XSLT to the source XML
             # Parse the XML string into an XDM node

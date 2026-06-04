@@ -1,20 +1,17 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
-from augmentation.models.config import ApplicationCode, AugmenterConfig, TTCAugmenterConfig
 from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import Code, DataField, NonstandardCodeInstance
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
-DATA_CONFIG: AugmenterConfig = TTCAugmenterConfig()
 BASE_XPATH = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText/text()"
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
@@ -46,8 +43,6 @@ class TestEicrAugmenter:
     def test_initialization(self):
         """Tests initialization of the TTC augmenter."""
         augmenter = EICRAugmenter(BASIC_ECR, [])
-        assert augmenter.application_code.value == ApplicationCode.TEXT_TO_CODE.value
-        assert augmenter.config == DATA_CONFIG
         assert augmenter.original_xml == BASIC_ECR
 
     def test_basic_eicr(self, snapshot: Snapshot):
@@ -239,29 +234,6 @@ class TestEicrAugmenter:
         parent_doc_id = augmenter._get_old_document_id()
 
         assert parent_doc_id.get("assigningAuthorityName") == "original-document"
-
-    def test_validate_config_raises_value_error_when_application_code_does_not_match(self):
-        """Tests config validation when application code does not match."""
-
-        class TestAugmenter(Augmenter):
-            def augment(self) -> Metadata:
-                return Metadata(
-                    original_eicr_id="original-doc-id",
-                    augmented_eicr_id="augmented-doc-id",
-                    nonstandard_codes=[],
-                )
-
-        class InvalidConfig:
-            application_code = "wrong-application-code"
-
-        with pytest.raises(
-            ValueError,
-            match=r"Config application code wrong-application-code does not match Augmenter application code ApplicationCode.TEXT_TO_CODE.",
-        ):
-            TestAugmenter(
-                BASIC_ECR,
-                cast(AugmenterConfig, InvalidConfig()),
-            )
 
     def test_augment_base_method_returns_none(self):
         """Tests abstract base augment method body."""

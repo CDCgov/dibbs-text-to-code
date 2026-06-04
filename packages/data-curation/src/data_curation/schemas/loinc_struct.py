@@ -9,7 +9,7 @@ separate sources into one object for synthetic data generation.
 """
 
 import enum
-import typing
+from typing import List, Optional
 
 import pydantic
 
@@ -24,42 +24,42 @@ class LoincStruct(pydantic.BaseModel):
     """
     model_config = pydantic.ConfigDict(from_attributes=True)
 
-    long_common_name: typing.Optional[str] = pydantic.Field(
+    long_common_name: Optional[str] = pydantic.Field(
         default=None,
         description="The Long Common Name of the LOINC code, if it exists."
     )
 
-    short_name: typing.Optional[str] = pydantic.Field(
+    short_name: Optional[str] = pydantic.Field(
         default=None,
         description="The Short Name of the LOINC code, if it exists."
     )
 
-    display_name: typing.Optional[str] = pydantic.Field(
+    display_name: Optional[str] = pydantic.Field(
         default=None,
         description="The Display Name of the LOINC code, if it exists."
     )
 
-    consumer_name: typing.Optional[str] = pydantic.Field(
+    consumer_name: Optional[str] = pydantic.Field(
         default=None,
         description="The Consumer Name of the LOINC code, if it exists."
     )
 
-    fully_specified_name: typing.Optional[str] = pydantic.Field(
+    fully_specified_name: Optional[str] = pydantic.Field(
         default=None,
         description="The Fully Specified Name of the LOINC code, if it exists."
     )
 
-    related_names: typing.Optional[typing.List[str]] = pydantic.Field(
+    related_names: Optional[List[str]] = pydantic.Field(
         default=None,
         description="The Related Names for this LOINC code, if they exist."
     )
 
-    lab_type: typing.Optional[LabType] = pydantic.Field(
+    lab_type: Optional[LabType] = pydantic.Field(
         default=None,
         description="The lab type of this LOINC code, if it exists."
     )
 
-    class_type: typing.Optional[str] = pydantic.Field(
+    class_type: Optional[str] = pydantic.Field(
         default=None,
         description=(
             "The laborary class extracted from the 'Basic Attributes' properties "
@@ -67,27 +67,27 @@ class LoincStruct(pydantic.BaseModel):
         )
     )
 
-    property: typing.Optional[str] = pydantic.Field(
+    property: Optional[str] = pydantic.Field(
         default=None,
         description="The 'property' component of this LOINC code, if it exists."
     )
 
-    time: typing.Optional[str] = pydantic.Field(
+    time: Optional[str] = pydantic.Field(
         default=None,
         description="The 'time' component of this LOINC code, if it exists."
     )
 
-    system: typing.Optional[str] = pydantic.Field(
+    system: Optional[str] = pydantic.Field(
         default=None,
         description="The 'system' component of this LOINC code, if it exists."
     )
 
-    scale: typing.Optional[str] = pydantic.Field(
+    scale: Optional[str] = pydantic.Field(
         default=None,
         description="The 'scale' component of this LOINC code, if it exists."
     )
 
-    method: typing.Optional[str] = pydantic.Field(
+    method: Optional[str] = pydantic.Field(
         default=None,
         description="The 'method' component of this LOINC code, if it exists."
     )

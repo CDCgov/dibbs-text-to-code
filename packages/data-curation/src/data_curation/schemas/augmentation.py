@@ -6,7 +6,7 @@ This module contains the schema definitions for the augmented data.
 """
 
 import enum
-import typing
+from typing import Literal, Optional
 
 import pydantic
 from typing_extensions import Annotated
@@ -117,7 +117,7 @@ class DeletionOptions(pydantic.BaseModel):
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
-    deletion_mode: typing.Literal["word", "char"] = pydantic.Field(
+    deletion_mode: Literal["word", "char"] = pydantic.Field(
         default="char",
         description=(
             "The means of randomly choosing characters to delete from the "
@@ -165,7 +165,7 @@ class AugmentationConfig(pydantic.BaseModel):
 
     model_config = pydantic.ConfigDict(from_attributes=True)
 
-    enhancement_all: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_all: Optional[EnhancementOptions] = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_all'. "
@@ -175,7 +175,7 @@ class AugmentationConfig(pydantic.BaseModel):
             "for or evaluated."
         ),
     )
-    enhancement_synonyms: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_synonyms: Optional[EnhancementOptions] = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_synonyms'. "
@@ -184,7 +184,7 @@ class AugmentationConfig(pydantic.BaseModel):
             "defined, but can be used with enhancement_abbreviation."
         ),
     )
-    enhancement_abbreviation: typing.Optional[EnhancementOptions] = pydantic.Field(
+    enhancement_abbreviation: Optional[EnhancementOptions] = pydantic.Field(
         default=None,
         description=(
             "A dictionary of EnhancementOptions for the setting 'enhancement_abbreviation'. "

@@ -8,7 +8,6 @@ from lxml.etree import Element
 from augmentation.models import Metadata
 
 from ..models.application import ApplicationCode
-from ..models.config import AugmenterConfig
 from .eicr_utils import parse_eicr_xml
 
 
@@ -18,7 +17,6 @@ class Augmenter(ABC):
     def __init__(
         self,
         document: str,
-        config: AugmenterConfig,
         application_code: ApplicationCode = ApplicationCode.TEXT_TO_CODE,
         augmentation_date: datetime | None = None,
     ):
@@ -28,7 +26,6 @@ class Augmenter(ABC):
         self._augmented_element = copy.deepcopy(self._original_element)
 
         self.application_code = application_code
-        self.config = self._validate_config(config)
         self.augmentation_date = datetime.now() if augmentation_date is None else augmentation_date
 
     @property
@@ -56,11 +53,3 @@ class Augmenter(ABC):
     def augment(self) -> Metadata:
         """Internal method to perform augmentation logic."""
         pass
-
-    def _validate_config(self, _config: AugmenterConfig) -> AugmenterConfig:
-        """Validates that the config matches the application and document type."""
-        if _config.application_code != self.application_code:
-            raise ValueError(
-                f"Config application code {_config.application_code} does not match Augmenter application code {self.application_code}."
-            )
-        return _config
