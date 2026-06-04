@@ -60,7 +60,7 @@ line-length = 100
 indent-width = 4
 target-version = "py312"
 show-fixes = true
-fix = true
+fix = false
 
 [tool.ruff.lint]
 select = [

@@ -47,9 +47,9 @@ from typing import List, Literal, Sequence, Tuple
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation.loinc_enhancement import enhance_loinc_str
-from data_curation.schemas import EnhancementType
-from data_curation.post_process import (
+from .loinc_enhancement import enhance_loinc_str
+from .schemas import EnhancementType
+from .post_process import (
     apply_deletion_post_processing,
     apply_delimiter_post_processing,
     apply_dot_flip_post_processing,
@@ -60,8 +60,8 @@ from data_curation.post_process import (
     apply_truncation_post_processing,
     _determine_eligible_post_processing
 )
-from data_curation.schemas import loinc_struct as schemas
-from data_curation.loinc_utils import (
+from .schemas import loinc_struct as schemas
+from .loinc_utils import (
     scramble_word_order,
     _axis_is_valid,
     _choose_from_loinc_axis,

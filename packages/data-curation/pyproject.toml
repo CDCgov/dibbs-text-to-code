@@ -20,3 +20,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/data_curation"]
+
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+extend-exclude = ["src/data_emulation"]
+
+[tool.ruff.lint]
+ignore = [
+  "T201", # print
+]
