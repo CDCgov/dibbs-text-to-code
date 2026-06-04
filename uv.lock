@@ -2203,7 +2203,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "saxonche", specifier = ">=13.0.0" }]
+requires-dist = [{ name = "saxonche", specifier = ">=12.9.0" }]
 
 [[package]]
 name = "virtualenv"
