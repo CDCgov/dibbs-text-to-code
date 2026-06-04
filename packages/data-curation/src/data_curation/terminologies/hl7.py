@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.hl7
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains a number of helper functions designed to assist
-with the process of extracting HL7 Specific codes and their terms
-to generate and maintain embeddings in Opensearch for TTC.
-"""
+"""This module contains a number of helper functions designed to assist with the process of extracting HL7 Specific codes and their terms to generate and maintain embeddings in Opensearch for TTC."""
 
 import sys
 
@@ -22,9 +16,7 @@ HL7_ENCOUNTER_CODE_URL = "https://terminology.hl7.org/6.5.0/CodeSystem-v3-ActCod
 
 
 def get_hl7_encounter_act_codes() -> list[dict]:
-    """Function to get all the HL7 Codes and Terms for
-    Encounter Act via the HL7 Valueset CodeSystem JSON file
-    and organize the data into a list of dictionaries.
+    """Function to get all the HL7 Codes and Terms for Encounter Act via the HL7 Valueset CodeSystem JSON file and organize the data into a list of dictionaries.
 
     :returns: A list of dictionaries containing HL7 Encounter
         Act records including codes, text, and descriptions.
@@ -90,9 +82,7 @@ def get_hl7_encounter_act_codes() -> list[dict]:
 
 
 def get_hl7_lab_interp() -> list[dict]:
-    """Function to get all the HL7 Codes and Terms for
-    Lab Interpretations via the HL7 Valueset CodeSystem JSON file
-    and organize the data into a list of dictionaries.
+    """Function to get all the HL7 Codes and Terms for Lab Interpretations via the HL7 Valueset CodeSystem JSON file and organize the data into a list of dictionaries.
 
     :returns: A list of dictionaries containing HL7 Lab
         Interpretations records including codes and text.

@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.vsac
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains a number of helper functions designed to assist
-with the process of extracting The Value Set Authority Center (VSAC)
-codes and their terms to generate and maintain embeddings in Opensearch for TTC.
-"""
+"""This module contains a number of helper functions designed to assist with the process of extracting The Value Set Authority Center (VSAC) codes and their terms to generate and maintain embeddings in Opensearch for TTC."""
 
 import requests
 
@@ -21,10 +15,7 @@ VSAC_PROBLEMS_URL = (
 
 
 def get_vsac_rxnorm_medications() -> list[dict]:
-    """Function to get the all VSAC RXNorm Codes and terms for medications
-    via the NLM/NIH VSAC API. There is an underlying function that
-    processes the results from various VSAC API results into a
-    common structure that is leveraged within this function.
+    """Function to get the all VSAC RXNorm Codes and terms for medications via the NLM/NIH VSAC API. There is an underlying function that processes the results from various VSAC API results into a common structure that is leveraged within this function.
 
     :returns: A list of dictionaries containing RXNorm Medication records
         including codes and text.
@@ -33,10 +24,7 @@ def get_vsac_rxnorm_medications() -> list[dict]:
 
 
 def get_vsac_cvx_vaccines() -> list[dict]:
-    """Function to get the all VSAC CVX Codes and terms for administered
-    vaccines via the NLM/NIH VSAC API.  There is an underlying
-    function that processes the results from various VSAC API
-    results into a common structure that is leveraged within this function.
+    """Function to get the all VSAC CVX Codes and terms for administered vaccines via the NLM/NIH VSAC API.  There is an underlying function that processes the results from various VSAC API results into a common structure that is leveraged within this function.
 
     :returns: A list of dictionaries containing RXNorm Medication records
         including codes and text.
@@ -46,11 +34,7 @@ def get_vsac_cvx_vaccines() -> list[dict]:
 
 # problems are also known as "Diagnosis/Symptom Codes"
 def get_vsac_snomed_problems() -> list[dict]:
-    """Function to get the all VSAC SNOMED Codes and terms for
-    Diagnosis/Problems via the NLM/NIH VSAC API. There is an
-    underlying function that processes the results from various
-    VSAC API results into a common structure that is leveraged
-    within this function.
+    """Function to get the all VSAC SNOMED Codes and terms for Diagnosis/Problems via the NLM/NIH VSAC API. There is an underlying function that processes the results from various VSAC API results into a common structure that is leveraged within this function.
 
     :returns: A list of dictionaries containing SNOMED Problem records
         including codes and text.
@@ -59,9 +43,7 @@ def get_vsac_snomed_problems() -> list[dict]:
 
 
 def process_vsac_codes(api_url: str, vs_type: str) -> list[dict]:
-    """Process to obtain VSAC API results for various value sets
-    and organize them into a common structure that is leveraged
-    by other functions within this module.
+    """Process to obtain VSAC API results for various value sets and organize them into a common structure that is leveraged by other functions within this module.
 
     :returns: A list of dictionaries containing different value set records
         including codes and text.

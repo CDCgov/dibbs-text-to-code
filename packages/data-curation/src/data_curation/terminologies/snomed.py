@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.snomed
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains a number of helper functions designed to assist
-with the process of extracting SNOMED codes and their terms
-to generate and maintain embeddings in Opensearch for TTC.
-"""
+"""This module contains a number of helper functions designed to assis with the process of extracting SNOMED codes and their term to generate and maintain embeddings in Opensearch for TTC."""
 
 import requests
 
@@ -19,8 +13,7 @@ UMLS_SNOMED_LAB_VALUES_URL = (
 
 
 def get_umls_snomed_lab_values() -> list[dict]:
-    """Process to get the all SNOMED Codes and terms for lab values
-    via the UMLS API.
+    """Process to get the all SNOMED Codes and terms for lab values via the UMLS API.
 
     :returns: A list of dictionaries containing SNOMED Lab Value records
         including codes and text.

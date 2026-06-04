@@ -53,11 +53,7 @@ EmbeddingRecord = dict[str, object]
 
 
 def extract_full_loinc_lab_names():
-    """Function that extracts all the latest LOINC Lab Names (all loinc codes
-    regardless of being of type 'Order', 'Observation' or 'Both')
-    and organizes them into a '|' delimited CSV file in a local folder
-    in our repo.
-    """
+    """Function that extracts all the latest LOINC Lab Names (all loinc codes regardless of being of type 'Order', 'Observation' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
     all_loinc_rows = get_loinc_lab_names()
 
@@ -65,11 +61,7 @@ def extract_full_loinc_lab_names():
 
 
 def extract_full_loinc_lab_orders():
-    """Function that extracts all the latest LOINC Orders
-    (only types of 'Order' or 'Both')
-    and organizes them into a '|' delimited CSV file in a local folder
-    in our repo.
-    """
+    """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
     loinc_order_rows = get_loinc_lab_orders()
 
@@ -77,20 +69,14 @@ def extract_full_loinc_lab_orders():
 
 
 def extract_full_loinc_lab_results():
-    """Function that extracts all the latest LOINC Orders
-    (only types of 'Observations' or 'Both')
-    and organizes them into a '|' delimited CSV file in a local folder
-    in our repo.
-    """
+    """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
     loinc_result_rows = get_loinc_lab_results()
     save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
 def get_loinc_lab_names(version: str = ""):
-    """Process to get the all, or version specific, LOINC Codes and terms
-    via the LOINC API for all labs (Lab Names) that are categorized as
-    'Observations', 'Orders', or 'Both'.
+    """Process to get the all, or version specific, LOINC Codes and terms via the LOINC API for all labs (Lab Names) that are categorized as 'Observations', 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
@@ -116,9 +102,7 @@ def get_loinc_lab_names(version: str = ""):
 
 
 def get_loinc_lab_orders(version: str = ""):
-    """Process to get all of the, or version specific, LOINC Codes and terms
-    via the LOINC API for all lab 'Orders' that are categorized as
-    'Orders', or 'Both'.
+    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
@@ -144,9 +128,7 @@ def get_loinc_lab_orders(version: str = ""):
 
 
 def get_loinc_lab_results(version: str = ""):
-    """Process to get all of the, or version specific, LOINC Codes and terms
-    via the LOINC API for all lab 'Observations' (Lab Results) that are
-    categorized as 'Observations', or 'Both'.
+    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
@@ -171,12 +153,7 @@ def get_loinc_lab_results(version: str = ""):
 
 
 def process_loinc_valueset(api_url, loinc_valueset_type):
-    """Function that makes the LOINC API calls based upon the
-    url and the loinc_Valueset_type passed in.  It confirms
-    that the LOINC User/PWD are configured, makes the calls and then
-    passes the output into another function for more detailed processing.
-    This function also performs the looping and row count maintanence as
-    LOINC can only return 500 rows at a time.
+    """Function that makes the LOINC API calls based upon the url and the loinc_Valueset_type passed in.  It confirms that the LOINC User/PWD are configured, makes the calls and then passes the output into another function for more detailed processing. This function also performs the looping and row count maintanence as LOINC can only return 500 rows at a time.
 
     :param api_url: LOINC url for the specific API used for requesting
         data for LOINC codes.
@@ -241,9 +218,7 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
 
 
 def process_loinc_results(loinc_results, loinc_rows: list[LoincRow]) -> list[LoincRow]:
-    """Function that loops through the LOINC results, returned via the various
-    API calls, and sends them into another function to extract and add
-    all the different terms/names for each loinc code.
+    """Function that loops through the LOINC results, returned via the various API calls, and sends them into another function to extract and add all the different terms/names for each loinc code.
 
     :param loinc_results: The current iteration of LOINC data returned
         from the API.  It will be empty if all results have been processed.
@@ -265,9 +240,7 @@ def process_loinc_results(loinc_results, loinc_rows: list[LoincRow]) -> list[Loi
 
 
 def get_loinc_umls_urls(loinc_results, loinc_rows_list):
-    """This function is used to generate and store the UMLS Urls that need
-    to be used for each LOINC code.  They can be processed separately by another
-    function.  Performance issues resulted in trying to do it all at once.
+    """This function is used to generate and store the UMLS Urls that need to be used for each LOINC code.  They can be processed separately by another function. Performance issues resulted in trying to do it all at once.
 
     :param loinc_results: The current iteration of LOINC data returned
         from the API.
@@ -294,10 +267,7 @@ def get_loinc_umls_urls(loinc_results, loinc_rows_list):
 
 
 def process_loincs_for_umls_urls() -> dict:
-    """Process that constructs and makes the various API calls necessary to gather
-    the UMLS data about the current LOINC codes.  The lower functions, related
-    to ATOM/UMLS process are leveraged to extract and organize the data together
-    for the enhancement/other LOINC files.
+    """Process that constructs and makes the various API calls necessary to gather the UMLS data about the current LOINC codes.  The lower functions, related to ATOM/UMLS process are leveraged to extract and organize the data together for the enhancement/other LOINC files.
 
     :returns: A list of dictionaries that contain the various LOINC and
         UMLS data for each LOINC code, ready to be loaded into the enhancement file(s).
@@ -308,9 +278,7 @@ def process_loincs_for_umls_urls() -> dict:
 
 
 def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
-    """This function receives the most recent result from the LOINC API
-    and extracts the various terms/names and adds to the list of records
-    ready for consumption into TTC model DB.
+    """This function receives the most recent result from the LOINC API and extracts the various terms/names and adds to the list of records ready for consumption into TTC model DB.
 
     :param loinc_results: The current iteration of LOINC data returned
         from the API.
@@ -352,9 +320,7 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow])
 
 
 def get_loinc_consumer_names(loinc_rows):
-    """Function that utilizes the downloaded consumer_names.csv file, in the
-    'other' data folder, to related the consumer name term with each loinc
-    code.
+    """Function that utilizes the downloaded consumer_names.csv file, in the 'other' data folder, to related the consumer name term with each loinc code.
 
     :param loinc_rows: The list of dictionaries that contain all the LOINC
         data (codes, terms/names, and axis information) so that this function
@@ -385,10 +351,7 @@ def get_loinc_consumer_names(loinc_rows):
 
 
 def _filter_loinc_term(text: str) -> bool:
-    """Function to determine if the input text is suppose to be filtered
-    out of the LOINC terms/names based upon our understandings stored
-    in a list.
-    (List: LOINC_TEXT_TO_FILTER).
+    """Function to determine if the input text is suppose to be filtered out of the LOINC terms/names based upon our understandings stored in a list. (List: LOINC_TEXT_TO_FILTER).
 
     :param text: The LOINC term/name in question - should this text
         be filtered or not?
@@ -403,8 +366,7 @@ def _filter_loinc_term(text: str) -> bool:
 
 
 def get_loinc_current_version_data() -> tuple[str, str]:
-    """Function Makes an API call to LOINC to determine current
-    version and version date.
+    """Function Makes an API call to LOINC to determine current version and version date.
 
     :returns: str, str - LOINC version number, LOINC version Date
     """
@@ -430,12 +392,7 @@ def get_loinc_current_version_data() -> tuple[str, str]:
 def get_loinc_embedding_records(
     current_loinc_dict: dict, new_version: str, loinc_version_date: str, current_loinc_file: str
 ) -> list[dict]:
-    """Function compares New LOINC Version delta API response against the existing
-    version of the TTC LOINC Lab Names (csv) filr to determine what changes are present.
-    This function creates a change_log that will be used by another function to
-    construct a list of embedding records based upon the need for the different
-    types of changes.  This change_log will also be used to document the updates in
-    a delta file.
+    """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
     5 new embedding records will be created for each 'NEW' LOINC code and
     a single embedding record for each name/term change.  If the LOINC
@@ -543,11 +500,7 @@ def get_loinc_embedding_records(
 def _create_embedding_records(
     loinc_record_id: int, loinc_code: str, loinc_row: dict, element_changes: list[str]
 ) -> list[dict]:
-    """This function takes the loinc_code and a list of changes from a change_log,
-    created by a higher function that performs the LOINC change comparison, and
-    generates a list of embedding records per LOINC Code.  As it is possible
-    that a single LOINC code could have multiple term/name changes in a single LOINC
-    update.
+    """This function takes the loinc_code and a list of changes from a change_log, created by a higher function that performs the LOINC change comparison, and generates a list of embedding records per LOINC Code.  As it is possible that a single LOINC code could have multiple term/name changes in a single LOINC update.
 
     5 new embedding records will be created for each 'NEW' LOINC code and
     a single embedding record for each name/term change.  If the LOINC
@@ -573,14 +526,8 @@ def _create_embedding_records(
     display_name = loinc_row["display_name"].strip()
     full_name = loinc_row["full_name"].strip()
     consumer_name = loinc_row["consumer_name"]
-    if consumer_name is not None:
-        consumer_name = consumer_name.strip()
-    else:
-        consumer_name = ""
-    if "loinc_type" in element_changes:
-        new_id = ""
-    else:
-        new_id = loinc_record_id
+    consumer_name = consumer_name.strip() if consumer_name is not None else ""
+    new_id = "" if "loinc_type" in element_changes else loinc_record_id
 
     loinc_axis_info["loinc_code"] = loinc_code
     loinc_axis_info["loinc_type"] = loinc_row["lab_type"]
@@ -670,8 +617,7 @@ def _create_embedding_records(
 def _create_embedding_record(
     rec_id: int | str, loinc_term: str, loinc_term_type: str, loinc_axis: dict
 ) -> dict:
-    """This function constructs a new basic instance of a LOINC Embedding record
-    from parameter inputs.
+    """This function constructs a new basic instance of a LOINC Embedding record from parameter inputs.
 
     :param rec_id: The unique numeric record id for each embedding.
     :param loinc_term: The LOINC term used for the embedding.
