@@ -96,6 +96,7 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
                 STAGE1_OUTPUT.unlink(missing_ok=True)
                 STAGE2_OUTPUT.unlink(missing_ok=True)
                 VALIDATOR_OUTPUT.unlink(missing_ok=True)
+                VOC_OUTPUT.unlink(missing_ok=True)
             else:
                 logger.info("Will use existing files for Step 1-3")
 
@@ -129,8 +130,12 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
                     output_file=str(VALIDATOR_OUTPUT),
                 )
 
-            # Ensure document()-referenced vocab sits next to the generated stylesheet
-            shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
+            # Ensure the document()-referenced vocab sits next to the generated stylesheet.
+            # Guarded like the stage artifacts above: on Lambda the package dir is read-only
+            # and this file is baked into the image at build time (Dockerfile.augmentation),
+            # so an unconditional copy would crash with OSError [Errno 30] on every invocation.
+            if not VOC_OUTPUT.exists():
+                shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
 
             # Step 4: Apply the generated XSLT to the source XML
             # Parse the XML string into an XDM node
