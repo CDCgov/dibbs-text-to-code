@@ -186,6 +186,12 @@ To update snapshots:
 just test all --snapshot-update
 ```
 
+To check coverage for a specific package or test suite:
+
+```sh
+just test coverage packages/augmentation-lambda
+```
+
 ### e2e Tests:
 
 To run e2e tests, use the following command:
