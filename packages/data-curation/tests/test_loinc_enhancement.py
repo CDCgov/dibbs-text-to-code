@@ -5,7 +5,7 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import loinc_enhancement
+from data_emulation import loinc_enhancement
 from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
@@ -15,7 +15,9 @@ assert len(LOINC_ENHANCEMENTS) > 0
 
 class TestGenerateDisjointIntervals:
     def test_generate_disjoint_intervals(self):
-        """Test generate disjoint internals with 3 test cases:
+        """Test generate disjoint internals with 3 test cases.
+
+        Test cases:
         1) already disjoint intervals
         2) empty list
         3) overlap with a singleton and interval
@@ -67,7 +69,7 @@ class TestFilterCandidatesForEnhancement:
 
 
 @pytest.mark.parametrize(
-    "words, expected",
+    ("words", "expected"),
     [
         # Test case 1: Typical case with multiple words
         (
@@ -147,7 +149,9 @@ class TestEnhanceLoincError:
         """Test enhance LOINC string with error."""
         text = "Blood Glucose Measurement"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="max_enhancements must be greater than min_enhancements"
+        ):
             loinc_enhancement.enhance_loinc_str(
                 text=text,
                 enhancement_type="abbrv",

@@ -4,7 +4,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import post_process
+from data_emulation import post_process
 from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
@@ -188,16 +188,18 @@ class TestTruncationPostProcessing:
 
 
 class TestDetermineEligiblePostProcessingOptions:
-    all_options = [
-        "poc",
-        "modality",
-        "delimiter",
-        "truncation",
-        "syntax",
-        "pound",
-        "deletion",
-        "dot",
-    ]
+    def __init__(self) -> None:
+        """Initialize testing data."""
+        self.all_options = [
+            "poc",
+            "modality",
+            "delimiter",
+            "truncation",
+            "syntax",
+            "pound",
+            "deletion",
+            "dot",
+        ]
 
     def test_ordinary_lcn(self):
         input = "Barbiturates [Presence] in Urine by Screen method"

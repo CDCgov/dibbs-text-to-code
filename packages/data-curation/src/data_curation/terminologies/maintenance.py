@@ -18,7 +18,7 @@ from text_to_code.services.embedder import embed
 # this current function is just set to work for
 # labnames, but can be modified to perform some or all
 # of the various LOINC valuesets
-def update_loinc_embeddings():
+def update_loinc_embeddings() -> None:
     """Process to get the latest updates from LOINC and convert all the new loinc codes and changes to existing loinc codes into embedding records that can be uploaded into TTC Opensearch.
 
     Returns nothing at this time.
@@ -64,7 +64,7 @@ def update_loinc_embeddings():
         extract_full_loinc_lab_names()
 
 
-def main(all: bool = False, loinc=False):
+def main(all: bool = False, loinc: bool = False) -> None:
     """Currently the main entry into the process of updating medical terminologies leveraged by TTC.  We can change this into a different mechanism as we wrap this up into a Lambda.
 
     :param all: Boolean flag to indicate if you want to perform all

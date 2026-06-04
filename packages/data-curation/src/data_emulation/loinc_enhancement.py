@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pydantic
 
-from data_curation.schemas import enhancement_type as schemas
+from data_emulation.schemas import enhancement_type as schemas
 from utils import normalize
 from utils import path
 from utils import regex_patterns

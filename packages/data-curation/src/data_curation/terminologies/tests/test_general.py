@@ -57,7 +57,7 @@ def test_get_date_from_filename_valid_other() -> None:
 
 def test_get_date_from_filename_invalid_date() -> None:
     file_name = "my_extract_file_20265555.csv"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="unconverted data remains: 55"):
         get_date_from_filename(file_name, "loinc")
 
 

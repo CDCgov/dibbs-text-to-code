@@ -1,19 +1,11 @@
 #!/usr/bin/env python
 
-"""data_curation.terminologies.utils.loinc
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains a number of helper functions designed to assist
-with the process of extracting LOINC codes and their terms
-to generate and maintain embeddings in Opensearch for TTC.
-"""
+"""This module contains a number of helper functions designed to assist with the process of extracting LOINC codes and their terms to generate and maintain embeddings in Opensearch for TTC."""
 
 import csv
 import json
 import os
 from datetime import datetime
-
-import requests
 
 from .general import (
     BASE_FOLDER,
@@ -22,6 +14,7 @@ from .general import (
     save_json_file,
     save_valueset_csv_file,
 )
+from .requests import STATUS_CODE_OK, get_with_timeout
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
@@ -152,7 +145,7 @@ def get_loinc_lab_results(version: str = ""):
     return loinc_result_rows
 
 
-def process_loinc_valueset(api_url, loinc_valueset_type):
+def process_loinc_valueset(api_url: str, loinc_valueset_type):
     """Function that makes the LOINC API calls based upon the url and the loinc_Valueset_type passed in.  It confirms that the LOINC User/PWD are configured, makes the calls and then passes the output into another function for more detailed processing. This function also performs the looping and row count maintanence as LOINC can only return 500 rows at a time.
 
     :param api_url: LOINC url for the specific API used for requesting
@@ -168,8 +161,8 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         raise KeyError(
             "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
         )
-    loinc_response = requests.get(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
-    if loinc_response.status_code != 200:
+    loinc_response = get_with_timeout(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
+    if loinc_response.status_code != STATUS_CODE_OK:
         # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
@@ -199,8 +192,8 @@ def process_loinc_valueset(api_url, loinc_valueset_type):
         # handles the looping mechanism to get the next set of LOINC codes
         # via the 'next' url
         if next_url_call is not None:
-            next_loinc_response = requests.get(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
-            if next_loinc_response.status_code != 200:
+            next_loinc_response = get_with_timeout(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
+            if next_loinc_response.status_code != STATUS_CODE_OK:
                 # TODO: In Subsequent PR update this to be a logging statement
                 print(
                     f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
@@ -319,7 +312,7 @@ def get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow])
     return loinc_rows
 
 
-def get_loinc_consumer_names(loinc_rows):
+def get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     """Function that utilizes the downloaded consumer_names.csv file, in the 'other' data folder, to related the consumer name term with each loinc code.
 
     :param loinc_rows: The list of dictionaries that contain all the LOINC
@@ -374,8 +367,8 @@ def get_loinc_current_version_data() -> tuple[str, str]:
         raise KeyError(
             "LOINC_USERNAME and LOINC_PWD environment variables are required to pull from LOINC!"
         )
-    loinc_response = requests.get(LOINC_META_URL, auth=(LOINC_USERNAME, LOINC_PWD))
-    if loinc_response.status_code != 200:
+    loinc_response = get_with_timeout(LOINC_META_URL, auth=(LOINC_USERNAME, LOINC_PWD))
+    if loinc_response.status_code != STATUS_CODE_OK:
         # TODO: In Subsequent PR update this to be a logging statement
         print(
             f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
@@ -493,7 +486,7 @@ def get_loinc_embedding_records(
         embedding_records.extend(new_embedding_records)
         loinc_record_max_id += len(new_embedding_records)
     # store the record of changes
-    write_change_log_file(change_log_filename, change_log)
+    _write_change_log_file(change_log_filename, change_log)
     return embedding_records
 
 
@@ -645,5 +638,5 @@ def _create_embedding_record(
     return embedding_record
 
 
-def write_change_log_file(file_name: str, content: dict):
+def _write_change_log_file(file_name: str, content: dict) -> None:
     save_json_file(str(CHANGE_LOG_DIRECTORY), file_name, content)

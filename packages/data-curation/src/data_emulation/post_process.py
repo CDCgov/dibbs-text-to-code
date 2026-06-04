@@ -15,7 +15,7 @@ import random
 import re
 from typing import List, Sequence
 
-from data_curation.loinc_utils import LOINC_PREPOSITIONS, _find_system_modality, _get_component_axis_from_fsn
+from data_emulation.loinc_utils import LOINC_PREPOSITIONS, _find_system_modality, _get_component_axis_from_fsn
 
 # Derived from rule analysis
 MAX_CHARS_FOR_TRUNCATION = 85

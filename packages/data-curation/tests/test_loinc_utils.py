@@ -6,7 +6,7 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import loinc_utils
+from data_emulation import loinc_utils
 from utils import normalize, path, regex_patterns
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
@@ -17,7 +17,7 @@ random.seed(3141)
 
 
 @pytest.mark.parametrize(
-    "text, max_perms, expected",
+    ("text", "max_perms", "expected"),
     [
         # Empty string
         ("", 3, ""),
