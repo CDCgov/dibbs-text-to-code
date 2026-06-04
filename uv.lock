@@ -74,7 +74,7 @@ dev = [
     { name = "pytest-snapshot", specifier = ">=0.9.0" },
     { name = "time-machine", specifier = ">=3.2.0" },
     { name = "types-lxml", specifier = ">=2026.2.16" },
-    { name = "tzdata", specifier = ">=2026.2" },
+    { name = "tzdata", specifier = ">=2024.5.1" },
 ]
 
 [[package]]
