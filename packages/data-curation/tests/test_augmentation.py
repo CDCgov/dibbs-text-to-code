@@ -7,10 +7,10 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation.archived.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
 from data_curation.archived import augmentation
-from utils import normalize
-from utils import path
+from data_curation.archived.configs import AUGMENTATION_WITHOUT_ENHANCEMENT
+
+from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
@@ -153,7 +153,7 @@ class TestBuildAugmentedLoincFiles:
             assert os.path.getsize(file_path) > 0
 
             # Check that the files contain the expected number of augmented examples
-            with open(file_path, "r", encoding="utf-8", newline="") as fp:
+            with open(file_path, encoding="utf-8", newline="") as fp:
                 reader = csv.reader(fp, delimiter=":")
                 for row in reader:
                     loinc_code, base_value, augmented_examples = row

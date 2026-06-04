@@ -52,7 +52,6 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
-  "data-curation",
   "docs",
   "model-tuning",
 ]
@@ -60,7 +59,7 @@ line-length = 100
 indent-width = 4
 target-version = "py312"
 show-fixes = true
-fix = false
+fix = true
 
 [tool.ruff.lint]
 select = [

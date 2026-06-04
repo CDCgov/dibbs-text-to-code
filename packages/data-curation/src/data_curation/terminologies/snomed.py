@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-"""
-data_curation.terminologies.utils.snomed
+"""data_curation.terminologies.utils.snomed
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a number of helper functions designed to assist
-with the process of extracting SNOMED codes and their terms 
+with the process of extracting SNOMED codes and their terms
 to generate and maintain embeddings in Opensearch for TTC.
 """
+
 import requests
-from .general import clean_text_string, UMLS_API_KEY
+
+from .general import UMLS_API_KEY, clean_text_string
 
 # Terminology URLS
 UMLS_SNOMED_LAB_VALUES_URL = (
@@ -19,10 +20,10 @@ UMLS_SNOMED_LAB_VALUES_URL = (
 
 def get_umls_snomed_lab_values() -> list[dict]:
     """Process to get the all SNOMED Codes and terms for lab values
-        via the UMLS API.
+    via the UMLS API.
 
-        :returns: A list of dictionaries containing SNOMED Lab Value records
-            including codes and text.
+    :returns: A list of dictionaries containing SNOMED Lab Value records
+        including codes and text.
     """
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
@@ -54,7 +55,7 @@ def get_umls_snomed_lab_values() -> list[dict]:
         page_num += 1
         params = {"apiKey": UMLS_API_KEY, "pageNumber": page_num, "pageSize": page_size}
         umls_response = requests.get(UMLS_SNOMED_LAB_VALUES_URL, params=params)
-        
+
     # TODO: In Subsequent PR update this to be a logging statement
     print(f"{snomed_row_count} Codes Extracted")
     return snomed_rows

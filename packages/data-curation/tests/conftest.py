@@ -1,13 +1,13 @@
 import os
+import random
 
 import pytest
-import random
+
 
 @pytest.fixture(autouse=True)
 def set_random_seed():
     # Set a fixed random seed before each test for reproducibility
     random.seed(3141)
-    yield
 
 
 @pytest.fixture(scope="function")
@@ -23,4 +23,3 @@ def cleanup_tmp_files():
     # Optionally, remove the tmp directory if empty
     if not os.listdir("./tmp"):
         os.rmdir("./tmp")
-

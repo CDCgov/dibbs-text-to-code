@@ -1,9 +1,11 @@
 from pathlib import Path
+
 from data_curation.terminologies.loinc import _create_embedding_record, _create_embedding_records
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"
 EXISTING_LOINC_FILE = API_RESPONSE_DIRECTORY / "loinc_lab_names_20260223.csv"
+
 
 def test_create_embedding_record() -> None:
     loinc_code = "12345-F"
@@ -30,10 +32,11 @@ def test_create_embedding_record() -> None:
         "system": "TEST SYSTEM",
         "scale_type": "TEST SCALE",
         "method_type": "TEST METHOD",
-        "class_type": "TEST CLASS"
+        "class_type": "TEST CLASS",
     }
-    result = _create_embedding_record(140,loinc_term,loinc_term_type,loinc_axis)    
+    result = _create_embedding_record(140, loinc_term, loinc_term_type, loinc_axis)
     assert result == expected
+
 
 def test_create_embedding_records() -> None:
     loinc_id1 = 155
@@ -47,7 +50,7 @@ def test_create_embedding_records() -> None:
     loinc_axis["scale"] = "TEST SCALE"
     loinc_axis["method"] = "TEST METHOD"
     loinc_axis["class"] = "TEST CLASS"
-    changes = ["short_name","long_name"]
+    changes = ["short_name", "long_name"]
 
     # loinc row return from our process that organizes
     # data from LOINC API call
@@ -73,11 +76,11 @@ def test_create_embedding_records() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "short_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
     record_2 = {
         "id": 157,
@@ -87,15 +90,16 @@ def test_create_embedding_records() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "long_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
-    expected = [record_1,record_2]
-    result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
+    expected = [record_1, record_2]
+    result = _create_embedding_records(loinc_id1, loinc_code, loinc_row, changes)
     assert result == expected
+
 
 def test_create_embedding_records_w_updates() -> None:
     loinc_id1 = 155
@@ -135,11 +139,11 @@ def test_create_embedding_records_w_updates() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "short_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
     record_2 = {
         "id": "",
@@ -149,11 +153,11 @@ def test_create_embedding_records_w_updates() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "long_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
     record_3 = {
         "id": "",
@@ -163,11 +167,11 @@ def test_create_embedding_records_w_updates() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "display_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
     record_4 = {
         "id": "",
@@ -177,11 +181,11 @@ def test_create_embedding_records_w_updates() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "full_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
     record_5 = {
         "id": "",
@@ -191,12 +195,12 @@ def test_create_embedding_records_w_updates() -> None:
         "loinc_code": loinc_axis["loinc_code"],
         "loinc_name_type": "consumer_name",
         "property": loinc_axis["property"],
-        "time_aspect":loinc_axis["time"],
+        "time_aspect": loinc_axis["time"],
         "system": loinc_axis["system"],
         "scale_type": loinc_axis["scale"],
         "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"]
+        "class_type": loinc_axis["class"],
     }
-    expected = [record_1,record_2,record_3,record_4,record_5]
-    result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
+    expected = [record_1, record_2, record_3, record_4, record_5]
+    result = _create_embedding_records(loinc_id1, loinc_code, loinc_row, changes)
     assert result == expected
