@@ -4,7 +4,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_emulation import post_process
+from data_curation.data_emulation import post_process
 from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())

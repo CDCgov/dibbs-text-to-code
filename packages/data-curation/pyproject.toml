@@ -24,7 +24,7 @@ packages = ["src/data_curation"]
 
 [tool.ruff]
 extend = "../../pyproject.toml"
-extend-exclude = ["src/data_emulation"]
+extend-exclude = ["src/data_curation/data_emulation"]
 
 [tool.ruff.lint]
 ignore = [
@@ -33,4 +33,4 @@ ignore = [
 
 
 [tool.ty.src]
-exclude = ["src/data_emulation/**"]
+exclude = ["src/data_curation/data_emulation/**"]

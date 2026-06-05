@@ -47,9 +47,9 @@ from typing import List, Literal, Sequence, Tuple
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from .loinc_enhancement import enhance_loinc_str
-from .schemas import EnhancementType
-from .post_process import (
+from data_curation.data_emulation.loinc_enhancement import enhance_loinc_str
+from data_curation.data_emulation.schemas import EnhancementType
+from data_curation.data_emulation.post_process import (
     apply_deletion_post_processing,
     apply_delimiter_post_processing,
     apply_dot_flip_post_processing,
@@ -60,8 +60,8 @@ from .post_process import (
     apply_truncation_post_processing,
     _determine_eligible_post_processing
 )
-from .schemas import loinc_struct as schemas
-from .loinc_utils import (
+from data_curation.data_emulation.schemas import loinc_struct as schemas
+from data_curation.data_emulation.loinc_utils import (
     scramble_word_order,
     _axis_is_valid,
     _choose_from_loinc_axis,
@@ -94,7 +94,7 @@ TESTING_OUT_FILE = "../../../../data/training_files/prod_emulated_validation_set
 # We have found Consumer Name to be actively detrimental for training and 
 # testing. We recommend excluding it from the final output written to the
 # training and validation files.
-INCLUDE_CN_IN_FINAL_OUTPUT = False
+INCLUDE_CN_IN_FINAL_OUTPUT = os.environ.get("INCLUDE_CN_IN_FINAL_OUTPUT", "false").lower() == "true"
 
 # We exclude FSN from training here because the variants are all one-to-many
 # mappings that will confound the algorithm; e.g., the word "creatinine" maps to
@@ -1007,7 +1007,6 @@ def _get_measurement_unit_word(
     :returns: The single measurement-descriptive word for the code string.
     """
     code_str = code_str or ""
-    property_axis = property_axis or ""
     if "by calculation" in code_str.lower():
         return "Determination"
     if "in specimen" in code_str.lower():

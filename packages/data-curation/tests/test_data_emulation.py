@@ -1,12 +1,15 @@
+import io
 import os
 import random
+import runpy
 import sys
+from typing import IO, Any
 
-from data_emulation import data_emulation
+from data_curation.data_emulation import data_emulation
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_emulation.schemas.loinc_struct import LabType, LoincStruct
+from data_curation.data_emulation.schemas.loinc_struct import LabType, LoincStruct
 from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
@@ -533,3 +536,290 @@ class TestGetMeasurementUnitWord:
         input = "Methemoglobin and sulfhemoglobin panel - Blood"
         result = data_emulation._get_measurement_unit_word(input, "MFr")
         assert result == "Measurement"
+
+
+class TestBuildLOINCAxisExampleEdgeCases:
+    def test_missing_component_returns_empty_string(self):
+        loinc_struct = LoincStruct(
+            long_common_name="Test",
+            short_name="Test",
+            display_name="Test",
+            consumer_name="Test",
+            fully_specified_name="axis1:axis2:axis3",
+            lab_type=LabType.BOTH,
+            class_type="TEST",
+            property="PrThr",
+            time="Pt",
+            system="Urine",
+            scale="Ord",
+            method="Screen",
+        )
+
+        assert data_emulation.build_loinc_axis_example(loinc_struct) == ""
+
+    def test_missing_core_concept_returns_empty_string(self, monkeypatch):
+        monkeypatch.setattr(data_emulation, "_choose_from_loinc_axis", lambda *args: "")
+
+        assert data_emulation.build_loinc_axis_example(FENTANYL_STRUCT) == ""
+
+
+class TestBuildVendorFormulaExampleEdgeCases:
+    def test_no_modality_returns_empty_string(self):
+        formula_result = data_emulation.build_vendor_formula_style_example(
+            "Creatinine [Mass/volume]", "MCnc", "Urine"
+        )
+
+        assert formula_result == ""
+
+
+class TestCreateSyntheticExamplesForCodeEdgeCases:
+    def test_short_name_hyphen_build_is_added(self, monkeypatch):
+        loinc_struct = LoincStruct(
+            long_common_name="Creatinine [Mass/volume] in Serum or Plasma",
+            short_name="Creat SerPl-mCnc",
+            display_name="Creatinine SerPl Display",
+            consumer_name="Creatinine",
+            fully_specified_name="Creatinine:MCnc:Pt:Ser/Plas:Qn:",
+            lab_type=LabType.BOTH,
+            class_type="CHEM",
+            property="MCnc",
+            time="Pt",
+            system="Ser/Plas",
+            scale="Qn",
+            method=None,
+        )
+
+        monkeypatch.setattr(data_emulation, "_choose_and_apply_post_processing", lambda *args: "")
+        monkeypatch.setattr(data_emulation, "build_loinc_axis_example", lambda *args, **kwargs: "")
+        monkeypatch.setattr(data_emulation, "build_vendor_formula_style_example", lambda *args: "")
+        monkeypatch.setattr(
+            data_emulation, "build_and_process_ttc_and_heuristics", lambda *args: args[-1]
+        )
+
+        synthetic_examples = data_emulation.create_synthetic_examples_for_code(loinc_struct)
+
+        assert synthetic_examples["short_name"] == ["Creat SerPl"]
+
+
+class TestQGroupVariationsAdditionalModalities:
+    def test_qualitative_serum_plasma_blood_modality(self, monkeypatch):
+        monkeypatch.setattr(data_emulation.random, "choice", lambda options: options[0])
+
+        variations = data_emulation.get_q_variations(
+            "Barbiturates Ql (Ser/Plas/Bld) by Screen Method"
+        )
+
+        assert variations == [
+            "Barbiturates Serum by Screen Method",
+            "Barbiturates Qualitative Serum by Screen Method",
+        ]
+
+    def test_qualitative_serum_modality(self):
+        variations = data_emulation.get_q_variations("Barbiturates Ql (S) by Screen Method")
+
+        assert variations == [
+            "Barbiturates Serum by Screen Method",
+            "Barbiturates Qualitative Serum by Screen Method",
+        ]
+
+    def test_quantitative_plasma_modality(self):
+        variations = data_emulation.get_q_variations("Barbiturates Qn (P) by Screen Method")
+
+        assert variations == [
+            "Barbiturates Plasma by Screen Method",
+            "Barbiturates Quantitative Plasma by Screen Method",
+        ]
+
+    def test_qualitative_blood_modality(self):
+        variations = data_emulation.get_q_variations("Barbiturates Ql (Bld) by Screen Method")
+
+        assert variations == [
+            "Barbiturates Blood by Screen Method",
+            "Barbiturates Qualitative Blood by Screen Method",
+        ]
+
+
+class TestChooseAndApplyVariationHeuristicsEdgeCases:
+    def test_bracket_heuristic_without_generated_variations_uses_previous_code(self, monkeypatch):
+        monkeypatch.setattr(
+            data_emulation, "_determine_eligible_pattern_heuristics", lambda *args: ["brackets"]
+        )
+        monkeypatch.setattr(data_emulation, "get_bracket_variations", lambda *args: [])
+
+        result = data_emulation._choose_and_apply_heuristics(
+            "Creatinine [Mass/volume]", "MCnc", "Ser/Plas"
+        )
+
+        assert result == "Creatinine [Mass/volume]"
+
+
+class TestChooseAndApplyPostProcessingEdgeCases:
+    def test_no_eligible_post_processing_returns_empty_string(self, monkeypatch):
+        monkeypatch.setattr(data_emulation, "_determine_eligible_post_processing", lambda *args: [])
+
+        post_processed = data_emulation._choose_and_apply_post_processing(
+            FENTANYL_STRUCT.long_common_name,
+            FENTANYL_STRUCT.fully_specified_name,
+            FENTANYL_STRUCT.system,
+            LOINC_ENHANCEMENTS,
+            data_emulation.BASE_POST_PROCESSING_OPTIONS,
+        )
+
+        assert post_processed == ""
+
+    def test_single_dot_post_processing(self, monkeypatch):
+        monkeypatch.setattr(
+            data_emulation, "_determine_eligible_post_processing", lambda *args: ["dot"]
+        )
+        monkeypatch.setattr(
+            data_emulation, "apply_dot_flip_post_processing", lambda code_str: "DOT PROCESSED"
+        )
+
+        post_processed = data_emulation._choose_and_apply_post_processing(
+            "protein.total",
+            "protein.total:MCnc:Pt:Ser/Plas:Qn:",
+            "Ser/Plas",
+            LOINC_ENHANCEMENTS,
+            data_emulation.BASE_POST_PROCESSING_OPTIONS,
+        )
+
+        assert post_processed == "DOT PROCESSED"
+
+
+class TestGetMeasurementUnitWordAdditionalCases:
+    def test_fraction_symbol(self):
+        input = "Alkaline phosphatase.bile/Alkaline phosphatase.total in Serum or Plasma"
+        result = data_emulation._get_measurement_unit_word(input, "CFr", return_symbol=True)
+        assert result == "%"
+
+
+def run_data_emulation_script() -> None:
+    runpy.run_path(data_emulation.__file__, run_name="__main__")
+
+
+def test_main_block_runs(monkeypatch):
+    real_open = open
+    output_files = {}
+    row = "|".join(
+        [
+            "12345-F",
+            "Both",
+            "PrThr",
+            "Pt",
+            "Urine",
+            "Ord",
+            "Screen",
+            "DRUG/TOX",
+            "fentaNYL Ur Ql Scn",
+            "fentaNYL [Presence] in Urine by Screen method",
+            "fentaNYL Screen Ql (U)",
+            "",
+            "",
+            "fentaNYL:PrThr:Pt:Urine:Ord:Screen",
+            "fentaNYL, Urine",
+        ]
+    )
+    source_data = "header\n" + row + "\n"
+
+    def mock_open(file, mode="r", *args: Any, **kwargs: Any) -> IO:
+        file_path = str(file)
+        if "loinc_lab_names_20260223.csv" in file_path and "r" in mode:
+            return io.StringIO(source_data)
+        if "prod_emulated_" in file_path and "w" in mode:
+            output_files[file_path] = io.StringIO()
+            return output_files[file_path]
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", mock_open)
+
+    run_data_emulation_script()
+
+    expected_length = 3
+    assert len(output_files) == expected_length
+
+
+def test_main_block_runs_with_consumer_name_output_and_edge_rows(monkeypatch):
+    real_open = open
+    output_files = {}
+
+    class TestRow:
+        def __init__(self, values: list[str | None]):
+            self.values = values
+
+        def split(self, delimiter) -> list[str | None]:
+            return self.values
+
+    class OutputFile(io.StringIO):
+        def close(self):
+            pass
+
+    rows = [
+        TestRow(["header"]),
+        TestRow(["malformed"]),
+        TestRow(
+            [
+                "12345-F",
+                "Both",
+                None,
+                "Pt",
+                "Urine",
+                "Ord",
+                "Screen",
+                "DRUG/TOX",
+                "fentaNYL Ur Ql Scn",
+                "fentaNYL [Presence] in Urine by Screen method",
+                "fentaNYL Screen Ql (U)",
+                "",
+                "",
+                "fentaNYL:PrThr:Pt:Urine:Ord:Screen",
+                "fentaNYL, Urine",
+            ]
+        ),
+        TestRow(
+            [
+                "67890-F",
+                "Both",
+                "{Measurement}",
+                "Pt",
+                "Urine",
+                "Ord",
+                "Screen",
+                "DRUG/TOX",
+                "fentaNYL Ur Ql Scn",
+                "fentaNYL [Presence] in Urine by Screen method",
+                "fentaNYL Screen Ql (U)",
+                "",
+                "",
+                "fentaNYL:PrThr:Pt:Urine:Ord:Screen",
+                "fentaNYL, Urine",
+            ]
+        ),
+    ]
+
+    class SourceFile:
+        def __enter__(self) -> "SourceFile":
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return None
+
+        def readlines(self) -> list[TestRow]:
+            return rows
+
+    def mock_open(file, mode="r", *args: Any, **kwargs: Any) -> SourceFile | IO:
+        file_path = str(file)
+        if "loinc_lab_names_20260223.csv" in file_path and "r" in mode:
+            return SourceFile()
+        if "prod_emulated_" in file_path and "w" in mode:
+            output_files[file_path] = OutputFile()
+            return output_files[file_path]
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setenv("INCLUDE_CN_IN_FINAL_OUTPUT", "true")
+    monkeypatch.setattr("builtins.open", mock_open)
+
+    run_data_emulation_script()
+
+    expected_length = 3
+    assert len(output_files) == expected_length
+    assert any(output_file.getvalue() != "" for output_file in output_files.values())
