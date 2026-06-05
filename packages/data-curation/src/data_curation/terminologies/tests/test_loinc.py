@@ -5,7 +5,6 @@ from typing import Mapping
 import pytest
 
 from data_curation.terminologies import loinc
-from data_curation.terminologies.loinc import _create_embedding_record, _create_embedding_records
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"
@@ -612,7 +611,7 @@ def test_create_embedding_record() -> None:
         "method_type": "TEST METHOD",
         "class_type": "TEST CLASS"
     }
-    result = _create_embedding_record(140,loinc_term,loinc_term_type,loinc_axis)    
+    result = loinc._create_embedding_record(140,loinc_term,loinc_term_type,loinc_axis)    
     assert result == expected
 
 def test_create_embedding_records() -> None:
@@ -674,7 +673,7 @@ def test_create_embedding_records() -> None:
         "class_type": loinc_axis["class"]
     }
     expected = [record_1,record_2]
-    result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
+    result = loinc._create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
     assert result == expected
 
 
@@ -779,7 +778,7 @@ def test_create_embedding_records_w_updates() -> None:
         "class_type": loinc_axis["class"]
     }
     expected = [record_1,record_2,record_3,record_4,record_5]
-    result = _create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
+    result = loinc._create_embedding_records(loinc_id1,loinc_code,loinc_row,changes)
     assert result == expected
 
 
@@ -789,7 +788,7 @@ def test_create_embedding_records_with_no_consumer_name() -> None:
     loinc_row: dict[str, object] = dict(_loinc_row())
     loinc_row["consumer_name"] = None
 
-    result = _create_embedding_records(
+    result = loinc._create_embedding_records(
         loinc_id1,
         loinc_code,
         loinc_row,
