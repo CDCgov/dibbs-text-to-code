@@ -1,36 +1,41 @@
-<?xml version='1.0' encoding='utf-8'?>
-<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:cda="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc" xmlns:voc="http://www.lantanagroup.com/voc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:cda="urn:hl7-org:v3" xmlns:sdtc="urn:hl7-org:sdtc"
+          xmlns:voc="http://www.lantanagroup.com/voc"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="urn:hl7-org:v3 ../../schema/infrastructure/cda/CDA_SDTC.xsd">
     <realmCode code="US"/>
-    <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3">
+    <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"
+                    >
         <!--[C-CDA R1.1] US Realm Header-->
     </typeId>
-    <templateId root="2.16.840.1.113883.10.20.22.1.1">
+    <templateId root="2.16.840.1.113883.10.20.22.1.1"
+                    >
         <!-- [C-CDA R2.1] US Realm Header (V3) -->
     </templateId>
-    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.1">
+    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.1.1"
+                    >
         <!--[eICR R2 STU1.1] Initial Public Health Case Report Document (eICR) (V2) -->
     </templateId>
     <templateId extension="2016-12-01" root="2.16.840.1.113883.10.20.15.2"/>
-    <!--DATA AUGMENTATION: eICR Data Augmentation Header -->
-    <templateId root="2.16.840.1.113883.10.20.15.2.1.3" extension="2025-11-01"/>
-    <!--DATA AUGMENTATION: new-document-id -->
-    <id root="d44dc1c6-8a0c-5236-906e-12f6475589ec" assigningAuthorityName="text-to-code"/>
-    <code code="55751-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Public Health Case Report">
+    <id root="10c13861-86a8-4a9a-aec6-b615921178df"
+                    >
+        <!--Globally unique document ID (extension) is scoped by vendor/software-->
+    </id>
+    <code code="55751-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC"
+                    displayName="Public Health Case Report">
         <!--Document Code-->
     </code>
     <title>Initial Public Health Case Report</title>
-    <!--DATA AUGMENTATION: time of data augmentation operation -->
-    <effectiveTime value="20260213152757"/>
+    <effectiveTime value="20200505150045-0400"/>
     <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" displayName="Normal"/>
     <languageCode code="en-US"/>
-    <!--DATA AUGMENTATION: new-document-setId -->
-    <setId root="2683d208-bbec-5d37-8886-3b46fb5ec908"/>
-    <!--DATA AUGMENTATION: new-document-versionNumber -->
+    <setId extension="8d86218e-0fea-11eb-8216-a80388425cfb"
+                    root="1.2.840.114350.1.13.380.3.7.1.1"/>
     <versionNumber value="1"/>
     <recordTarget>
         <!--******************************************************** recordTarget: The patient ********************************************************-->
         <patientRole>
-            <id extension="PT-470126" root="2.16.840.1.113883.19.5">
+            <id extension="PT-470126" root="2.16.840.1.113883.19.5"
+                                        >
                 <!--Patient ID-->
             </id>
             <!--SSN-->
@@ -50,11 +55,18 @@
                     <given>Jane</given>
                     <family>Doe</family>
                 </name>
-                <administrativeGenderCode code="F" codeSystem="2.16.840.1.113883.5.1" displayName="Female"/>
+                <administrativeGenderCode code="F"
+                                                  codeSystem="2.16.840.1.113883.5.1"
+                                                  displayName="Female"/>
                 <birthTime value="19901002"/>
                 <sdtc:deceasedInd value="false"/>
-                <raceCode code="2076-8" codeSystem="2.16.840.1.113883.6.238" codeSystemName="Race &amp; Ethnicity - CDC" displayName="Native Hawaiian or other Pacific Islander"/>
-                <ethnicGroupCode code="2186-5" codeSystem="2.16.840.1.113883.6.238" codeSystemName="Race &amp; Ethnicity - CDC" displayName="Not Hispanic or Latino"/>
+                <raceCode code="2076-8" codeSystem="2.16.840.1.113883.6.238"
+                                                  codeSystemName="Race &amp; Ethnicity - CDC"
+                                                  displayName="Native Hawaiian or other Pacific Islander"/>
+                <ethnicGroupCode code="2186-5"
+                                                  codeSystem="2.16.840.1.113883.6.238"
+                                                  codeSystemName="Race &amp; Ethnicity - CDC"
+                                                  displayName="Not Hispanic or Latino"/>
                 <languageCommunication>
                     <languageCode code="en"/>
                     <preferenceInd value="true"/>
@@ -86,7 +98,8 @@
     <custodian>
         <assignedCustodian>
             <representedCustodianOrganization>
-                <id extension="TBDFacility#" root="2.16.840.1.113883.4.6">
+                <id extension="TBDFacility#" root="2.16.840.1.113883.4.6"
+                                                  >
                     <!--Custodian ID-->
                 </id>
                 <name>Houston Urgent Care Clinic</name>
@@ -120,17 +133,22 @@
     <componentOf>
         <!--******************************************************** componentOf: contains the encompassingEncouter and the provider and facility infomation for the case ********************************************************-->
         <encompassingEncounter>
-            <id extension="9937015" root="2.16.840.1.113883.19">
+            <id extension="9937015" root="2.16.840.1.113883.19"
+                                        >
                 <!--encounter ID-->
             </id>
-            <code code="AMB" codeSystem="2.16.840.1.113883.5.4" codeSystemName="HL7 ActEncounterCode" displayName="Ambulatory"/>
+            <code code="AMB" codeSystem="2.16.840.1.113883.5.4"
+                                        codeSystemName="HL7 ActEncounterCode"
+                                        displayName="Ambulatory"/>
             <effectiveTime>
                 <low value="20200513"/>
                 <high value="20200513"/>
             </effectiveTime>
             <responsibleParty>
                 <assignedEntity>
-                    <id extension="66666666666" root="2.16.840.1.113883.4.6">
+                    <id extension="66666666666"
+                                                  root="2.16.840.1.113883.4.6"
+                                                  >
                         <!--Provider ID-->
                     </id>
                     <addr use="H">
@@ -152,7 +170,9 @@
                         </name>
                     </assignedPerson>
                     <representedOrganization>
-                        <id extension="TBDFacility#" root="2.16.840.1.113883.4.6">
+                        <id extension="TBDFacility#"
+                                                  root="2.16.840.1.113883.4.6"
+                                                  >
                             <!--Represented Organization-->
                         </id>
                         <name>Houston Urgent Care
@@ -173,10 +193,15 @@
             </responsibleParty>
             <location>
                 <healthCareFacility>
-                    <id extension="1915" root="2.16.840.1.113883.4.6">
+                    <id extension="1915" root="2.16.840.1.113883.4.6"
+                                                  >
                         <!--Facility ID-->
                     </id>
-                    <code code="OF" codeSystem="2.16.840.1.113883.5.111" codeSystemName="HL7RoleCode" displayName="Outpatient Facility">
+                    <code code="OF"
+                                                  codeSystem="2.16.840.1.113883.5.111"
+                                                  codeSystemName="HL7RoleCode"
+                                                  displayName="Outpatient Facility"
+                                                  >
                         <!--Facility location within larger healthcare organization e.g Kaiser Vacaville within Kaiser North-->
                     </code>
                     <location>
@@ -219,11 +244,17 @@
                     <!--[C-CDA R1.1] Encounters Section (entries optional)-->
                     <templateId root="2.16.840.1.113883.10.20.22.2.22"/>
                     <!--[C-CDA R2.1] Encounters Section (entries optional) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.22"/>
-                    <templateId root="2.16.840.1.113883.10.20.22.2.22.1"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.22"/>
+                    <templateId
+                                                  root="2.16.840.1.113883.10.20.22.2.22.1"/>
                     <!-- [C-CDA R2.1] Encounters Section (entries required) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.22.1"/>
-                    <code code="46240-8" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="History of encounters"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.22.1"/>
+                    <code code="46240-8"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="History of encounters"/>
                     <title>Encounters</title>
                     <text>
                         <table>
@@ -245,7 +276,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ID="id_fd7ee2ec-4d8e-4169-aeb6-836731cc7201_ref">
+                                <tr
+                                                  ID="id_fd7ee2ec-4d8e-4169-aeb6-836731cc7201_ref">
                                     <td>Office outpatient visit 15 minutes</td>
                                     <td>05/13/2020</td>
                                     <td>Houston Urgent Care Clinic</td>
@@ -289,9 +321,13 @@
                             <!--[C-CDA R1.1] Encounter Activities-->
                             <templateId root="2.16.840.1.113883.10.20.22.4.49"/>
                             <!--[C-CDA R2.1] Encounter Activities (V3)-->
-                            <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.49"/>
+                            <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.4.49"/>
                             <id root="fd7ee2ec-4d8e-4169-aeb6-836731cc7201"/>
-                            <code code="99213" codeSystem="2.16.840.1.113883.6.12" codeSystemName="CPT-4" displayName="Office outpatient visit 15 minutes"/>
+                            <code code="99213"
+                                                  codeSystem="2.16.840.1.113883.6.12"
+                                                  codeSystemName="CPT-4"
+                                                  displayName="Office outpatient visit 15 minutes"/>
                             <effectiveTime value="20200513"/>
                         </encounter>
                     </entry>
@@ -301,7 +337,10 @@
                 <!--******************************************************** History of Present Illness Section ********************************************************-->
                 <section nullFlavor="NI">
                     <templateId root="1.3.6.1.4.1.19376.1.5.3.1.3.4"/>
-                    <code code="10164-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="History of Present Illness"/>
+                    <code code="10164-2"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="History of Present Illness"/>
                     <title>History of Present Illness</title>
                     <text>No history of present illness</text>
                 </section>
@@ -312,8 +351,12 @@
                     <!--[C-CDA R1.1] Medications Administered Section-->
                     <templateId root="2.16.840.1.113883.10.20.22.2.38"/>
                     <!--[C-CDA R2.0] Medications Administered Section (V2) -->
-                    <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.38"/>
-                    <code code="29549-3" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Medications Administered"/>
+                    <templateId extension="2014-06-09"
+                                                  root="2.16.840.1.113883.10.20.22.2.38"/>
+                    <code code="29549-3"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Medications Administered"/>
                     <title>Medications Administered</title>
                     <text>No medications administered</text>
                 </section>
@@ -324,12 +367,17 @@
                     <!--[C-CDA R1.1] Problem Section (entries optional)-->
                     <templateId root="2.16.840.1.113883.10.20.22.2.5"/>
                     <!--[C-CDA R2.1] Problem Section (entries optional) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.5"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.5"/>
                     <!--[C-CDA R1.1] Problem Section (entries required)-->
-                    <templateId root="2.16.840.1.113883.10.20.22.2.5.1"/>
+                    <templateId
+                                                  root="2.16.840.1.113883.10.20.22.2.5.1"/>
                     <!-- [C-CDA R2.1] Problem Section (entries required) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.5.1"/>
-                    <code code="11450-4" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Problem List"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.5.1"/>
+                    <code code="11450-4"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC" displayName="Problem List"/>
                     <title>Problem List</title>
                     <text>No problems reported</text>
                 </section>
@@ -338,7 +386,10 @@
                 <!--******************************************************** Reason for visit Section ********************************************************-->
                 <section nullFlavor="NI">
                     <templateId root="2.16.840.1.113883.10.20.22.2.12"/>
-                    <code code="29299-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Reason for visit"/>
+                    <code code="29299-5"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Reason for visit"/>
                     <title>Reason for visit</title>
                     <text>
                         <paragraph/>
@@ -351,12 +402,18 @@
                     <!--[C-CDA R1.1] Results Section (entries optional)-->
                     <templateId root="2.16.840.1.113883.10.20.22.2.3"/>
                     <!--[C-CDA R2.1] Results Section (entries optional) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.3"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.3"/>
                     <!--[C-CDA R1.1] Results Section (entries required)-->
-                    <templateId root="2.16.840.1.113883.10.20.22.2.3.1"/>
+                    <templateId
+                                                  root="2.16.840.1.113883.10.20.22.2.3.1"/>
                     <!-- [C-CDA R2.1] Results Section (entries required) (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.3.1"/>
-                    <code code="30954-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Relevant diagnostic tests and/or laboratory data"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.3.1"/>
+                    <code code="30954-2"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Relevant diagnostic tests and/or laboratory data"/>
                     <title>Results</title>
                     <text>
                         <table>
@@ -377,7 +434,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ID="id_2047cca3-559f-45da-8775-406538fa4815_ref">
+                                <tr
+                                                  ID="id_2047cca3-559f-45da-8775-406538fa4815_ref">
                                     <td>SARS-like Coronavirus N gene [Presence] in
                                                   Unspecified specimen by NAA with probe
                                                   detection</td>
@@ -413,7 +471,8 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr ID="id_9890e2c3-019a-4168-8403-a0a069994440_ref">
+                                                        <tr
+                                                  ID="id_9890e2c3-019a-4168-8403-a0a069994440_ref">
                                                             <td>SARS-like Coronavirus N gene [Presence] in
                                                   Unspecified specimen by NAA with probe
                                                   detection</td>
@@ -439,9 +498,13 @@
                             <!--[C-CDA R1.1] Result Organizer -->
                             <templateId root="2.16.840.1.113883.10.20.22.4.1"/>
                             <!--[C-CDA R2.1] Result Organizer (V3)-->
-                            <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.1"/>
+                            <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.4.1"/>
                             <id root="2047cca3-559f-45da-8775-406538fa4815"/>
-                            <code code="" codeSystem="" codeSystemName="" displayName=""/>
+                            <code code=""
+                                                  codeSystem=""
+                                                  codeSystemName=""
+                                                  displayName=""/>
                             <statusCode code="completed"/>
                             <effectiveTime>
                                 <low value="20200513"/>
@@ -452,13 +515,16 @@
                                     <!--[C-CDA R1.1] Result Observation -->
                                     <templateId root="2.16.840.1.113883.10.20.22.4.2"/>
                                     <!--[C-CDA R2.1] Result Observation (V3)-->
-                                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.2"/>
-                                    <templateId extension="2016-12-01" root="2.16.840.1.113883.10.20.15.2.3.2"/>
+                                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.4.2"/>
+                                    <templateId extension="2016-12-01"
+                                                  root="2.16.840.1.113883.10.20.15.2.3.2"/>
                                     <!--[eICR R2 STU1.1] Initial Case Report Trigger Code Result Observation-->
                                     <id root="9890e2c3-019a-4168-8403-a0a069994440"/>
-                                    <!--DATA AUGMENTATION: This data has been augmented with a standard LOINC code -->
-                                    <!--DATA AUGMENTATION: The data in the code and code/originalText data elements is the original data -->
-                                    <code code="" codeSystem="" codeSystemName="" displayName="">
+                                    <code code=""
+                                                  codeSystem=""
+                                                  codeSystemName=""
+                                                  displayName="">
                                         <originalText>COVID-19 Spike IgG Interpretation
                                             <reference value="#Result.1.2.840.114350.1.13.478.3.7.2.798268.2047881.Comp3Name"/>
                                         </originalText>
@@ -470,31 +536,14 @@
                                             </originalText>
                                             <text>SARS-like Virus</text>
                                         </translation>
-                                        <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                        <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="COVID-19 Spike IgG Interpretation"/>
                                     </code>
                                     <statusCode code="completed"/>
                                     <effectiveTime value="20200513"/>
-                                    <value code="260373001" codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED-CT" displayName="Detected (qualifier value)" xsi:type="CD"/>
-                                    <author>
-                                        <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->
-                                        <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
-                                        <!--DATA AUGMENTATION: time of data augmentation operation -->
-                                        <effectiveTime value="20260213152757"/>
-                                        <assignedAuthor>
-                                            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                            <id nullFlavor="NA"/>
-                                            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                            <addr nullFlavor="NA"/>
-                                            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-                                            <telecom nullFlavor="NA"/>
-                                            <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
-                                            <assignedAuthoringDevice>
-                                                <!--DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
-                                                <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
-                                            </assignedAuthoringDevice>
-                                        </assignedAuthor>
-                                    </author>
+                                    <value code="260373001"
+                                                  codeSystem="2.16.840.1.113883.6.96"
+                                                  codeSystemName="SNOMED-CT"
+                                                  displayName="Detected (qualifier value)"
+                                                  xsi:type="CD"/>
                                 </observation>
                             </component>
                         </organizer>
@@ -505,9 +554,14 @@
                 <!--******************************************************** Plan of Care/Treatment Section ********************************************************-->
                 <section>
                     <!--[C-CDA R1.1] Plan of Care Section new-->
-                    <templateId root="2.16.840.1.113883.10.20.22.2.22.1"/>
-                    <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.2.22.1"/>
-                    <code code="18776-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Plan of Treatment"/>
+                    <templateId
+                                                  root="2.16.840.1.113883.10.20.22.2.22.1"/>
+                    <templateId extension="2014-06-09"
+                                                  root="2.16.840.1.113883.10.20.22.2.22.1"/>
+                    <code code="18776-5"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Plan of Treatment"/>
                     <title>Plan of Treatment</title>
                     <text>
                         <paragraph>*** In the table below, row entries
@@ -535,7 +589,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ID="id_35e51f68-1d48-43e8-bcfd-769b007104e8_ref">
+                                <tr
+                                                  ID="id_35e51f68-1d48-43e8-bcfd-769b007104e8_ref">
                                     <td>SARS-like Coronavirus N gene [Presence] in
                                                   Unspecified specimen by NAA with probe
                                                   detection</td>
@@ -554,9 +609,13 @@
                             <!--[C-CDA R1.1] Plan of Care Activity Observation-->
                             <templateId root="2.16.840.1.113883.10.20.22.4.44"/>
                             <!--[C-CDA R2.0] Planned Observation (V2)-->
-                            <templateId extension="2014-06-09" root="2.16.840.1.113883.10.20.22.4.44"/>
+                            <templateId extension="2014-06-09"
+                                                  root="2.16.840.1.113883.10.20.22.4.44"/>
                             <id root="35e51f68-1d48-43e8-bcfd-769b007104e8"/>
-                            <code code="94310-0 " codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"/>
+                            <code code="94310-0 "
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="SARS-like Coronavirus N gene [Presence] in Unspecified specimen by NAA with probe detection"/>
                             <statusCode code="active"/>
                             <effectiveTime value="20200513"/>
                         </observation>
@@ -569,8 +628,12 @@
                     <!-- [C-CDA 1.1] Social History Section-->
                     <templateId root="2.16.840.1.113883.10.20.22.2.17"/>
                     <!--[C-CDA 2.1] Social History Section (V3)-->
-                    <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.2.17"/>
-                    <code code="29762-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Social History"/>
+                    <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.2.17"/>
+                    <code code="29762-2"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Social History"/>
                     <title>Social History</title>
                     <text>
                         <table>
@@ -618,7 +681,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ID="id_799478b3-a3af-4bfe-8501-fb832a3a4645_ref">
+                                <tr
+                                                  ID="id_799478b3-a3af-4bfe-8501-fb832a3a4645_ref">
                                     <td>Occupation / Employment details</td>
                                     <td>Postsecondary teachers</td>
                                     <td/>
@@ -634,14 +698,22 @@
                     <entry typeCode="DRIV">
                         <observation classCode="OBS" moodCode="EVN">
                             <!--[C-CDA R2.1 Companion Guide] Birth Sex Observation -->
-                            <templateId root="2.16.840.1.113883.10.20.22.4.200"/>
-                            <templateId extension="2016-06-01" root="2.16.840.1.113883.10.20.22.4.200"/>
-                            <code code="76689-9" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Sex Assigned At Birth"/>
+                            <templateId
+                                                  root="2.16.840.1.113883.10.20.22.4.200"/>
+                            <templateId extension="2016-06-01"
+                                                  root="2.16.840.1.113883.10.20.22.4.200"/>
+                            <code code="76689-9"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Sex Assigned At Birth"/>
                             <statusCode code="completed"/>
-                            <effectiveTime value="19901002">
+                            <effectiveTime value="19901002"
+                                                  >
                                 <!--effectiveTime if present should match birthTime-->
                             </effectiveTime>
-                            <value code="F" codeSystem="2.16.840.1.113883.5.1" codeSystemName="AdministrativeGender" displayName="Female" xsi:type="CD"/>
+                            <value code="F" codeSystem="2.16.840.1.113883.5.1"
+                                                  codeSystemName="AdministrativeGender"
+                                                  displayName="Female" xsi:type="CD"/>
                         </observation>
                     </entry>
                     <entry typeCode="DRIV">
@@ -650,49 +722,29 @@
                             <!--[C-CDA R1.1] Social History Observation-->
                             <templateId root="2.16.840.1.113883.10.20.22.4.38"/>
                             <!--[C-CDA R2.1] Social History Observation (V3)-->
-                            <templateId extension="2015-08-01" root="2.16.840.1.113883.10.20.22.4.38"/>
+                            <templateId extension="2015-08-01"
+                                                  root="2.16.840.1.113883.10.20.22.4.38"/>
                             <id root="799478b3-a3af-4bfe-8501-fb832a3a4645"/>
-                            <code code="364703007" codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT" displayName="Employment detail">
-                                <translation code="11295-3" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Current employment - Reported"/>
+                            <code code="364703007"
+                                                  codeSystem="2.16.840.1.113883.6.96"
+                                                  codeSystemName="SNOMED CT"
+                                                  displayName="Employment detail">
+                                <translation code="11295-3"
+                                                  codeSystem="2.16.840.1.113883.6.1"
+                                                  codeSystemName="LOINC"
+                                                  displayName="Current employment - Reported"/>
                             </code>
                             <statusCode code="completed"/>
                             <effectiveTime/>
-                            <value code="2200" codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT" displayName="Postsecondary teachers" xsi:type="CD"/>
+                            <value code="2200"
+                                                  codeSystem="2.16.840.1.113883.6.96"
+                                                  codeSystemName="SNOMED CT"
+                                                  displayName="Postsecondary teachers" xsi:type="CD"
+                                                  />
                         </observation>
                     </entry>
                 </section>
             </component>
         </structuredBody>
     </component>
-    <!--DATA AUGMENTATION: typeCode 'XFRM' -->
-    <relatedDocument typeCode="XFRM">
-        <parentDocument>
-            <!--DATA AUGMENTATION: ClinicalDocument/id of the document to replace -->
-            <!--DATA AUGMENTATION: original-document-id -->
-            <id root="10c13861-86a8-4a9a-aec6-b615921178df" assigningAuthorityName="original-document">
-                <!--Globally unique document ID (extension) is scoped by vendor/software-->
-            </id>
-            <!--DATA AUGMENTATION: input-document-setId -->
-            <setId extension="8d86218e-0fea-11eb-8216-a80388425cfb" root="1.2.840.114350.1.13.380.3.7.1.1"/>
-            <!--DATA AUGMENTATION: input-document-versionNumber -->
-            <versionNumber value="1"/>
-        </parentDocument>
-    </relatedDocument>
-    <author>
-        <!--DATA AUGMENTATION: time of data augmentation operation -->
-        <effectiveTime value="20260213152757"/>
-        <assignedAuthor>
-            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-            <id nullFlavor="NA"/>
-            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-            <addr nullFlavor="NA"/>
-            <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
-            <telecom nullFlavor="NA"/>
-            <!--DATA AUGMENTATION: set to 'Data Augmentation Tool' -->
-            <assignedAuthoringDevice>
-                <!--DATA AUGMENTATION: assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool -->
-                <softwareName code="text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation" displayName="Text-to-Code"/>
-            </assignedAuthoringDevice>
-        </assignedAuthor>
-    </author>
 </ClinicalDocument>
