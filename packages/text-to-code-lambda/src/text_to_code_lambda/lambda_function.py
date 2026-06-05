@@ -336,7 +336,7 @@ def _get_cache_metric(hit_value: typing.Literal["hit", "miss"]) -> dict:
     }
 
 
-def _process_record_pipeline(
+def _process_record_pipeline(  # noqa: PLR0915
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
