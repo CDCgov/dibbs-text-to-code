@@ -1,3 +1,3 @@
-from .main import ValidationResult, validate_eicr
+from .main import ValidationResult, build_schematron_report_xml, validate_eicr
 
-__all__ = ["ValidationResult", "validate_eicr"]
+__all__ = ["ValidationResult", "build_schematron_report_xml", "validate_eicr"]

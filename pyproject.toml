@@ -117,6 +117,10 @@ known-first-party = [
 "scripts/*.py" = [
   "T201", # print
 ]
+# CLI entry points legitimately write to stdout/stderr
+"**/__main__.py" = [
+  "T201", # print
+]
 ".github/scripts/*.py" = [
   "S607", # `git` resolved from PATH is fine on GitHub-hosted runners
   "T201", # prints surface as CI run logs intentionally
