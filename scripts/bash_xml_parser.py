@@ -27,8 +27,13 @@ if __name__ == "__main__":
 
     root = ET.fromstring(xml)
 
+    # The augmented eICR is served in the CDA default namespace
+    # (xmlns="urn:hl7-org:v3"), so each step must match that namespace. The
+    # "{*}" wildcard matches namespaced and unnamespaced elements alike, so this
+    # keeps working regardless of how the augmenter serializes the tree.
     node = root.find(
-        "component/structuredBody/component/section/entry/observation/code/translation"
+        "{*}component/{*}structuredBody/{*}component/{*}section/{*}entry/"
+        "{*}observation/{*}code/{*}translation"
     )
 
     if node is None:

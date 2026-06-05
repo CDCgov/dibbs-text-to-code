@@ -6,15 +6,17 @@
 #   1. Loads each test case from the file into a bash array.
 #   2. Templates a dummy test eICR with the nonstandard input name
 #      of each test case, and stamps each result with a fresh UUID.
-#   3. For each test eICR, one at a time, uploads the templated eICR + a 
-#      canned schematron errors file to S3, which fires the TTC lambda
-#      via SQS event.
+#   3. For each test eICR, one at a time, runs real Schematron validation
+#      against it (via the in-repo `validation` package) and uploads that
+#      report + the templated eICR to S3, which fires the TTC lambda via
+#      SQS event.
 #   4. Tails both lambdas' CloudWatch logs in real time until each emits its
 #      `REPORT RequestId:` line (AWS's end-of-invocation marker).
 #   5. Fetches the resulting augmented eICR XML from S3, parses its
 #      translated code name (where the TTC Pipeline leaves its predicted
-#      standardization), and compares the result to the expected value of
-#      the test case.
+#      standardization), re-validates the augmented eICR, and marks the case
+#      passed only if the predicted code matches AND no Schematron errors
+#      remain. Exits non-zero if any case fails.
 
 # Usage: ./scripts/batch_aws_test.sh ./test_cases_file.json
 #
@@ -27,16 +29,29 @@ command -v gum >/dev/null || {
     echo "This script requires 'gum'. Install with: brew install gum" >&2
     exit 1
 }
+command -v uv >/dev/null || {
+    echo "This script requires 'uv' (runs the in-repo validation package). Install: https://docs.astral.sh/uv/" >&2
+    exit 1
+}
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUCKET="dibbs-text-to-code"
 SOURCE_EICR="$SCRIPT_DIR/test_eicr.xml"
-SOURCE_SCHEMATRON="$SCRIPT_DIR/test_schematron_errors.xml"
 TTC_LOG="/aws/lambda/ttc-lambda"                  # CloudWatch log group for the TTC lambda
 AUG_LOG="/aws/lambda/ttc-augmentation-lambda"     # …and the augmentation lambda
 AWS_REGION="us-east-2"
+
+# Run the in-repo validation package CLI (real Schematron validation):
+#   validate_cli report <eicr>  → prints the NIST <Report> XML to stdout
+#   validate_cli check  <eicr>  → exits non-zero if any Schematron errors remain
+# `--all-packages` syncs the uv workspace (the validation member isn't a root
+# dependency); it's a no-op once the workspace has been synced.
+validate_cli() {
+    uv run --project "$REPO_ROOT" --all-packages python -m validation "$@"
+}
 
 
 # ── Chrome helpers ────────────────────────────────────────────────────────────
@@ -55,10 +70,6 @@ JSON_FP="$1"
 
 [[ -f "$SOURCE_EICR" ]] || {
     gum log -l error "Missing $SOURCE_EICR"
-    exit 1
-}
-[[ -f "$SOURCE_SCHEMATRON" ]] || {
-    gum log -l error "Missing $SOURCE_SCHEMATRON"
     exit 1
 }
 
@@ -141,6 +152,8 @@ while IFS=$'\t' read -r nin cout loinc; do
     NONSTANDARD_INPUTS+=("$nin"); CORRECT_OUTPUTS+=("$cout"); LOINC_CODES+=("$loinc")
 done < <(JSON_FP="$JSON_FP" python3 "$SCRIPT_DIR/bash_json_loader.py")
 
+any_failed=0
+
 for i in "${!NONSTANDARD_INPUTS[@]}"; do
 
     section "Test Case $i:"
@@ -156,14 +169,21 @@ for i in "${!NONSTANDARD_INPUTS[@]}"; do
         python3 "$SCRIPT_DIR/bash_eicr_templater.py"
     
     
+    # ── Validate the eICR ──────────────────────────────────────────────────────────
+    # Run real Schematron validation against the templated eICR to produce the
+    # report the TTC lambda consumes (replacing the old canned fixture).
+    echo "  Validating eICR"
+    SCHEMATRON_REPORT="$TMPDIR/schematron_$FILENAME"
+    validate_cli report "$TEMPLATED_EICR" >"$SCHEMATRON_REPORT"
+
     # # ── Fire the pipeline ─────────────────────────────────────────────────────────
     # # The schematron report must land under ValidationResponseV2/ before the eICR
     # # under TextToCodeSubmissionV2/, because the eICR put is the S3 event that
     # # triggers the TTC lambda, which then reads the paired schematron report by
     # # the same filename.
     echo "  Uploading to S3"
-    gum spin --spinner=dot --title "Uploading schematron errors…" -- \
-        aws s3 cp --region "$AWS_REGION" "$SOURCE_SCHEMATRON" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
+    gum spin --spinner=dot --title "Uploading schematron report…" -- \
+        aws s3 cp --region "$AWS_REGION" "$SCHEMATRON_REPORT" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
     gum spin --spinner=dot --title "Uploading templated eICR…" -- \
         aws s3 cp --region "$AWS_REGION" "$TEMPLATED_EICR" "s3://$BUCKET/TextToCodeSubmissionV2/$FILENAME"
 
@@ -179,14 +199,37 @@ for i in "${!NONSTANDARD_INPUTS[@]}"; do
     content="$(aws s3 cp --region "$AWS_REGION" "s3://$BUCKET/AugmentationEICRV2/$FILENAME" -)"
     { read PREDICTED_LOINC; read PREDICTED_CODE_STRING; } < <(CONTENT="$content" python3 "$SCRIPT_DIR/bash_xml_parser.py")
 
-    if [[ "$PREDICTED_LOINC" = "${LOINC_CODES[$i]}" ]]; then
+    # Re-validate the augmented eICR — a case passes only if augmentation also
+    # resolved the Schematron errors we started with.
+    AUGMENTED_EICR="$TMPDIR/augmented_$FILENAME"
+    printf '%s' "$content" >"$AUGMENTED_EICR"
+    if validate_cli check "$AUGMENTED_EICR" 2>/dev/null; then
+        validation_clean=1
+    else
+        validation_clean=0
+    fi
+
+    if [[ "$PREDICTED_LOINC" = "${LOINC_CODES[$i]}" && "$validation_clean" -eq 1 ]]; then
         echo "  Predicted LOINC code $PREDICTED_LOINC matches expected code ${LOINC_CODES[$i]}"
+        echo "  Schematron validation clean"
         echo "  Test Case Passed!"
     else
-        echo "  Predicted code $PREDICTED_LOINC does not match expected code ${LOINC_CODES[$i]}"
-        echo "    Predicted code string: $PREDICTED_CODE_STRING"
-        echo "    Expected code string:  ${CORRECT_OUTPUTS[$i]}"
+        if [[ "$PREDICTED_LOINC" != "${LOINC_CODES[$i]}" ]]; then
+            echo "  Predicted code $PREDICTED_LOINC does not match expected code ${LOINC_CODES[$i]}"
+            echo "    Predicted code string: $PREDICTED_CODE_STRING"
+            echo "    Expected code string:  ${CORRECT_OUTPUTS[$i]}"
+        fi
+        if [[ "$validation_clean" -ne 1 ]]; then
+            echo "  Schematron errors remain after augmentation"
+        fi
         echo "  Test Case Failed :/"
+        any_failed=1
     fi
 
 done
+
+if [[ "$any_failed" -ne 0 ]]; then
+    gum style --foreground=red --bold "Some test cases failed."
+    exit 1
+fi
+gum style --foreground=green --bold "All test cases passed."
