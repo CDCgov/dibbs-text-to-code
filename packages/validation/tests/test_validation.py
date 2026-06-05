@@ -1,18 +1,34 @@
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 
-from validation import ValidationResult, validate_eicr
+from validation import ValidationResult, build_schematron_report_xml, validate_eicr
 from validation import main as validation_main
+
+FAKE_MESSAGE = "Text to Code: Lab Test Name Ordered does not have a @code attribute"
+FAKE_LOCATION = "/ClinicalDocument/component/structuredBody/component/section/entry/observation"
+FAKE_TEST = "not(cda:code) or cda:code/@code"
+
+
+class FakeText:
+    local_name = "text"
+    string_value = FAKE_MESSAGE
 
 
 class FakeAssert:
     local_name = "failed-assert"
+    string_value = FAKE_MESSAGE
+
+    def __init__(self) -> None:
+        """Represents a failed-assert node, whose <svrl:text> child carries the message."""
+        self.children = [FakeText()]
 
     def get_attribute_value(self, attribute: str) -> str:
         values = {
             "id": "ttc-labTestNameOrdered-noCode",
-            "location": "/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+            "location": FAKE_LOCATION,
+            "test": FAKE_TEST,
         }
 
         return values[attribute]
@@ -179,3 +195,63 @@ def test_validation_raises_when_validator_errors(
         validate_eicr("<ClinicalDocument />")
 
     assert "An error occurred during validation: validator failed" in caplog.text
+
+
+def test_normalize_location_strips_eqname_prefixes():
+    """Tests that Saxon EQName namespace prefixes are stripped to plain XPath steps."""
+    raw = (
+        "/Q{urn:hl7-org:v3}ClinicalDocument[1]"
+        "/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}observation[1]"
+    )
+
+    assert (
+        validation_main._normalize_location(raw)
+        == "/ClinicalDocument[1]/component[1]/observation[1]"
+    )
+
+
+def test_build_schematron_report_xml_uses_fake_svrl(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Tests that build_schematron_report_xml serializes failed asserts into the NIST report shape."""
+    stage1_output = tmp_path / "stage1.sch.tmp"
+    stage2_output = tmp_path / "stage2.sch.tmp"
+    validator_output = tmp_path / "validator.xsl.tmp"
+
+    stage1_output.write_text("existing stage 1")
+    stage2_output.write_text("existing stage 2")
+    validator_output.write_text("existing validator")
+
+    monkeypatch.setattr(validation_main, "STAGE1_OUTPUT", stage1_output)
+    monkeypatch.setattr(validation_main, "STAGE2_OUTPUT", stage2_output)
+    monkeypatch.setattr(validation_main, "VALIDATOR_OUTPUT", validator_output)
+    monkeypatch.setattr(validation_main, "PySaxonProcessor", FakeSaxonProcessor)
+
+    report = build_schematron_report_xml("<ClinicalDocument />")
+
+    # The xmlns="" reset is required for the TTC reader's namespace-less find() calls.
+    assert '<validationResult xmlns="">' in report
+
+    issues = list(ET.fromstring(report).iter("issue"))
+    assert len(issues) == 1
+    assert issues[0].findtext("message") == FAKE_MESSAGE
+    assert issues[0].findtext("context") == FAKE_LOCATION
+    assert issues[0].findtext("test") == FAKE_TEST
+
+
+def test_build_schematron_report_xml_normalizes_real_location():
+    """Tests that a real validation run produces a parseable report with a namespace-free context."""
+    with Path("packages/validation/tests/assets/test_eicr.xml").open() as f:
+        eicr = f.read()
+
+    report = build_schematron_report_xml(eicr)
+
+    assert "Q{" not in report  # Saxon EQName prefixes must be normalized away
+
+    issues = list(ET.fromstring(report).iter("issue"))
+    assert len(issues) == 1
+    assert issues[0].findtext("message") == FAKE_MESSAGE
+    context = issues[0].findtext("context")
+    assert context is not None
+    assert context.startswith("/ClinicalDocument[1]/")
+    assert context.endswith("/observation[1]")

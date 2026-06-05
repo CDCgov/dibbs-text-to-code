@@ -30,6 +30,15 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
 COPY ./packages/augmentation ${LAMBDA_TASK_ROOT}/augmentation
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation"
 
+# validation pulls saxonche (Saxon/C) for the post-augmentation Schematron check.
+COPY ./packages/validation ${LAMBDA_TASK_ROOT}/validation
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/validation"
+# Pre-generate the schematron→XSLT artifacts now, while the filesystem is
+# writable. validate_eicr caches them inside the installed package, but the
+# Lambda runtime filesystem is read-only (except /tmp); baking them at build
+# time means the first invocation finds them and never needs to write.
+RUN python -c "from validation import validate_eicr; validate_eicr('<ClinicalDocument xmlns=\"urn:hl7-org:v3\"/>', redo_all_steps=True)"
+
 COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda" \
     && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"

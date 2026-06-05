@@ -4,12 +4,15 @@
 #
 # Given a "nonstandard test name" (e.g. "Zucchini IgG"), this script:
 #   1. Templates scripts/test_eicr.xml with that name and fresh UUIDs.
-#   2. Uploads the templated eICR + a canned schematron errors file to S3,
-#      which fires the TTC lambda via SQS event.
+#   2. Runs real Schematron validation against the templated eICR (via the
+#      in-repo `validation` package) and uploads that report to S3, then the
+#      templated eICR — the eICR put fires the TTC lambda via SQS event.
 #   3. Tails both lambdas' CloudWatch logs in real time until each emits its
 #      `REPORT RequestId:` line (AWS's end-of-invocation marker).
 #   4. Fetches and pretty-prints the resulting TTC metadata JSON and the
 #      augmented eICR XML from S3.
+#   5. Re-validates the augmented eICR and fails if any Schematron errors
+#      remain — i.e. asserts that augmentation resolved them.
 #
 # Usage: ./scripts/aws_e2e.sh "<nonstandard test name>"
 #
@@ -30,15 +33,28 @@ command -v unbuffer >/dev/null || {
     echo "This script requires 'unbuffer' (from expect). Install with: brew install expect" >&2
     exit 1
 }
+command -v uv >/dev/null || {
+    echo "This script requires 'uv' (runs the in-repo validation package). Install: https://docs.astral.sh/uv/" >&2
+    exit 1
+}
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUCKET="dibbs-text-to-code"
 SOURCE_EICR="$SCRIPT_DIR/test_eicr.xml"
-SOURCE_SCHEMATRON="$SCRIPT_DIR/test_schematron_errors.xml"
 TTC_LOG="/aws/lambda/ttc-lambda"                  # CloudWatch log group for the TTC lambda
 AUG_LOG="/aws/lambda/ttc-augmentation-lambda"     # …and the augmentation lambda
 AWS_REGION="us-east-2"
+
+# Run the in-repo validation package CLI (real Schematron validation):
+#   validate_cli report <eicr>  → prints the NIST <Report> XML to stdout
+#   validate_cli check  <eicr>  → exits non-zero if any Schematron errors remain
+# `--all-packages` syncs the uv workspace (the validation member isn't a root
+# dependency); it's a no-op once the workspace has been synced.
+validate_cli() {
+    uv run --project "$REPO_ROOT" --all-packages python -m validation "$@"
+}
 
 # ── Chrome helpers ────────────────────────────────────────────────────────────
 
@@ -80,10 +96,6 @@ TEST_NAME="$1"
 
 [[ -f "$SOURCE_EICR" ]] || {
     gum log -l error "Missing $SOURCE_EICR"
-    exit 1
-}
-[[ -f "$SOURCE_SCHEMATRON" ]] || {
-    gum log -l error "Missing $SOURCE_SCHEMATRON"
     exit 1
 }
 
@@ -251,14 +263,22 @@ src = re.sub(
 open(os.environ["OUT_PATH"], "w").write(src)
 PYEOF
 
+# ── Validate the eICR ─────────────────────────────────────────────────────────
+# Run real Schematron validation against the templated eICR to produce the
+# report the TTC lambda consumes (replacing the old canned fixture).
+section "Validating eICR"
+SCHEMATRON_REPORT="$TMPDIR/schematron_$FILENAME"
+validate_cli report "$TEMPLATED_EICR" >"$SCHEMATRON_REPORT"
+gum log -l info "Schematron validation produced $(grep -c '<issue ' "$SCHEMATRON_REPORT" || true) issue(s)"
+
 # ── Fire the pipeline ─────────────────────────────────────────────────────────
 # The schematron report must land under ValidationResponseV2/ before the eICR
 # under TextToCodeSubmissionV2/, because the eICR put is the S3 event that
 # triggers the TTC lambda, which then reads the paired schematron report by
 # the same filename.
 section "Uploading to S3"
-gum spin --spinner=dot --title "Uploading schematron errors…" -- \
-    aws s3 cp "$SOURCE_SCHEMATRON" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
+gum spin --spinner=dot --title "Uploading schematron report…" -- \
+    aws s3 cp "$SCHEMATRON_REPORT" "s3://$BUCKET/ValidationResponseV2/$FILENAME"
 gum spin --spinner=dot --title "Uploading templated eICR…" -- \
     aws s3 cp "$TEMPLATED_EICR" "s3://$BUCKET/TextToCodeSubmissionV2/$FILENAME"
 
@@ -273,6 +293,19 @@ wait_for_s3_object "TTCMetadataV2/${FILENAME%.xml}.json" "TTC metadata"
 wait_for_s3_object "AugmentationEICRV2/$FILENAME" "augmented eICR"
 dump_s3 "TTCMetadataV2/${FILENAME%.xml}.json" json
 dump_s3 "AugmentationEICRV2/$FILENAME" xml
+
+# ── Re-validate the augmented eICR ────────────────────────────────────────────
+# Run the same real Schematron validation against the augmented output and fail
+# if any errors remain — i.e. assert that augmentation actually resolved them.
+section "Re-validating augmented eICR"
+AUGMENTED_EICR="$TMPDIR/augmented_$FILENAME"
+aws s3 cp "s3://$BUCKET/AugmentationEICRV2/$FILENAME" "$AUGMENTED_EICR" >/dev/null
+if validate_cli check "$AUGMENTED_EICR"; then
+    gum style --foreground=green --bold "✓ Validation clean — Schematron errors resolved"
+else
+    gum style --foreground=red --bold "✗ Schematron errors remain after augmentation"
+    exit 1
+fi
 
 gum style --border=double --padding="0 2" --margin="1 0" --foreground=212 \
     "Done — $FILENAME" "" \
