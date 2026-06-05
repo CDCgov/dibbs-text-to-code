@@ -2,7 +2,7 @@ import os
 
 import requests
 from dotenv import load_dotenv
-from utils import export_json
+from data.accuracy_evaluation.utils import export_json
 
 load_dotenv()
 
@@ -27,9 +27,9 @@ def get_ersd_valuesets(endpoints: list) -> tuple[dict, list]:
     Fetches LOINC value sets from ERSD API.
     :param endpoints: List of TES API endpoints to fetch value sets from.
     """
-    response = requests.get(ERSD_BASE_URL)
+    response = requests.get(ERSD_BASE_URL).json()
     oids = []
-    for item in response.json().get("entry"):
+    for item in response.get("entry", []):
         if item["resource"].get("id") in endpoints:
             oid_list = [
                 oid_url.split("/")[-1]
@@ -65,7 +65,7 @@ def build_ersd_mapping_files(response: dict, oids: list) -> tuple[dict, dict]:
     """
     oid_to_conditions = {}
     loinc_to_oids = {}
-    for entry in response.json().get("entry"):
+    for entry in response.get("entry", []):
         oid = entry.get("resource").get("id")
         if oid in oids:
             snomed = (
@@ -134,7 +134,7 @@ def evaluate_mapping_files(oid_to_conditions: dict, loinc_to_oids: dict):
     for oids in loinc_to_oids.values():
         k = len(oids)
         multiple_oids[k] = multiple_oids.get(k, 0) + 1
-    pct_multi_oids = (n - multiple_oids.get(1)) / n * 100
+    pct_multi_oids = (n - multiple_oids.get(1, 0)) / n * 100
     print("LOINC codes mapped to multiple OIDs:", pct_multi_oids, "%")
     for k in sorted(multiple_oids):
         print(k, multiple_oids[k])
@@ -145,7 +145,7 @@ def evaluate_mapping_files(oid_to_conditions: dict, loinc_to_oids: dict):
         unique_count = len(set(conditions))
         multiple_conditions[unique_count] = multiple_conditions.get(unique_count, 0) + 1
 
-    pct_multi_conditions = (n - multiple_conditions.get(1)) / n * 100
+    pct_multi_conditions = (n - multiple_conditions.get(1, 0)) / n * 100
     print("LOINC codes mapped to multiple unique conditions:", pct_multi_conditions, "%")
     for k in sorted(multiple_conditions):
         print(k, multiple_conditions[k])

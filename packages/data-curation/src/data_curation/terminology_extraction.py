@@ -30,12 +30,22 @@ import datetime
 import json
 import os
 import sys
+from pathlib import Path
 import requests
-from data_curation.terminologies.loinc import get_loinc_lab_names, get_loinc_lab_orders, get_loinc_lab_results, process_loincs_for_umls_urls, LOINC_PARTS_ABBRV_SYNONYMS
+from data_curation.terminologies.loinc import (extract_full_loinc_lab_names,
+                                               extract_full_loinc_lab_orders,
+                                               extract_full_loinc_lab_results,
+                                               process_loincs_for_umls_urls,
+                                               LOINC_PARTS_ABBRV_SYNONYMS)
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
 from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
 from data_curation.terminologies.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
-from data_curation.terminologies.general import BASE_FOLDER, ENHANCEMENTS_DIRECTORY, TMP_DIRECTORY, UMLS_API_KEY, clean_text_string
+from data_curation.terminologies.general import (save_json_file,
+                                                save_valueset_csv_file,
+                                                clean_text_string,
+                                                TMP_DIRECTORY,
+                                                ENHANCEMENTS_DIRECTORY,
+                                                UMLS_API_KEY)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -50,26 +60,6 @@ def extract_full_hl7_lab_interp():  # noqa: D103
     hl7_filename = f"hl7_lab_interp_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
     hl7_rows = get_hl7_lab_interp()
     save_valueset_csv_file(hl7_filename, hl7_rows)
-
-
-def extract_full_loinc_lab_names():  # noqa: D103
-    loinc_filename = f"loinc_lab_names_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
-    all_loinc_rows = get_loinc_lab_names()
-
-    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
-
-
-def extract_full_loinc_lab_orders():  # noqa: D103
-    loinc_filename = f"loinc_lab_orders_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
-    loinc_order_rows = get_loinc_lab_orders()
-
-    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
-
-
-def extract_full_loinc_lab_results():  # noqa: D103
-    loinc_filename = f"loinc_lab_result_{datetime.datetime.now().strftime('%Y%m%d')}.csv"
-    loinc_result_rows = get_loinc_lab_results()
-    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
 
 
 def get_loinc_umls_related_results():  # noqa: D103
@@ -101,7 +91,7 @@ def get_loinc_umls_related_results():  # noqa: D103
     save_json_file(ENHANCEMENTS_DIRECTORY, umls_filename, umls_rows, False)
 
 
-def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
+def process_loinc_codes_with_umls(file_path: str | Path) -> dict:  # noqa: D103
     # ensure UMLS creds are available
     if UMLS_API_KEY is None:
         raise KeyError("UMLS_API_KEY Environment Variable must be set to a proper UMLS API Key!")
@@ -262,69 +252,6 @@ def process_loinc_codes_with_umls(file_path: str) -> dict:  # noqa: D103
     return umls_loinc_rows
 
 
-def save_valueset_csv_file(filename: str, contents: dict, append_to_file: bool = False):  # noqa: D103
-    if not filename.strip():
-        print("No filename supplied.  Failed to save CSV file!")
-        return
-
-    if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save CSV!")
-        return
-
-    if append_to_file:
-        file_method = "a"
-    else:
-        file_method = "w"
-
-    try:
-        full_file_path = BASE_FOLDER / filename
-        csv_headers = contents[0].keys()
-
-        with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
-            if not (append_to_file):
-                writer.writeheader()
-            writer.writerows(contents)
-        print(f"CSV File successfully saved as {full_file_path}")
-
-    except ValueError as e:
-        print(f"Error parsing Dict Contents: {e}")
-    except Exception as e:
-        print(f"An error occured: {e}")
-
-
-def save_json_file(  # noqa: D103
-    directory_path: str, filename: str, contents: dict, append_to_file: bool = False
-):
-    if not filename.strip() or not directory_path.strip():
-        print("No filename & path supplied.  Failed to save JSON File!")
-        return
-
-    if contents is None and len(contents) == 0:
-        print("Empty file contents!  Failed to save JSON File!")
-        return
-
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
-
-    full_file_path = directory_path / filename
-
-    if append_to_file:
-        file_method = "a"
-    else:
-        file_method = "w"
-
-    try:
-        with open(full_file_path, file_method, encoding="utf-8") as dictfile:
-            json.dump(contents, dictfile, indent=4)
-        print(f"JSON File successfully saved as: {full_file_path}")
-
-    except ValueError as e:
-        print(f"Error parsing Dict Contents: {e}")
-    except Exception as e:
-        print(f"An error occured: {e}")
-
-
 def _get_loinc_abbrv_syns(
     part_code: str,
     part_name: str,
@@ -340,15 +267,15 @@ def _get_loinc_abbrv_syns(
             repl_name is not None
             and repl_name not in filter_from_names
             and repl_name != part_name
-            and repl_name not in loinc_row.get("synonyms")
+            and repl_name not in loinc_row["synonyms"]
         ):
             loinc_row["synonyms"].append(repl_name)
         if (
             pref_abrv is not None
             and pref_abrv not in filter_from_names
             and pref_abrv != part_name
-            and pref_abrv not in loinc_row.get("synonyms")
-            and pref_abrv not in loinc_row.get("abbrv")
+            and pref_abrv not in loinc_row["synonyms"]
+            and pref_abrv not in loinc_row["abbrv"]
         ):
             loinc_row["abbrv"].append(pref_abrv)
 
@@ -356,8 +283,8 @@ def _get_loinc_abbrv_syns(
             synonym is not None
             and synonym not in filter_from_names
             and synonym != part_name
-            and synonym not in loinc_row.get("synonyms")
-            and synonym not in loinc_row.get("abbrv")
+            and synonym not in loinc_row["synonyms"]
+            and synonym not in loinc_row["abbrv"]
         ):
             loinc_row["synonyms"].append(synonym)
     return loinc_row
@@ -394,12 +321,12 @@ def create_loinc_part_abbrv_syn_dicts():
             # for particular rows with character issues
             # print(f"ROW_COUNT: {row_count}")
             row_count = row_count + 1
-            part_code = row.get("PART_NUM")
-            axis_name = row.get("PART_TYPE_NAME_NAME")
-            part_name = row.get("PART")
-            repl_name = row.get("PART_NAME")
-            pref_abrv = row.get("PREF_ABRV")
-            synonym = row.get("SYNONYM")
+            part_code = row.get("PART_NUM") or ""
+            axis_name = row.get("PART_TYPE_NAME_NAME") or ""
+            part_name = row.get("PART") or ""
+            repl_name = row.get("PART_NAME") or ""
+            pref_abrv = row.get("PREF_ABRV") or ""
+            synonym = row.get("SYNONYM") or ""
 
             # build various LOINC Part dicts
             if axis_name == "COMPONENT":

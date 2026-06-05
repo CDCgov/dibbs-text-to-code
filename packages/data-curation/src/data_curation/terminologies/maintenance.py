@@ -1,11 +1,19 @@
+from datetime import datetime
+
 from data_curation.terminologies.loinc import (get_loinc_current_version_data,
                                                      LAB_NAMES,
-                                                     get_loinc_embedding_records)
+                                                     get_loinc_embedding_records,
+                                                     extract_full_loinc_lab_names)
 from data_curation.terminologies.general import (get_latest_extract_file_name, 
                                                        get_date_from_filename, 
-                                                       load_extract_file_to_dict)
+                                                       load_extract_file_to_dict,
+                                                       save_jsonl_file)
+from text_to_code.services.embedder import embed
 
 
+# this current function is just set to work for
+# labnames, but can be modified to perform some or all
+# of the various LOINC valuesets
 def update_loinc_embeddings():
     """Process to get the latest updates from LOINC and convert 
         all the new loinc codes and changes to existing loinc codes
@@ -20,6 +28,8 @@ def update_loinc_embeddings():
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
+    if current_loinc_file is None:
+        return
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_filename(current_loinc_file,"loinc")
     if (file_date <= loinc_version_date):
@@ -27,30 +37,29 @@ def update_loinc_embeddings():
         print(f"Getting all updates from LOINC since {loinc_version_date}!")
         # get the current extract into a dict
         loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
-        loinc_updates = get_loinc_embedding_records(loinc_current_dict,loinc_version)
-        if len(loinc_updates) > 0:
-            # TODO: now process the updates into embeddings
-            # This will be handled in the next ticket
-            # Handled in Ticket #454
-            None
+        loinc_updates = get_loinc_embedding_records(loinc_current_dict,
+                                                       loinc_version,
+                                                       loinc_version_date,
+                                                       current_loinc_file)
     else:
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
         return
-    
-    
 
-    # TODO: add a function here that will clean up
-    # the existing file and make a new one with a new date
-    # so that the next time the process is run it will ensure 
-    # to not add updates unless they are really necessary
-    # 
-    # This will be part of the creating the actual embeddings work
-    #  It will have to succeed from this step to making the embeddings
-    #   into a file or files and then we can update/remove the existing
-    # csv file
-    # Handled in Ticket #454
-    
+    # add embeddings to any of the records for the various descriptions
+    if len(loinc_updates) > 0:
+        print(f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}")
+        for loinc_update_record in loinc_updates:
+            if (loinc_update_record.get("description") is not None
+                and loinc_update_record.get("description", "").strip()
+            ):
+                embedding = embed(loinc_update_record["description"])
+                loinc_update_record["description_vector"] = embedding.tolist()  
+        ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
+        save_jsonl_file(ingestion_file_name,loinc_updates)
+        
+        # if all goes well write a new valueset file with all the existing codes
+        extract_full_loinc_lab_names()
 
 
 def main(all: bool = False, loinc=False):

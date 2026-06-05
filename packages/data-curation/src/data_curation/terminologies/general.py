@@ -12,6 +12,7 @@ to generate and maintain embeddings in Opensearch for TTC.
 # File & Directories
 import csv
 from datetime import datetime
+import json
 import os
 from pathlib import Path
 from utils.regex_patterns import MULTIPLE_SPACE
@@ -22,13 +23,14 @@ import re
 BASE_FOLDER = Path(__file__).parents[5] / "data" / "snoinc_extracts"
 ENHANCEMENTS_DIRECTORY = BASE_FOLDER / "enhancements"
 TMP_DIRECTORY = Path(__file__).parents[5] / "tmp"
+CHANGE_LOG_DIRECTORY = BASE_FOLDER / "change_log"
 
 # Keys - the UMLS key is used for more than 
 #   one terminology set so it's here in General
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 
 
-def clean_text_string(value: str) -> str:
+def clean_text_string(value: str | None) -> str:
     """Function that removes multiple space characters from a string
         and returns it for further processing.
 
@@ -72,7 +74,7 @@ def get_date_from_filename(filename: str, terminology: str) -> str:
         return datetime.strptime(file_date, "%Y%m%d").strftime("%Y%m%d")
 
 
-def get_latest_extract_file_name(filename_prefix: str):
+def get_latest_extract_file_name(filename_prefix: str | None) -> str | None:
     """Function that gets the most current/recent value set csv 
         file from the TTC code repo, by filename prefix.
 
@@ -94,7 +96,7 @@ def get_latest_extract_file_name(filename_prefix: str):
         raise FileNotFoundError(f"No file with prefix {filename_prefix} under {BASE_FOLDER}!")
 
 
-def load_extract_file_to_dict(filename: str) -> list[dict]:
+def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]:
     """Function that takes a filename, finds the file and parses
         it into an easier to process dictionary.
 
@@ -113,3 +115,116 @@ def load_extract_file_to_dict(filename: str) -> list[dict]:
             extract_dict = {row['code']: row for row in reader}
     
     return extract_dict
+
+
+def save_valueset_csv_file(filename: str, contents: list[dict], append_to_file: bool = False) -> None:
+    """Function that takes a filename, which includes the directory,
+        and contents (dictionary) for the file then writes the results out into
+        a standard csv file with a '|' delimiter - 
+        specifically for terminology extract files.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a csv file.  The keys will be the column name 
+            headers for the csv file.
+        :param append_to_file: Boolean - Do you want to overwrite the file or append?
+            Default is set to False, so overwrite the file.
+
+        :returns: Nothing.
+    """
+    if not filename.strip():
+        print("No filename supplied.  Failed to save CSV file!")
+        return
+
+    if contents is None or len(contents) == 0:
+        print("Empty file contents!  Failed to save CSV!")
+        return
+
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
+
+    try:
+        full_file_path = BASE_FOLDER / filename
+        csv_headers = contents[0].keys()
+
+        with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, csv_headers, delimiter="|")
+            if not (append_to_file):
+                writer.writeheader()
+            writer.writerows(contents)
+        print(f"CSV File successfully saved as {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+def save_json_file(directory_path: str | Path, filename: str, contents: dict, append_to_file: bool = False) -> None:
+    """Function that takes a filename, directory path,
+        and contents (dictionary) for the file then writes the results out into
+        a basic JSON file using the dictionary as the structure.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a json file.
+        :param append_to_file: Boolean - Do you want to overwrite the file or append?
+            Default is set to False, so overwrite the file.
+
+        :returns: Nothing.
+    """
+    if not filename.strip() or not directory_path:
+        print("No filename & path supplied.  Failed to save JSON File!")
+        return
+
+    if contents is None or len(contents) == 0:
+        print("Empty file contents!  Failed to save JSON File!")
+        return
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+    full_file_path = Path(directory_path) / filename
+
+    if append_to_file:
+        file_method = "a"
+    else:
+        file_method = "w"
+
+    try:
+        with open(full_file_path, file_method, encoding="utf-8") as dictfile:
+            json.dump(contents, dictfile, indent=4)
+        print(f"JSON File successfully saved as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+def save_jsonl_file(filename: str, contents: list[dict]) -> None:
+    """Function that takes a filename, which includes the directory,
+        and contents (dictionary) for the file then writes the results out into
+        JSONL files that can be used for ingestion into OpenSearch.
+
+        :param filename: The directory location and filename of the file 
+            you wanted created.
+        :param contents: The dictionary containing the data that will be
+            paresed into a json file.
+
+        :returns: Nothing.
+    """
+    full_file_path = BASE_FOLDER / filename
+    try:
+        with open(full_file_path, "w") as f:
+            f.writelines(json.dumps(doc) + "\n" for doc in contents)
+        print(f"JSONL File successfully saved as: {full_file_path}")
+
+    except ValueError as e:
+        print(f"Error parsing Dict Contents: {e}")
+    except Exception as e:
+        print(f"An error occured: {e}")

@@ -106,8 +106,7 @@ def main():
     parser.add_argument("num_rows", type=int, help="Number of rows to generate")
     parser.add_argument(
         "--output",
-        type=argparse.FileType("w"),
-        default=sys.stdout,
+        default=None,
         help="File to write output to (default: STDOUT)",
     )
     parser.add_argument(
@@ -125,18 +124,24 @@ def main():
     args = parser.parse_args()
 
     count = args.num_rows
-    writer = csv.writer(args.output)
-    writer.writerow(["word", "label"])
+    output = open(args.output, "w", newline="") if args.output else sys.stdout
 
-    all_words = [(w, 1) for w in positive_words] + [(w, 2) for w in negative_words]
+    try:
+        writer = csv.writer(output)
+        writer.writerow(["word", "label"])
 
-    for _ in range(count):
-        word, label = random.choice(all_words)
-        if random.random() < args.change_case:
-            word = random_case(word)
-        if random.random() < args.introduce_typo:
-            word = introduce_typo(word)
-        writer.writerow([word, label])
+        all_words = [(w, 1) for w in positive_words] + [(w, 2) for w in negative_words]
+
+        for _ in range(count):
+            word, label = random.choice(all_words)
+            if random.random() < args.change_case:
+                word = random_case(word)
+            if random.random() < args.introduce_typo:
+                word = introduce_typo(word)
+            writer.writerow([word, label])
+    finally:
+        if args.output:
+            output.close()
 
 
 if __name__ == "__main__":

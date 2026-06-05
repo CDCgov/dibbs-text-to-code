@@ -13,7 +13,7 @@ richer training examples.
 import math
 import random
 import re
-import typing
+from typing import List, Sequence
 
 from data_curation.loinc_utils import LOINC_PREPOSITIONS, _find_system_modality, _get_component_axis_from_fsn
 
@@ -65,7 +65,7 @@ def apply_deletion_post_processing(code_str: str, **kwargs) -> str:
     # Now, convert the string index into an appropriate span of array
     # indices that we'll exclude from deletion candidates
     idxs_to_exclude = []
-    if component_idx != -1:
+    if component_idx != -1 and present_component is not None:
         preceding_words = code_str[:component_idx].strip().split()
         # First word of the component is the length of the preceding array,
         # due to 0-indexing of strings, so just find the length of the 
@@ -236,17 +236,8 @@ def _determine_eligible_post_processing(
         code_str: str,
         system_axis: str,
         loinc_enhancements: dict,
-        base_options: typing.List[typing.Literal[
-            "poc",
-            "modality",
-            "delimiter",
-            "truncation",
-            "syntax",
-            "pound",
-            "deletion",
-            "dot"
-        ]]
-    ) -> typing.List[str]:
+        base_options: Sequence[str]
+    ) -> List[str]:
     """
     Determines which types of post-processing can be successfully applied to
     a given code string. A post processing form is valid if it would result in

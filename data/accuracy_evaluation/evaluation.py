@@ -1,7 +1,6 @@
 import json
 import os
-from utils import export_json
-from utils import import_json
+from data.accuracy_evaluation.utils import export_json, import_json
 
 # sample run: python data/accuracy_evaluation/evaluation.py
 # could make this a sys.argv parameter or just update directly as needed, for now hardcoding

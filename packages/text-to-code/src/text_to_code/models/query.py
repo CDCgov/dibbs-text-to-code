@@ -1,4 +1,4 @@
-import typing
+from typing import ClassVar
 
 from pydantic import Field, model_validator
 
@@ -8,7 +8,7 @@ from shared_models import DataField, FrozenBaseModel
 class DataFieldTypeMapping:
     """Mapping of DataField enum values to their corresponding filter values for vector search."""
 
-    _mapping: typing.ClassVar[dict[DataField, list[str]]] = {
+    _mapping: ClassVar[dict[DataField, list[str]]] = {
         DataField.LAB_TEST_NAME_ORDERED: ["Order", "Both"],
         DataField.LAB_TEST_NAME_RESULTED: ["Observation", "Both"],
     }

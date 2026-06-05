@@ -83,7 +83,8 @@ def get_hl7_encounter_act_codes() -> list[dict]:
         hl7_rows.append(external_encounter)
         # TODO: In Subsequent PR update this to be a logging statement
         print(f"HL7 Encounter Act Codes Retrieved from HL7 Act Codes: {len(hl7_rows)}")
-        return hl7_rows
+
+    return hl7_rows
 
 
 def get_hl7_lab_interp() -> list[dict]:
