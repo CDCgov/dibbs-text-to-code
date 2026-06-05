@@ -30,3 +30,7 @@ extend-exclude = ["src/data_emulation"]
 ignore = [
   "T201", # print
 ]
+
+
+[tool.ty.src]
+exclude = ["src/data_emulation/**"]

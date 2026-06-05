@@ -144,7 +144,10 @@ def save_valueset_csv_file(
 
 
 def save_json_file(
-    directory_path: str | Path, filename: str, contents: dict, append_to_file: bool = False
+    directory_path: str | Path,
+    filename: str,
+    contents: dict | list[dict],
+    append_to_file: bool = False,
 ) -> None:
     """Function that takes a filename, directory path, and contents (dictionary) for the file then writes the results out into a basic JSON file using the dictionary as the structure.
 
