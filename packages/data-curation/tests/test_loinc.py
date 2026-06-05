@@ -344,7 +344,7 @@ def test_process_loinc_valueset_gets_next_page(monkeypatch: pytest.MonkeyPatch, 
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
         "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=responses.pop(0),
+        side_effect=responses,
     )
 
     result = loinc._process_loinc_valueset("https://example.com", "Lab Names")
@@ -373,12 +373,12 @@ def test_process_loinc_valueset_returns_none_when_next_page_errors(
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
         "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=responses.pop(0),
+        side_effect=responses,
     )
 
     result = loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
-    assert result is None
+    assert result == []
 
 
 def test_process_loinc_valueset_returns_none_on_error(
@@ -394,7 +394,7 @@ def test_process_loinc_valueset_returns_none_on_error(
 
     result = loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
-    assert result is None
+    assert result == []
 
 
 def test_process_loinc_valueset_requires_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -574,8 +574,8 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
         change_log["file_name"] = file_name
         change_log["content"] = content
 
-    monkeypatch.setattr(loinc, "get_loinc_lab_names", mock_get_loinc_lab_names)
-    monkeypatch.setattr(loinc, "write_change_log_file", mock_write_change_log_file)
+    monkeypatch.setattr(loinc, "_get_loinc_lab_names", mock_get_loinc_lab_names)
+    monkeypatch.setattr(loinc, "_write_change_log_file", mock_write_change_log_file)
 
     result = loinc.get_loinc_embedding_records(
         current_loinc_dict,
