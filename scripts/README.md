@@ -7,9 +7,10 @@ End-to-end smoke test for the deployed DIBBs TTC pipeline.
 Given a "nonstandard test name" (e.g. `"Zucchini IgG"`), the script:
 
 1. Templates `test_eicr.xml` with that name and fresh UUIDs for `<id>` and `<setId>`.
-2. Uploads the canned schematron errors file to `s3://dibbs-text-to-code/ValidationResponseV2/`, then the templated eICR to `s3://dibbs-text-to-code/TextToCodeSubmissionV2/` — the eICR upload fires the TTC Lambda via an S3 → SQS event.
+2. Runs real Schematron validation against the templated eICR (via the in-repo `validation` package) and uploads that report to `s3://dibbs-text-to-code/ValidationResponseV2/`, then the templated eICR to `s3://dibbs-text-to-code/TextToCodeSubmissionV2/` — the eICR upload fires the TTC Lambda via an S3 → SQS event.
 3. Tails CloudWatch logs for both `ttc-lambda` and `ttc-augmentation-lambda` in real time, with a pinned spinner, until each emits its `REPORT RequestId:` end-of-invocation marker.
 4. Fetches and pretty-prints the resulting TTC metadata JSON (`TTCMetadataV2/`) and augmented eICR XML (`AugmentationEICRV2/`) from S3.
+5. Re-validates the augmented eICR and exits non-zero if any Schematron errors remain — asserting that augmentation resolved them.
 
 ### Usage
 
@@ -35,6 +36,7 @@ You must have AWS credentials available in the environment (e.g. via `aws sso lo
 | `unbuffer` (from `expect`) | Wraps `aws logs tail` in a PTY so its output line-buffers when piped. The AWS CLI v2 is a PyInstaller bundle that ignores `PYTHONUNBUFFERED`, so without `unbuffer` log lines arrive in one burst at the end. |
 | `jq`                       | Pretty-prints JSON log payloads and the TTC metadata output.                                                                                                                                                  |
 | `python3`                  | Templates the eICR (regex substitutions for displayName, originalText, and UUIDs). Standard library only.                                                                                                     |
+| `uv`                       | Runs the in-repo `validation` package (real Schematron validation) via `uv run --project <repo> --all-packages`. Install: https://docs.astral.sh/uv/                                                          |
 | `xmllint` (from `libxml2`) | Pretty-formats the augmented eICR XML output.                                                                                                                                                                 |
 | `bat` _(optional)_         | Syntax-highlights the formatted XML. Falls back to plain output if missing.                                                                                                                                   |
 
@@ -83,8 +85,7 @@ The script is bash-only — run it from inside WSL, not from PowerShell or `cmd.
 
 ## Test fixtures
 
-- `test_eicr.xml` — minimal eICR document used as the template input.
-- `test_schematron_errors.xml` — canned schematron validation report uploaded alongside the eICR.
+- `test_eicr.xml` — minimal eICR document used as the template input. Both scripts run real Schematron validation against the templated eICR (via the `validation` package) to produce the report uploaded to `ValidationResponseV2/`, rather than a canned fixture.
 
 The script reuses the same generated filename across every S3 prefix; that's how the TTC and augmentation Lambdas correlate the schematron report, source eICR, and output objects for one invocation.
 
@@ -96,9 +97,9 @@ Given a JSON file of nonstandard test cases, this script:
 
 1. Loads each test case from the file into a bash array.
 2. Templates a dummy test eICR with the nonstandard input name of each test case, and stamps each result with a fresh UUID.
-3. For each test eICR, one at a time, uploads the templated eICR and a canned schematron errors file to S3, which fires the TTC lambda via SQS event.
+3. For each test eICR, one at a time, runs real Schematron validation against it and uploads that report plus the templated eICR to S3, which fires the TTC lambda via SQS event.
 4. Tails both lambdas' CloudWatch logs in real time until each emits its `REPORT RequestId:` line (AWS's end-of-invocation marker).
-5. Fetches the resulting augmented eICR XML from S3, parses its translated code name (where the TTC Pipeline leaves its predicted standardization), and compares the result to the expected value of the test case.
+5. Fetches the resulting augmented eICR XML from S3, parses its translated code name (where the TTC Pipeline leaves its predicted standardization), re-validates the augmented eICR, and marks the case passed only if the predicted code matches and no Schematron errors remain. Exits non-zero if any case fails.
 
 ### Usage
 
