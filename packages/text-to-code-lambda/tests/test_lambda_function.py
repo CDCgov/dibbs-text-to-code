@@ -169,7 +169,7 @@ class TestHandler:
                     original_text="A custom code in display name.",
                 ),
                 search_score=0.88,
-                reranker_score=7127664685249329,
+                reranker_score=0.7127664685249329,
                 opensearch_retrieved_scores=opensearch_retrieved_scores,
                 reranker_processed_results={"results": ranked_results},
                 cached_at="2026-05-15T18:14:45.020655+00:00",
