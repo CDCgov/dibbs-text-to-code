@@ -2,7 +2,6 @@ import json
 import os
 import typing
 from datetime import UTC, datetime
-from hashlib import sha256
 from io import BytesIO
 
 from aws_lambda_powertools import Logger
@@ -24,6 +23,7 @@ from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import ScoredResult, rerank
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
+from text_to_code.services.utils import compute_cache_key
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
@@ -394,9 +394,7 @@ def _process_record_pipeline(  # noqa: PLR0915
             if selected_candidate:
                 # Before we run the full embedding, searching, and reranking process,
                 # first let's check if we've seen this nonstandard input before
-                cache_key = sha256(
-                    (selected_candidate.value.strip().lower() + "|" + data_field).encode("utf-8")
-                ).hexdigest()
+                cache_key = compute_cache_key(selected_candidate.value, data_field)
                 cached_result: OpenSearchResultCacheSource | None = get_cached_result(
                     opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
                 )

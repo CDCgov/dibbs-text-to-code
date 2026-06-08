@@ -1,3 +1,5 @@
+from hashlib import sha256
+
 from shared_models import DataField
 from text_to_code.models.labs import BaseLabField
 from text_to_code.models.registry import EICR_REGISTRY
@@ -20,3 +22,8 @@ def get_config_for_data_field(data_field: DataField) -> BaseLabField:
         raise KeyError(f"No config registered for EicrDataField {data_field}") from e
 
     return cls()
+
+
+def compute_cache_key(*text: str) -> str:
+    """Compute cache key by hashing the concatenation of the given strings."""
+    return sha256((" | ".join(x.strip().lower() for x in text)).encode("utf-8")).hexdigest()

@@ -1,5 +1,3 @@
-from hashlib import sha256
-
 from opensearchpy import OpenSearch
 
 from lambda_handler.models import (
@@ -11,6 +9,7 @@ from lambda_handler.models import (
 )
 from shared_models import Code
 from text_to_code.models.result_cache import OpenSearchResultCacheSource
+from text_to_code.services.utils import compute_cache_key
 
 
 def get_cached_result(
@@ -118,9 +117,7 @@ def put_new_cached_result(  # noqa: PLR0913
     :returns: A boolean indicating whether the new cache hit was successfully added to
       the OpenSearch index.
     """
-    cache_key = sha256(
-        (candidate_input.strip().lower() + "|" + data_field).encode("utf-8")
-    ).hexdigest()
+    cache_key = compute_cache_key(candidate_input, data_field)
     new_cache_hit: OpenSearchResultCacheSource = OpenSearchResultCacheSource(
         cache_key=cache_key,
         text=candidate_input,
