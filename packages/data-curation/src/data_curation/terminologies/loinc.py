@@ -17,9 +17,9 @@ from .general import clean_text_string, save_json_file, save_valueset_csv_file, 
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
-LOINC_LAB_ORDER_QUERY = "orderobs:Order+OR+orderobs:Both&rows=500"
-LOINC_LAB_RESULT_QUERY = "orderobs:Observation+OR+orderobs:Both&rows=500"
-LOINC_LAB_NAMES_QUERY = "orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation&rows=500"
+LOINC_LAB_ORDER_QUERY = "(orderobs:Order+OR+orderobs:Both)&rows=500"
+LOINC_LAB_RESULT_QUERY = "(orderobs:Observation+OR+orderobs:Both)&rows=500"
+LOINC_LAB_NAMES_QUERY = "(orderobs:Order+OR+orderobs:Both+OR+orderobs:Observation)&rows=500"
 UMLS_LOINC_LAB_ATOMS_URL = "https://uts-ws.nlm.nih.gov/rest/content/2025AA/source/LNC/"
 UMLS_LOINC_LAB_CROSSWALK_URL = "https://uts-ws.nlm.nih.gov/rest/crosswalk/current/source/LNC/"
 LOINC_META_URL = "https://loinc.regenstrief.org/api/v1/Loinc"
@@ -94,7 +94,7 @@ def get_loinc_lab_names(version: str = ""):
     # and filter based upon version changes
     # otherwise grab all Orders/Observations/Both
     if version != "":
-        api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_NAMES_QUERY
+        api_url = LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+{LOINC_LAB_NAMES_QUERY}"
     else:
         api_url = LOINC_BASE_URL + f"query={LOINC_LAB_NAMES_QUERY}" 
     loinc_vs_type = "Lab Names"
