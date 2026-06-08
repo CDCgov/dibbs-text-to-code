@@ -3,7 +3,7 @@
 """This module contains a number of helper functions designed to assist with the process of extracting The Value Set Authority Center (VSAC) codes and their terms to generate and maintain embeddings in Opensearch for TTC."""
 
 from .general import UMLS_API_KEY, clean_text_string
-from .requests import STATUS_CODE_OK, get_with_timeout
+from .http_client import STATUS_CODE_OK, get_with_timeout
 
 # Terminology URLS
 VSAC_MEDICATIONS_URL = "https://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4/$expand"

@@ -5,7 +5,7 @@
 import sys
 
 from .general import clean_text_string
-from .requests import STATUS_CODE_OK, get_with_timeout
+from .http_client import STATUS_CODE_OK, get_with_timeout
 
 # Set Terminology URLS
 HL7_LAB_INTERP_URL = (

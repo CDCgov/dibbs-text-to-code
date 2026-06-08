@@ -3,7 +3,7 @@
 """This module contains a number of helper functions designed to assis with the process of extracting SNOMED codes and their term to generate and maintain embeddings in Opensearch for TTC."""
 
 from .general import UMLS_API_KEY, clean_text_string
-from .requests import STATUS_CODE_OK, get_with_timeout
+from .http_client import STATUS_CODE_OK, get_with_timeout
 
 # Terminology URLS
 UMLS_SNOMED_LAB_VALUES_URL = (

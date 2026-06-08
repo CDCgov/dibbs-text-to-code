@@ -14,7 +14,7 @@ from .general import (
     save_json_file,
     save_valueset_csv_file,
 )
-from .requests import STATUS_CODE_OK, get_with_timeout
+from .http_client import STATUS_CODE_OK, get_with_timeout
 
 # LOINC URLS
 LOINC_BASE_URL = "https://loinc.regenstrief.org/searchapi/loincs?"
