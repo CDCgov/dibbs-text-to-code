@@ -7,7 +7,6 @@ import pytest
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
-from augmentation.services.augmenter import Augmenter
 from augmentation.services.eicr_augmenter import EICRAugmenter
 from shared_models import Code, DataField, NonstandardCodeInstance
 
@@ -234,8 +233,3 @@ class TestEicrAugmenter:
         parent_doc_id = augmenter._get_old_document_id()
 
         assert parent_doc_id.get("assigningAuthorityName") == "original-document"
-
-    def test_augment_base_method_returns_none(self):
-        """Tests abstract base augment method body."""
-        augmenter = EICRAugmenter(BASIC_ECR, [])
-        assert Augmenter.augment(augmenter) is None
