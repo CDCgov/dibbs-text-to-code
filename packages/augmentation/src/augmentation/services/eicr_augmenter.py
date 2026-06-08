@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from uuid import NAMESPACE_URL, uuid5
 
@@ -6,10 +7,9 @@ from lxml.etree import Element
 
 from augmentation.models import ApplicationCode, Metadata
 from augmentation.models.application import NonstandardCodeInstanceMetadata
-from augmentation.services.augmenter import Augmenter
 from shared_models import NonstandardCodeInstance
 
-from .eicr_utils import CDA_NS, CDA_NSMAP, cda_xpath
+from .eicr_utils import CDA_NS, CDA_NSMAP, cda_xpath, parse_eicr_xml
 
 _AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
 _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
@@ -24,7 +24,7 @@ def _cda_element(tag: str, parent: Element | None = None) -> Element:
     return etree.Element(full_tag)
 
 
-class EICRAugmenter(Augmenter):
+class EICRAugmenter:
     """Augmenter specific to eICR documents.
 
     It is expected that the document payload will be
@@ -44,13 +44,39 @@ class EICRAugmenter(Augmenter):
         For now only TTC is supported in Augmentation and the only document type for TTC is eICR.
         # TODO: for now just use hard coded TTC Config we will need to remove/change this once we have S3 config integrated
         """
-        super().__init__(document, ApplicationCode.TEXT_TO_CODE, augmentation_date)
+        self.original_xml = document
+        self._original_element = self.document_payload_not_none(self.original_xml)
+        self._augmented_element = copy.deepcopy(self._original_element)
+
+        self.application_code = ApplicationCode.TEXT_TO_CODE
+        self.augmentation_date = datetime.now() if augmentation_date is None else augmentation_date
 
         self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
         self.new_doc_id: str = self._generate_deterministic_id("document")
         self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
+
+    @classmethod
+    def document_payload_not_none(cls, v: str) -> Element:
+        """Validates that the document payload is always supplied as a non-empty string."""
+        if v is None or v.strip() == "":
+            raise ValueError("Document payload must be a non-empty string!")
+        return parse_eicr_xml(v)
+
+    @property
+    def augmented_xml(self) -> str:
+        """Get the augmented XML document as a string."""
+        etree.indent(self._augmented_element, space="    ")
+        return etree.tostring(
+            self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
+        ).decode()
+
+    def _get_application_code_value(self) -> str:
+        return self.application_code.code
+
+    def _get_application_code_display(self) -> str:
+        return self.application_code.display
 
     def augment(self) -> Metadata:
         """Apply augmentation to the eICR."""
