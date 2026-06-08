@@ -271,7 +271,7 @@ def _get_loinc_umls_urls(
     return loinc_rows_list
 
 
-def process_loincs_for_umls_urls() -> dict | None:
+def process_loincs_for_umls_urls() -> dict:
     """Process that constructs and makes the various API calls necessary to gather the UMLS data about the current LOINC codes.  The lower functions, related to ATOM/UMLS process are leveraged to extract and organize the data together for the enhancement/other LOINC files.
 
     :returns: A list of dictionaries that contain the various LOINC and
