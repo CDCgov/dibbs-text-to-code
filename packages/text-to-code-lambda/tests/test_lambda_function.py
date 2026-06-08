@@ -172,7 +172,7 @@ class TestHandler:
                 reranker_score=0.7127664685249329,
                 opensearch_retrieved_scores=opensearch_retrieved_scores,
                 reranker_processed_results={"results": ranked_results},
-                cached_at="2026-05-15T18:14:45.020655+00:00",
+                cached_at=datetime.fromisoformat("2026-05-15T18:14:45.020655+00:00"),
             ),
         )
 

@@ -36,8 +36,8 @@ class OpenSearchResultCacheSource(FrozenBaseModel):
         "by the TTC Lambda is a single list, so this object will always have just a single "
         "key `results`."
     )
-    cached_at: str = Field(
-        default=datetime.now(UTC).isoformat(),
+    cached_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
         description="The timestamp at which this input was cached.",
     )
 
