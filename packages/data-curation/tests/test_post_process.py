@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+from typing import ClassVar
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -188,18 +189,16 @@ class TestTruncationPostProcessing:
 
 
 class TestDetermineEligiblePostProcessingOptions:
-    def __init__(self) -> None:
-        """Initialize testing data."""
-        self.all_options = [
-            "poc",
-            "modality",
-            "delimiter",
-            "truncation",
-            "syntax",
-            "pound",
-            "deletion",
-            "dot",
-        ]
+    all_options: ClassVar[list[str]] = [
+        "poc",
+        "modality",
+        "delimiter",
+        "truncation",
+        "syntax",
+        "pound",
+        "deletion",
+        "dot",
+    ]
 
     def test_ordinary_lcn(self):
         input = "Barbiturates [Presence] in Urine by Screen method"
