@@ -705,6 +705,16 @@
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
 
+    // Render a code as a link to its loinc.org page (e.g. https://loinc.org/2339-0)
+    // when it's a LOINC code; otherwise just escaped text.
+    function loincCodeHtml(code, systemName) {
+      const safe = escapeHtml(code);
+      if (systemName === 'LOINC' && /^\d+-\d$/.test(String(code ?? "").trim())) {
+        return `<a href="https://loinc.org/${encodeURIComponent(String(code).trim())}" target="_blank" rel="noopener">${safe}</a>`;
+      }
+      return safe;
+    }
+
     // Pull the first column out of an uploaded CSV, dropping an optional header row.
     function parseCsvFirstColumn(text) {
       const inputs = [];
@@ -767,7 +777,7 @@
 
     function showDemoResult(value, code, system, systemName, display, type) {
       document.getElementById('demo-result-input').textContent = value;
-      document.getElementById('demo-result-code').textContent = code;
+      document.getElementById('demo-result-code').innerHTML = loincCodeHtml(code, systemName);
       document.getElementById('demo-result-system').textContent = system;
       document.getElementById('demo-result-system-name').textContent = systemName;
       document.getElementById('demo-result-display').textContent = display;
@@ -855,7 +865,7 @@
         <tr id="row-${i}">
           <td class="num-cell">${i+1}</td>
           <td style="font-weight:600;">${escapeHtml(row.input)}</td>
-          <td><div class="code-val">${escapeHtml(row.code)}</div><div class="code-sub">${escapeHtml(row.systemName)}</div></td>
+          <td><div class="code-val">${loincCodeHtml(row.code, row.systemName)}</div><div class="code-sub">${escapeHtml(row.systemName)}</div></td>
           <td>${escapeHtml(row.systemName)}</td>
           <td style="max-width:220px; color:var(--base-darker);">${escapeHtml(row.display)}</td>
           <td style="min-width:260px;">
