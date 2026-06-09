@@ -18,6 +18,7 @@ AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
 EXPECTED_ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+EXPECTED_AUGMENTED_EICR_ID = "d44dc1c6-8a0c-5236-906e-12f6475589ec"
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -106,6 +107,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata["augmented_eicr_id"] != metadata["original_eicr_id"]
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is False
+        assert metadata["passthrough_reason"] is None
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "handler_writes_outputs_metadata.json",
@@ -158,6 +165,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "ttc_passthrough.json",
@@ -206,6 +219,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] is None
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "passthrough_reason_missing.json",
@@ -245,6 +264,13 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["error"] == "augmentation boom"
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "augmentation_fails.json",
@@ -341,6 +367,26 @@ class TestHandler:
         )
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
+
+    def test_build_original_eicr_output_sets_metadata_ids_to_original_eicr_id(self) -> None:
+        output = lambda_function._build_original_eicr_output(
+            persistence_id=TEST_PERSISTENCE_ID,
+            original_eicr_id=EXPECTED_ORIGINAL_EICR_ID,
+            original_eicr="<ClinicalDocument />",
+            nonstandard_codes=[],
+            passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
+        )
+
+        assert output.persistence_id == TEST_PERSISTENCE_ID
+        assert output.augmented_eicr == "<ClinicalDocument />"
+        assert output.metadata.model_dump(mode="json") == {
+            "original_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
+            "augmented_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
+            "nonstandard_codes": [],
+            "error": None,
+            "passthrough": True,
+            "passthrough_reason": PassthroughReason.NO_CODE_MATCHES.value,
+        }
 
     def test_handler_source_bucket_routing(
         self,
