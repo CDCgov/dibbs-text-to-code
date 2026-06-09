@@ -72,6 +72,9 @@ jobs:
       major_tag: ${{ needs.detect-release.outputs.major }}
       tag_latest: true
       tag_branch: false
+      # Versioned images are long-lived; never bake week-old cached OS layers
+      # into a release.
+      no_cache: true
 
   release:
     needs: [detect-release, build]
