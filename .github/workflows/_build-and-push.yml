@@ -45,6 +45,15 @@ on:
         type: string
         required: false
         default: ""
+      no_cache:
+        description: >-
+          Build without layer cache. Required when the goal is picking up OS
+          package patches: the `microdnf update` layer is keyed on the base
+          image digest, so cached builds silently skip repo updates (e.g.
+          AL2023 security patches) published since the layer was first built.
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -110,6 +119,7 @@ jobs:
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          no-cache: ${{ inputs.no_cache }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           secrets: |
