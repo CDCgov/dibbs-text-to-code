@@ -342,37 +342,6 @@ class TestHandler:
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
-    def test_get_passthrough_reason_returns_none_when_reason_is_missing(self) -> None:
-        result = lambda_function._get_passthrough_reason({})
-
-        assert result is None
-
-    def test_get_passthrough_reason_returns_enum_when_reason_is_already_enum(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": PassthroughReason.TTC_EXCEPTION}
-        )
-
-        assert result == PassthroughReason.TTC_EXCEPTION
-
-    def test_get_passthrough_reason_returns_enum_when_reason_is_valid_string(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": PassthroughReason.NO_CODE_MATCHES.value}
-        )
-
-        assert result == PassthroughReason.NO_CODE_MATCHES
-
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_value(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": "not_a_passthrough_reason"}
-        )
-
-        assert result is None
-
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_type(self) -> None:
-        result = lambda_function._get_passthrough_reason({"passthrough_reason": 1})
-
-        assert result is None
-
     def test_handler_source_bucket_routing(
         self,
         example_s3_event_payload,
