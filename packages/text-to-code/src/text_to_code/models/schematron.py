@@ -20,7 +20,7 @@ class LabTestNameOrderedSchematronErrors(Enum):
 class LabTestNameResultedSchematronErrors(Enum):
     """The list of Schematron error messages relevant to the lab test name resulted data field."""
 
-    MISSING_CODE_ATTRIBUTE = "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+    MISSING_CODE_ATTRIBUTE = "Text to Code: Lab Test Name Resulted does not have a @code attribute."
     BLANK_CODE_ATTRIBUTE = (
         "Text to Code: Result observation code data element @code attribute is blank."
     )

@@ -71,11 +71,9 @@ class TestSchematronProcessor:
         lab_test_name_resulted_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_RESULTED
         ]
-        print(f"HERE: {lab_test_name_resulted_errors}")
         lab_test_name_ordered_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_ORDERED
         ]
-        print(f"HERE2: {lab_test_name_ordered_errors}")
 
         assert len(lab_test_name_resulted_errors) == expected_lab_test_name_resulted
         assert len(lab_test_name_ordered_errors) == expected_lab_test_name_ordered
