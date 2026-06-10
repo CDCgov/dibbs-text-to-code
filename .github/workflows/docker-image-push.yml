@@ -18,6 +18,13 @@ on:
       version_tag:
         description: Optional Docker tag
         required: false
+      no_cache:
+        description: >-
+          Build without layer cache so OS package patches are picked up.
+          Disable only when rebuilding for a code change.
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: read
@@ -34,7 +41,7 @@ jobs:
       is_release: ${{ steps.detect.outputs.is_release }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 2
 
@@ -56,3 +63,7 @@ jobs:
       extra_tag: ${{ github.event.inputs.version_tag || '' }}
       tag_branch: true
       tag_latest: ${{ github.ref_name == 'main' }}
+      # The weekly rebuild exists to pick up base-image/OS patches, which a
+      # cached `microdnf update` layer silently skips — so bust the cache on
+      # schedule and (by default) on manual dispatch. Push builds stay cached.
+      no_cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.no_cache != 'false') }}
