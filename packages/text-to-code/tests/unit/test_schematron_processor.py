@@ -71,9 +71,11 @@ class TestSchematronProcessor:
         lab_test_name_resulted_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_RESULTED
         ]
+        print(f"HERE: {lab_test_name_resulted_errors}")
         lab_test_name_ordered_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_ORDERED
         ]
+        print(f"HERE2: {lab_test_name_ordered_errors}")
 
         assert len(lab_test_name_resulted_errors) == expected_lab_test_name_resulted
         assert len(lab_test_name_ordered_errors) == expected_lab_test_name_ordered
@@ -92,18 +94,18 @@ class TestSchematronProcessor:
             for error in error_result
             if error.field == DataField.LAB_TEST_NAME_RESULTED
             and error.error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
         )
 
         assert lab_test_name_resulted_error.eicr_id is None
         assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
         assert (
             lab_test_name_resulted_error.error
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
         )
         assert (
             lab_test_name_resulted_error.error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
         )
         assert (
             lab_test_name_resulted_error.error_context
@@ -126,10 +128,10 @@ class TestSchematronProcessor:
         schematron_errors = """
         <validationResult>
             <issue>
-                <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                 <context>/ClinicalDocument/component[1]</context>
                 <test>test-expression</test>
-                <assertionID>ttc-labTestNameResulted-noCode</assertionID>
+                <assertionID>ttc-labTestNameResulted-code-missing</assertionID>
             </issue>
         </validationResult>
         """
@@ -140,15 +142,15 @@ class TestSchematronProcessor:
         assert result[0].field == DataField.LAB_TEST_NAME_RESULTED
         assert (
             result[0].error
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
         )
         assert (
             result[0].error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute"
+            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
         )
         assert result[0].error_context == "/ClinicalDocument/component[1]"
         assert result[0].error_test == "test-expression"
-        assert result[0].error_id == "ttc-labTestNameResulted-noCode"
+        assert result[0].error_id == "ttc-labTestNameResulted-code-missing"
         assert result[0].candidate is None
 
     def test_get_schematron_error_skips_validation_result_when_issue_is_missing(self):
@@ -187,7 +189,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
-                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                     </issue>
                 </validationResult>
             </result>
@@ -222,7 +224,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
-                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                     </issue>
                 </validationResult>
@@ -250,14 +252,14 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
-                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                         <test>test-expression</test>
                     </issue>
                 </validationResult>
                 <validationResult>
                     <issue>
-                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                         <test>test-expression</test>
                     </issue>
@@ -276,7 +278,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
-                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute</message>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
                         <test>not(cda:code) or cda:code/@code or cda:code/cda:translation/@code</test>
                     </issue>
@@ -298,7 +300,7 @@ class TestSchematronProcessor:
         mock_exception.assert_called_once_with(
             "Failed to process a schematron error detail",
             extra={
-                "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute",
+                "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute.",
                 "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
                 "status": "error",
             },
