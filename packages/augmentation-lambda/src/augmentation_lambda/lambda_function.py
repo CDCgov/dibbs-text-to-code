@@ -156,7 +156,6 @@ def _build_augmentation_output(
                 persistence_id=persistence_id,
                 original_eicr_id=original_eicr_id,
                 original_eicr=original_eicr,
-                nonstandard_codes=[],
                 passthrough_reason=passthrough_reason,
             )
 
@@ -179,7 +178,6 @@ def _build_augmentation_output(
             persistence_id=persistence_id,
             original_eicr_id=original_eicr_id,
             original_eicr=original_eicr,
-            nonstandard_codes=[],
             error=str(e),
             passthrough_reason=passthrough_reason,
         )
@@ -218,8 +216,8 @@ def _build_original_eicr_output(  # noqa: PLR0913
     persistence_id: str,
     original_eicr_id: str,
     original_eicr: str,
-    nonstandard_codes: list[NonstandardCodeInstanceMetadata],
     passthrough_reason: PassthroughReason | None,
+    nonstandard_codes: list[NonstandardCodeInstanceMetadata] | None = None,
     error: str | None = None,
 ) -> TTCAugmenterOutput:
     """Build output for cases where the augmentation stage emits the original eICR.
@@ -232,11 +230,14 @@ def _build_original_eicr_output(  # noqa: PLR0913
     :param persistence_id: The stable pipeline/storage ID used for S3 keys.
     :param original_eicr_id: The CDA document ID from the original eICR.
     :param original_eicr: The original eICR XML string.
-    :param nonstandard_codes: Metadata for nonstandard codes attempted before fallback.
     :param passthrough_reason: The reason the original eICR is being emitted.
+    :param nonstandard_codes: Metadata for nonstandard codes attempted before fallback.
     :param error: The error that caused fallback, if any.
     :return: The augmentation-stage output containing the original eICR.
     """
+    if nonstandard_codes is None:
+        nonstandard_codes = []
+
     metadata = Metadata(
         original_eicr_id=original_eicr_id,
         augmented_eicr_id=original_eicr_id,
