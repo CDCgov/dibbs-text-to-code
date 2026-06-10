@@ -64,7 +64,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lxml", specifier = ">=6.1.1" },
+    { name = "lxml", specifier = ">=4.9.2" },
     { name = "pydantic", specifier = ">=2.12.3" },
 ]
 
@@ -1530,10 +1530,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/de/10/bc53ea7c13f0f3fc6e5a012bc53ccfe3eccd2703f6bbfde4eebe9e4163d0/saxonche-13.0.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:e6ae3f24f80f299c9f0e24dbc6bc1f43571f8496a7f87cdbf4d66933ef838ea7", size = 40400909, upload-time = "2026-05-29T15:05:09.001Z" },
     { url = "https://files.pythonhosted.org/packages/a8/16/8ad2fd72981c9b67a26b6b19680bdff2a3360e9d510ea4b0326c9a94f2d6/saxonche-13.0.0-cp311-cp311-manylinux_2_24_aarch64.whl", hash = "sha256:46d831f083f70c00a09013898ff58469430082be08f891d0ca93fe2ee2467d3d", size = 41860562, upload-time = "2026-05-29T15:07:31.084Z" },
     { url = "https://files.pythonhosted.org/packages/af/f1/0e32f42342ec6fb481d9e3072d1d24b2ef8c06d6efd81fb9ada3efe4dfcb/saxonche-13.0.0-cp311-cp311-manylinux_2_24_x86_64.whl", hash = "sha256:92cb29bf2139dd014b30e6be5313e2770a86d8b7d9c71df9c2ad70b4d4849791", size = 42472587, upload-time = "2026-05-29T15:02:30.424Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/4a/736f88a070a88f291672ec3d0ff3e294a62807916cdc9592b52183431174/saxonche-13.0.0-cp311-cp311-win_amd64.whl", hash = "sha256:c2caba1726e3d09089cf892bb10d23d9a2cee3afc90c3d64217f9035dbb1956a", size = 40465041, upload-time = "2026-06-10T12:34:34.767Z" },
     { url = "https://files.pythonhosted.org/packages/12/1d/6a555839ea469cb5b33907ab5cd4544cda9e7d57b210374f3a48a19be608/saxonche-13.0.0-cp312-cp312-macosx_10_11_x86_64.whl", hash = "sha256:256e03c865b04dacbdb5385f86c0e71759671ff7ad59ef39c56f8862b4fc5a46", size = 41566011, upload-time = "2026-05-29T15:09:59.83Z" },
     { url = "https://files.pythonhosted.org/packages/f9/37/b6767148a0e3ad54c71ecfdae09f9e602680877de1e5c382c619a2b6e253/saxonche-13.0.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:c5189518d3a25588147a667a8c2e605fcc879a69a7f7d7567a3940ffffa9a05e", size = 40404305, upload-time = "2026-05-29T15:05:26.644Z" },
     { url = "https://files.pythonhosted.org/packages/51/d3/4d563d0de45d9b49765ddaff3866119ca76e754e35c8c62ccaa7a179ee1f/saxonche-13.0.0-cp312-cp312-manylinux_2_24_aarch64.whl", hash = "sha256:b3cc0862a67ebb863eebdcc2ed4b75e97d48114b798eca9149213758942ee122", size = 41733936, upload-time = "2026-05-29T15:07:45.711Z" },
     { url = "https://files.pythonhosted.org/packages/f9/2d/98d05807c21e65e5a569052ae0a7fbcd465c6f1ac4fbfdd29bbff537ea9f/saxonche-13.0.0-cp312-cp312-manylinux_2_24_x86_64.whl", hash = "sha256:d190a1021636c11a85a410cf62cc7f8fd78cb1a756dabaa12d5a1e03bc236a3d", size = 42421163, upload-time = "2026-05-29T15:02:45.469Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/3e/2414668f6e2db4a939935cda5125a33156db211f2cf941aba19196f2faf5/saxonche-13.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:d05ca490ca090613c9d9fd1b3364c1c07e969825bfaf9ea26472329e7806c745", size = 40467874, upload-time = "2026-06-10T12:33:37.49Z" },
 ]
 
 [[package]]
@@ -1815,7 +1817,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lxml", specifier = ">=6.1.1" },
+    { name = "lxml", specifier = ">=6.0.2" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "sentence-transformers" },
     { name = "torch", specifier = "==2.9.1" },
