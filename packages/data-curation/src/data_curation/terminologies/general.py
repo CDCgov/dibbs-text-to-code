@@ -206,7 +206,7 @@ def save_json_file(directory_path: str | Path, filename: str, contents: dict, ap
         print(f"An error occured: {e}")
 
 
-def save_jsonl_file(filename: str, contents: list[dict]) -> None:
+def save_jsonl_file(filename: str, contents: list[dict], record_size: int = 0) -> None:
     """Function that takes a filename, which includes the directory,
         and contents (dictionary) for the file then writes the results out into
         JSONL files that can be used for ingestion into OpenSearch.
@@ -215,6 +215,8 @@ def save_jsonl_file(filename: str, contents: list[dict]) -> None:
             you wanted created.
         :param contents: The dictionary containing the data that will be
             paresed into a json file.
+        :param record_size: The number or records per file.  Defaults to 0
+            meaning load ALL records into single file.
 
         :returns: Nothing.
     """
