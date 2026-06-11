@@ -52,7 +52,6 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
-  "data-curation",
   "docs",
   "model-tuning",
 ]
@@ -92,8 +91,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-annotations]
-# Turn off return type annotations for __init__
+# Relax typing requirements for certain situations
+allow-star-arg-any = true
 mypy-init-return = true
+suppress-dummy-args = true
+suppress-none-returning = true
 
 [tool.ruff.lint.isort]
 known-first-party = [
