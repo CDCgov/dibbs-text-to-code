@@ -24,7 +24,7 @@
       "field_type": "Lab Test Name Ordered",
       "issue_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]",
       "issue_id": null,
-      "issue_message": "Text to Code: Lab Test Name Ordered does not have a @code attribute",
+      "issue_message": "Text to Code: Planned observation code data element has no @code attribute",
       "issue_test": "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
       "new_translation": {
         "code": "82041-5",
