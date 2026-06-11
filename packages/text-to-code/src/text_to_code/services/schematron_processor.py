@@ -8,7 +8,7 @@ from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD, Schematron
 logger = logging.getLogger(__name__)
 
 
-def get_data_element_from_schematron_error(schematron_error: str) -> DataField | None:
+def get_data_element_from_schematron_error(schematron_error_id: str) -> DataField | None:
     """Return the data field that the error message is associated with, if any.
 
     :param schematron_error: The schematron error message being evaluated.
@@ -16,12 +16,12 @@ def get_data_element_from_schematron_error(schematron_error: str) -> DataField |
         or None if not found.
     """
     for error_enum, data_field in _SCHEMATRON_ENUM_TO_FIELD.items():
-        if schematron_error in (e.value for e in error_enum):
+        if schematron_error_id in (e.value for e in error_enum):
             return data_field
     return None
 
 
-def _get_error_enum_value(schematron_error: str) -> str | None:
+def _get_error_enum_value(schematron_error_id: str) -> str | None:
     """Return the normalized Schematron enum value for the error message, if any.
 
     :param schematron_error: The schematron error message being evaluated.
@@ -29,7 +29,7 @@ def _get_error_enum_value(schematron_error: str) -> str | None:
     """
     for error_enum in _SCHEMATRON_ENUM_TO_FIELD:
         for error in error_enum:
-            if schematron_error == error.value:
+            if schematron_error_id == error.value:
                 return error.value
     return None
 
@@ -90,10 +90,11 @@ def get_data_fields_from_schematron_error(
                 continue
             error_message = message_elem.text.strip()
             error_context = context_elem.text.strip()
-            err_data_field = get_data_element_from_schematron_error(error_message)
+            error_assertion_id = assertion_id_elem.text.strip()
+            err_data_field = get_data_element_from_schematron_error(error_assertion_id)
             if err_data_field is None:
                 continue
-            error_value = _get_error_enum_value(error_message)
+            error_value = _get_error_enum_value(error_assertion_id)
             if error_value is None:
                 continue
             error_detail = SchematronErrorDetail(
@@ -120,6 +121,7 @@ def get_data_fields_from_schematron_error(
             logger.exception(
                 "Failed to process a schematron error detail",
                 extra={
+                    "error_id": assertion_id_elem.text if assertion_id_elem is not None else None,
                     "error_message": message_elem.text if message_elem is not None else None,
                     "error_context": context_elem.text if context_elem is not None else None,
                     "status": "error",

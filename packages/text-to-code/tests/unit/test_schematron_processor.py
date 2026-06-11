@@ -65,6 +65,9 @@ class TestSchematronProcessor:
             schematron_error_file,
         )
 
+        for err in error_result:
+            print(f"ERROR ID: {err.error_id}")
+
         expected_lab_test_name_resulted = 2
         expected_lab_test_name_ordered = 2
 
@@ -97,10 +100,7 @@ class TestSchematronProcessor:
 
         assert lab_test_name_resulted_error.eicr_id is None
         assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
-        assert (
-            lab_test_name_resulted_error.error
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
-        )
+        assert lab_test_name_resulted_error.error == "ttc-labTestNameResulted-noCode"
         assert (
             lab_test_name_resulted_error.error_message
             == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
@@ -126,10 +126,11 @@ class TestSchematronProcessor:
         schematron_errors = """
         <validationResult>
             <issue>
+                <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                 <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                 <context>/ClinicalDocument/component[1]</context>
                 <test>test-expression</test>
-                <assertionID>ttc-labTestNameResulted-code-missing</assertionID>
+                <assertionID>ttc-labTestNameResulted-noCode</assertionID>
             </issue>
         </validationResult>
         """
@@ -148,7 +149,7 @@ class TestSchematronProcessor:
         )
         assert result[0].error_context == "/ClinicalDocument/component[1]"
         assert result[0].error_test == "test-expression"
-        assert result[0].error_id == "ttc-labTestNameResulted-code-missing"
+        assert result[0].error_id == "ttc-labTestNameResulted-noCode"
         assert result[0].candidate is None
 
     def test_get_schematron_error_skips_validation_result_when_issue_is_missing(self):
@@ -164,7 +165,7 @@ class TestSchematronProcessor:
 
         assert result == []
 
-    def test_get_schematron_error_skips_validation_result_when_message_is_missing(self):
+    def test_get_schematron_error_skips_validation_result_when_message_and_id_are_missing(self):
         schematron_errors = """
         <root>
             <result>
@@ -187,6 +188,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
+                        <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                         <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                     </issue>
                 </validationResult>
@@ -204,6 +206,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
+                        <assertionID>unk-err</assertionID>
                         <message>unknown schematron error</message>
                         <context>/ClinicalDocument/component[1]</context>
                     </issue>
@@ -222,6 +225,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
+                        <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                         <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                     </issue>
@@ -250,6 +254,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
+                        <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                         <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                         <test>test-expression</test>
@@ -257,6 +262,7 @@ class TestSchematronProcessor:
                 </validationResult>
                 <validationResult>
                     <issue>
+                        <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                         <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]</context>
                         <test>test-expression</test>
@@ -276,6 +282,7 @@ class TestSchematronProcessor:
             <result>
                 <validationResult>
                     <issue>
+                        <assertionID>ttc-labTestNameResulted-noCode</assertionID>
                         <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                         <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
                         <test>not(cda:code) or cda:code/@code or cda:code/cda:translation/@code</test>
@@ -298,6 +305,7 @@ class TestSchematronProcessor:
         mock_exception.assert_called_once_with(
             "Failed to process a schematron error detail",
             extra={
+                "error_id": "ttc-labTestNameResulted-noCode",
                 "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute.",
                 "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
                 "status": "error",

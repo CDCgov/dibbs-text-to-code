@@ -5,27 +5,21 @@ from text_to_code.models.eicr import Candidate
 
 
 class LabTestNameOrderedSchematronErrors(Enum):
-    """The list of Schematron error messages relevant to the lab test name ordered data field."""
+    """The list of Schematron error message ids that are relevant to the lab test name ordered data field."""
 
-    MISSING_CODE_ATTRIBUTE = (
-        "Text to Code: Planned observation code data element has no @code attribute"
-    )
-    BLANK_CODE_ATTRIBUTE = (
-        "Text to Code: Planned observation code data element @code attribute is blank"
-    )
-    NULL_CODE_ATTRIBUTE = "Text to Code: Planned observation code data element is nullFlavor"
-    INVALID_CODE_SYSTEM = "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96),  CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)"
+    MISSING_CODE_ATTRIBUTE = "ttc-labOrder-code-missing"
+    BLANK_CODE_ATTRIBUTE = "ttc-labOrder-code-empty"
+    NULL_CODE_ATTRIBUTE = "ttc-labOrder-code-nullFlavor"
+    INVALID_CODE_SYSTEM = "ttc-labOrder-wrongCode"
 
 
 class LabTestNameResultedSchematronErrors(Enum):
-    """The list of Schematron error messages relevant to the lab test name resulted data field."""
+    """The list of Schematron error message ids that are relevant to the lab test name resulted data field."""
 
-    MISSING_CODE_ATTRIBUTE = "Text to Code: Lab Test Name Resulted does not have a @code attribute."
-    BLANK_CODE_ATTRIBUTE = (
-        "Text to Code: Result observation code data element @code attribute is blank."
-    )
-    NULL_CODE_ATTRIBUTE = "Text to Code: Result observation code data element is nullFlavor."
-    INVALID_CODE_SYSTEM = "Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1"
+    MISSING_CODE_ATTRIBUTE = "ttc-labTestNameResulted-noCode"
+    BLANK_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-empty"
+    NULL_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-nullFlavor"
+    INVALID_CODE_SYSTEM = "ttc-labTestNameResulted-wrongCode"
 
 
 SchematronErrors = LabTestNameOrderedSchematronErrors | LabTestNameResultedSchematronErrors
