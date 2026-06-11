@@ -22,11 +22,11 @@
   <sch:pattern id="p-validate_labOrder_ttc">
     <sch:rule abstract="true" id="r-validate_labOrder_ttc_abstract" role="text_to_code">
       <!--observation code-->
-      <sch:assert id="ttc-labTestNameOrdered-noCode" test="
+      <sch:assert id="ttc-labOrder-code-missing" test="
         not(cda:code) 
         or cda:code/@code
         or cda:code/cda:translation/@code">Text to Code: Planned observation code data element has no @code attribute</sch:assert>
-      <sch:assert id="ttc-labTestNameOrdered-wrongCodeSystem" test="
+      <sch:assert id="ttc-labOrder-wrongCode" test="
         not(cda:code/@code or cda:code/cda:translation/@code) 
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
         or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">Text to Code: Lab Test Name Ordered @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1</sch:assert>
@@ -48,7 +48,7 @@
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
         or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</sch:assert>
       <!--observation value-->
-      <sch:assert id="ttc-labResultValue-noCode" test="
+      <sch:assert id="ttc-labTestNameResulted-noCode" test="
         not(cda:value) 
         or cda:value[not(@nullFlavor)]">Text to Code: Lab Result Value is nullFlavor</sch:assert>
       <sch:assert id="ttc-labResultValue-STNoInterp" test="
