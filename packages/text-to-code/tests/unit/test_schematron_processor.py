@@ -65,8 +65,8 @@ class TestSchematronProcessor:
             schematron_error_file,
         )
 
-        expected_lab_test_name_resulted = 2
-        expected_lab_test_name_ordered = 2
+        expected_lab_test_name_resulted = 4
+        expected_lab_test_name_ordered = 4
 
         lab_test_name_resulted_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_RESULTED
@@ -83,7 +83,7 @@ class TestSchematronProcessor:
         error_result = get_data_fields_from_schematron_error(
             schematron_error_file,
         )
-        expected_total_errors = 4
+        expected_total_errors = 8
 
         assert len(error_result) == expected_total_errors
 

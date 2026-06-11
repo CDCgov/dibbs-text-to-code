@@ -70,6 +70,22 @@
                 <specification/>
             </issue>
         </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Result observation code data element @code attribute is blank.</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                <test> not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@code = '']) = 0</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Result observation code data element is nullFlavor.</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
+                <test> not(cda:code) or cda:code[not(@nullFlavor)]</test>
+                <specification/>
+            </issue>
+        </validationResult>
     </Results>
     <Results xmlns="urn:gov:nist:cdaGuideValidator">
         <validationResult xmlns="">
@@ -85,6 +101,22 @@
                 <message>Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC (2.16.840.1.113883.6.1), SNOMED CT (2.16.840.1.113883.6.96),  CPT-4 (2.16.840.1.113883.6.12), ICD10 PCS (2.16.840.1.113883.6.4) or CDT-2 (2.16.840.1.113883.6.13)</message>
                 <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]</context>
                 <test>not(cda:code/@code or cda:code/cda:translation/@code) or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Planned observation code data element is nullFlavor</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]</context>
+                <test>not(cda:code) or cda:code[not(@nullFlavor)]</test>
+                <specification/>
+            </issue>
+        </validationResult>
+        <validationResult xmlns="">
+            <issue severity="errors">
+                <message>Text to Code: Planned observation code data element @code attribute is blank</message>
+                <context>/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/observation[1]</context>
+                <test>not(cda:code) or cda:code[@nullFlavor] or count(cda:code[@code = '']) = 0</test>
                 <specification/>
             </issue>
         </validationResult>
