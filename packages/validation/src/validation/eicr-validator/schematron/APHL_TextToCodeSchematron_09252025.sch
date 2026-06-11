@@ -26,7 +26,7 @@
         not(cda:code) 
         or cda:code/@code
         or cda:code/cda:translation/@code">Text to Code: Planned observation code data element has no @code attribute</sch:assert>
-      <sch:assert id="ttc-labOrder-wrongCode" test="
+      <sch:assert id="ttc-labTestNameOrdered-wrongCodeSystem" test="
         not(cda:code/@code or cda:code/cda:translation/@code) 
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
         or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">Text to Code: Lab Test Name Ordered @codeSystem attribute is not LOINC 2.16.840.1.113883.6.1</sch:assert>

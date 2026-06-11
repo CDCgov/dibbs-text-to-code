@@ -16,6 +16,9 @@ current_dir = Path(__file__).parent.parent
 
 class TestSchematronProcessor:
     SCHEMATRON_ERROR_FILE: str | None = None
+    LAB_TEST_RESULTED_ERROR: str = (
+        "Text to Code: Lab Test Name Resulted does not have a @code attribute."
+    )
 
     def file_setup(self) -> str:
         if self.SCHEMATRON_ERROR_FILE is None:
@@ -65,11 +68,8 @@ class TestSchematronProcessor:
             schematron_error_file,
         )
 
-        for err in error_result:
-            print(f"ERROR ID: {err.error_id}")
-
-        expected_lab_test_name_resulted = 2
-        expected_lab_test_name_ordered = 2
+        expected_lab_test_name_resulted = 4
+        expected_lab_test_name_ordered = 4
 
         lab_test_name_resulted_errors = [
             error for error in error_result if error.field == DataField.LAB_TEST_NAME_RESULTED
@@ -86,7 +86,7 @@ class TestSchematronProcessor:
         error_result = get_data_fields_from_schematron_error(
             schematron_error_file,
         )
-        expected_total_errors = 4
+        expected_total_errors = 8
 
         assert len(error_result) == expected_total_errors
 
@@ -94,17 +94,13 @@ class TestSchematronProcessor:
             error
             for error in error_result
             if error.field == DataField.LAB_TEST_NAME_RESULTED
-            and error.error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
+            and error.error_message == self.LAB_TEST_RESULTED_ERROR
         )
 
         assert lab_test_name_resulted_error.eicr_id is None
         assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
-        assert lab_test_name_resulted_error.error == "ttc-labTestNameResulted-noCode"
-        assert (
-            lab_test_name_resulted_error.error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
-        )
+        assert lab_test_name_resulted_error.error == self.LAB_TEST_RESULTED_ERROR
+        assert lab_test_name_resulted_error.error_message == self.LAB_TEST_RESULTED_ERROR
         assert (
             lab_test_name_resulted_error.error_context
             == "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
@@ -139,14 +135,8 @@ class TestSchematronProcessor:
 
         assert len(result) == 1
         assert result[0].field == DataField.LAB_TEST_NAME_RESULTED
-        assert (
-            result[0].error
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
-        )
-        assert (
-            result[0].error_message
-            == "Text to Code: Lab Test Name Resulted does not have a @code attribute."
-        )
+        assert result[0].error == self.LAB_TEST_RESULTED_ERROR
+        assert result[0].error_message == self.LAB_TEST_RESULTED_ERROR
         assert result[0].error_context == "/ClinicalDocument/component[1]"
         assert result[0].error_test == "test-expression"
         assert result[0].error_id == "ttc-labTestNameResulted-noCode"
@@ -306,7 +296,7 @@ class TestSchematronProcessor:
             "Failed to process a schematron error detail",
             extra={
                 "error_id": "ttc-labTestNameResulted-noCode",
-                "error_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute.",
+                "error_message": self.LAB_TEST_RESULTED_ERROR,
                 "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
                 "status": "error",
             },
