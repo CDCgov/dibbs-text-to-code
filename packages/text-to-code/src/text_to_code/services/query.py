@@ -50,7 +50,8 @@ class TermsFilter(FrozenBaseModel):
 class QueryBuilder:
     """Builds a query with filters and KNN queries."""
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self) -> None:
+        """Initialize query builder."""
         self._must: list[dict] = []
         self._filters: list[dict] = []
 
