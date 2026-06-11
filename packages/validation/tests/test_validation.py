@@ -117,7 +117,7 @@ def test_validation():
 
 def test_validation_no_errors():
     """Tests that the validate_eicr function returns an empty list when there are no validation errors."""
-    with Path("e2e/snapshots/test_e2e/test_upload_and_process/augmented_eicr.xml").open() as f:
+    with Path("packages/validation/tests/assets/augmented_eicr.xml").open() as f:
         eicr = f.read()
     results = validate_eicr(eicr)
 
