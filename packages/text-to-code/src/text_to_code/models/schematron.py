@@ -16,7 +16,7 @@ class LabTestNameOrderedSchematronErrors(Enum):
 class LabTestNameResultedSchematronErrors(Enum):
     """The list of Schematron error message ids that are relevant to the lab test name resulted data field."""
 
-    MISSING_CODE_ATTRIBUTE = "ttc-labTestNameResulted-noCode"
+    MISSING_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-missing"
     BLANK_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-empty"
     NULL_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-nullFlavor"
     INVALID_CODE_SYSTEM = "ttc-labTestNameResulted-wrongCode"

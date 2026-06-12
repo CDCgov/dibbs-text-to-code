@@ -79,7 +79,6 @@ def get_data_fields_from_schematron_error(
             message_elem = issue.find("message")
             context_elem = issue.find("context")
             test_elem = issue.find("test")
-            id_elem = issue.find("id")
             assertion_id_elem = issue.find("assertionID")
             if (
                 message_elem is None
@@ -106,13 +105,7 @@ def get_data_fields_from_schematron_error(
                 error_test=test_elem.text.strip()
                 if test_elem is not None and test_elem.text is not None
                 else vr.get("test"),
-                error_id=(
-                    id_elem.text.strip()
-                    if id_elem is not None and id_elem.text is not None
-                    else assertion_id_elem.text.strip()
-                    if assertion_id_elem is not None and assertion_id_elem.text is not None
-                    else vr.get("id") or issue.get("id")
-                ),
+                error_id=error_assertion_id,
                 candidate=None,
             )
             if error_detail not in schematron_errors:

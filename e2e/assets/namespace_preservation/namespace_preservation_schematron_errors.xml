@@ -158,7 +158,7 @@
     <Results xmlns="urn:gov:nist:cdaGuideValidator">
         <validationResult xmlns="">
             <issue severity="text_to_code">
-                <assertionID>ttc-labTestNameResulted-noCode</assertionID>
+                <assertionID>ttc-labTestNameResulted-code-missing</assertionID>
                 <flag/>
                 <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
                 <context>/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]</context>
