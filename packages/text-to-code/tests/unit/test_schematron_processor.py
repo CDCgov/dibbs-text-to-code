@@ -109,7 +109,7 @@ class TestSchematronProcessor:
             lab_test_name_resulted_error.error_test
             == "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code"
         )
-        assert lab_test_name_resulted_error.error_id is None
+        assert lab_test_name_resulted_error.error_id == "ttc-labTestNameResulted-code-missing"
         assert lab_test_name_resulted_error.candidate is None
 
     def test_get_schematron_error_empty_xml(self):
