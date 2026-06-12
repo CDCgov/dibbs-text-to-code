@@ -3,14 +3,10 @@ from datetime import UTC, datetime
 from pydantic import Field
 
 from lambda_handler.models import OpenSearchResult
-from shared_models import (
-    Code,
-    DataField,
-    FrozenBaseModel,
-    PassthroughReason,
-)
+from shared_models import Code, DataField, FrozenBaseModel, PassthroughReason
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import Metadata as EICRMetadata
+from text_to_code.models.registry import TTCModelInfo
 from text_to_code.services.reranker import ScoredResult
 
 
@@ -42,3 +38,4 @@ class Metadata(FrozenBaseModel):
     passthrough: bool | None = None
     passthrough_reason: PassthroughReason | None = None
     error: str | None = None
+    model_info: TTCModelInfo | None = None
