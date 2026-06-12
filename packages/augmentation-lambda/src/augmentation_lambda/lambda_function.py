@@ -139,7 +139,15 @@ def _build_augmentation_output(
     :param augmenter_input: The parsed TTC augmenter input.
     :return: The augmentation-stage output to write to S3.
     """
-    original_eicr_id = persistence_id
+    original_eicr_id = augmenter_input.original_eicr_id or persistence_id
+
+    if augmenter_input.passthrough:
+        return _build_original_eicr_output(
+            persistence_id=persistence_id,
+            original_eicr_id=original_eicr_id,
+            original_eicr=original_eicr,
+            passthrough_reason=augmenter_input.passthrough_reason,
+        )
 
     try:
         augmenter = EICRAugmenter(
@@ -150,36 +158,22 @@ def _build_augmentation_output(
 
         original_eicr_id = str(augmenter.original_eicr_id)
 
-        if augmenter_input.passthrough:
-            passthrough_reason = augmenter_input.passthrough_reason
-            return _build_original_eicr_output(
-                persistence_id=persistence_id,
-                original_eicr_id=original_eicr_id,
-                original_eicr=original_eicr,
-                passthrough_reason=passthrough_reason,
-            )
-
         output = _build_augmented_eicr_output(
             persistence_id=persistence_id,
             augmenter=augmenter,
         )
     except Exception as e:
-        passthrough_reason = (
-            augmenter_input.passthrough_reason
-            if augmenter_input.passthrough
-            else PassthroughReason.AUGMENTATION_EXCEPTION
-        )
         logger.exception(
             "Augmentation failed; writing original eICR output",
             status="passthrough",
-            passthrough_reason=passthrough_reason,
+            passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
         )
         return _build_original_eicr_output(
             persistence_id=persistence_id,
             original_eicr_id=original_eicr_id,
             original_eicr=original_eicr,
             error=str(e),
-            passthrough_reason=passthrough_reason,
+            passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
         )
 
     try:
