@@ -1,10 +1,12 @@
 from datetime import datetime
 
-from pydantic import FrozenModel
+from pydantic import BaseModel, ConfigDict
 
 
-class ModelInfo(FrozenModel):
+class ModelInfo(BaseModel):
     """Info about a Text-to-Code model sourced from Hugging Face."""
+
+    model_config = ConfigDict(frozen=True)
 
     id: str | None
     author: str | None
@@ -12,8 +14,10 @@ class ModelInfo(FrozenModel):
     last_modified: datetime | None
 
 
-class TTCModelInfo(FrozenModel):
+class TTCModelInfo(BaseModel):
     """Info about the Text-to-Code models used in a TTC run."""
+
+    model_config = ConfigDict(frozen=True)
 
     retriever: ModelInfo
     reranker: ModelInfo
