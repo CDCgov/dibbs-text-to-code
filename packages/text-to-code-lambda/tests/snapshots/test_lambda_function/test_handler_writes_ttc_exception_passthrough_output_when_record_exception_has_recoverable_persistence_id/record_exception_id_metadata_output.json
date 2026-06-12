@@ -1,6 +1,20 @@
 {
   "eicr_metadata": null,
   "error": "boom",
+  "model_info": {
+    "reranker": {
+      "author": "NCHS",
+      "created_at": "2026-04-02T16:48:39Z",
+      "id": "NCHS/ttc-reranker-mvp",
+      "last_modified": "2026-04-02T17:19:19Z"
+    },
+    "retriever": {
+      "author": "NCHS",
+      "created_at": "2026-04-02T16:48:39Z",
+      "id": "NCHS/ttc-reranker-mvp",
+      "last_modified": "2026-04-02T17:19:19Z"
+    }
+  },
   "passthrough": true,
   "passthrough_reason": "ttc_exception",
   "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
