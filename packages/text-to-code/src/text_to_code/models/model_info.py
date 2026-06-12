@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import FrozenModel
 
 
-class ModelInfo(BaseModel):
+class ModelInfo(FrozenModel):
     """Info about a Text-to-Code model sourced from Hugging Face."""
 
     id: str | None
@@ -12,7 +12,7 @@ class ModelInfo(BaseModel):
     last_modified: datetime | None
 
 
-class TTCModelInfo(BaseModel):
+class TTCModelInfo(FrozenModel):
     """Info about the Text-to-Code models used in a TTC run."""
 
     retriever: ModelInfo
