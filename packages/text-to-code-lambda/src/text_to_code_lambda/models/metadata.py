@@ -6,7 +6,7 @@ from lambda_handler.models import OpenSearchResult
 from shared_models import Code, DataField, FrozenBaseModel, PassthroughReason
 from text_to_code.models.eicr import Candidate
 from text_to_code.models.eicr import Metadata as EICRMetadata
-from text_to_code.models.registry import TTCModelInfo
+from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services.reranker import ScoredResult
 
 

@@ -1,7 +1,8 @@
 from .eicr import Candidate, LabXPaths
 from .labs import BaseLabField, LabTestNameOrdered, LabTestNameResulted
+from .model_info import ModelInfo, TTCModelInfo
 from .query import DataFieldTypeMapping, VectorSearchParams
-from .registry import EICR_REGISTRY, TTC_RERANKER, TTC_RETRIEVER, ModelInfo, TTCModelInfo
+from .registry import EICR_REGISTRY, TTC_RERANKER, TTC_RETRIEVER
 from .schematron import (
     _SCHEMATRON_ENUM_TO_FIELD,
     LabTestNameOrderedSchematronErrors,

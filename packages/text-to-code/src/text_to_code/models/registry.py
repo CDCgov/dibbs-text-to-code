@@ -1,7 +1,4 @@
 import os
-from datetime import datetime
-
-from pydantic import BaseModel
 
 from shared_models import DataField
 
@@ -19,19 +16,3 @@ TTC_RETRIEVER: str = os.getenv("RETRIEVER_MODEL_PATH") or "NCHS/ttc-retriever-mv
 # Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
 # found by the approximate neighbor search
 TTC_RERANKER: str = os.getenv("RERANKER_MODEL_PATH") or "NCHS/ttc-reranker-mvp"
-
-
-class ModelInfo(BaseModel):
-    """Info about a Text-to-Code model sourced from Hugging Face."""
-
-    id: str
-    author: str
-    created_at: datetime
-    last_modified: datetime
-
-
-class TTCModelInfo(BaseModel):
-    """Info about the Text-to-Code models used in a TTC run."""
-
-    retriever: ModelInfo
-    reranker: ModelInfo

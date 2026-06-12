@@ -2,7 +2,8 @@ from huggingface_hub import errors, model_info
 
 from shared_models import DataField
 from text_to_code.models.labs import BaseLabField
-from text_to_code.models.registry import EICR_REGISTRY, ModelInfo
+from text_to_code.models.model_info import ModelInfo
+from text_to_code.models.registry import EICR_REGISTRY
 
 ConfigType = type[BaseLabField]
 

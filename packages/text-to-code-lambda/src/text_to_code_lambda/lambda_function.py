@@ -10,7 +10,7 @@ from opensearchpy import OpenSearch
 import lambda_handler
 from shared_models import Code, NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
 from text_to_code.models import query as query_models
-from text_to_code.models.registry import TTCModelInfo
+from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder

@@ -4,7 +4,8 @@ import pytest
 
 from shared_models import DataField
 from text_to_code.models import LabTestNameResulted
-from text_to_code.models.registry import TTC_RETRIEVER, ModelInfo
+from text_to_code.models.model_info import ModelInfo
+from text_to_code.models.registry import TTC_RETRIEVER
 from text_to_code.services.utils import get_config_for_data_field, get_model_info
 
 
