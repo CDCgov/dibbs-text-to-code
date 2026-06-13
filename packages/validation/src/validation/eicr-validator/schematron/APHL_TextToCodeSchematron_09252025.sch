@@ -48,7 +48,7 @@
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
         or cda:code/cda:translation[@codeSystem = '2.16.840.1.113883.6.1']">Text to Code: Lab Test Name Resulted code and translation data elements @codeSystem attribute are not LOINC 2.16.840.1.113883.6.1</sch:assert>
       <!--observation value-->
-      <sch:assert id="labResultValue-noCode" test="
+      <sch:assert id="ttc-labResultValue-noCode" test="
         not(cda:value) 
         or cda:value[not(@nullFlavor)]">Text to Code: Lab Result Value is nullFlavor</sch:assert>
       <sch:assert id="ttc-labResultValue-STNoInterp" test="
