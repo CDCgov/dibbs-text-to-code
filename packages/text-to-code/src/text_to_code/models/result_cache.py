@@ -28,7 +28,7 @@ class OpenSearchResultCacheSource(FrozenBaseModel):
     )
     opensearch_retrieved_scores: OpenSearchResult = Field(
         description="The serialized list of OpenSearch results returned during the initial "
-        "processing of this input, as a JSON dict."
+        "processing of this input."
     )
     reranker_processed_results: dict = Field(
         description="The serialized list of ScoredResult objects calculated by the Reranker "
