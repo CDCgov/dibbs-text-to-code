@@ -84,15 +84,14 @@ def mock_opensearch() -> Iterator[MagicMock]:
     opensearch_client.get.return_value = {
         "found": True,
         "_source": {
-            "cache_key": "1357924680",
-            "text": "Screening urine fentanyl detection",
-            "data_field": "Lab Test Name Ordered",
-            "loinc_code": {
-                "code": "51459-2",
-                "code_system": "2.16.840.1.113883.6.1",
-                "code_system_name": "LOINC",
-                "display_name": "fentaNYL [Presence] in Urine by Screen method",
-                "original_text": "Screening urine fentanyl detection",
+            "id": 0,
+            "loinc_code": "109224-6",
+            "loinc_name_type": "Long Common Name",
+            "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+            "loinc_type": "Order",
+            "s3": {
+                "bucket": "dibbs-ttc",
+                "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
             },
             "search_score": 0.9563,
             "reranker_score": 0.6789,
