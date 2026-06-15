@@ -2,8 +2,10 @@ from sentence_transformers import CrossEncoder
 from typing_extensions import TypedDict
 
 from text_to_code.models.registry import TTC_RERANKER
+from text_to_code.services.utils import get_model_info
 
 _RERANKER = CrossEncoder(TTC_RERANKER)
+RERANKER_MODEL_INFO = get_model_info(TTC_RERANKER)
 
 
 class ScoredResult(TypedDict):
