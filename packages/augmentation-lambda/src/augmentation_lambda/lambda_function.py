@@ -139,7 +139,19 @@ def _build_augmentation_output(
     :param augmenter_input: The parsed TTC augmenter input.
     :return: The augmentation-stage output to write to S3.
     """
-    original_eicr_id = augmenter_input.original_eicr_id or persistence_id
+    original_eicr_identifier = augmenter_input.original_eicr_id
+    original_eicr_id = persistence_id
+
+    if original_eicr_identifier is not None:
+        root = original_eicr_identifier.root
+        extension = original_eicr_identifier.extension
+
+        if root and extension:
+            original_eicr_id = f"{root}^{extension}"
+        elif root:
+            original_eicr_id = root
+        elif extension:
+            original_eicr_id = extension
 
     if augmenter_input.passthrough:
         return _build_original_eicr_output(
@@ -156,7 +168,8 @@ def _build_augmentation_output(
             deterministic_id_seed=augmenter_input.persistence_id,
         )
 
-        original_eicr_id = str(augmenter.original_eicr_id)
+        if augmenter_input.original_eicr_id is None:
+            original_eicr_id = str(augmenter.original_eicr_id)
 
         output = _build_augmented_eicr_output(
             persistence_id=persistence_id,
@@ -176,6 +189,8 @@ def _build_augmentation_output(
             passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
         )
 
+    validation_error = None
+
     try:
         validation_results = validate_eicr(output.augmented_eicr)
     except Exception as e:
@@ -184,22 +199,18 @@ def _build_augmentation_output(
             status="passthrough",
             passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
         )
-        return _build_original_eicr_output(
-            persistence_id=persistence_id,
-            original_eicr_id=output.metadata.original_eicr_id,
-            original_eicr=original_eicr,
-            nonstandard_codes=output.metadata.nonstandard_codes,
-            error=str(e),
-            passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
-        )
+        validation_error = str(e)
+    else:
+        if validation_results:
+            validation_error = json.dumps([result.model_dump() for result in validation_results])
 
-    if validation_results:
+    if validation_error:
         return _build_original_eicr_output(
             persistence_id=persistence_id,
             original_eicr_id=output.metadata.original_eicr_id,
             original_eicr=original_eicr,
             nonstandard_codes=output.metadata.nonstandard_codes,
-            error=json.dumps([result.model_dump() for result in validation_results]),
+            error=validation_error,
             passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
         )
 

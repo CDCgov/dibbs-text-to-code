@@ -438,11 +438,10 @@ def _process_record_pipeline(
         passthrough_reason = PassthroughReason.NO_CODE_MATCHES
 
     eicr_metadata = processor.eicr_metadata
-    original_eicr_id = eicr_metadata.eicr_id.root if eicr_metadata.eicr_id else None
 
     ttc_output = TTCAugmenterInput(
         persistence_id=persistence_id,
-        original_eicr_id=original_eicr_id,
+        original_eicr_id=eicr_metadata.eicr_id,
         nonstandard_codes=nonstandard_code_replacements,
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
