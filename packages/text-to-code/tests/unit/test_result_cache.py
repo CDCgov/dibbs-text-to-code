@@ -25,8 +25,8 @@ class TestResultCacheAPIs:
             "primary_term": "3",
             "found": True,
             "routing": "",
-            "source": {
-                "cache_key": "1357924680",
+            "_source": {
+                "_cache_key": "1357924680",
                 "text": "Screening urine fentanyl detection",
                 "data_field": "Lab Test Name Ordered",
                 "loinc_code": {
@@ -72,7 +72,7 @@ class TestResultCacheAPIs:
             "primary_term": "",
             "found": False,
             "routing": "",
-            "source": {},
+            "_source": {},
             "fields": {},
         }
 

@@ -63,7 +63,7 @@ def get_cached_result(
         )
 
         return OpenSearchResultCacheSource(
-            cache_key=response_source["cache_key"],
+            cache_key=response_source["_cache_key"],
             text=response_source["text"],
             data_field=response_source["data_field"],
             loinc_code=Code(

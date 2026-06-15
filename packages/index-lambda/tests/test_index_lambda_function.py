@@ -75,7 +75,7 @@ class MockIndices:
                 index: {
                     "mappings": {
                         "properties": {
-                            "cache_key": {"type": "keyword"},
+                            "_cache_key": {"type": "keyword"},
                         }
                     }
                 }
@@ -185,7 +185,7 @@ class TestHandler:
             RESULT_CACHE_INDEX_NAME: {
                 "mappings": {
                     "properties": {
-                        "cache_key": {"type": "keyword"},
+                        "_cache_key": {"type": "keyword"},
                     }
                 }
             }
@@ -306,7 +306,7 @@ class TestHandler:
             RESULT_CACHE_INDEX_NAME: {
                 "mappings": {
                     "properties": {
-                        "cache_key": {"type": "keyword"},
+                        "_cache_key": {"type": "keyword"},
                     }
                 }
             }
