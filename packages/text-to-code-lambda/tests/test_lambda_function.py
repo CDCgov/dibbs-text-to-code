@@ -72,8 +72,7 @@ class TestHandler:
         ttc_metadata_output = _get_serialized_object(
             f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
-        print(ttc_metadata_output)
-        # snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
+        snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
 
     def test_handler_with_no_records(self, example_sqs_event, mock_opensearch, mock_lambda_context):
         """Test handler with no records."""
