@@ -24,7 +24,7 @@ The TTC output is consumed by downstream augmentation workflows.
 
 Alongside the SQS batch worker, this package exposes a small **synchronous** path
 that maps a raw lab-test string directly to a LOINC code — no eICR XML, no S3.
-It powers the demo webpage (`index.html`) and reuses the exact embed → KNN →
+It powers the demo webpage (`frontend/index.html`) and reuses the exact embed → KNN →
 rerank pipeline via the shared `service` module.
 
 - `service.py` — `code_for_text(text, data_field, client, index)` and

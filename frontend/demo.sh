@@ -45,8 +45,8 @@ fi
 export OPENSEARCH_ENDPOINT_URL
 
 if [[ "$BACKEND_PORT" != "8080" ]]; then
-  echo "! BACKEND_PORT is $BACKEND_PORT, but index.html targets 8080."
-  echo "  Update API_BASE in index.html to match, or the page won't reach the backend."
+  echo "! BACKEND_PORT is $BACKEND_PORT, but the frontend targets 8080."
+  echo "  Update API_BASE in app.js to match, or the page won't reach the backend."
 fi
 
 pids=()
