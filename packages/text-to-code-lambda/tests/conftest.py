@@ -244,11 +244,11 @@ def mock_opensearch() -> Iterator[MagicMock]:
                     "_id": "123455wBhppl0u9qtABC",
                     "_score": 0.65,
                     "_source": {
-                        "id": 4,
-                        "loinc_code": "15273-6",
-                        "loinc_name_type": "Fully-Specified Name",
-                        "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
-                        "loinc_type": "Both",
+                        "id": 0,
+                        "loinc_code": "109224-6",
+                        "loinc_name_type": "Long Common Name",
+                        "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                        "loinc_type": "Order",
                         "s3": {
                             "bucket": "dibbs-ttc",
                             "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
@@ -256,6 +256,34 @@ def mock_opensearch() -> Iterator[MagicMock]:
                     },
                 },
             ],
+        },
+    }
+
+    opensearch_client.get.return_value = {
+        "found": True,
+        "_source": {
+            "id": 0,
+            "loinc_code": "109224-6",
+            "loinc_name_type": "Long Common Name",
+            "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+            "loinc_type": "Order",
+            "s3": {
+                "bucket": "dibbs-ttc",
+                "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+            },
+            "search_score": 0.9563,
+            "reranker_score": 0.6789,
+            "opensearch_retrieved_scores": {
+                "took": 234,
+                "timed_out": False,
+                "_shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                "hits": {
+                    "total": {},
+                    "hits": [],
+                },
+            },
+            "reranker_processed_results": {"results": []},
+            "cached_at": "2026-05-15T18:14:45.020655+00:00",
         },
     }
 
