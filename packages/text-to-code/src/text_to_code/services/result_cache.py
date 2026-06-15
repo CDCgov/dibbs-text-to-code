@@ -29,7 +29,7 @@ def get_cached_result(
     """
     response = opensearch_client.get(index=index, id=os_doc_id)
     if response and response["found"]:
-        response_source = response["source"]
+        response_source = response["_source"]
         response_loinc = response_source["loinc_code"]
         opensearch_results = response_source["opensearch_retrieved_scores"]
 

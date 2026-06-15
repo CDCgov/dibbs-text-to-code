@@ -81,6 +81,35 @@ def mock_opensearch() -> Iterator[MagicMock]:
         },
     }
 
+    opensearch_client.get.return_value = {
+        "found": True,
+        "_source": {
+            "cache_key": "1357924680",
+            "text": "Screening urine fentanyl detection",
+            "data_field": "Lab Test Name Ordered",
+            "loinc_code": {
+                "code": "51459-2",
+                "code_system": "2.16.840.1.113883.6.1",
+                "code_system_name": "LOINC",
+                "display_name": "fentaNYL [Presence] in Urine by Screen method",
+                "original_text": "Screening urine fentanyl detection",
+            },
+            "search_score": 0.9563,
+            "reranker_score": 0.6789,
+            "opensearch_retrieved_scores": {
+                "took": 234,
+                "timed_out": False,
+                "_shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                "hits": {
+                    "total": {},
+                    "hits": [],
+                },
+            },
+            "reranker_processed_results": {"results": []},
+            "cached_at": "2026-05-15T18:14:45.020655+00:00",
+        },
+    }
+
     with patch(
         "lambda_handler.create_opensearch_client",
         return_value=opensearch_client,
