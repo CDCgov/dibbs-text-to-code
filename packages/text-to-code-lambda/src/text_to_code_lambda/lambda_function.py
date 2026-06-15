@@ -8,17 +8,13 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import (
-    Code,
-    NonstandardCodeInstance,
-    PassthroughReason,
-    TTCAugmenterInput,
-)
+from shared_models import Code, NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
 from text_to_code.models import query as query_models
+from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
-from text_to_code.services.embedder import embed
+from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import ScoredResult, rerank
+from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
@@ -130,6 +126,10 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             passthrough=True,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             error=str(error),
+            model_info=TTCModelInfo(
+                reranker=RERANKER_MODEL_INFO,
+                retriever=RETRIEVER_MODEL_INFO,
+            ),
         )
         ttc_output = TTCAugmenterInput(
             persistence_id=persistence_id,
@@ -449,6 +449,10 @@ def _process_record_pipeline(
         ttc_schematron_issues=ttc_schematron_issues_details,
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
+        model_info=TTCModelInfo(
+            retriever=RETRIEVER_MODEL_INFO,
+            reranker=RERANKER_MODEL_INFO,
+        ),
     )
 
     _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)
