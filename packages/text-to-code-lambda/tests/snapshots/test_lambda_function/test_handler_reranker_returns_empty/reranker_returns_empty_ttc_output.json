@@ -1,6 +1,12 @@
 {
   "nonstandard_codes": [],
-  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f",
+  "original_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+  },
   "passthrough": true,
   "passthrough_reason": "no_code_matches",
   "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
