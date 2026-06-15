@@ -13,13 +13,14 @@ def reset_opensearch_cache(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(scope="function")
-def mock_opensearch() -> Iterator[MagicMock]:
+def mock_opensearch(request: pytest.FixtureRequest) -> Iterator[MagicMock]:
     """Mock OpenSearch client.
 
     We have to use MagicMock here instead of moto because
     moto's mocked version of OpenSearch does not support the search functionality,
     only the creation and deletion of indices.
     """
+    candidate = request.param
     opensearch_client = MagicMock()
 
     opensearch_client.search.return_value = {
@@ -85,7 +86,7 @@ def mock_opensearch() -> Iterator[MagicMock]:
         "found": True,
         "_source": {
             "cache_key": "test_cache_key",
-            "text": "COVID-19 Spike IgG Interpretation",
+            "text": candidate,
             "data_field": "Lab Test Name Resulted",
             "codeid": 0,
             "loinc_code": {
@@ -93,7 +94,7 @@ def mock_opensearch() -> Iterator[MagicMock]:
                 "code_system": "2.16.840.1.113883.6.1",
                 "code_system_name": "LOINC",
                 "display_name": "Weed Allerg Mix3 IgE Qn",
-                "original_text": "COVID-19 Spike IgG Interpretation",
+                "original_text": candidate,
             },
             "loinc_name_type": "Long Common Name",
             "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",

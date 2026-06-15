@@ -24,7 +24,7 @@
                                     A custom code in original text.
                                 </originalText>
                                 <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="COVID-19 Spike IgG Interpretation"/>
+                                <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="A custom code in display name."/>
                             </code>
                             <author>
                                 <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->
