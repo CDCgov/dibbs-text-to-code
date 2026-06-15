@@ -12,9 +12,9 @@ from shared_models import Code, NonstandardCodeInstance, PassthroughReason, TTCA
 from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
-from text_to_code.services.embedder import _RETRIEVER_MODEL_INFO, embed
+from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import _RERANKER_MODEL_INFO, ScoredResult, rerank
+from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
@@ -127,8 +127,8 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             error=str(error),
             model_info=TTCModelInfo(
-                reranker=_RERANKER_MODEL_INFO,
-                retriever=_RETRIEVER_MODEL_INFO,
+                reranker=RERANKER_MODEL_INFO,
+                retriever=RETRIEVER_MODEL_INFO,
             ),
         )
         ttc_output = TTCAugmenterInput(
@@ -450,8 +450,8 @@ def _process_record_pipeline(
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
         model_info=TTCModelInfo(
-            retriever=_RETRIEVER_MODEL_INFO,
-            reranker=_RERANKER_MODEL_INFO,
+            retriever=RETRIEVER_MODEL_INFO,
+            reranker=RERANKER_MODEL_INFO,
         ),
     )
 

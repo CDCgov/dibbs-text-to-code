@@ -9,7 +9,7 @@ from text_to_code.services.utils import get_model_info
 logger = logging.getLogger(__name__)
 
 _RETRIEVER = SentenceTransformer(TTC_RETRIEVER)
-_RETRIEVER_MODEL_INFO = get_model_info(TTC_RETRIEVER)
+RETRIEVER_MODEL_INFO = get_model_info(TTC_RETRIEVER)
 
 
 def embed(text: str) -> Tensor:
