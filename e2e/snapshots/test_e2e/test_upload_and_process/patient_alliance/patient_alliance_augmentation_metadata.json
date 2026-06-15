@@ -1,8 +1,8 @@
 {
-  "augmented_eicr_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
-  "error": null,
+  "augmented_eicr_id": "1.2.840.113619.21.1.139060385287897942.5.3",
+  "error": "Unable to find tag in eICR document for XPath: /ClinicalDocument/setId",
   "nonstandard_codes": [],
-  "original_eicr_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "original_eicr_id": "1.2.840.113619.21.1.139060385287897942.5.3",
   "passthrough": true,
-  "passthrough_reason": "ttc_exception"
+  "passthrough_reason": "augmentation_exception"
 }

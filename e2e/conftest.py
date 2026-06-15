@@ -84,8 +84,17 @@ def mock_opensearch() -> Iterator[MagicMock]:
     opensearch_client.get.return_value = {
         "found": True,
         "_source": {
-            "id": 0,
-            "loinc_code": "109224-6",
+            "cache_key": "test_cache_key",
+            "text": "COVID-19 Spike IgG Interpretation",
+            "data_field": "Lab Test Name Resulted",
+            "codeid": 0,
+            "loinc_code": {
+                "code": "82041-5",
+                "code_system": "2.16.840.1.113883.6.1",
+                "code_system_name": "LOINC",
+                "display_name": "Weed Allerg Mix3 IgE Qn",
+                "original_text": "COVID-19 Spike IgG Interpretation",
+            },
             "loinc_name_type": "Long Common Name",
             "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
             "loinc_type": "Order",
