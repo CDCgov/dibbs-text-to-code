@@ -17,7 +17,7 @@ class OpenSearchResultCacheSource(FrozenBaseModel):
         description="The data field from which the candidate text was retrieved during initial "
         "processing of this cache hit."
     )
-    loinc_code: Code = Field(description="The Code object for this cached input as a JSON dict.")
+    loinc_code: Code = Field(description="The Code object for this cached input.")
     search_score: float = Field(
         description="The cosine similarity score calculated for this standardization during "
         "initial processing of this input."
