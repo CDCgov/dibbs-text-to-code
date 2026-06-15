@@ -6,7 +6,7 @@ import pytest
 from validation import ValidationResult, build_schematron_report_xml, validate_eicr
 from validation import main as validation_main
 
-FAKE_MESSAGE = "Text to Code: Planned observation code data element has no @code attribute"
+FAKE_MESSAGE = "Text to Code: Lab Test Name Ordered does not have a @code attribute"
 FAKE_LOCATION = "/ClinicalDocument/component/structuredBody/component/section/entry/observation"
 FAKE_TEST = "not(cda:code) or cda:code/@code"
 
