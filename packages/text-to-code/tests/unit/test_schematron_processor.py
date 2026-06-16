@@ -135,7 +135,7 @@ class TestSchematronProcessor:
 
         assert len(result) == 1
         assert result[0].field == DataField.LAB_TEST_NAME_RESULTED
-        assert result[0].error == "ttc-labTestNameResulted-code-missing"
+        assert result[0].error == LabTestNameResultedSchematronErrors.MISSING_CODE_ATTRIBUTE.value
         assert result[0].error_message == self.LAB_TEST_RESULTED_ERROR
         assert result[0].error_context == "/ClinicalDocument/component[1]"
         assert result[0].error_test == "test-expression"
