@@ -4,6 +4,7 @@ from unittest.mock import patch
 from lxml import etree
 
 from shared_models import CdaInstanceIdentifier, DataField
+from text_to_code.models.schematron import LabTestNameResultedSchematronErrors
 from text_to_code.services.schematron_processor import (
     _get_eicr_id,
     _get_error_enum_value,
@@ -99,7 +100,10 @@ class TestSchematronProcessor:
 
         assert lab_test_name_resulted_error.eicr_id is None
         assert lab_test_name_resulted_error.field == DataField.LAB_TEST_NAME_RESULTED
-        assert lab_test_name_resulted_error.error == "ttc-labTestNameResulted-code-missing"
+        assert (
+            lab_test_name_resulted_error.error
+            == LabTestNameResultedSchematronErrors.MISSING_CODE_ATTRIBUTE.value
+        )
         assert lab_test_name_resulted_error.error_message == self.LAB_TEST_RESULTED_ERROR
         assert (
             lab_test_name_resulted_error.error_context
@@ -109,7 +113,10 @@ class TestSchematronProcessor:
             lab_test_name_resulted_error.error_test
             == "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code"
         )
-        assert lab_test_name_resulted_error.error_id == "ttc-labTestNameResulted-code-missing"
+        assert (
+            lab_test_name_resulted_error.error_id
+            == LabTestNameResultedSchematronErrors.MISSING_CODE_ATTRIBUTE.value
+        )
         assert lab_test_name_resulted_error.candidate is None
 
     def test_get_schematron_error_empty_xml(self):
@@ -139,7 +146,9 @@ class TestSchematronProcessor:
         assert result[0].error_message == self.LAB_TEST_RESULTED_ERROR
         assert result[0].error_context == "/ClinicalDocument/component[1]"
         assert result[0].error_test == "test-expression"
-        assert result[0].error_id == "ttc-labTestNameResulted-code-missing"
+        assert (
+            result[0].error_id == LabTestNameResultedSchematronErrors.MISSING_CODE_ATTRIBUTE.value
+        )
         assert result[0].candidate is None
 
     def test_get_schematron_error_skips_validation_result_when_issue_is_missing(self):

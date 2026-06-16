@@ -3,6 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from text_to_code.models.schematron import (
+    LabTestNameOrderedSchematronErrors,
+)
 from validation import ValidationResult, build_schematron_report_xml, validate_eicr
 from validation import main as validation_main
 
@@ -147,7 +150,7 @@ def test_validation_redoes_all_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labOrder-code-missing",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
         )
     ]
@@ -175,7 +178,7 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labOrder-code-missing",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
         )
     ]

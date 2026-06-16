@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 from shared_models import CdaInstanceIdentifier, DataField, FrozenBaseModel
 from text_to_code.models.eicr import Candidate
 
 
-class LabTestNameOrderedSchematronErrors(Enum):
+class LabTestNameOrderedSchematronErrors(StrEnum):
     """The list of Schematron error message ids that are relevant to the lab test name ordered data field."""
 
     MISSING_CODE_ATTRIBUTE = "ttc-labOrder-code-missing"
@@ -13,7 +13,7 @@ class LabTestNameOrderedSchematronErrors(Enum):
     INVALID_CODE_SYSTEM = "ttc-labOrder-wrongCode"
 
 
-class LabTestNameResultedSchematronErrors(Enum):
+class LabTestNameResultedSchematronErrors(StrEnum):
     """The list of Schematron error message ids that are relevant to the lab test name resulted data field."""
 
     MISSING_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-missing"
