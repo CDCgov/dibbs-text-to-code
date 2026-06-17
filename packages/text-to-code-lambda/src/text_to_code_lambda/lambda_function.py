@@ -322,7 +322,9 @@ def _get_cache_metric(hit_value: typing.Literal["hit", "miss"]) -> dict:
     """
     return {
         "_aws": {
-            "Timestamp": int(datetime.timestamp(datetime.now(UTC))),
+            "Timestamp": int(
+                datetime.timestamp(datetime.now(UTC)) * 1000
+            ),  # timestamp in milliseconds.
             "CloudWatchMetrics": [
                 {
                     "Namespace": "ttc-lambda-cache-metrics",
