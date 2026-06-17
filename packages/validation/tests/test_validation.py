@@ -3,6 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from text_to_code.models.schematron import (
+    LabTestNameOrderedSchematronErrors,
+)
 from validation import ValidationResult, build_schematron_report_xml, validate_eicr
 from validation import main as validation_main
 
@@ -26,7 +29,7 @@ class FakeAssert:
 
     def get_attribute_value(self, attribute: str) -> str:
         values = {
-            "id": "ttc-labTestNameOrdered-noCode",
+            "id": "ttc-labOrder-code-missing",
             "location": FAKE_LOCATION,
             "test": FAKE_TEST,
         }
@@ -109,7 +112,7 @@ def test_validation():
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
+            error_id="ttc-labOrder-code-missing",
             location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
         )
     ]
@@ -147,7 +150,7 @@ def test_validation_redoes_all_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
         )
     ]
@@ -175,7 +178,7 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
         )
     ]
