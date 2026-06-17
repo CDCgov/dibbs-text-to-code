@@ -79,7 +79,9 @@ EICR_CASES = (
         / "patient_alliance"
         / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
         [
+            "CHLAMURETHRA",
             "CHLAMRECNAAT",
+            "CHLAMTHROAT",
             "CHLAM DNA PR",
             "GC-THROAT",
             "GC RECTUM",
