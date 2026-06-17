@@ -16,7 +16,7 @@ RUN microdnf update -y --releasever=latest \
 # Heavy, rarely-changing layers first so they stay cached across source changes.
 # Install CPU-only PyTorch before any workspace package — a transitive pin
 # could otherwise pull the full CUDA wheel before our override lands.
-RUN pip install --no-cache-dir torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch>=2.12.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir huggingface_hub
 
 # Torch's build environment can leave behind an older setuptools that shadows
