@@ -21,7 +21,7 @@ The package centralizes common Lambda support behavior, including AWS client cre
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.13 or higher
 - Docker
 - Docker Compose [optional]
 
