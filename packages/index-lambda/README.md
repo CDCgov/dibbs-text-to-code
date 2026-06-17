@@ -21,7 +21,7 @@ The index stores LOINC code metadata and embedding vectors used for semantic sea
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.13
 - Docker
 - Docker Compose [optional]
 

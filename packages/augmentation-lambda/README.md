@@ -25,7 +25,7 @@ Augmentation creates a new eICR iteration rather than replacing the original eIC
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.13
 - Docker
 - Docker Compose [optional]
 
