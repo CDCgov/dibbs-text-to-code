@@ -58,19 +58,19 @@ EICR_CASES = (
         "eicr_test",
         ASSETS_FOLDER / "eicr_test" / "eicr_test.xml",
         ASSETS_FOLDER / "eicr_test" / "eicr_test_schematron_errors.xml",
-        "A custom code in display name.",
+        ["A custom code in display name."],
     ),
     (
         "eicr_covid",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
-        "COVID-19 Spike IgG Interpretation",
+        ["COVID-19 Spike IgG Interpretation"],
     ),
     (
         "eicr_empty",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
-        None,
+        [""],
     ),
     (
         "patient_alliance",
@@ -78,13 +78,18 @@ EICR_CASES = (
         ASSETS_FOLDER
         / "patient_alliance"
         / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
-        None,
+        [
+            "CHLAMRECNAAT",
+            "CHLAM DNA PR",
+            "GC-THROAT",
+            "GC RECTUM",
+        ],
     ),
     (
         "sample7",
         ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues.xml",
         ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues_schematron_errors.xml",
-        "Influenza A & B Antigen",
+        ["Influenza A & B Antigen"],
     ),
     (
         "sample9",
@@ -92,7 +97,7 @@ EICR_CASES = (
         ASSETS_FOLDER
         / "sample9"
         / "eICR_Sample9_nullFlavorResultValues_localCodes_schematron_errors.xml",
-        None,
+        [""],
     ),
 )
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
