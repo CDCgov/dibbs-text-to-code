@@ -1,10 +1,10 @@
 import json
 import os
-from datetime import UTC, datetime
-from enum import IntEnum
+from enum import StrEnum
 from io import BytesIO
 
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Logger, Metrics, single_metric
+from aws_lambda_powertools.metrics import MetricUnit
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, SQSRecord, event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
@@ -27,6 +27,11 @@ from text_to_code.services.utils import compute_cache_key
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
+metrics = Metrics()
+
+_METRIC_NAME = "result_cache_value_status"
+
+
 # Initialize the logger
 logger = Logger(service="ttc")
 # Environment variables
@@ -41,14 +46,14 @@ OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 RESULT_CACHE_INDEX = os.getenv("RESULT_CACHE_INDEX", "ttc-result-cache")
 
 
-class HitValue(IntEnum):
+class HitValue(StrEnum):
     """Enum to represent the value of the hit status of the cache.
 
     CloudWatch metrics must be numeric, hence the use of `IntEnum`.
     """
 
-    hit = 1
-    miss = 0
+    hit = "hit"
+    miss = "miss"
 
 
 @event_source(data_class=SQSEvent)
@@ -322,30 +327,16 @@ def _save_ttc_outputs(
     )
 
 
-def _get_cache_metric(hit_value: HitValue) -> dict:
-    """Helper method for creating a cache-result metric dict.
-
-    Output is generated using Embedded Metric Format Specification.
-    :param hit_value: A string indicating whether the metric denotes a cache hit
-      or a cache miss.
-    :return: A dictionary in EMFS that can be emitted by the Logger.
-    """
-    return {
-        "_aws": {
-            "Timestamp": int(
-                datetime.timestamp(datetime.now(UTC)) * 1000
-            ),  # timestamp in milliseconds.
-            "CloudWatchMetrics": [
-                {
-                    "Namespace": "ttc-lambda-cache-metrics",
-                    "Dimensions": [["lastLoincUpdate"]],
-                    "Metrics": [{"Name": "result_cache_value_status"}],
-                }
-            ],
-        },
-        "lastLoincUpdate": "02-23-2026",
-        "result_cache_value_status": hit_value.value,
-    }
+def _record_cache_metric(hit_value: HitValue) -> None:
+    """Emit a cache-result metric via CloudWatch EMF."""
+    with single_metric(
+        name=_METRIC_NAME,
+        unit=MetricUnit.Count,
+        value=1,
+        namespace="ttc-lambda-cache-metrics",
+    ) as metric:
+        metric.add_dimension(name="cacheResult", value=hit_value.value)
+        metric.add_dimension(name="lastLoincUpdate", value="02-23-2026")
 
 
 def _process_record_pipeline(  # noqa: PLR0915
@@ -414,9 +405,7 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # We've got a hit--no need to run our usual processes, we'll
                 # just pull out the fields we want to use directly
                 if cached_result is not None:
-                    cache_hit_metric = _get_cache_metric(HitValue.hit)
-                    logger.info(cache_hit_metric)
-
+                    _record_cache_metric(HitValue.hit)
                     new_translation = cached_result.loinc_code
                     nonstandard_code_replacements.append(
                         NonstandardCodeInstance(
@@ -432,8 +421,7 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # Cache miss, so log that, run everything normally, and then finally store
                 # the prediction in the cache for future use
                 else:
-                    cache_hit_metric = _get_cache_metric(HitValue.miss)
-                    logger.info(cache_hit_metric)
+                    _record_cache_metric(HitValue.miss)
 
                     vector_embedding = embed(selected_candidate.value)
 
