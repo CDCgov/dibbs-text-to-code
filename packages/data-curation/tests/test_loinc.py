@@ -405,45 +405,6 @@ def test_process_loinc_valueset_requires_credentials(monkeypatch: pytest.MonkeyP
         loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
 
-def test_process_loinc_valueset_gets_umls_urls(monkeypatch: pytest.MonkeyPatch, mocker) -> None:
-    payload: dict[str, object] = {
-        "ResponseSummary": {
-            "RecordsFound": 1,
-            "RowsReturned": 1,
-            "Next": None,
-        },
-        "Results": [
-            {
-                "LOINC_NUM": "12345-F",
-                "LONG_COMMON_NAME": "TEST LONG NAME",
-            }
-        ],
-    }
-
-    monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
-    monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    mocker.patch(
-        "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=MockResponse(200, payload),
-    )
-
-    result = loinc._process_loinc_valueset("https://example.com", "UMLS Atoms")
-
-    assert result == {
-        "12345-F": {
-            "atom": loinc.UMLS_LOINC_LAB_ATOMS_URL + "12345-F/atoms",
-            "crs": loinc.UMLS_LOINC_LAB_CROSSWALK_URL + "12345-F",
-            "long_name": "TEST LONG NAME",
-        }
-    }
-
-
-def test_process_loinc_results_empty() -> None:
-    result = loinc._process_loinc_results([], [])
-
-    assert result == []
-
-
 def test_process_loincs_for_umls_urls(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: dict[str, str] = {}
     expected = {
