@@ -90,9 +90,6 @@ def _get_loinc_lab_names(version: str = "") -> list:
     all_loinc_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
     # Now let's add the ConsumerName for each of the loinc codes
-
-    if not isinstance(all_loinc_rows, list):
-        raise ValueError("Expected a list.")
     all_loinc_rows = _get_loinc_consumer_names(all_loinc_rows)
     return all_loinc_rows
 
@@ -117,9 +114,8 @@ def _get_loinc_lab_orders(version: str = "") -> list:
         api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = _process_loinc_valueset(api_url, loinc_vs_type)
+
     # Now let's add the ConsumerName for each of the loinc codes
-    if not isinstance(loinc_order_rows, list):
-        raise ValueError("Expected a list.")
     loinc_order_rows = _get_loinc_consumer_names(loinc_order_rows)
 
     return loinc_order_rows
@@ -146,14 +142,12 @@ def _get_loinc_lab_results(version: str = "") -> list:
     loinc_vs_type = "Lab Results"
     loinc_result_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
-    if not isinstance(loinc_result_rows, list):
-        raise ValueError("Expected list.")
     # Now let's add the ConsumerName for each of the loinc codes
     loinc_result_rows = _get_loinc_consumer_names(loinc_result_rows)
     return loinc_result_rows
 
 
-def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict] | dict:
+def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict]:
     """Function that makes the LOINC API calls based upon the url and the loinc_Valueset_type passed in.  It confirms that the LOINC User/PWD are configured, makes the calls and then passes the output into another function for more detailed processing. This function also performs the looping and row count maintanence as LOINC can only return 500 rows at a time.
 
     :param api_url: LOINC url for the specific API used for requesting
@@ -215,7 +209,7 @@ def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict
 
     if loinc_valueset_type not in ("UMLS Atoms"):
         return loinc_rows
-    return loinc_umls_urls
+    return [loinc_umls_urls]
 
 
 def _process_loinc_results(
@@ -279,9 +273,7 @@ def process_loincs_for_umls_urls() -> dict:
     """
     loinc_api_url = LOINC_BASE_URL + LOINC_LAB_NAMES_QUERY
     umls_loinc_results = _process_loinc_valueset(loinc_api_url, "UMLS Atoms")
-    if not isinstance(umls_loinc_results, dict):
-        raise ValueError("Expected a dict.")
-    return umls_loinc_results
+    return umls_loinc_results[0]
 
 
 def _get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
