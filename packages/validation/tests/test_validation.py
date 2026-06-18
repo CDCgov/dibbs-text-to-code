@@ -29,7 +29,7 @@ class FakeAssert:
 
     def get_attribute_value(self, attribute: str) -> str:
         values = {
-            "id": "ttc-labOrder-code-missing",
+            "id": LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             "location": FAKE_LOCATION,
             "test": FAKE_TEST,
         }
@@ -112,7 +112,7 @@ def test_validation():
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labOrder-code-missing",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
         )
     ]
