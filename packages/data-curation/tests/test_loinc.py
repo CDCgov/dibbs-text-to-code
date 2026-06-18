@@ -191,6 +191,18 @@ def test_get_loinc_lab_names_without_version(monkeypatch: pytest.MonkeyPatch) ->
     assert calls["api_url"] == loinc.LOINC_BASE_URL + f"query={loinc.LOINC_LAB_NAMES_QUERY}"
 
 
+def test_get_loinc_lab_names_raises_when_valueset_is_not_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> dict[str, str]:
+        return {"unexpected": "dict"}
+
+    monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
+
+    with pytest.raises(ValueError, match="Expected a list\\."):
+        loinc._get_loinc_lab_names()
+
+
 def test_get_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: dict[str, str] = {}
     rows = [_loinc_row()]
@@ -235,6 +247,18 @@ def test_get_loinc_lab_orders_with_version(monkeypatch: pytest.MonkeyPatch) -> N
     assert "versionlastchanged:2.80" in calls["api_url"]
 
 
+def test_get_loinc_lab_orders_raises_when_valueset_is_not_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> dict[str, str]:
+        return {"unexpected": "dict"}
+
+    monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
+
+    with pytest.raises(ValueError, match="Expected a list\\."):
+        loinc._get_loinc_lab_orders()
+
+
 def test_get_loinc_lab_results(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: dict[str, str] = {}
     rows = [_loinc_row()]
@@ -277,6 +301,18 @@ def test_get_loinc_lab_results_with_version(monkeypatch: pytest.MonkeyPatch) -> 
     assert result == rows
     assert calls["loinc_vs_type"] == "Lab Results"
     assert "versionlastchanged:2.80" in calls["api_url"]
+
+
+def test_get_loinc_lab_results_raises_when_valueset_is_not_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> dict[str, str]:
+        return {"unexpected": "dict"}
+
+    monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
+
+    with pytest.raises(ValueError, match="Expected list\\."):
+        loinc._get_loinc_lab_results()
 
 
 def test_process_loinc_valueset(monkeypatch: pytest.MonkeyPatch, mocker) -> None:
@@ -466,6 +502,18 @@ def test_process_loincs_for_umls_urls(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result == expected
     assert calls["api_url"] == loinc.LOINC_BASE_URL + loinc.LOINC_LAB_NAMES_QUERY
     assert calls["loinc_vs_type"] == "UMLS Atoms"
+
+
+def test_process_loincs_for_umls_urls_raises_when_valueset_is_not_dict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> list[dict[str, str]]:
+        return [{"unexpected": "list"}]
+
+    monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
+
+    with pytest.raises(ValueError, match="Expected a dict\\."):
+        loinc.process_loincs_for_umls_urls()
 
 
 def test_get_all_loinc_terms_per_code_filters_definition() -> None:

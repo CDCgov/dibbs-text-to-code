@@ -151,7 +151,7 @@ def test_validation_redoes_all_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: 
     assert results == [
         ValidationResult(
             error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
-            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+            location=FAKE_LOCATION,
         )
     ]
     assert stage1_output.read_text() == "<generated />"
@@ -179,7 +179,7 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
     assert results == [
         ValidationResult(
             error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
-            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+            location=FAKE_LOCATION,
         )
     ]
     assert stage1_output.read_text() == "existing stage 1"
