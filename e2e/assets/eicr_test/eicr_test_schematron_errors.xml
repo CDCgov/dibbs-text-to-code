@@ -8,6 +8,7 @@
     <Results xmlns="urn:gov:nist:cdaGuideValidator">
         <validationResult xmlns="">
             <issue severity="errors">
+                <assertionID>ttc-labOrder-code-missing</assertionID>
                 <message>Text to Code: Planned observation code data element has no @code attribute</message>
                 <context>
                     /ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]</context>

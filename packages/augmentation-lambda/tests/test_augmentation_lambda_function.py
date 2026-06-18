@@ -8,7 +8,7 @@ from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
 from augmentation_lambda import lambda_function
-from shared_models import PassthroughReason
+from shared_models import CdaInstanceIdentifier, PassthroughReason, TTCAugmenterInput
 from validation import ValidationResult, validate_eicr
 
 S3_BUCKET = os.environ["S3_BUCKET"]
@@ -18,6 +18,7 @@ AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
 EXPECTED_ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+EXPECTED_AUGMENTED_EICR_ID = "d44dc1c6-8a0c-5236-906e-12f6475589ec"
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -106,6 +107,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata["augmented_eicr_id"] != metadata["original_eicr_id"]
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is False
+        assert metadata["passthrough_reason"] is None
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "handler_writes_outputs_metadata.json",
@@ -123,29 +130,35 @@ class TestHandler:
             object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+        ttc_output = TTCAugmenterInput.model_validate(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+                )
             )
+        ).model_copy(
+            update={
+                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID),
+                "passthrough": True,
+                "passthrough_reason": PassthroughReason.NO_CODE_MATCHES,
+            }
         )
-        ttc_output["passthrough"] = True
-        ttc_output["passthrough_reason"] = PassthroughReason.NO_CODE_MATCHES
 
         mock_aws_setup.put_object(
             Bucket=S3_BUCKET,
             Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=json.dumps(ttc_output).encode("utf-8"),
+            Body=ttc_output.model_dump_json().encode("utf-8"),
         )
 
-        augment_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter.augment")
+        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
-        augment_mock.assert_not_called()
+        augmenter_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -158,6 +171,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "ttc_passthrough.json",
@@ -171,29 +190,37 @@ class TestHandler:
             object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+        ttc_output = TTCAugmenterInput.model_validate(
+            json.loads(
+                lambda_handler.get_file_content_from_s3(
+                    bucket_name=S3_BUCKET,
+                    object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+                )
             )
+        ).model_copy(
+            update={
+                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID),
+                "passthrough": True,
+                "passthrough_reason": None,
+            }
         )
-        ttc_output["passthrough"] = True
-        ttc_output.pop("passthrough_reason", None)
+        ttc_output_json = json.loads(ttc_output.model_dump_json())
+        ttc_output_json.pop("passthrough_reason", None)
 
         mock_aws_setup.put_object(
             Bucket=S3_BUCKET,
             Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=json.dumps(ttc_output).encode("utf-8"),
+            Body=json.dumps(ttc_output_json).encode("utf-8"),
         )
 
-        augment_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter.augment")
+        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
-        augment_mock.assert_not_called()
+        augmenter_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -206,6 +233,12 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] is None
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "passthrough_reason_missing.json",
@@ -245,10 +278,70 @@ class TestHandler:
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
         metadata = json.loads(metadata_raw)
+        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
+        assert metadata["error"] == "augmentation boom"
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
         snapshot.assert_match(
             _serialize_snapshot_value(metadata),
             "augmentation_fails.json",
         )
+
+    def test_handler_writes_original_eicr_with_persistence_id_when_augmenter_constructor_fails_without_original_eicr_id(
+        self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context
+    ) -> None:
+        original_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
+        )
+
+        ttc_output = json.loads(
+            lambda_handler.get_file_content_from_s3(
+                bucket_name=S3_BUCKET,
+                object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            )
+        )
+        ttc_output.pop("original_eicr_id", None)
+        ttc_output["passthrough"] = False
+        ttc_output["passthrough_reason"] = None
+
+        mock_aws_setup.put_object(
+            Bucket=S3_BUCKET,
+            Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+            Body=json.dumps(ttc_output).encode("utf-8"),
+        )
+
+        mocker.patch(
+            "augmentation_lambda.lambda_function.EICRAugmenter",
+            side_effect=Exception("constructor boom"),
+        )
+
+        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
+
+        augmented_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        assert augmented_eicr == original_eicr
+
+        metadata_raw = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        metadata = json.loads(metadata_raw)
+
+        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
+        assert metadata["error"] == "constructor boom"
+        assert metadata["passthrough"] is True
+        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
 
     def test_handler_writes_original_eicr_when_augmented_eicr_validation_throws(
         self,
@@ -342,36 +435,74 @@ class TestHandler:
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
-    def test_get_passthrough_reason_returns_none_when_reason_is_missing(self) -> None:
-        result = lambda_function._get_passthrough_reason({})
-
-        assert result is None
-
-    def test_get_passthrough_reason_returns_enum_when_reason_is_already_enum(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": PassthroughReason.TTC_EXCEPTION}
+    def test_build_augmentation_output_uses_root_and_extension_for_passthrough_original_eicr_id(
+        self, mocker
+    ) -> None:
+        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
+        output = lambda_function._build_augmentation_output(
+            persistence_id=TEST_PERSISTENCE_ID,
+            original_eicr="<ClinicalDocument />",
+            augmenter_input=TTCAugmenterInput(
+                persistence_id=TEST_PERSISTENCE_ID,
+                original_eicr_id=CdaInstanceIdentifier(
+                    root=EXPECTED_ORIGINAL_EICR_ID,
+                    extension="extension-1",
+                ),
+                passthrough=True,
+                passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
+            ),
         )
 
-        assert result == PassthroughReason.TTC_EXCEPTION
+        augmenter_mock.assert_not_called()
+        assert output.persistence_id == TEST_PERSISTENCE_ID
+        assert output.augmented_eicr == "<ClinicalDocument />"
+        assert output.metadata.original_eicr_id == f"{EXPECTED_ORIGINAL_EICR_ID}^extension-1"
+        assert output.metadata.augmented_eicr_id == f"{EXPECTED_ORIGINAL_EICR_ID}^extension-1"
+        assert output.metadata.passthrough is True
+        assert output.metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
 
-    def test_get_passthrough_reason_returns_enum_when_reason_is_valid_string(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": PassthroughReason.NO_CODE_MATCHES.value}
+    def test_build_augmentation_output_uses_extension_for_passthrough_original_eicr_id(
+        self, mocker
+    ) -> None:
+        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
+        output = lambda_function._build_augmentation_output(
+            persistence_id=TEST_PERSISTENCE_ID,
+            original_eicr="<ClinicalDocument />",
+            augmenter_input=TTCAugmenterInput(
+                persistence_id=TEST_PERSISTENCE_ID,
+                original_eicr_id=CdaInstanceIdentifier(extension="extension-only"),
+                passthrough=True,
+                passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
+            ),
         )
 
-        assert result == PassthroughReason.NO_CODE_MATCHES
+        augmenter_mock.assert_not_called()
+        assert output.persistence_id == TEST_PERSISTENCE_ID
+        assert output.augmented_eicr == "<ClinicalDocument />"
+        assert output.metadata.original_eicr_id == "extension-only"
+        assert output.metadata.augmented_eicr_id == "extension-only"
+        assert output.metadata.passthrough is True
+        assert output.metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
 
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_value(self) -> None:
-        result = lambda_function._get_passthrough_reason(
-            {"passthrough_reason": "not_a_passthrough_reason"}
+    def test_build_original_eicr_output_sets_metadata_ids_to_original_eicr_id(self) -> None:
+        output = lambda_function._build_original_eicr_output(
+            persistence_id=TEST_PERSISTENCE_ID,
+            original_eicr_id=EXPECTED_ORIGINAL_EICR_ID,
+            original_eicr="<ClinicalDocument />",
+            nonstandard_codes=[],
+            passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
         )
 
-        assert result is None
-
-    def test_get_passthrough_reason_returns_none_when_reason_has_invalid_type(self) -> None:
-        result = lambda_function._get_passthrough_reason({"passthrough_reason": 1})
-
-        assert result is None
+        assert output.persistence_id == TEST_PERSISTENCE_ID
+        assert output.augmented_eicr == "<ClinicalDocument />"
+        assert output.metadata.model_dump(mode="json") == {
+            "original_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
+            "augmented_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
+            "nonstandard_codes": [],
+            "error": None,
+            "passthrough": True,
+            "passthrough_reason": PassthroughReason.NO_CODE_MATCHES.value,
+        }
 
     def test_handler_source_bucket_routing(
         self,

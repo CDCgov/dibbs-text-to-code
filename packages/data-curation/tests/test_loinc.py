@@ -99,6 +99,52 @@ def test_extract_full_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
     assert saved_files[0][2] is False
 
 
+def test_extract_full_loinc_lab_names_handles_empty_api_results(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    payload: dict[str, object] = {
+        "ResponseSummary": {
+            "RecordsFound": 0,
+            "RowsReturned": 1,
+            "Next": None,
+        },
+        "Results": [],
+    }
+    consumer_names_file = tmp_path / "consumer_names.csv"
+    consumer_names_file.write_text(
+        "LoincNumber|ConsumerName\n",
+        encoding="utf-8",
+    )
+    saved_files: list[tuple[str, list[loinc.LoincRow], bool]] = []
+
+    def mock_get_with_timeout(
+        api_url: str,
+        auth: tuple[str, str] | None = None,
+    ) -> MockResponse:
+        return MockResponse(200, payload)
+
+    def mock_save_valueset_csv_file(
+        filename: str, contents: list[loinc.LoincRow], append_to_file: bool = False
+    ) -> None:
+        saved_files.append((filename, contents, append_to_file))
+
+    monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
+    monkeypatch.setattr(loinc, "LOINC_PWD", "password")
+    monkeypatch.setattr(loinc, "LOINC_CS_NAMES", consumer_names_file)
+    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
+    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
+
+    loinc.extract_full_loinc_lab_names()
+
+    assert "NO RESULTS TO PROCESS!" in capsys.readouterr().out
+    assert len(saved_files) == 1
+    assert saved_files[0][0].startswith("loinc_lab_names_")
+    assert saved_files[0][1] == []
+    assert saved_files[0][2] is False
+
+
 def test_extract_full_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
     rows = [_loinc_row()]
     saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
@@ -405,7 +451,9 @@ def test_process_loinc_valueset_requires_credentials(monkeypatch: pytest.MonkeyP
         loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
 
-def test_process_loinc_valueset_gets_umls_urls(monkeypatch: pytest.MonkeyPatch, mocker) -> None:
+def test_process_loincs_for_umls_urls_processes_api_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     payload: dict[str, object] = {
         "ResponseSummary": {
             "RecordsFound": 1,
@@ -420,14 +468,17 @@ def test_process_loinc_valueset_gets_umls_urls(monkeypatch: pytest.MonkeyPatch, 
         ],
     }
 
+    def mock_get_with_timeout(
+        api_url: str,
+        auth: tuple[str, str] | None = None,
+    ) -> MockResponse:
+        return MockResponse(200, payload)
+
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    mocker.patch(
-        "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=MockResponse(200, payload),
-    )
+    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
 
-    result = loinc._process_loinc_valueset("https://example.com", "UMLS Atoms")
+    result = loinc.process_loincs_for_umls_urls()
 
     assert result == {
         "12345-F": {
@@ -436,12 +487,6 @@ def test_process_loinc_valueset_gets_umls_urls(monkeypatch: pytest.MonkeyPatch, 
             "long_name": "TEST LONG NAME",
         }
     }
-
-
-def test_process_loinc_results_empty() -> None:
-    result = loinc._process_loinc_results([], [])
-
-    assert result == []
 
 
 def test_process_loincs_for_umls_urls(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -454,10 +499,12 @@ def test_process_loincs_for_umls_urls(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     }
 
-    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> dict[str, dict[str, str]]:
+    def mock_process_loinc_valueset(
+        api_url: str, loinc_vs_type: str
+    ) -> list[dict[str, dict[str, str]]]:
         calls["api_url"] = api_url
         calls["loinc_vs_type"] = loinc_vs_type
-        return expected
+        return [expected]
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
 

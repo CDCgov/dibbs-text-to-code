@@ -3,6 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from text_to_code.models.schematron import (
+    LabTestNameOrderedSchematronErrors,
+)
 from validation import ValidationResult, build_schematron_report_xml, validate_eicr
 from validation import main as validation_main
 
@@ -26,7 +29,7 @@ class FakeAssert:
 
     def get_attribute_value(self, attribute: str) -> str:
         values = {
-            "id": "ttc-labTestNameOrdered-noCode",
+            "id": LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             "location": FAKE_LOCATION,
             "test": FAKE_TEST,
         }
@@ -109,7 +112,7 @@ def test_validation():
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
             location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
         )
     ]
@@ -117,7 +120,7 @@ def test_validation():
 
 def test_validation_no_errors():
     """Tests that the validate_eicr function returns an empty list when there are no validation errors."""
-    with Path("e2e/snapshots/test_e2e/test_upload_and_process/augmented_eicr.xml").open() as f:
+    with Path("packages/validation/tests/assets/augmented_eicr.xml").open() as f:
         eicr = f.read()
     results = validate_eicr(eicr)
 
@@ -147,8 +150,8 @@ def test_validation_redoes_all_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
-            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
+            location=FAKE_LOCATION,
         )
     ]
     assert stage1_output.read_text() == "<generated />"
@@ -175,8 +178,8 @@ def test_validation_uses_existing_generated_files(monkeypatch: pytest.MonkeyPatc
 
     assert results == [
         ValidationResult(
-            error_id="ttc-labTestNameOrdered-noCode",
-            location="/ClinicalDocument/component/structuredBody/component/section/entry/observation",
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
+            location=FAKE_LOCATION,
         )
     ]
     assert stage1_output.read_text() == "existing stage 1"

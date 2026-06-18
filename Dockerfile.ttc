@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.13.2026.06.16.18
+FROM public.ecr.aws/lambda/python:3.13
 
 LABEL org.opencontainers.image.source=https://github.com/CDCgov/dibbs-text-to-code
 LABEL org.opencontainers.image.licenses=Apache-2.0
@@ -10,13 +10,13 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 # off the runtime layer, which is where the HIGH-severity CVEs come from.
 # --releasever=latest is required: AL2023 base images pin to a snapshot release.
 RUN microdnf update -y --releasever=latest \
-    && microdnf clean all \
-    && rm -f /usr/local/bin/aws-lambda-rie
+  && microdnf clean all \
+  && rm -f /usr/local/bin/aws-lambda-rie
 
 # Heavy, rarely-changing layers first so they stay cached across source changes.
 # Install CPU-only PyTorch before any workspace package — a transitive pin
 # could otherwise pull the full CUDA wheel before our override lands.
-RUN pip install --no-cache-dir torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch>=2.12.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir huggingface_hub
 
 # Torch's build environment can leave behind an older setuptools that shadows
@@ -29,7 +29,7 @@ RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
 
 # Download reranker at build time (private repo, needs token)
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
-    python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-reranker-mvp', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
+  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-reranker-mvp', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
   && rm -rf /root/.cache/huggingface
 
 # Workspace packages (change frequently) come after the heavy layers.
@@ -47,7 +47,7 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda" \
-    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
+  && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
 # Clean up package source copies
 RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/utils ${LAMBDA_TASK_ROOT}/lambda-handler ${LAMBDA_TASK_ROOT}/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code-lambda
