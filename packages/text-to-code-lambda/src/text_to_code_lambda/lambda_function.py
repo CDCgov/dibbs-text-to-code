@@ -1,7 +1,7 @@
 import json
 import os
-import typing
 from datetime import UTC, datetime
+from enum import IntEnum
 from io import BytesIO
 
 from aws_lambda_powertools import Logger
@@ -39,6 +39,16 @@ S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 RESULT_CACHE_INDEX = os.getenv("RESULT_CACHE_INDEX", "ttc-result-cache")
+
+
+class HitValue(IntEnum):
+    """Enum to represent the value of the hit status of the cache.
+
+    CloudWatch metrics must be numeric, hence the use of `IntEnum`.
+    """
+
+    hit = 1
+    miss = 0
 
 
 @event_source(data_class=SQSEvent)
@@ -312,7 +322,7 @@ def _save_ttc_outputs(
     )
 
 
-def _get_cache_metric(hit_value: typing.Literal["hit", "miss"]) -> dict:
+def _get_cache_metric(hit_value: HitValue) -> dict:
     """Helper method for creating a cache-result metric dict.
 
     Output is generated using Embedded Metric Format Specification.
@@ -334,7 +344,7 @@ def _get_cache_metric(hit_value: typing.Literal["hit", "miss"]) -> dict:
             ],
         },
         "lastLoincUpdate": "02-23-2026",
-        "result_cache_value_status": hit_value,
+        "result_cache_value_status": hit_value.value,
     }
 
 
@@ -404,7 +414,7 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # We've got a hit--no need to run our usual processes, we'll
                 # just pull out the fields we want to use directly
                 if cached_result is not None:
-                    cache_hit_metric = _get_cache_metric("hit")
+                    cache_hit_metric = _get_cache_metric(HitValue.hit)
                     logger.info(cache_hit_metric)
 
                     new_translation = cached_result.loinc_code
@@ -422,7 +432,7 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # Cache miss, so log that, run everything normally, and then finally store
                 # the prediction in the cache for future use
                 else:
-                    cache_hit_metric = _get_cache_metric("miss")
+                    cache_hit_metric = _get_cache_metric(HitValue.miss)
                     logger.info(cache_hit_metric)
 
                     vector_embedding = embed(selected_candidate.value)
