@@ -415,10 +415,12 @@ def test_process_loincs_for_umls_urls(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     }
 
-    def mock_process_loinc_valueset(api_url: str, loinc_vs_type: str) -> dict[str, dict[str, str]]:
+    def mock_process_loinc_valueset(
+        api_url: str, loinc_vs_type: str
+    ) -> list[dict[str, dict[str, str]]]:
         calls["api_url"] = api_url
         calls["loinc_vs_type"] = loinc_vs_type
-        return expected
+        return [expected]
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
 
