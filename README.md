@@ -114,7 +114,7 @@ In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.13
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/) [optional]
 

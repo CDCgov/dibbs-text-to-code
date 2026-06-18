@@ -18,10 +18,11 @@ from shared_models import (
 )
 from text_to_code.models import OpenSearchResultCacheSource
 from text_to_code.models import query as query_models
+from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
-from text_to_code.services.embedder import embed
+from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import ScoredResult, rerank
+from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
@@ -151,6 +152,10 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             passthrough=True,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             error=str(error),
+            model_info=TTCModelInfo(
+                reranker=RERANKER_MODEL_INFO,
+                retriever=RETRIEVER_MODEL_INFO,
+            ),
         )
         ttc_output = TTCAugmenterInput(
             persistence_id=persistence_id,
@@ -513,18 +518,25 @@ def _process_record_pipeline(  # noqa: PLR0915
     ):
         passthrough_reason = PassthroughReason.NO_CODE_MATCHES
 
+    eicr_metadata = processor.eicr_metadata
+
     ttc_output = TTCAugmenterInput(
         persistence_id=persistence_id,
+        original_eicr_id=eicr_metadata.eicr_id,
         nonstandard_codes=nonstandard_code_replacements,
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
     )
     ttc_metadata = Metadata(
         persistence_id=persistence_id,
-        eicr_metadata=processor.eicr_metadata,
+        eicr_metadata=eicr_metadata,
         ttc_schematron_issues=ttc_schematron_issues_details,
         passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
+        model_info=TTCModelInfo(
+            retriever=RETRIEVER_MODEL_INFO,
+            reranker=RERANKER_MODEL_INFO,
+        ),
     )
 
     _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)

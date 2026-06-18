@@ -1,7 +1,10 @@
 from hashlib import sha256
 
+from huggingface_hub import errors, model_info
+
 from shared_models import DataField
 from text_to_code.models.labs import BaseLabField
+from text_to_code.models.model_info import ModelInfo
 from text_to_code.models.registry import EICR_REGISTRY
 
 ConfigType = type[BaseLabField]
@@ -27,3 +30,25 @@ def get_config_for_data_field(data_field: DataField) -> BaseLabField:
 def compute_cache_key(*text: str) -> str:
     """Compute cache key by hashing the concatenation of the given strings."""
     return sha256((" | ".join(x.strip().lower() for x in text)).encode("utf-8")).hexdigest()
+
+
+def get_model_info(model: str) -> ModelInfo:
+    """Returns the model info for a given model.
+
+    :param model: The name of the model.
+    :returns: The model info for the specified model.
+    """
+    try:
+        full_info = model_info(model)
+    # If the model doesn't exist or is inaccessible, model_info will return a 400 error
+    except errors.RepositoryNotFoundError as e:
+        raise ValueError(f"Model name '{model}' was not found") from e
+
+    info = ModelInfo(
+        id=full_info.id,
+        author=full_info.author,
+        created_at=full_info.created_at,
+        last_modified=full_info.last_modified,
+    )
+
+    return info

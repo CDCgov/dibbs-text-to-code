@@ -5,9 +5,8 @@ import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from data_curation import loinc_enhancement
-from utils import normalize
-from utils import path
+from data_curation.data_emulation import loinc_enhancement
+from utils import normalize, path
 
 enhancements = path.load_loinc_enhancements(os.getcwd())
 LOINC_ENHANCEMENTS = normalize.merge_enhancements(enhancements)
@@ -16,11 +15,12 @@ assert len(LOINC_ENHANCEMENTS) > 0
 
 class TestGenerateDisjointIntervals:
     def test_generate_disjoint_intervals(self):
-        """
-        Test generate disjoint internals with 3 test cases:
-            1) already disjoint intervals
-            2) empty list
-            3) overlap with a singleton and interval
+        """Test generate disjoint internals with 3 test cases.
+
+        Test cases:
+        1) already disjoint intervals
+        2) empty list
+        3) overlap with a singleton and interval
         """
         # Test case 1: already disjoint intervals
         words = [("blood", (0, 0)), ("glucose", (1, 1)), ("measurement", (2, 2))]
@@ -69,7 +69,7 @@ class TestFilterCandidatesForEnhancement:
 
 
 @pytest.mark.parametrize(
-    "words, expected",
+    ("words", "expected"),
     [
         # Test case 1: Typical case with multiple words
         (
@@ -111,25 +111,24 @@ class TestEnhanceLoinc:
 
         # Case 2: One enhancement that's a disjoint singleton, and its replacement
         # is multiple words--make sure the rest of the string is unaffected
-        code_str = "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum"  # noqa
+        code_str = "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum"
         enhanced_code = loinc_enhancement.enhance_loinc_str(code_str, "all", 5)
         assert (
             enhanced_code
             == "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) Immunoglobulin E Ab [Measurement] in Serum"
-        )  # noqa
+        )
 
         # Case 3: Multiple enhancements, one singleton and one substring
         # The substring's replacement is shorter, so this test's string
         # truncation and the deletion of other tokens later.
         # Make sure word is modified in reverse order and both take effect
-        code_str = "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE [Measurement] panel - Urine"  # noqa
+        code_str = "Epidermal Allergen Mix (Dog dander+Cat epithelium+Horse dander) Ab.IgE [Measurement] panel - Urine"
         enhanced_code = loinc_enhancement.enhance_loinc_str(code_str, "all", 5, min_enhancements=2)
-        assert (
-            enhanced_code
-            == "Epidermal Allergen Mix Dander Ab.IgE [Measurement] panel - Urn"
-        )  # noqa
+        assert enhanced_code == "Epidermal Allergen Mix Dander Ab.IgE [Measurement] panel - Urn"
 
-    def test_enhance_loinc_str_skips_candidate_without_requested_enhancement_type(self, monkeypatch):
+    def test_enhance_loinc_str_skips_candidate_without_requested_enhancement_type(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(
             loinc_enhancement,
             "LOINC_ENHANCEMENTS",
@@ -150,7 +149,9 @@ class TestEnhanceLoincError:
         """Test enhance LOINC string with error."""
         text = "Blood Glucose Measurement"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="max_enhancements must be greater than min_enhancements"
+        ):
             loinc_enhancement.enhance_loinc_str(
                 text=text,
                 enhancement_type="abbrv",

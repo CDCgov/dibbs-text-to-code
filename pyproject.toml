@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.2.1"
+version = "0.2.2"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
@@ -13,7 +13,7 @@ authors = [
 ]
 license-files = ["LICENSE"]
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.11,<3.13"
+requires-python = "==3.13.*"
 dependencies = []
 [dependency-groups]
 dev = [
@@ -22,7 +22,7 @@ dev = [
   "pytest-env>=1.6.0",
   "pytest>=9.0.3",
   "requests>=2.32.5",
-  "ruff>=0.15.12",
+  "ruff>=0.15.17",
   "ty>=0.0.39",
 ]
 
@@ -52,7 +52,6 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
-  "data-curation",
   "docs",
   "model-tuning",
 ]
@@ -92,8 +91,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-annotations]
-# Turn off return type annotations for __init__
+# Relax typing requirements for certain situations
+allow-star-arg-any = true
 mypy-init-return = true
+suppress-dummy-args = true
+suppress-none-returning = true
 
 [tool.ruff.lint.isort]
 known-first-party = [
