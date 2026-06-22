@@ -488,10 +488,6 @@ requires-dist = [
 name = "dibbs-text-to-code-root"
 version = "0.2.2"
 source = { virtual = "." }
-dependencies = [
-    { name = "sentence-transformers" },
-    { name = "torch" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -505,10 +501,6 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "sentence-transformers", specifier = ">=5.5.0" },
-    { name = "torch", specifier = "==2.12.1" },
-]
 
 [package.metadata.requires-dev]
 dev = [
