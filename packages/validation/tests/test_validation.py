@@ -112,7 +112,7 @@ def test_validation():
 
     assert results == [
         ValidationResult(
-            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
+            error_id=LabTestNameOrderedSchematronErrors.NO_CODE.value,
             location="/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}structuredBody[1]/Q{urn:hl7-org:v3}component[1]/Q{urn:hl7-org:v3}section[1]/Q{urn:hl7-org:v3}entry[1]/Q{urn:hl7-org:v3}observation[1]",
         )
     ]
@@ -253,7 +253,10 @@ def test_build_schematron_report_xml_normalizes_real_location():
 
     issues = list(ET.fromstring(report).iter("issue"))
     assert len(issues) == 1
-    assert issues[0].findtext("message") == FAKE_MESSAGE
+    assert (
+        issues[0].findtext("message")
+        == "Text to Code: Lab Test Name Ordered does not have a @code attribute"
+    )
     context = issues[0].findtext("context")
     assert context is not None
     assert context.startswith("/ClinicalDocument[1]/")
