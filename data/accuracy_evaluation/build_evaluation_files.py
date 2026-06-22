@@ -9,6 +9,8 @@ load_dotenv()
 # sample run: python data/accuracy_evaluation/build_evaluation_files.py
 # TES API Key can be obtained at https://tes.tools.aimsplatform.org/
 TES_API_KEY = os.environ.get("TES_API_KEY")
+if TES_API_KEY is None:
+    raise RuntimeError("TES_API_KEY is required")
 TES_BASE_URL = "https://tes.tools.aimsplatform.org/api/fhir/ValueSet/"
 TES_HEADERS = {"x-api-key": TES_API_KEY, "Accept": "application/fhir+json"}
 
@@ -159,3 +161,4 @@ if __name__ == "__main__":
     evaluate_mapping_files(oid_to_conditions, loinc_to_oids)
     export_json(oid_to_conditions, "data/accuracy_evaluation/oid_to_conditions.txt")
     export_json(loinc_to_oids, "data/accuracy_evaluation/loinc_to_oids.txt")
+    

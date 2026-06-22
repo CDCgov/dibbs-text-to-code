@@ -10,8 +10,8 @@ load_dotenv()
 file_path = "data/accuracy_evaluation/sample_data/eval_results_snippet.jsonl"
 
 # obtain LOINC API credentials from environment variables
-USERNAME = os.environ.get("LOINC_USERNAME")
-PASSWORD = os.environ.get("LOINC_PASSWORD")
+USERNAME = os.environ["LOINC_USERNAME"]
+PASSWORD = os.environ["LOINC_PASSWORD"]
 
 url = "https://loinc.regenstrief.org/searchapi/loincs"
 
