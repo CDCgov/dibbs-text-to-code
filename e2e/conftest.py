@@ -20,7 +20,7 @@ def mock_opensearch(request: pytest.FixtureRequest) -> Iterator[MagicMock]:
     moto's mocked version of OpenSearch does not support the search functionality,
     only the creation and deletion of indices.
     """
-    candidates: list[str] = request.param
+    candidates: list[str] = getattr(request, "param", ["dummy"])
     candidate_iter = iter(candidates)
 
     def build_response(*args, **kwargs) -> dict:  # noqa: ANN002, ANN003
