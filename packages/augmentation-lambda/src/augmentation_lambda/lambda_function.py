@@ -121,6 +121,58 @@ def _process_record(record: SQSRecord) -> None:
         )
 
 
+def _introduced_validation_error(original_eicr: str, augmented_eicr: str) -> str | None:
+    """Return a JSON error string only if augmentation introduced new validation errors.
+
+    Augmentation adds ``<translation>`` children under ``<code>`` and never alters result
+    values or observation positions, so a finding that pre-existed in the original eICR has
+    an identical ``(error_id, location)`` in both validations and cancels out of the diff.
+    Pre-existing findings the augmenter does not own therefore do not block its output.
+
+    A clean augmented result cannot contain anything new, so the original is only
+    re-validated when the augmented eICR has findings to diff against. On a validation
+    exception the exception text is returned so the caller conservatively passes through.
+
+    :param original_eicr: The original (pre-augmentation) eICR XML string.
+    :param augmented_eicr: The augmented eICR XML string.
+    :return: A JSON-encoded list of the newly-introduced validation errors, the exception
+        text if validation raised, or ``None`` when augmentation introduced nothing.
+    """
+    try:
+        augmented_results = validate_eicr(augmented_eicr)
+        if not augmented_results:
+            return None
+        baseline_results = validate_eicr(original_eicr)
+        new_results = sorted(
+            set(augmented_results) - set(baseline_results),
+            key=lambda result: (result.error_id, result.location),
+        )
+    except Exception as e:
+        logger.exception(
+            "Augmentation validation failed; writing original eICR output",
+            status="passthrough",
+            passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
+        )
+        return str(e)
+
+    if new_results:
+        logger.warning(
+            "Augmentation introduced new validation errors; writing original eICR output",
+            status="passthrough",
+            passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
+            new_error_count=len(new_results),
+        )
+        return json.dumps([result.model_dump() for result in new_results])
+
+    logger.info(
+        "Augmented eICR has pre-existing validation findings not introduced by "
+        "augmentation; emitting augmented eICR",
+        status="success",
+        preexisting_error_count=len(augmented_results),
+    )
+    return None
+
+
 def _build_augmentation_output(
     persistence_id: str,
     original_eicr: str,
@@ -189,20 +241,7 @@ def _build_augmentation_output(
             passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
         )
 
-    validation_error = None
-
-    try:
-        validation_results = validate_eicr(output.augmented_eicr)
-    except Exception as e:
-        logger.exception(
-            "Augmentation validation failed; writing original eICR output",
-            status="passthrough",
-            passthrough_reason=PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
-        )
-        validation_error = str(e)
-    else:
-        if validation_results:
-            validation_error = json.dumps([result.model_dump() for result in validation_results])
+    validation_error = _introduced_validation_error(original_eicr, output.augmented_eicr)
 
     if validation_error:
         return _build_original_eicr_output(
