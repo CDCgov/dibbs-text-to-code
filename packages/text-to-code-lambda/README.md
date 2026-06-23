@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Demo API (synchronous text-to-code)](#demo-api-synchronous-text-to-code)
 - [Source-Bucket Directed Architecture](#source-bucket-directed-architecture)
 - [Pipeline Behavior](#pipeline-behavior)
 - [Outputs](#outputs)
@@ -18,6 +19,57 @@ The Text-to-Code (TTC) Lambda infers structured medical codes, such as LOINC, fr
 It is triggered by SQS messages that wrap S3 EventBridge notifications. Each record points to an incoming TTC submission object in S3. The Lambda loads the related schematron validation response, loads the original eICR, evaluates candidate free-text values, embeds selected text, queries OpenSearch, reranks returned code suggestions, and writes TTC output artifacts back to S3.
 
 The TTC output is consumed by downstream augmentation workflows.
+
+## Demo API (synchronous text-to-code)
+
+Alongside the SQS batch worker, this package exposes a small **synchronous** path
+that maps a raw lab-test string directly to a LOINC code — no eICR XML, no S3.
+It powers the demo webpage (`frontend/index.html`) and reuses the exact embed → KNN →
+rerank pipeline via the shared `service` module.
+
+- `service.py` — `code_for_text(text, data_field, client, index)` and
+  `results_for_inputs(...)`, the framework-agnostic core.
+- `api_handler.py` — AWS Lambda **Function URL** handler. Intended to deploy as a
+  second Lambda built from the **same image** as the batch worker, with the
+  container command overridden to `text_to_code_lambda.api_handler.handler`.
+- `local_server.py` — a **FastAPI** dev server (dev dependency only; not shipped
+  in the image) for running the backend locally against the real OpenSearch
+  domain.
+
+### Request / response
+
+```text
+POST /text-to-code
+{ "inputs": ["Glucose measurement", ...], "data_field": "Lab Test Name Ordered" }  // data_field optional
+```
+
+```json
+{ "results": [
+  { "input": "Glucose measurement", "matched": true, "code": "110283-9",
+    "code_system": "2.16.840.1.113883.6.1", "code_system_name": "LOINC",
+    "display_name": "Glucose [Measurement]" }
+] }
+```
+
+`data_field` defaults to `Lab Test Name Ordered`; pass `Lab Test Name Resulted`
+to filter to observation-typed LOINC codes instead. Unrecognized values fall back
+to the default.
+
+### Run locally
+
+Requires AWS credentials permitted on the OpenSearch domain, and local access to
+the retriever/reranker models (cached, or via `HF_TOKEN`).
+
+```bash
+OPENSEARCH_ENDPOINT_URL=https://<domain-endpoint> \
+OPENSEARCH_INDEX=ttc-index \
+AWS_REGION=us-east-2 \
+uv run uvicorn text_to_code_lambda.local_server:app --port 8080
+```
+
+Then point the webpage's `API_BASE` at `http://localhost:8080`. Serve the page
+over HTTP (e.g. `python -m http.server 8000`) so the browser sends a real CORS
+origin; set `CORS_ALLOW_ORIGINS` to that origin to restrict cross-origin access.
 
 ## Source-Bucket Directed Architecture
 
