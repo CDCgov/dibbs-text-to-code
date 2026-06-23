@@ -39,7 +39,7 @@ Given an eICR XML document and a corresponding [Schematron](https://www.schematr
 1. Reads the Schematron report to identify which sections of the eICR contain errors that need standardized codes
 2. Parses the XML and extracts text candidates for each configured data field (e.g., lab test names) using XPath expressions
 3. Selects the best candidate text using priority-based evaluation criteria (e.g., prefers LOINC-sourced text over free text)
-4. Embeds the selected text as a vector using a fine-tuned [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2) SentenceTransformer model
+4. Embeds the selected text as a vector using [`NCHS/ttc-retriever-mvp`](https://huggingface.co/NCHS/ttc-retriever-mvp) — a SentenceTransformer model fine-tuned from [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2)
 5. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
 6. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
 
@@ -61,14 +61,14 @@ This is a **uv workspace** (Python). All Python packages live under `packages/`.
 | [`shared-models`](packages/shared-models/)             | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput`          |
 | [`text-to-code`](packages/text-to-code/)               | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building          |
 | [`augmentation`](packages/augmentation/)               | Writes TTC results back into eICR XML as `<translation>` elements                                    |
-| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow, triggered by S3 → SQS events                                |
+| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow (S3 → SQS triggered); also exposes the synchronous demo API   |
 | [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events                            |
+| [`index-lambda`](packages/index-lambda/)               | AWS Lambda that bootstraps the OpenSearch KNN index (1024-dim HNSW/faiss/cosine) at deploy time      |
+| [`lambda-handler`](packages/lambda-handler/)           | Shared Lambda runtime utilities (S3/OpenSearch clients, event parsing) used by the Lambda packages   |
 | [`utils`](packages/utils/)                             | Path, regex, and LOINC name parsing utilities                                                        |
 | [`data-curation`](packages/data-curation/)             | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
-| [`model-tuning`](packages/model-tuning/)               | Fine-tunes SentenceTransformer models and builds HNSW indexes for OpenSearch                         |
-| [`api`](packages/api/)                                 | FastAPI service exposing `/api` endpoints; serves the built frontend in non-local environments       |
-| [`frontend`](frontend/)                                | React 19 + TypeScript + Vite demo application for interacting with the API                           |
 | [`validation`](packages/validation/)                   | Functionality to validate an eICR and to create Schematron output                                    |
+| [`frontend`](frontend/)                                | Static HTML/CSS/JS demo page for the synchronous text-to-code API (run with [`demo.sh`](frontend/demo.sh)) |
 
 ### Architecture Diagram
 
@@ -114,7 +114,7 @@ In production, the two Lambda functions handle large-scale eICR processing.
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.13
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/) [optional]
 

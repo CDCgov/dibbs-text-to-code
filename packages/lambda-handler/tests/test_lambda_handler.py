@@ -1,5 +1,7 @@
 import io
+import json
 from typing import cast
+from unittest.mock import Mock
 
 import pytest
 from aws_lambda_typing import events as lambda_events
@@ -164,3 +166,51 @@ class TestGetPersistenceId:
         object_key = "IncorrectPrefix/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
         with pytest.raises(ValueError, match="does not start with expected prefix"):
             lambda_handler.get_persistence_id(object_key, "TextToCodeSubmission")
+
+
+class TestRetrieveOpenSearchResults:
+    def test_retrieve_opensearch_results(self, snapshot):
+        query = {"query": {"match_all": {}}}
+        index = "loinc-index"
+        opensearch_client = Mock()
+        opensearch_client.search.return_value = {
+            "took": 4,
+            "timed_out": False,
+            "_shards": {
+                "total": 1,
+                "successful": 1,
+                "skipped": 0,
+                "failed": 0,
+            },
+            "hits": {
+                "total": {
+                    "value": 1,
+                    "relation": "eq",
+                },
+                "hits": [
+                    {
+                        "_index": "loinc-index",
+                        "_id": "12345-6",
+                        "_score": 1.0,
+                        "_source": {
+                            "id": 12345,
+                            "loinc_code": "12345-6",
+                            "loinc_name_type": "Component",
+                            "description": "Test LOINC description",
+                            "loinc_type": "Laboratory",
+                        },
+                    }
+                ],
+            },
+        }
+
+        result = lambda_handler.retrieve_opensearch_results(query, index, opensearch_client)
+
+        opensearch_client.search.assert_called_once_with(
+            index=index,
+            body=query,
+        )
+        snapshot.assert_match(
+            json.dumps(result.model_dump(), indent=2, sort_keys=True),
+            "retrieve_opensearch_results.json",
+        )

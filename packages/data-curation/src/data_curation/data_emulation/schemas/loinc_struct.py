@@ -1,8 +1,4 @@
-"""
-data_curation.schemas.loinc_struct
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains the schema definition for a LOINC code object
+"""This module contains the schema definition for a LOINC code object
 built out of data pulled from the LOINC API, the RELMA Database, and
 UMLS. It is used to compile properties for each LOINC code from
 separate sources into one object for synthetic data generation.

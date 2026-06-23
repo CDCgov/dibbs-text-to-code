@@ -15,7 +15,7 @@ class MockIndices:
         description_vector_type: str | None = None,
         index_initially_exists: bool = False,
         result_cache_initially_exists: bool = False,
-    ) -> None:
+    ):
         """Mock class for OpenSearch client's indices property."""
         self._exists_calls = {INDEX_NAME: 0, RESULT_CACHE_INDEX_NAME: 0}
         self._initially_exists = {
@@ -94,7 +94,7 @@ class MockOpenSearchClient:
         description_vector_type: str | None = None,
         index_initially_exists: bool = False,
         result_cache_initially_exists: bool = False,
-    ) -> None:
+    ):
         """Mock class for OpenSearch client."""
         self.indices = MockIndices(
             description_vector_type=description_vector_type,

@@ -22,10 +22,10 @@
   <sch:pattern id="p-validate_labOrder_ttc">
     <sch:rule abstract="true" id="r-validate_labOrder_ttc_abstract" role="text_to_code">
       <!--observation code-->
-      <sch:assert id="ttc-labTestNameOrdered-noCode" test="
+      <sch:assert id="ttc-labOrder-code-missing" test="
         not(cda:code) 
         or cda:code/@code
-        or cda:code/cda:translation/@code">Text to Code: Lab Test Name Ordered does not have a @code attribute</sch:assert>
+        or cda:code/cda:translation/@code">Text to Code: Planned observation code data element has no @code attribute</sch:assert>
       <sch:assert id="ttc-labTestNameOrdered-wrongCodeSystem" test="
         not(cda:code/@code or cda:code/cda:translation/@code) 
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
@@ -39,10 +39,10 @@
   <sch:pattern id="p-validate_resultObservation_ttc">
     <sch:rule abstract="true" id="r-validate_resultObservation_ttc_abstract" role="text_to_code">
       <!--observation code-->
-      <sch:assert id="ttc-labTestNameResulted-noCode" test="
+      <sch:assert id="ttc-labTestNameResulted-code-missing" test="
         not(cda:code) 
         or cda:code/@code
-        or cda:code/cda:translation/@code">Text to Code: Lab Test Name Resulted does not have a @code attribute</sch:assert>
+        or cda:code/cda:translation/@code">Text to Code: Lab Test Name Resulted does not have a @code attribute.</sch:assert>
       <sch:assert id="ttc-labTestNameResulted-wrongCode" test="
         not(cda:code/@code or cda:code/cda:translation/@code)   
         or cda:code[@codeSystem = '2.16.840.1.113883.6.1'] 
