@@ -17,6 +17,8 @@ AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
 AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
+# The diff-based gate validates the augmented eICR, then the original as a baseline.
+EXPECTED_DIFF_VALIDATION_CALLS = 2
 EXPECTED_ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
 EXPECTED_AUGMENTED_EICR_ID = "d44dc1c6-8a0c-5236-906e-12f6475589ec"
 
@@ -385,7 +387,7 @@ class TestHandler:
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
-    def test_handler_writes_original_eicr_when_augmented_eicr_fails_validation(
+    def test_handler_writes_original_eicr_when_augmentation_introduces_new_validation_error(
         self,
         example_sqs_event,
         mock_aws_setup,
@@ -396,16 +398,21 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
         )
-        validation_results = [
-            ValidationResult(
-                error_id="ttc-labResultValue-noCode",
-                location="/ClinicalDocument[1]",
-            )
-        ]
+        # A pre-existing result-value finding the augmenter does not own, and a new error
+        # only present after augmentation. Only the new one should block the output.
+        preexisting_error = ValidationResult(
+            error_id="ttc-labResultValue-PQNoInterp",
+            location="/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]",
+        )
+        new_error = ValidationResult(
+            error_id="ttc-labTestNameResulted-wrongCode",
+            location="/ClinicalDocument[1]/component[1]/structuredBody[1]/component[7]",
+        )
 
         validate_mock = mocker.patch(
             "augmentation_lambda.lambda_function.validate_eicr",
-            return_value=validation_results,
+            # First call validates the augmented eICR, second the original (baseline).
+            side_effect=[[new_error, preexisting_error], [preexisting_error]],
         )
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -413,7 +420,7 @@ class TestHandler:
         assert result["statusCode"] == SUCCESS_CODE
         assert result["message"] == "Augmentation processed successfully!"
         assert result["num_success_eicrs"] == 1
-        validate_mock.assert_called_once()
+        assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -429,11 +436,57 @@ class TestHandler:
 
         assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
         assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["error"] == json.dumps(
-            [result.model_dump() for result in validation_results]
-        )
+        # Only the newly-introduced error is recorded, not the pre-existing one.
+        assert metadata["error"] == json.dumps([new_error.model_dump()])
         assert metadata["passthrough"] is True
         assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
+
+    def test_handler_emits_augmented_eicr_when_validation_errors_are_preexisting(
+        self,
+        example_sqs_event,
+        mock_aws_setup,
+        mocker,
+        mock_lambda_context,
+    ) -> None:
+        original_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
+        )
+        # The same finding is present before and after augmentation: augmentation did not
+        # introduce it, so the augmented eICR must still be emitted (no passthrough).
+        preexisting_error = ValidationResult(
+            error_id="ttc-labResultValue-PQNoInterp",
+            location="/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]",
+        )
+
+        validate_mock = mocker.patch(
+            "augmentation_lambda.lambda_function.validate_eicr",
+            side_effect=[[preexisting_error], [preexisting_error]],
+        )
+
+        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert result["statusCode"] == SUCCESS_CODE
+        assert result["message"] == "Augmentation processed successfully!"
+        assert result["num_success_eicrs"] == 1
+        assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
+
+        augmented_eicr = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        assert augmented_eicr != original_eicr
+
+        metadata_raw = lambda_handler.get_file_content_from_s3(
+            bucket_name=S3_BUCKET,
+            object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
+        )
+        metadata = json.loads(metadata_raw)
+
+        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata["error"] is None
+        assert metadata["passthrough"] is False
+        assert metadata["passthrough_reason"] is None
 
     def test_build_augmentation_output_uses_root_and_extension_for_passthrough_original_eicr_id(
         self, mocker

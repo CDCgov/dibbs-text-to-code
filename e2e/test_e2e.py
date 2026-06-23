@@ -582,7 +582,13 @@ class TestEndToEndSimulated:
 
             _assert_augmented_eicr_retains_original_content(original_root, augmented_root, eicr_id)
 
-            assert actual_validation_results == [], actual_validation_results
+            # The augmenter only blocks output on errors it introduced, so the success path
+            # asserts no *new* findings versus the original eICR, not zero findings overall.
+            baseline_validation_results = validate_eicr(original_eicr)
+            new_validation_results = set(actual_validation_results) - set(
+                baseline_validation_results
+            )
+            assert new_validation_results == set(), new_validation_results
 
         snapshot.assert_match(
             json.dumps(
