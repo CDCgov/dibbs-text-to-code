@@ -495,7 +495,7 @@ requires-dist = [
 
 [[package]]
 name = "dibbs-text-to-code-root"
-version = "0.2.3"
+version = "0.2.4"
 source = { virtual = "." }
 
 [package.dev-dependencies]
