@@ -35,7 +35,6 @@ class Metadata(FrozenBaseModel):
     eicr_metadata: EICRMetadata | None = None
     ttc_schematron_issues: list[TTCSchematronIssueDetail] | None = None
     processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    passthrough: bool | None = None
     passthrough_reason: PassthroughReason | None = None
     error: str | None = None
     model_info: TTCModelInfo | None = None
