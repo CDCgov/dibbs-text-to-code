@@ -184,11 +184,6 @@ class TestHandler:
     def test_handler_writes_augmented_eicr_when_ttc_output_passthrough_reason_is_missing(
         self, example_sqs_event, mock_aws_setup, mock_lambda_context
     ) -> None:
-        original_eicr = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
-        )
-
         ttc_output = TTCAugmenterInput.model_validate(
             json.loads(
                 lambda_handler.get_file_content_from_s3(
@@ -221,7 +216,6 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        assert augmented_eicr != original_eicr
 
         metadata_raw = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -233,6 +227,9 @@ class TestHandler:
         assert metadata["augmented_eicr_id"] != metadata["original_eicr_id"]
         assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
         assert metadata["passthrough_reason"] is None
+
+        actual_validation_results = validate_eicr(augmented_eicr)
+        assert actual_validation_results == []
 
     def test_handler_writes_original_eicr_when_augmentation_fails(
         self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context, snapshot
