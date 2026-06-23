@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
