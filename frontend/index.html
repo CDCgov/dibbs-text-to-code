@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text-to-Code — DIBBs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Merriweather:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── GOVERNMENT BANNER ── -->
+  <section class="usa-banner" aria-label="Official government website">
+    <div class="usa-banner__inner">
+      <span class="banner-flag" aria-hidden="true"></span>
+      <span class="usa-banner__text">An official website of the United States government</span>
+      <button class="usa-banner__button" id="banner-toggle" aria-expanded="false" aria-controls="banner-content">
+        Here's how you know <span class="arrow">▼</span>
+      </button>
+    </div>
+    <div class="usa-banner__content" id="banner-content">
+      <div class="usa-banner__guidance">
+        <span class="ico ico-gov" aria-hidden="true">⌂</span>
+        <p><strong>Official websites use .gov</strong>A <strong>.gov</strong> website belongs to an official government organization in the United States.</p>
+      </div>
+      <div class="usa-banner__guidance">
+        <span class="ico ico-https" aria-hidden="true"><span class="lock"></span></span>
+        <p><strong>Secure .gov websites use HTTPS</strong>A lock (<span class="lock" style="vertical-align:-1px"></span>) or <strong>https://</strong> means you've safely connected to the .gov website.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HEADER ── -->
+  <header class="usa-header">
+    <div class="usa-header__inner">
+      <div class="usa-logo">
+        <span class="usa-logo__mark" aria-hidden="true">TTC</span>
+        <span>
+          <em class="usa-logo__text">Text-to-Code</em>
+          <span class="usa-logo__sub">DIBBs · Data Modernization Initiative</span>
+        </span>
+      </div>
+      <nav class="usa-nav" aria-label="Primary navigation">
+        <ul class="usa-nav__primary">
+          <li><button class="nav-link active" onclick="showPage('demo', this)">Demo</button></li>
+          <li><button class="nav-link" onclick="showPage('testing', this)">Testing</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── DEMO PAGE ── -->
+    <div id="page-demo" class="page active">
+      <div class="page-intro">
+        <div class="grid-container">
+          <p class="kicker">Text-to-Code · Demo</p>
+          <h1>Map lab test names to standardized codes</h1>
+          <p class="lead">See how TTC maps nonstandard lab test names to standardized LOINC and SNOMED codes for public health surveillance.</p>
+        </div>
+      </div>
+
+      <div class="grid-container">
+        <div class="demo-body">
+
+          <div class="form-section">
+            <span class="section-label">Data element type</span>
+            <div class="btn-row">
+              <button class="type-btn active">Lab test name</button>
+              <button class="type-btn coming-soon" disabled>Lab result <span class="coming-soon-tag">Coming soon</span></button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <span class="section-label">LOINC code type</span>
+            <div class="radio-row">
+              <span class="usa-radio">
+                <input class="usa-radio__input" type="radio" id="demo-ordered" name="demo-data-field" value="Lab Test Name Ordered" checked />
+                <label class="usa-radio__label" for="demo-ordered">Ordered <span class="radio-hint">test as ordered</span></label>
+              </span>
+              <span class="usa-radio">
+                <input class="usa-radio__input" type="radio" id="demo-resulted" name="demo-data-field" value="Lab Test Name Resulted" />
+                <label class="usa-radio__label" for="demo-resulted">Resulted <span class="radio-hint">test as resulted</span></label>
+              </span>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <span class="section-label">Try an example</span>
+            <div class="chip-row">
+              <button class="chip selected" data-value="Glucose measurement" data-code="2339-0" data-system="2.16.840.1.113883.6.1" data-system-name="LOINC" data-display="Glucose [Mass/volume] in Blood">Glucose measurement</button>
+              <button class="chip" data-value="Flu A rapid test" data-code="80382-5" data-system="2.16.840.1.113883.6.1" data-system-name="LOINC" data-display="Influenza virus A Ag [Presence] in Upper respiratory specimen by Rapid immunoassay">Flu A rapid test</button>
+              <button class="chip" data-value="COVID-19 PCR" data-code="94500-6" data-system="2.16.840.1.113883.6.1" data-system-name="LOINC" data-display="SARS-CoV-2 (COVID-19) RNA [Presence] in Respiratory specimen by NAA with probe detection">COVID-19 PCR</button>
+              <button class="chip" data-value="HDV IgG antibody, Blood" data-code="35273-2" data-system="2.16.840.1.113883.6.1" data-system-name="LOINC" data-display="Hepatitis D virus IgG Ab [Presence] in Serum by Immunoassay">HDV IgG antibody</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="section-label" for="demo-input">Or enter your own</label>
+            <input class="usa-input demo-input" type="text" id="demo-input" placeholder="Type a lab test name…" />
+            <div class="run-row">
+              <button class="usa-button usa-button--big" id="demo-run-btn">Run TTC</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="result-card" id="demo-result-card">
+            <div class="result-header">
+              <div class="result-header-label">Input string</div>
+              <div class="result-header-value" id="demo-result-input"></div>
+              <div class="result-header-meta" id="demo-result-type"></div>
+            </div>
+            <div class="result-body">
+              <div class="result-box">
+                <div class="result-box-label">Suggested code</div>
+                <div class="result-box-value" id="demo-result-code"></div>
+              </div>
+              <div class="result-box">
+                <div class="result-box-label">Code system name</div>
+                <div class="result-box-value" id="demo-result-system-name"></div>
+              </div>
+              <div class="result-box">
+                <div class="result-box-label">Code system</div>
+                <div class="result-box-text" id="demo-result-system"></div>
+              </div>
+              <div class="result-box full">
+                <div class="result-box-label">Display name</div>
+                <div class="result-box-text" id="demo-result-display"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TESTING PAGE ── -->
+    <div id="page-testing" class="page">
+      <div class="page-intro">
+        <div class="grid-container">
+          <p class="kicker">Text-to-Code · Testing</p>
+          <h1>Validate TTC against your own data</h1>
+          <p class="lead">Upload a CSV of lab test strings, review TTC's suggested codes, and export your annotated results.</p>
+        </div>
+      </div>
+
+      <div class="grid-container--wide testing-body">
+
+        <!-- Step indicator -->
+        <ol class="usa-step-indicator__segments usa-step-indicator" id="step-indicator">
+          <li class="usa-step-indicator__segment usa-step-indicator__segment--current" data-step="1">
+            <span class="usa-step-indicator__label"><span class="usa-step-indicator__counter">1</span> Upload &amp; configure</span>
+          </li>
+          <li class="usa-step-indicator__segment" data-step="2">
+            <span class="usa-step-indicator__label"><span class="usa-step-indicator__counter">2</span> Review codes</span>
+          </li>
+          <li class="usa-step-indicator__segment" data-step="3">
+            <span class="usa-step-indicator__label"><span class="usa-step-indicator__counter">3</span> Export</span>
+          </li>
+        </ol>
+
+        <div id="upload-state">
+          <div class="upload-card">
+            <h2>Upload a CSV file</h2>
+            <p class="card-lead">Your file should contain a column of nonstandard lab test strings. Any additional columns will be preserved as context during validation.</p>
+
+            <div class="form-section" style="margin-top:0;">
+              <span class="section-label">Step 1 — Select data element type</span>
+              <div class="btn-row">
+                <button class="type-btn active" id="test-type-btn" onclick="selectTestType(this, 'Lab test name')">Lab test name</button>
+                <button class="type-btn coming-soon" disabled>Lab result <span class="coming-soon-tag">Coming soon</span></button>
+              </div>
+              <div class="radio-row" style="margin-top:1rem;">
+                <span class="usa-radio">
+                  <input class="usa-radio__input" type="radio" id="test-ordered" name="test-data-field" value="Lab Test Name Ordered" checked />
+                  <label class="usa-radio__label" for="test-ordered">Ordered <span class="radio-hint">filters to Order/Both LOINC types</span></label>
+                </span>
+                <span class="usa-radio">
+                  <input class="usa-radio__input" type="radio" id="test-resulted" name="test-data-field" value="Lab Test Name Resulted" />
+                  <label class="usa-radio__label" for="test-resulted">Resulted <span class="radio-hint">filters to Observation/Both</span></label>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="section-label" for="validator-name">Step 2 — Enter your name</label>
+              <input class="usa-input name-input" type="text" id="validator-name" placeholder="e.g. Ashley Johnson" />
+            </div>
+
+            <div class="form-section">
+              <span class="section-label">Step 3 — Choose your file</span>
+              <div class="usa-file-input">
+                <div class="file-drop">
+                  <span class="file-drop__hint">Drag a CSV here, or select it from your computer</span>
+                  <label class="upload-btn" for="csv-upload">Choose file</label>
+                  <span class="upload-filename" id="upload-filename">No file chosen</span>
+                </div>
+              </div>
+              <input type="file" id="csv-upload" accept=".csv" />
+              <p class="upload-hint">Accepted format: .csv</p>
+            </div>
+          </div>
+
+          <div class="preview-card" id="preview-card">
+            <div class="preview-header">
+              <h3 id="preview-filename">—</h3>
+              <span id="preview-count">—</span>
+            </div>
+            <table class="usa-table preview-table">
+              <thead><tr><th style="width:3rem;">#</th><th>Lab test string</th></tr></thead>
+              <tbody id="preview-body"></tbody>
+            </table>
+            <div class="card-pad">
+              <button class="usa-button usa-button--big usa-button--block" id="run-batch-btn">Run TTC on all rows</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="validation-state" style="display:none;">
+          <div class="progress-bar-wrap">
+            <div class="progress-top">
+              <div>
+                <span class="progress-label" id="progress-label">0 of 8 reviewed</span>
+                <span class="progress-meta" id="validation-type-label"></span>
+                <span class="progress-meta" id="validation-name-label"></span>
+              </div>
+              <div class="progress-counts">
+                <span><span class="dot dot-correct"></span> <span id="count-correct">0</span> correct</span>
+                <span><span class="dot dot-incorrect"></span> <span id="count-incorrect">0</span> incorrect</span>
+                <span><span class="dot dot-uncertain"></span> <span id="count-uncertain">0</span> uncertain</span>
+                <span><span class="dot dot-pending"></span> <span id="count-pending">8</span> pending</span>
+              </div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill-correct" id="fill-correct" style="width:0%"></div>
+              <div class="progress-fill-incorrect" id="fill-incorrect" style="width:0%"></div>
+              <div class="progress-fill-uncertain" id="fill-uncertain" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="validation-card">
+            <table class="usa-table validation-table">
+              <thead>
+                <tr>
+                  <th style="width:2rem;">#</th>
+                  <th>Input string</th>
+                  <th>Suggested code</th>
+                  <th>Code system name</th>
+                  <th>Display name</th>
+                  <th>Validate</th>
+                  <th>Notes</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="validation-body"></tbody>
+            </table>
+          </div>
+
+          <div class="export-bar">
+            <p id="export-label">Review all rows to enable export.</p>
+            <button class="usa-button" id="export-btn" disabled>Export annotated CSV</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ── AGENCY FOOTER ── -->
+  <footer class="agency-footer">
+    <div class="agency-footer__inner">
+      <div class="agency-footer__brand">
+        <span class="agency-footer__mark" aria-hidden="true">TTC</span>
+        <span>
+          <strong>Text-to-Code</strong>
+          <span>A DIBBs product built by Skylight for CDC</span>
+        </span>
+      </div>
+      <nav class="agency-footer__links" aria-label="Footer">
+        <a href="https://dibbs.tools">dibbs.tools</a>
+        <a href="#">Documentation</a>
+        <a href="#">GitHub</a>
+        <a href="#">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- ── USWDS IDENTIFIER ── -->
+  <section class="usa-identifier" aria-label="Agency identifier">
+    <div class="usa-identifier__inner">
+      <div class="usa-identifier__masthead">
+        <span class="usa-identifier__logo" aria-hidden="true">CDC</span>
+        <p class="usa-identifier__id">
+          An official website of the <strong>Centers for Disease Control and Prevention</strong>, part of the U.S. Department of Health and Human Services.
+        </p>
+      </div>
+      <nav class="usa-identifier__required" aria-label="Important links">
+        <a href="#">About CDC</a>
+        <a href="#">Accessibility</a>
+        <a href="#">FOIA requests</a>
+        <a href="#">No FEAR Act data</a>
+        <a href="#">Privacy policy</a>
+        <a href="#">Vulnerability disclosure</a>
+      </nav>
+      <p class="usa-identifier__gov">
+        Looking for U.S. government information and services? Visit <a href="https://www.usa.gov">USA.gov</a>
+      </p>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
