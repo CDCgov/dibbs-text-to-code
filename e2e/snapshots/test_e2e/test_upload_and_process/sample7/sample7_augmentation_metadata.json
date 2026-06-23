@@ -18,6 +18,5 @@
     }
   ],
   "original_eicr_id": "2.16.840.1.113883.3.432.0.16.1.100.779.2",
-  "passthrough": false,
   "passthrough_reason": null
 }
