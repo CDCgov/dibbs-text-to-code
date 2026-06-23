@@ -125,19 +125,35 @@ class EICRAugmenter:
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
 
         # 3 next replace the setId tag
-        old_set_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/setId")
-        # we need to retain the old tags 'tail' to preserve the spacing format
+        old_set_id_element = self._augmented_element.xpath(
+            cda_xpath("/ClinicalDocument/setId"), namespaces=CDA_NSMAP
+        )
         new_set_id_element = self._get_new_set_id()
-        new_set_id_element.tail = old_set_id_element.tail
-        self._add_previous_element_comment("new-document-setId ", old_set_id_element)
-        self._augmented_element.replace(old_set_id_element, new_set_id_element)
+        if old_set_id_element:
+            old_set_id_element = old_set_id_element[0]
+            # we need to retain the old tags 'tail' to preserve the spacing format
+            new_set_id_element.tail = old_set_id_element.tail
+            self._add_previous_element_comment("new-document-setId ", old_set_id_element)
+            self._augmented_element.replace(old_set_id_element, new_set_id_element)
+        else:
+            self._augmented_element.append(new_set_id_element)
+            self._add_previous_element_comment("new-document-setId ", new_set_id_element)
+
         # 4 finally replace the versionNumber tag
-        old_version_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/versionNumber")
-        # we need to retain the old tags 'tail' to preserve the spacing format
+        old_version_element = self._augmented_element.xpath(
+            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        )
         new_version_element = self._get_new_version_number()
-        new_version_element.tail = old_version_element.tail
-        self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
-        self._augmented_element.replace(old_version_element, new_version_element)
+        if old_version_element:
+            old_version_element = old_version_element[0]
+            # we need to retain the old tags 'tail' to preserve the spacing format
+
+            new_version_element.tail = old_version_element.tail
+            self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
+            self._augmented_element.replace(old_version_element, new_version_element)
+        else:
+            self._augmented_element.append(new_version_element)
+            self._add_previous_element_comment("new-document-versionNumber ", new_version_element)
 
         # 5 add the new templateId tag which will also include the comments in order
         template_id = self._get_augmented_template_id()
@@ -164,12 +180,23 @@ class EICRAugmenter:
             self._add_previous_element_comment("original-document-id ", parent_doc_id)
         else:
             self._add_previous_element_comment("input-document-id ", parent_doc_id)
-        parent_set_id = self._get_old_set_id()
-        parent_doc.append(parent_set_id)
-        self._add_previous_element_comment("input-document-setId ", parent_set_id)
-        parent_version_number = self._get_old_version_number()
-        parent_doc.append(parent_version_number)
-        self._add_previous_element_comment("input-document-versionNumber ", parent_version_number)
+        parent_set_id = self._original_element.xpath(
+            cda_xpath("/ClinicalDocument/setId"), namespaces=CDA_NSMAP
+        )
+        if parent_set_id:
+            parent_set_id = parent_set_id[0]
+            parent_doc.append(parent_set_id)
+            self._add_previous_element_comment("input-document-setId ", parent_set_id)
+
+        parent_version_number = self._original_element.xpath(
+            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        )
+        if parent_version_number:
+            parent_version_number = parent_version_number[0]
+            parent_doc.append(parent_version_number)
+            self._add_previous_element_comment(
+                "input-document-versionNumber ", parent_version_number
+            )
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
@@ -192,16 +219,6 @@ class EICRAugmenter:
         if parent_doc_id.get("assigningAuthorityName") is None:
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
-
-    def _get_old_set_id(self) -> Element:
-        """Extract the parent document setId from original eICR document."""
-        parent_set_id = self._get_original_by_xpath("/ClinicalDocument/setId")
-        return parent_set_id
-
-    def _get_old_version_number(self) -> Element:
-        """Extract the parent versionNumber from original eICR document."""
-        version = self._get_original_by_xpath("/ClinicalDocument/versionNumber")
-        return version
 
     def _generate_deterministic_id(self, identifier_type: str) -> str:
         """Generate a stable UUID for augmented eICR identifiers."""
@@ -233,9 +250,16 @@ class EICRAugmenter:
 
     def _get_new_version_number(self) -> Element:
         """Generate a versionNumber element for the augmented eICR document."""
-        old_version_number = self._get_old_version_number()
+        old_version_number = self._original_element.xpath(
+            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        )
+
         version_number_tag = _cda_element("versionNumber")
-        version_number_tag.set("value", old_version_number.get("value", "1"))
+        if old_version_number:
+            version_number_tag.set("value", old_version_number[0].get("value", "1"))
+        else:
+            version_number_tag.set("value", "1")
+
         return version_number_tag
 
     def _get_augmented_template_id(self) -> Element:
