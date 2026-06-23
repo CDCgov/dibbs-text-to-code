@@ -27,7 +27,7 @@
   "passthrough": false,
   "passthrough_reason": null,
   "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
-  "processed_at": "2026-06-17T16:46:14.685573Z",
+  "processed_at": "2026-02-13T20:27:00Z",
   "ttc_schematron_issues": [
     {
       "candidate": {
@@ -37,7 +37,7 @@
       },
       "field_type": "Lab Test Name Resulted",
       "issue_context": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[8]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
-      "issue_id": "ttc-labTestNameResulted-noCode",
+      "issue_id": "ttc-labTestNameResulted-code-missing",
       "issue_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute.",
       "issue_test": "not(cda:code)                  or cda:code/@code                 or cda:code/cda:translation/@code",
       "new_translation": {

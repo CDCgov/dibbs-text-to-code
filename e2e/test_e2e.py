@@ -462,9 +462,12 @@ class TestEndToEndSimulated:
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
-        _ = ttc_handler(sqs_event, mock_lambda_context)
+        with time_machine.travel(
+            datetime(2026, 2, 13, 15, 27, 0, tzinfo=ZoneInfo("America/New_York")), tick=False
+        ):
+            _ = ttc_handler(sqs_event, mock_lambda_context)
 
-        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
+            q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
 
         if q2 == []:
             return
@@ -578,13 +581,7 @@ class TestEndToEndSimulated:
 
             _assert_augmented_eicr_retains_original_content(original_root, augmented_root, eicr_id)
 
-            # The augmenter only blocks output on errors it introduced, so the success path
-            # asserts no *new* findings versus the original eICR, not zero findings overall.
-            baseline_validation_results = validate_eicr(original_eicr)
-            new_validation_results = set(actual_validation_results) - set(
-                baseline_validation_results
-            )
-            assert new_validation_results == set(), new_validation_results
+            assert actual_validation_results == [], actual_validation_results
 
         snapshot.assert_match(
             json.dumps(
