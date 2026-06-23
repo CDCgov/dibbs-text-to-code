@@ -1,0 +1,359 @@
+/* ============================================================
+   DIBBs Design System
+   (CDCgov/dibbs-design-system — USWDS theme overrides)
+   Primary = blue-cool (teal) · Secondary = violet-warm
+   Headings = Merriweather (serif) · UI/body = Public Sans
+   ============================================================ */
+:root {
+  /* Primary — blue-cool (teal) */
+  --primary:         #2e6276;  /* blue-cool-60 */
+  --primary-dark:    #224a58;  /* blue-cool-70 */
+  --primary-darker:  #14333d;  /* blue-cool-80 — header/footer */
+  --primary-light:   #adcfdc;  /* blue-cool-20 */
+  --primary-lighter: #dae9ee;  /* blue-cool-10 — summary box bg */
+  --primary-lightest:#e7f2f5;  /* blue-cool-5 */
+
+  /* Links — blue-cool-50 */
+  --link:        #3a7d95;
+  --link-hover:  #224a58;
+  --link-active: #14333d;
+
+  /* Secondary — violet-warm (buttons, checked controls) */
+  --secondary:        #864381;  /* violet-warm-60 */
+  --secondary-light:  #bf9dc3;
+  --secondary-lighter:#dccfdd;
+  --secondary-dark:   #5c395a;  /* violet-warm-70 */
+  --secondary-darker: #382936;  /* violet-warm-80 */
+
+  /* Grays */
+  --base-darkest: #1b1b1b;  /* gray-90 */
+  --base-darker:  #2e2e2e;  /* gray-80 */
+  --base-dark:    #5c5c5c;  /* gray-60 */
+  --base:         #757575;  /* gray-50 */
+  --base-light:   #919191;  /* gray-40 */
+  --base-lighter: #dfe1e2;  /* gray-400 — borders */
+  --base-lightest:#f0f0f0;  /* gray-5 */
+  --gray-2:       #f9f9f9;
+  --bg:           #fbfcfd;  /* app background */
+
+  /* Status */
+  --success:       #00a91c;  /* green-cool-40v */
+  --success-dark:  #216e1f;  /* green-cool-60v */
+  --success-light: #ecf3ec;  /* green-cool-5v */
+
+  --warning:       #ddaa01;  /* yellow-30v */
+  --warning-light: #fff5c2;  /* yellow-5v */
+  --warning-text:  #947100;  /* yellow-50v */
+
+  --error:       #d54309;  /* destructive primary */
+  --error-dark:  #b51d09;  /* destructive dark */
+  --error-light: #f8e1d6;
+
+  --info:        #2491ff;  /* blue-40v */
+  --info-light:  #e8f5ff;  /* blue-5v */
+  --info-border: #a1d3ff;  /* blue-20v */
+
+  --focus: #2491ff;  /* blue-40v */
+
+  --font-sans: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Merriweather", Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  color: var(--base-darkest);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+a:active { color: var(--link-active); }
+
+:focus-visible { outline: 0.25rem solid var(--focus); outline-offset: 0; }
+button:focus-visible, .chip:focus-visible, .act-btn:focus-visible, a:focus-visible {
+  outline: 0.25rem solid var(--focus); outline-offset: 0;
+}
+
+.grid-container { max-width: 64rem; margin: 0 auto; padding: 0 1rem; }
+.grid-container--wide { max-width: 87.5rem; margin: 0 auto; padding: 0 1rem; }
+
+/* ── GOV BANNER ───────────────────────────────────────────── */
+.usa-banner { background: var(--base-lightest); font-size: 0.8125rem; line-height: 1.3; }
+.usa-banner__inner { max-width: 64rem; margin: 0 auto; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.banner-flag {
+  flex: none; width: 16px; height: 11px; border-radius: 1px; position: relative;
+  background: repeating-linear-gradient(to bottom, #b22234 0 1.57px, #fff 1.57px 3.14px);
+  overflow: hidden;
+}
+.banner-flag::before { content: ""; position: absolute; left: 0; top: 0; width: 8px; height: 6px; background: #3c3b6e; }
+.usa-banner__text { color: var(--base-darker); }
+.usa-banner__button {
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--link);
+  font-family: inherit; font-size: 0.8125rem; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;
+}
+.usa-banner__button .arrow { transition: transform 0.15s; font-size: 0.6rem; }
+.usa-banner__button[aria-expanded="true"] .arrow { transform: rotate(180deg); }
+.usa-banner__content { display: none; max-width: 64rem; margin: 0 auto; padding: 1.25rem 1rem 1.75rem; gap: 2rem; }
+.usa-banner__content.open { display: grid; grid-template-columns: 1fr 1fr; }
+.usa-banner__guidance { display: flex; gap: 0.75rem; align-items: flex-start; font-size: 0.875rem; color: var(--base-darker); }
+.usa-banner__guidance .ico { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.05rem; }
+.ico-gov { background: var(--primary-lighter); color: var(--primary-darker); }
+.ico-https { background: var(--success-light); color: var(--success-dark); }
+.usa-banner__guidance strong { display: block; }
+.lock { display: inline-block; width: 0.65rem; height: 0.55rem; border: 1.5px solid var(--success-dark); border-radius: 0 0 1px 1px; position: relative; vertical-align: -1px; margin: 0 1px; }
+.lock::before { content: ""; position: absolute; left: 50%; top: -0.42rem; transform: translateX(-50%); width: 0.42rem; height: 0.42rem; border: 1.5px solid var(--success-dark); border-bottom: 0; border-radius: 0.42rem 0.42rem 0 0; }
+@media (max-width: 40rem) { .usa-banner__content.open { grid-template-columns: 1fr; } }
+
+/* ── HEADER (dark blue-cool, DIBBs) ───────────────────────── */
+.usa-header { background: var(--primary-darker); }
+.usa-header__inner { max-width: 64rem; margin: 0 auto; padding: 0 1rem; display: flex; align-items: stretch; justify-content: space-between; flex-wrap: wrap; }
+.usa-logo { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 0; }
+.usa-logo__mark { width: 2.4rem; height: 2.4rem; border-radius: 3px; background: #fff; color: var(--primary-darker); display: grid; place-items: center; font-weight: 700; font-size: 0.92rem; letter-spacing: 0.01em; }
+.usa-logo__text { font-style: normal; font-family: var(--font-serif); font-weight: 700; font-size: 1.2rem; color: #fff; line-height: 1.1; }
+.usa-logo__sub { display: block; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 400; color: var(--primary-light); letter-spacing: 0.02em; margin-top: 2px; }
+.usa-nav { display: flex; align-items: stretch; }
+.usa-nav__primary { display: flex; list-style: none; height: 100%; }
+.nav-link {
+  font-family: inherit; background: none; border: 0; cursor: pointer;
+  display: flex; align-items: center; height: 100%; padding: 0 1.25rem;
+  font-size: 1rem; font-weight: 600; color: #dfe9ed;
+  border-bottom: 4px solid transparent; transition: background 0.12s, color 0.12s;
+}
+.nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-link.active { color: #fff; border-bottom-color: var(--primary-light); }
+
+/* ── PAGE / INTRO ─────────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
+.page-intro { background: #fff; border-bottom: 1px solid var(--base-lighter); padding: 2.5rem 0 2rem; }
+.kicker { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.6rem; }
+.page-intro h1 { font-family: var(--font-serif); font-size: 2.1rem; line-height: 1.2; font-weight: 700; color: var(--base-darkest); letter-spacing: -0.005em; }
+.page-intro .lead { margin-top: 0.9rem; font-size: 1.2rem; line-height: 1.5; color: var(--base-dark); max-width: 44rem; text-wrap: pretty; }
+
+main { padding-bottom: 3.5rem; }
+
+/* ── FORM PRIMITIVES ──────────────────────────────────────── */
+.form-section { margin-top: 2rem; }
+.section-label { display: block; font-size: 1.06rem; font-weight: 700; color: var(--base-darkest); margin-bottom: 0.5rem; }
+.section-label .hint { display: block; font-weight: 400; font-size: 0.9rem; color: var(--base); margin-top: 1px; }
+
+.usa-input, .usa-textarea {
+  font-family: inherit; font-size: 1.06rem; color: var(--base-darkest);
+  border: 1px solid var(--base-dark); border-radius: 0; background: #fff;
+  width: 100%; max-width: 30rem; padding: 0.5rem; line-height: 1.3;
+}
+.usa-input { height: 2.5rem; }
+.usa-input:focus, .usa-textarea:focus { outline: 0.25rem solid var(--focus); outline-offset: 0; }
+.usa-input::placeholder, .usa-textarea::placeholder { color: var(--base); }
+
+/* USWDS radio — DIBBs checked state = violet-warm */
+.radio-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.usa-radio { position: relative; }
+.usa-radio__input { position: absolute; left: -999rem; }
+.usa-radio__label { display: inline-flex; align-items: baseline; gap: 0.5rem; cursor: pointer; padding-left: 2rem; position: relative; min-height: 1.5rem; font-size: 1.06rem; line-height: 1.4; }
+.usa-radio__label::before {
+  content: ""; position: absolute; left: 0; top: 0.05rem; width: 1.25rem; height: 1.25rem;
+  background: #fff; border-radius: 50%; box-shadow: 0 0 0 2px var(--base-darkest);
+}
+.usa-radio__input:checked + .usa-radio__label::before {
+  background: var(--secondary); box-shadow: 0 0 0 2px var(--secondary), inset 0 0 0 0.18rem #fff;
+}
+.usa-radio__input:focus + .usa-radio__label::before { outline: 0.25rem solid var(--focus); outline-offset: 0.18rem; }
+.radio-hint { color: var(--base); font-size: 0.95rem; }
+
+/* Type buttons (segmented mode selector) — teal */
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.type-btn {
+  font-family: inherit; padding: 0.6rem 1.1rem; border-radius: 0.25rem; cursor: pointer; white-space: nowrap;
+  font-size: 1rem; font-weight: 600; color: var(--primary); background: #fff;
+  border: 0; box-shadow: inset 0 0 0 2px var(--primary); transition: all 0.12s;
+}
+.type-btn:hover { box-shadow: inset 0 0 0 2px var(--primary-dark); color: var(--primary-dark); background: var(--primary-lightest); }
+.type-btn.active { background: var(--primary); color: #fff; box-shadow: inset 0 0 0 2px var(--primary); }
+.type-btn.coming-soon { color: var(--base-light); box-shadow: inset 0 0 0 2px var(--base-lighter); cursor: not-allowed; }
+.type-btn.coming-soon:hover { color: var(--base-light); box-shadow: inset 0 0 0 2px var(--base-lighter); background: #fff; }
+.coming-soon-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 0.5rem; background: var(--base-lightest); color: var(--base); padding: 0.1rem 0.4rem; border-radius: 2px; vertical-align: middle; }
+
+/* USWDS buttons — DIBBs primary action = violet-warm */
+.usa-button {
+  font-family: inherit; font-size: 1.06rem; font-weight: 700; line-height: 1.1;
+  color: #fff; background: var(--secondary); border: 0; border-radius: 0.25rem;
+  box-shadow: inset 0 0 0 2px var(--secondary);
+  padding: 0.75rem 1.25rem; cursor: pointer; transition: background 0.12s, box-shadow 0.12s; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+}
+.usa-button:hover { background: var(--secondary-dark); box-shadow: inset 0 0 0 2px var(--secondary-dark); }
+.usa-button:active { background: var(--secondary-darker); box-shadow: inset 0 0 0 2px var(--secondary-darker); }
+.usa-button:disabled { background: var(--base-lighter); box-shadow: none; color: var(--base); cursor: not-allowed; }
+.usa-button--big { font-size: 1.18rem; padding: 1rem 1.5rem; }
+.usa-button--block { width: 100%; }
+
+/* ── DEMO PAGE ────────────────────────────────────────────── */
+.demo-body { max-width: 42rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip {
+  font-family: inherit; padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer;
+  font-size: 0.95rem; font-weight: 600; color: var(--primary); background: #fff;
+  border: 0; box-shadow: inset 0 0 0 1.5px var(--primary); transition: all 0.12s;
+}
+.chip:hover { background: var(--primary-lightest); }
+.chip.selected { background: var(--primary); color: #fff; box-shadow: inset 0 0 0 1.5px var(--primary); }
+.run-row { margin-top: 0.75rem; }
+
+.divider { height: 1px; background: var(--base-lighter); margin: 2.5rem 0; }
+
+/* Result → DIBBs summary box (primary-lighter bg, primary-light border) */
+.result-card { display: none; border: 1px solid var(--primary-light); border-radius: 0.25rem; background: var(--primary-lighter); overflow: hidden; }
+.result-card.visible { display: block; }
+.result-header { padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--primary-light); }
+.result-header-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary-dark); margin-bottom: 0.25rem; }
+.result-header-value { font-size: 1.25rem; font-weight: 700; color: var(--base-darkest); }
+.result-header-meta { font-size: 0.9rem; color: var(--base-dark); margin-top: 0.25rem; }
+.result-body { padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #fff; }
+.result-box { background: var(--base-lightest); border-radius: 0.25rem; padding: 1rem; }
+.result-box.full { grid-column: 1 / -1; }
+.result-box-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--base-dark); margin-bottom: 0.4rem; }
+.result-box-value { font-size: 1.25rem; font-weight: 700; color: var(--primary-dark); font-variant-numeric: tabular-nums; }
+.result-box-text { font-size: 1rem; color: var(--base-darkest); line-height: 1.45; }
+
+/* ── ALERT (USWDS) ────────────────────────────────────────── */
+.usa-alert { display: flex; gap: 0.75rem; padding: 1rem 1.25rem; border-left: 0.5rem solid var(--info); background: var(--info-light); font-size: 1rem; line-height: 1.45; }
+.usa-alert--info { border-color: var(--info); background: var(--info-light); }
+.usa-alert__heading { font-weight: 700; margin-bottom: 0.15rem; }
+.usa-alert__icon { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--primary-darker); color: #fff; display: grid; place-items: center; font-size: 0.9rem; font-weight: 700; font-style: italic; font-family: Georgia, serif; }
+
+/* ── TESTING PAGE ─────────────────────────────────────────── */
+.testing-body { padding-top: 0.5rem; }
+
+/* Step indicator — current = teal, complete = teal-dark */
+.usa-step-indicator { margin: 0 0 2rem; }
+.usa-step-indicator__segments { display: flex; gap: 0; list-style: none; }
+.usa-step-indicator__segment { flex: 1; position: relative; padding-top: 1.25rem; text-align: left; }
+.usa-step-indicator__segment::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 0.5rem; background: var(--base-lighter); border-right: 2px solid #fff;
+}
+.usa-step-indicator__segment--complete::before { background: var(--primary-dark); }
+.usa-step-indicator__segment--current::before { background: var(--primary); }
+.usa-step-indicator__label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: var(--base-dark); font-weight: 600; }
+.usa-step-indicator__counter { width: 1.6rem; height: 1.6rem; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 0.85rem; font-weight: 700; background: #fff; color: var(--base); box-shadow: inset 0 0 0 2px var(--base-light); }
+.usa-step-indicator__segment--complete .usa-step-indicator__label { color: var(--base-darker); }
+.usa-step-indicator__segment--complete .usa-step-indicator__counter { background: var(--primary-dark); color: #fff; box-shadow: none; }
+.usa-step-indicator__segment--current .usa-step-indicator__label { color: var(--primary); }
+.usa-step-indicator__segment--current .usa-step-indicator__counter { background: var(--primary); color: #fff; box-shadow: none; }
+
+.upload-card { background: #fff; border: 1px solid var(--base-lighter); border-radius: 0.25rem; padding: 2rem; }
+.upload-card h2 { font-size: 1.5rem; font-weight: 700; color: var(--base-darkest); margin-bottom: 0.4rem; }
+.upload-card > .card-lead { font-size: 1.02rem; color: var(--base-dark); margin-bottom: 1.5rem; line-height: 1.5; max-width: 40rem; }
+.upload-card input[type=file] { position: absolute; left: -999rem; }
+.name-input { max-width: 22rem; }
+
+/* USWDS file input */
+.usa-file-input { max-width: 30rem; border: 1px dashed var(--base-light); border-radius: 0; background: var(--gray-2); }
+.file-drop { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 1.5rem; text-align: center; }
+.file-drop__hint { font-size: 0.95rem; color: var(--base-dark); }
+.upload-btn {
+  font-family: inherit; display: inline-block; padding: 0.6rem 1.25rem; cursor: pointer;
+  font-size: 1rem; font-weight: 700; color: var(--secondary); background: #fff; border-radius: 0.25rem; box-shadow: inset 0 0 0 2px var(--secondary); transition: all 0.12s;
+}
+.upload-btn:hover { background: #fff; box-shadow: inset 0 0 0 2px var(--secondary-dark); color: var(--secondary-dark); }
+.upload-filename { font-size: 0.95rem; color: var(--base-dark); }
+.upload-hint { font-size: 0.85rem; color: var(--base); margin-top: 0.5rem; }
+
+/* Tables (USWDS) */
+.preview-card, .validation-card { background: #fff; border: 1px solid var(--base-lighter); border-radius: 0.25rem; overflow: auto; }
+.preview-card { display: none; margin-top: 1.5rem; }
+.preview-card.visible { display: block; }
+.preview-header { background: var(--base-lightest); border-bottom: 1px solid var(--base-lighter); padding: 0.9rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+.preview-header h3 { font-size: 1.05rem; font-weight: 700; color: var(--base-darkest); }
+.preview-header span { font-size: 0.9rem; color: var(--base-dark); }
+.usa-table { width: 100%; border-collapse: collapse; font-size: 0.98rem; }
+.usa-table th { background: var(--base-lightest); padding: 0.6rem 1rem; text-align: left; font-size: 0.85rem; font-weight: 700; color: var(--base-darker); border-bottom: 2px solid var(--base-light); white-space: nowrap; }
+.usa-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--base-lighter); vertical-align: top; line-height: 1.4; }
+.usa-table tr:last-child td { border-bottom: none; }
+.usa-table tbody tr.reviewed { background: var(--gray-2); }
+.num-cell { color: var(--base); font-variant-numeric: tabular-nums; }
+
+.card-pad { padding: 1.25rem; }
+
+/* Progress */
+.progress-bar-wrap { background: #fff; border: 1px solid var(--base-lighter); border-radius: 0.25rem; padding: 1.1rem 1.25rem; margin-bottom: 1.5rem; }
+.progress-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.progress-label { font-size: 1.05rem; font-weight: 700; color: var(--base-darkest); }
+.progress-meta { font-size: 0.9rem; color: var(--base-dark); margin-left: 0.75rem; }
+.progress-counts { display: flex; gap: 1.1rem; font-size: 0.9rem; color: var(--base-darker); flex-wrap: wrap; }
+.progress-counts span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; display: inline-block; }
+.dot-correct { background: var(--success); }
+.dot-incorrect { background: var(--error); }
+.dot-uncertain { background: var(--warning); }
+.dot-pending { background: var(--base-light); }
+.progress-track { height: 0.6rem; background: var(--base-lightest); border-radius: 999px; overflow: hidden; display: flex; }
+.progress-fill-correct { background: var(--success); height: 100%; transition: width 0.3s; }
+.progress-fill-incorrect { background: var(--error); height: 100%; transition: width 0.3s; }
+.progress-fill-uncertain { background: var(--warning); height: 100%; transition: width 0.3s; }
+
+/* Validation table cells */
+.code-val { font-weight: 700; color: var(--primary-dark); font-variant-numeric: tabular-nums; }
+.code-sub { font-size: 0.8rem; color: var(--base); margin-top: 2px; }
+.action-group { display: flex; gap: 0.4rem; white-space: nowrap; }
+.act-btn {
+  font-family: inherit; padding: 0.4rem 0.75rem; border-radius: 0.25rem; cursor: pointer;
+  font-size: 0.85rem; font-weight: 700; background: #fff; border: 0; box-shadow: inset 0 0 0 2px transparent; transition: all 0.12s;
+}
+.act-correct { color: var(--success-dark); box-shadow: inset 0 0 0 2px var(--success-dark); }
+.act-correct:hover, .act-correct.selected { background: var(--success-dark); color: #fff; }
+.act-incorrect { color: var(--error-dark); box-shadow: inset 0 0 0 2px var(--error-dark); }
+.act-incorrect:hover, .act-incorrect.selected { background: var(--error-dark); color: #fff; }
+.act-uncertain { color: var(--warning-text); box-shadow: inset 0 0 0 2px var(--warning); }
+.act-uncertain:hover, .act-uncertain.selected { background: var(--warning); color: var(--base-darkest); }
+.sub-input { margin-top: 0.5rem; width: 100%; padding: 0.4rem 0.5rem; font-size: 0.85rem; border-radius: 0; outline: none; display: none; font-family: inherit; }
+.sub-input.visible { display: block; }
+.sub-input-incorrect { border: 1px solid var(--error-dark); }
+.sub-input-uncertain { border: 1px solid var(--warning-text); }
+.sub-input:focus { outline: 0.25rem solid var(--focus); outline-offset: 0; }
+.notes-input { width: 100%; padding: 0.4rem 0.5rem; font-size: 0.85rem; border: 1px solid var(--base-light); border-radius: 0; outline: none; resize: vertical; color: var(--base-darkest); font-family: inherit; }
+.notes-input:focus { outline: 0.25rem solid var(--focus); outline-offset: 0; }
+
+/* USWDS tag (status) */
+.status-badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 2px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.badge-correct { background: var(--success-light); color: var(--success-dark); }
+.badge-incorrect { background: var(--error-light); color: var(--error-dark); }
+.badge-uncertain { background: var(--warning-light); color: var(--warning-text); }
+.badge-pending { background: var(--base-lightest); color: var(--base); }
+
+.export-bar { background: #fff; border: 1px solid var(--base-lighter); border-radius: 0.25rem; padding: 1.1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.export-bar p { font-size: 1rem; color: var(--base-dark); }
+
+/* ── AGENCY FOOTER (dark blue-cool, DIBBs) ────────────────── */
+.agency-footer { background: var(--primary-darker); color: #fff; padding: 2rem 0; }
+.agency-footer__inner { max-width: 64rem; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between; }
+.agency-footer__brand { display: flex; align-items: center; gap: 0.75rem; }
+.agency-footer__mark { width: 2.5rem; height: 2.5rem; border-radius: 3px; background: #fff; color: var(--primary-darker); display: grid; place-items: center; font-weight: 700; }
+.agency-footer__brand strong { font-family: var(--font-serif); font-size: 1.05rem; display: block; }
+.agency-footer__brand span { font-family: var(--font-sans); font-size: 0.85rem; color: var(--primary-light); }
+.agency-footer__links { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: 0.9rem; }
+.agency-footer__links a { color: #fff; text-decoration: none; }
+.agency-footer__links a:hover { color: #fff; text-decoration: underline; }
+
+/* ── USWDS IDENTIFIER ─────────────────────────────────────── */
+.usa-identifier { background: var(--base-darkest); color: var(--base-light); padding: 1.5rem 0; }
+.usa-identifier__inner { max-width: 64rem; margin: 0 auto; padding: 0 1rem; }
+.usa-identifier__masthead { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.9rem; border-bottom: 1px solid #454545; flex-wrap: wrap; }
+.usa-identifier__logo { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #454545; display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex: none; }
+.usa-identifier__id { font-size: 0.92rem; line-height: 1.4; }
+.usa-identifier__id strong { color: #fff; font-weight: 700; }
+.usa-identifier__required { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; padding: 0.9rem 0; font-size: 0.9rem; }
+.usa-identifier__required a { color: var(--base-light); text-decoration: none; }
+.usa-identifier__required a:hover { color: #fff; text-decoration: underline; }
+.usa-identifier__gov { font-size: 0.9rem; padding-top: 0.5rem; }
+.usa-identifier__gov a { color: var(--primary-light); }
+
+@media (max-width: 48rem) {
+  .result-body { grid-template-columns: 1fr; }
+  .page-intro h1 { font-size: 1.75rem; }
+  .usa-nav__primary { width: 100%; }
+  .nav-link { flex: 1; justify-content: center; padding: 0.85rem 0.5rem; }
+}
