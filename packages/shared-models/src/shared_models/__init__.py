@@ -68,5 +68,4 @@ class TTCAugmenterInput(FrozenBaseModel):
     persistence_id: str
     original_eicr_id: CdaInstanceIdentifier | None = None
     nonstandard_codes: list[NonstandardCodeInstance] = []
-    passthrough: bool = False
     passthrough_reason: PassthroughReason | None = None
