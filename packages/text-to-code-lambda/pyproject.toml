@@ -12,7 +12,7 @@ dependencies = [
 [dependency-groups]
 # `fastapi`/`uvicorn` power the local dev server (local_server.py) only; they are
 # intentionally NOT runtime dependencies so they stay out of the Lambda image.
-dev = ["moto", "fastapi>=0.115.0", "uvicorn>=0.30.0"]
+dev = ["fastapi", "moto", "uvicorn"]
 
 [build-system]
 requires = ["hatchling"]
