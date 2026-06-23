@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid5
 
 from lxml import etree
@@ -49,7 +49,9 @@ class EICRAugmenter:
         self._augmented_element = copy.deepcopy(self._original_element)
 
         self.application_code = ApplicationCode.TEXT_TO_CODE
-        self.augmentation_date = datetime.now() if augmentation_date is None else augmentation_date
+        self.augmentation_date = (
+            datetime.now(UTC) if augmentation_date is None else augmentation_date
+        )
 
         self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
