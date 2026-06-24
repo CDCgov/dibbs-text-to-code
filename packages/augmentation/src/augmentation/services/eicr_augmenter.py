@@ -1,27 +1,28 @@
 import copy
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid5
 
 from lxml import etree
 from lxml.etree import Element
 
-from augmentation.models import ApplicationCode, Metadata
-from augmentation.models.application import NonstandardCodeInstanceMetadata
+from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
+from augmentation.services.eicr_utils import CDA_NSMAP, cda_element, cda_xpath, parse_document
 from shared_models import NonstandardCodeInstance
-
-from .eicr_utils import CDA_NS, CDA_NSMAP, cda_xpath, parse_eicr_xml
 
 _AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
 _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
 _AUTHOR_FUNCTION_CODE_SYSTEM_NAME: str = "eCRDataAugmentation"
+_APPLICATION_CODE_VALUE: str = "text-to-code"
+_APPLICATION_CODE_DISPLAY: str = "Text-to-Code"
 
 
-def _cda_element(tag: str, parent: Element | None = None) -> Element:
-    """Create an element in the CDA default namespace (urn:hl7-org:v3)."""
-    full_tag = f"{{{CDA_NS}}}{tag}"
-    if parent is not None:
-        return etree.SubElement(parent, full_tag)
-    return etree.Element(full_tag)
+@dataclass(frozen=True)
+class AugmentResult:
+    """The augmented XML and the associated metadata."""
+
+    augmented_xml: str
+    metadata: Metadata
 
 
 class EICRAugmenter:
@@ -36,22 +37,14 @@ class EICRAugmenter:
         self,
         document: str,
         nonstandard_codes: list[NonstandardCodeInstance],
-        augmentation_date: datetime | None = None,
         deterministic_id_seed: str | None = None,
     ):
-        """Initialize EICRAugmenter.
-
-        For now only TTC is supported in Augmentation and the only document type for TTC is eICR.
-        # TODO: for now just use hard coded TTC Config we will need to remove/change this once we have S3 config integrated
-        """
+        """Initialize EICRAugmenter with an eICR XML document and the nonstandard codes to resolve."""
         self.original_xml = document
-        self._original_element = self.document_payload_not_none(self.original_xml)
+        self._original_element = parse_document(self.original_xml)
         self._augmented_element = copy.deepcopy(self._original_element)
 
-        self.application_code = ApplicationCode.TEXT_TO_CODE
-        self.augmentation_date = (
-            datetime.now(UTC) if augmentation_date is None else augmentation_date
-        )
+        self.augmentation_date = datetime.now(UTC)
 
         self.original_eicr_id = self._get_required_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/id/@root"
@@ -61,32 +54,11 @@ class EICRAugmenter:
         self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
 
-    @classmethod
-    def document_payload_not_none(cls, v: str) -> Element:
-        """Validates that the document payload is always supplied as a non-empty string."""
-        if v is None or v.strip() == "":
-            raise ValueError("Document payload must be a non-empty string!")
-        return parse_eicr_xml(v)
-
-    @property
-    def augmented_xml(self) -> str:
-        """Get the augmented XML document as a string."""
-        etree.indent(self._augmented_element, space="    ")
-        return etree.tostring(
-            self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
-        ).decode()
-
-    def _get_application_code_value(self) -> str:
-        return self.application_code.code
-
-    def _get_application_code_display(self) -> str:
-        return self.application_code.display
-
-    def augment(self) -> Metadata:
+    def augment(self) -> AugmentResult:
         """Apply augmentation to the eICR."""
         self._handle_document_id_header()
         self._handle_related_document_header()
-        self._handle_author_header()
+        self._augmented_element.append(self._generate_author())
 
         nonstandard_code_metadata: list[NonstandardCodeInstanceMetadata] = []
 
@@ -103,83 +75,71 @@ class EICRAugmenter:
                 )
             )
 
-        metadata = Metadata(
-            original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
-            augmented_eicr_id=self.new_doc_id,
-            nonstandard_codes=nonstandard_code_metadata,
+        etree.indent(self._augmented_element, space="    ")
+        augmented_xml = etree.tostring(
+            self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
+        ).decode()
+
+        return AugmentResult(
+            augmented_xml,
+            Metadata(
+                original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
+                augmented_eicr_id=self.new_doc_id,
+                nonstandard_codes=nonstandard_code_metadata,
+            ),
         )
-        return metadata
+
+    def _replace_element(self, xpath: str, new_element: Element) -> None:
+        """Replace a child in the augmented document, preserving whitespace tail."""
+        old = self._get_augmented_tag_by_xpath(xpath)
+        new_element.tail = old.tail
+        self._augmented_element.replace(old, new_element)
 
     def _handle_document_id_header(self) -> None:
-        # 1 first replace the id tag
-        old_id_element = self._get_required_element_by_xpath(
-            self._augmented_element, "/ClinicalDocument/id"
-        )
-        # we need to retain the old tags 'tail' to preserve the spacing format
-        new_id_element = self._get_new_document_id()
-        new_id_element.tail = old_id_element.tail
-        self._augmented_element.replace(old_id_element, new_id_element)
+        self._replace_element("/ClinicalDocument/id", self._get_new_document_id())
 
-        # 2 replace the effectiveTime tag
         old_eff_time_element = self._get_required_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/effectiveTime"
         )
-        self._add_previous_element_comment(
-            "time of data augmentation operation ", old_eff_time_element
-        )
-        # we need to retain the old tags 'tail' to preserve the spacing format
-        new_eff_time_element = self._get_new_effective_time()
-        new_eff_time_element.tail = old_eff_time_element.tail
-        self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
+        self._add_previous_element_comment("time of data augmentation operation ", old_eff_time)
+        self._replace_element("/ClinicalDocument/effectiveTime", self._get_new_effective_time())
 
-        # 3 next replace the setId tag
-        old_set_id_element = self._get_element_by_xpath(
+       old_set_id_element = self._get_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/setId"
         )
-        new_set_id_element = self._get_new_set_id()
         if old_set_id_element is not None:
-            # we need to retain the old tags 'tail' to preserve the spacing format
-            new_set_id_element.tail = old_set_id_element.tail
-            self._add_previous_element_comment("new-document-setId ", old_set_id_element)
-            self._augmented_element.replace(old_set_id_element, new_set_id_element)
+            self._add_previous_element_comment("new-document-setId ", old_set_id)
+            self._replace_element("/ClinicalDocument/setId", self._get_new_set_id())
         else:
             self._augmented_element.append(new_set_id_element)
             self._add_previous_element_comment("new-document-setId ", new_set_id_element)
-
-        # 4 finally replace the versionNumber tag
+        
         old_version_element = self._get_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/versionNumber"
         )
-        new_version_element = self._get_new_version_number()
         if old_version_element is not None:
-            # we need to retain the old tags 'tail' to preserve the spacing format
-            new_version_element.tail = old_version_element.tail
-            self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
-            self._augmented_element.replace(old_version_element, new_version_element)
+            self._add_previous_element_comment("new-document-versionNumber ", old_version)
+            self._replace_element("/ClinicalDocument/versionNumber", self._get_new_version_number())
         else:
             self._augmented_element.append(new_version_element)
             self._add_previous_element_comment("new-document-versionNumber ", new_version_element)
 
-        # 5 add the new templateId tag which will also include the comments in order
-        template_id = self._get_augmented_template_id()
-        # find the newly added and updated document id and put the templateId right before it
         new_id = self._get_required_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/id"
         )
         self._add_previous_element_comment("eICR Data Augmentation Header ", new_id)
-        new_id.addprevious(template_id)
+        new_id.addprevious(self._get_augmented_template_id())
         self._add_previous_element_comment("new-document-id ", new_id)
 
     def _handle_related_document_header(self) -> None:
         """Add related document referencing the old eICR."""
-        related_doc = _cda_element("relatedDocument", self._augmented_element)
+        related_doc = cda_element("relatedDocument", self._augmented_element)
         related_doc.set("typeCode", "XFRM")
         self._add_previous_element_comment(" typeCode 'XFRM' ", related_doc)
-        parent_doc = _cda_element("parentDocument", related_doc)
+        parent_doc = cda_element("parentDocument", related_doc)
         parent_doc_id = self._get_old_document_id()
         parent_doc.append(parent_doc_id)
-        # comments need to be added to the element after it's been appended to the
-        # parent data element
+        # comments need to be added to the element after it's been appended to the parent
         self._add_previous_element_comment(
             "ClinicalDocument/id of the document to replace ", parent_doc_id
         )
@@ -226,31 +186,39 @@ class EICRAugmenter:
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
 
+    def _get_old_set_id(self) -> Element:
+        """Extract the parent document setId from original eICR document."""
+        return self._get_original_by_xpath("/ClinicalDocument/setId")
+
+    def _get_old_version_number(self) -> Element:
+        """Extract the parent versionNumber from original eICR document."""
+        return self._get_original_by_xpath("/ClinicalDocument/versionNumber")
+
     def _generate_deterministic_id(self, identifier_type: str) -> str:
         """Generate a stable UUID for augmented eICR identifiers."""
         return str(
             uuid5(
                 NAMESPACE_URL,
-                f"{self._get_application_code_value()}:{self.deterministic_id_seed}:{identifier_type}",
+                f"{_APPLICATION_CODE_VALUE}:{self.deterministic_id_seed}:{identifier_type}",
             )
         )
 
     def _get_new_document_id(self) -> Element:
         """Generate a new document ID element for the augmented eICR document."""
-        doc_id_tag = _cda_element("id")
+        doc_id_tag = cda_element("id")
         doc_id_tag.set("root", self.new_doc_id)
-        doc_id_tag.set("assigningAuthorityName", self._get_application_code_value())
+        doc_id_tag.set("assigningAuthorityName", _APPLICATION_CODE_VALUE)
         return doc_id_tag
 
     def _get_new_set_id(self) -> Element:
         """Generate a new setId element for the augmented eICR document."""
-        set_id_tag = _cda_element("setId")
+        set_id_tag = cda_element("setId")
         set_id_tag.set("root", self.new_set_id)
         return set_id_tag
 
     def _get_new_effective_time(self) -> Element:
         """Generate an effectiveTime element for the augmented eICR document."""
-        effective_time_tag = _cda_element("effectiveTime")
+        effective_time_tag = cda_element("effectiveTime")
         effective_time_tag.set("value", self.augmentation_date.strftime("%Y%m%d%H%M%S"))
         return effective_time_tag
 
@@ -271,25 +239,20 @@ class EICRAugmenter:
     def _get_augmented_template_id(self) -> Element:
         """Generate a new templateId element for the augmented eICR document."""
         # this new templateId is defined in the Augmentation Spec V2
-        template_id_tag = _cda_element("templateId")
+        template_id_tag = cda_element("templateId")
         template_id_tag.set("root", "2.16.840.1.113883.10.20.15.2.1.3")
         template_id_tag.set("extension", "2025-11-01")
         return template_id_tag
 
     def _add_previous_element_comment(self, comment: str, element: Element) -> None:
-        """Generate an XML comment element with the given comment text and add it before the specified element."""
-        comment_element = etree.Comment(f"DATA AUGMENTATION: {comment.strip()} ")
-        element.addprevious(comment_element)
+        """Add an XML comment immediately before the given element."""
+        element.addprevious(etree.Comment(f"DATA AUGMENTATION: {comment.strip()} "))
 
-    def _generate_author(self, level: str = "header") -> Element:
+    def _generate_author(self, is_header: bool = True) -> Element:
         null_flavor_comment = " set to nullFlavor 'NA' "
-        author = _cda_element("author")
-        # TODO: Eventually we will not only separate by header vs. data_element
-        # but will also separate out the various comments by the various data element
-        # type being modified. This can easily be stored in the model for the data element.
-        # For now we are hard coding for code-text-to-code and observation in the comment
-        if level != "header":
-            function_code = _cda_element("functionCode", author)
+        author = cda_element("author")
+        if not is_header:
+            function_code = cda_element("functionCode", author)
             function_code.set("code", value=_AUTHOR_FUNCTION_CODE)
             function_code.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
             function_code.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
@@ -300,7 +263,7 @@ class EICRAugmenter:
         author_eff_time = self._get_new_effective_time()
         author.append(author_eff_time)
         self._add_previous_element_comment("time of data augmentation operation ", author_eff_time)
-        if level == "header":
+        if is_header:
             self._add_previous_element_comment(
                 (
                     "Header-level Author to flag that this document "
@@ -310,42 +273,36 @@ class EICRAugmenter:
                 ),
                 author,
             )
-        assigned_author = _cda_element("assignedAuthor", author)
-        id = _cda_element("id", assigned_author)
+        assigned_author = cda_element("assignedAuthor", author)
+        id = cda_element("id", assigned_author)
         id.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, id)
-        addr = _cda_element("addr", assigned_author)
+        addr = cda_element("addr", assigned_author)
         addr.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, addr)
-        telecom = _cda_element("telecom", assigned_author)
+        telecom = cda_element("telecom", assigned_author)
         telecom.set("nullFlavor", "NA")
         self._add_previous_element_comment(null_flavor_comment, telecom)
-        assigned_authoring_device = _cda_element("assignedAuthoringDevice", assigned_author)
+        assigned_authoring_device = cda_element("assignedAuthoringDevice", assigned_author)
         self._add_previous_element_comment(
             " set to 'Data Augmentation Tool' ", assigned_authoring_device
         )
-        software_name = _cda_element("softwareName", assigned_authoring_device)
-        software_name.set("code", value=self._get_application_code_value())
+        software_name = cda_element("softwareName", assigned_authoring_device)
+        software_name.set("code", value=_APPLICATION_CODE_VALUE)
         software_name.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
         software_name.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
-        software_name.set("displayName", self._get_application_code_display())
+        software_name.set("displayName", _APPLICATION_CODE_DISPLAY)
         self._add_previous_element_comment(
             " assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool",
             software_name,
         )
-
         return author
-
-    def _handle_author_header(self) -> None:
-        """Generate and add to the augment eICR document an author element."""
-        author = self._generate_author(level="header")
-        self._augmented_element.append(author)
 
     def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
         entry = self._get_required_element_by_xpath(
             self._augmented_element, augmentation.schematron_error_xpath
         )
-        author = self._generate_author(level="data_element")
+        author = self._generate_author(is_header=False)
         entry.append(author)
 
     # TODO: this will need to be modified in the future when we have
@@ -361,7 +318,7 @@ class EICRAugmenter:
             "The data in the code and code/originalText data elements is the original data",
             entry_code,
         )
-        new_translation = _cda_element("translation", entry_code)
+        new_translation = cda_element("translation", entry_code)
         _set_attribute(new_translation, "code", augmentation.new_translation.code)
         new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
         new_translation.set("codeSystemName", "LOINC")
@@ -370,7 +327,6 @@ class EICRAugmenter:
         self._add_previous_element_comment(
             "The data in the translation is the augmented data", new_translation
         )
-
         return _absolute_local_xpath(new_translation)
 
 
