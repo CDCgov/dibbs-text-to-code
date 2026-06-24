@@ -41,6 +41,7 @@ coverage.xml
 
 # Training files
 data/training_files/embeddings
+azure_scripts/*.parquet
 
 node_modules
 
