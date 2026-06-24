@@ -59,7 +59,7 @@ class EICRAugmenter:
         """Apply augmentation to the eICR."""
         self._handle_document_id_header()
         self._handle_related_document_header()
-        self._handle_author_header()
+        self._augmented_element.append(self._generate_author())
 
         nonstandard_code_metadata: list[NonstandardCodeInstanceMetadata] = []
 
@@ -265,10 +265,6 @@ class EICRAugmenter:
             software_name,
         )
         return author
-
-    def _handle_author_header(self) -> None:
-        """Generate and add to the augment eICR document an author element."""
-        self._augmented_element.append(self._generate_author())
 
     def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
         entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
