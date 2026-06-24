@@ -699,7 +699,7 @@ requires-dist = [
     { name = "botocore" },
     { name = "lambda-handler", editable = "packages/lambda-handler" },
     { name = "opensearch-py" },
-    { name = "requests-aws4auth" },
+    { name = "requests-aws4auth", specifier = ">=1.3.2" },
 ]
 
 [package.metadata.requires-dev]
