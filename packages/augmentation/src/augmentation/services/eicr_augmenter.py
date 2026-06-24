@@ -51,7 +51,9 @@ class EICRAugmenter:
         self.application_code = ApplicationCode.TEXT_TO_CODE
         self.augmentation_date = datetime.now() if augmentation_date is None else augmentation_date
 
-        self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
+        self.original_eicr_id = self._get_required_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/id/@root"
+        )
         self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
         self.new_doc_id: str = self._generate_deterministic_id("document")
         self.new_set_id: str = self._generate_deterministic_id("set")
@@ -108,14 +110,18 @@ class EICRAugmenter:
 
     def _handle_document_id_header(self) -> None:
         # 1 first replace the id tag
-        old_id_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
+        old_id_element = self._get_required_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/id"
+        )
         # we need to retain the old tags 'tail' to preserve the spacing format
         new_id_element = self._get_new_document_id()
         new_id_element.tail = old_id_element.tail
         self._augmented_element.replace(old_id_element, new_id_element)
 
         # 2 replace the effectiveTime tag
-        old_eff_time_element = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
+        old_eff_time_element = self._get_required_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/effectiveTime"
+        )
         self._add_previous_element_comment(
             "time of data augmentation operation ", old_eff_time_element
         )
@@ -125,12 +131,11 @@ class EICRAugmenter:
         self._augmented_element.replace(old_eff_time_element, new_eff_time_element)
 
         # 3 next replace the setId tag
-        old_set_id_element = self._augmented_element.xpath(
-            cda_xpath("/ClinicalDocument/setId"), namespaces=CDA_NSMAP
+        old_set_id_element = self._get_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/setId"
         )
         new_set_id_element = self._get_new_set_id()
         if old_set_id_element:
-            old_set_id_element = old_set_id_element[0]
             # we need to retain the old tags 'tail' to preserve the spacing format
             new_set_id_element.tail = old_set_id_element.tail
             self._add_previous_element_comment("new-document-setId ", old_set_id_element)
@@ -140,14 +145,12 @@ class EICRAugmenter:
             self._add_previous_element_comment("new-document-setId ", new_set_id_element)
 
         # 4 finally replace the versionNumber tag
-        old_version_element = self._augmented_element.xpath(
-            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        old_version_element = self._get_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/versionNumber"
         )
         new_version_element = self._get_new_version_number()
         if old_version_element:
-            old_version_element = old_version_element[0]
             # we need to retain the old tags 'tail' to preserve the spacing format
-
             new_version_element.tail = old_version_element.tail
             self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
             self._augmented_element.replace(old_version_element, new_version_element)
@@ -158,7 +161,9 @@ class EICRAugmenter:
         # 5 add the new templateId tag which will also include the comments in order
         template_id = self._get_augmented_template_id()
         # find the newly added and updated document id and put the templateId right before it
-        new_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id")
+        new_id = self._get_required_element_by_xpath(
+            self._augmented_element, "/ClinicalDocument/id"
+        )
         self._add_previous_element_comment("eICR Data Augmentation Header ", new_id)
         new_id.addprevious(template_id)
         self._add_previous_element_comment("new-document-id ", new_id)
@@ -180,42 +185,41 @@ class EICRAugmenter:
             self._add_previous_element_comment("original-document-id ", parent_doc_id)
         else:
             self._add_previous_element_comment("input-document-id ", parent_doc_id)
-        parent_set_id = self._original_element.xpath(
-            cda_xpath("/ClinicalDocument/setId"), namespaces=CDA_NSMAP
+        parent_set_id = self._get_element_by_xpath(
+            self._original_element, "/ClinicalDocument/setId"
         )
         if parent_set_id:
-            parent_set_id = parent_set_id[0]
             parent_doc.append(parent_set_id)
             self._add_previous_element_comment("input-document-setId ", parent_set_id)
 
-        parent_version_number = self._original_element.xpath(
-            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        parent_version_number = self._get_element_by_xpath(
+            self._original_element, "/ClinicalDocument/versionNumber"
         )
         if parent_version_number:
-            parent_version_number = parent_version_number[0]
             parent_doc.append(parent_version_number)
             self._add_previous_element_comment(
                 "input-document-versionNumber ", parent_version_number
             )
 
-    def _get_original_by_xpath(self, xpath: str) -> Element:
-        """Get element from the original eICR by XPath."""
-        return self._get_element_by_xpath(self._original_element, xpath)
-
-    def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
-        """Get element from the augmented eICR by XPath."""
-        return self._get_element_by_xpath(self._augmented_element, xpath)
-
-    def _get_element_by_xpath(self, element: Element, xpath: str) -> Element:
+    def _get_required_element_by_xpath(self, element: Element, xpath: str) -> Element:
         """Get the first matching child element by XPath, or raise if not found."""
-        results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
-        if not results:
+        result = self._get_element_by_xpath(element, xpath)
+        if result is None:
             raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
-        return results[0]
+        return result
+
+    def _get_element_by_xpath(self, element: Element, xpath: str) -> Element | None:
+        """Get the first matching child element by XPath, or `None` if not found."""
+        results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
+        if results:
+            return results[0]
+        return None
 
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
-        parent_doc_id = self._get_original_by_xpath("/ClinicalDocument/id")
+        parent_doc_id = self._get_required_element_by_xpath(
+            self._original_element, "/ClinicalDocument/id"
+        )
         if parent_doc_id.get("assigningAuthorityName") is None:
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
@@ -250,13 +254,13 @@ class EICRAugmenter:
 
     def _get_new_version_number(self) -> Element:
         """Generate a versionNumber element for the augmented eICR document."""
-        old_version_number = self._original_element.xpath(
-            cda_xpath("/ClinicalDocument/versionNumber"), namespaces=CDA_NSMAP
+        old_version_number = self._get_element_by_xpath(
+            self._original_element, "/ClinicalDocument/versionNumber"
         )
 
         version_number_tag = _cda_element("versionNumber")
         if old_version_number:
-            version_number_tag.set("value", old_version_number[0].get("value", "1"))
+            version_number_tag.set("value", old_version_number.get("value", "1"))
         else:
             version_number_tag.set("value", "1")
 
@@ -336,14 +340,18 @@ class EICRAugmenter:
         self._augmented_element.append(author)
 
     def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
-        entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
+        entry = self._get_required_element_by_xpath(
+            self._augmented_element, augmentation.schematron_error_xpath
+        )
         author = self._generate_author(level="data_element")
         entry.append(author)
 
     # TODO: this will need to be modified in the future when we have
     # other data elements, other than observation.codes that are being augmented
     def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
-        entry_code = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath + "/code")
+        entry_code = self._get_required_element_by_xpath(
+            self._augmented_element, augmentation.schematron_error_xpath + "/code"
+        )
         self._add_previous_element_comment(
             "This data has been augmented with a standard LOINC code", entry_code
         )
