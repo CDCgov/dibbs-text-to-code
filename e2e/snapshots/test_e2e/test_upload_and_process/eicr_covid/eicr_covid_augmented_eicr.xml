@@ -20,7 +20,7 @@
     </code>
     <title>Initial Public Health Case Report</title>
     <!--DATA AUGMENTATION: time of data augmentation operation -->
-    <effectiveTime value="20260213152757"/>
+    <effectiveTime value="20260213202757"/>
     <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" displayName="Normal"/>
     <languageCode code="en-US"/>
     <!--DATA AUGMENTATION: new-document-setId -->
@@ -480,7 +480,7 @@
                                         <!--DATA AUGMENTATION: functionCode specifies type of change 'code-text-to-code' which signifies that the code in this observation has been augmented with a code derived from the text in the code element -->
                                         <functionCode code="code-text-to-code" codeSystem="2.16.840.1.113883.10.20.15.2.7.1" codeSystemName="eCRDataAugmentation"/>
                                         <!--DATA AUGMENTATION: time of data augmentation operation -->
-                                        <effectiveTime value="20260213152757"/>
+                                        <effectiveTime value="20260213202757"/>
                                         <assignedAuthor>
                                             <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
                                             <id nullFlavor="NA"/>
@@ -680,7 +680,7 @@
     </relatedDocument>
     <author>
         <!--DATA AUGMENTATION: time of data augmentation operation -->
-        <effectiveTime value="20260213152757"/>
+        <effectiveTime value="20260213202757"/>
         <assignedAuthor>
             <!--DATA AUGMENTATION: set to nullFlavor 'NA' -->
             <id nullFlavor="NA"/>
