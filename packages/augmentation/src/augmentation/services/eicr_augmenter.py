@@ -37,7 +37,6 @@ class EICRAugmenter:
         self,
         document: str,
         nonstandard_codes: list[NonstandardCodeInstance],
-        augmentation_date: datetime | None = None,
         deterministic_id_seed: str | None = None,
     ):
         """Initialize EICRAugmenter with an eICR XML document and the nonstandard codes to resolve."""
@@ -45,9 +44,7 @@ class EICRAugmenter:
         self._original_element = parse_document(self.original_xml)
         self._augmented_element = copy.deepcopy(self._original_element)
 
-        self.augmentation_date = (
-            datetime.now(UTC) if augmentation_date is None else augmentation_date
-        )
+        self.augmentation_date = datetime.now(UTC)
 
         self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
         self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
