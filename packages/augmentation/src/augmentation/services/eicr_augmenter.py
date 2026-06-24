@@ -91,38 +91,38 @@ class EICRAugmenter:
 
     def _replace_element(self, xpath: str, new_element: Element) -> None:
         """Replace a child in the augmented document, preserving whitespace tail."""
-        old = self._get_augmented_tag_by_xpath(xpath)
+        old = self._get_required_element_by_xpath(self._augmented_element, xpath)
         new_element.tail = old.tail
         self._augmented_element.replace(old, new_element)
 
     def _handle_document_id_header(self) -> None:
         self._replace_element("/ClinicalDocument/id", self._get_new_document_id())
 
-        old_eff_time_element = self._get_required_element_by_xpath(
+        old_eff_time = self._get_required_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/effectiveTime"
         )
         self._add_previous_element_comment("time of data augmentation operation ", old_eff_time)
         self._replace_element("/ClinicalDocument/effectiveTime", self._get_new_effective_time())
 
-       old_set_id_element = self._get_element_by_xpath(
-            self._augmented_element, "/ClinicalDocument/setId"
-        )
-        if old_set_id_element is not None:
+        old_set_id = self._get_element_by_xpath(self._augmented_element, "/ClinicalDocument/setId")
+        new_set_id = self._get_new_set_id()
+        if old_set_id is not None:
             self._add_previous_element_comment("new-document-setId ", old_set_id)
-            self._replace_element("/ClinicalDocument/setId", self._get_new_set_id())
+            self._replace_element("/ClinicalDocument/setId", new_set_id)
         else:
-            self._augmented_element.append(new_set_id_element)
-            self._add_previous_element_comment("new-document-setId ", new_set_id_element)
-        
-        old_version_element = self._get_element_by_xpath(
+            self._augmented_element.append(new_set_id)
+            self._add_previous_element_comment("new-document-setId ", new_set_id)
+
+        old_version = self._get_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/versionNumber"
         )
-        if old_version_element is not None:
+        new_version = self._get_new_version_number()
+        if old_version is not None:
             self._add_previous_element_comment("new-document-versionNumber ", old_version)
             self._replace_element("/ClinicalDocument/versionNumber", self._get_new_version_number())
         else:
-            self._augmented_element.append(new_version_element)
-            self._add_previous_element_comment("new-document-versionNumber ", new_version_element)
+            self._augmented_element.append(new_version)
+            self._add_previous_element_comment("new-document-versionNumber ", new_version)
 
         new_id = self._get_required_element_by_xpath(
             self._augmented_element, "/ClinicalDocument/id"
@@ -186,14 +186,6 @@ class EICRAugmenter:
             parent_doc_id.set("assigningAuthorityName", "original-document")
         return parent_doc_id
 
-    def _get_old_set_id(self) -> Element:
-        """Extract the parent document setId from original eICR document."""
-        return self._get_original_by_xpath("/ClinicalDocument/setId")
-
-    def _get_old_version_number(self) -> Element:
-        """Extract the parent versionNumber from original eICR document."""
-        return self._get_original_by_xpath("/ClinicalDocument/versionNumber")
-
     def _generate_deterministic_id(self, identifier_type: str) -> str:
         """Generate a stable UUID for augmented eICR identifiers."""
         return str(
@@ -228,7 +220,7 @@ class EICRAugmenter:
             self._original_element, "/ClinicalDocument/versionNumber"
         )
 
-        version_number_tag = _cda_element("versionNumber")
+        version_number_tag = cda_element("versionNumber")
         if old_version_number is not None:
             version_number_tag.set("value", old_version_number.get("value", "1"))
         else:
