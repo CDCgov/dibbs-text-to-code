@@ -7,6 +7,7 @@ import time_machine
 from pytest_snapshot.plugin import Snapshot
 
 import lambda_handler
+from augmentation.models import Metadata
 from augmentation_lambda import lambda_function
 from shared_models import CdaInstanceIdentifier, PassthroughReason, TTCAugmenterInput
 from validation import ValidationResult, validate_eicr
@@ -19,8 +20,12 @@ TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
 SUCCESS_CODE = 200
 # The diff-based gate validates the augmented eICR, then the original as a baseline.
 EXPECTED_DIFF_VALIDATION_CALLS = 2
-EXPECTED_ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
-EXPECTED_AUGMENTED_EICR_ID = "d44dc1c6-8a0c-5236-906e-12f6475589ec"
+EXPECTED_ORIGINAL_EICR_ID = CdaInstanceIdentifier(
+    root="c8516bdc-8bb2-40aa-8dae-20a77546488f", extension=None
+)
+EXPECTED_AUGMENTED_EICR_ID = CdaInstanceIdentifier(
+    root="d44dc1c6-8a0c-5236-906e-12f6475589ec", extension=None
+)
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -108,14 +113,15 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
-        assert metadata["augmented_eicr_id"] != metadata["original_eicr_id"]
-        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["passthrough_reason"] is None
+        metadata = Metadata.model_validate_json(metadata_raw)
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata.augmented_eicr_id != metadata.original_eicr_id
+        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.passthrough_reason is None
         snapshot.assert_match(
-            _serialize_snapshot_value(metadata),
+            _serialize_snapshot_value(metadata.model_dump(mode="json")),
             "handler_writes_outputs_metadata.json",
         )
 
@@ -140,7 +146,7 @@ class TestHandler:
             )
         ).model_copy(
             update={
-                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID),
+                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID.root),
                 "passthrough_reason": PassthroughReason.NO_CODE_MATCHES,
             }
         )
@@ -170,14 +176,16 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["passthrough_reason"] == PassthroughReason.NO_CODE_MATCHES
+        metadata = Metadata.model_validate_json(metadata_raw)
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.original_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.original_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
         snapshot.assert_match(
-            _serialize_snapshot_value(metadata),
+            _serialize_snapshot_value(metadata.model_dump(mode="json")),
             "ttc_passthrough.json",
         )
 
@@ -193,7 +201,7 @@ class TestHandler:
             )
         ).model_copy(
             update={
-                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID),
+                "original_eicr_id": CdaInstanceIdentifier(root=EXPECTED_ORIGINAL_EICR_ID.root),
                 "passthrough_reason": None,
             }
         )
@@ -221,12 +229,13 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
-        assert metadata["augmented_eicr_id"] != metadata["original_eicr_id"]
-        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["passthrough_reason"] is None
+        metadata = Metadata.model_validate_json(metadata_raw)
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata.augmented_eicr_id != metadata.original_eicr_id
+        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.passthrough_reason is None
 
         actual_validation_results = validate_eicr(augmented_eicr)
         assert actual_validation_results == []
@@ -264,19 +273,21 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["original_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] != TEST_PERSISTENCE_ID
-        assert metadata["error"] == "augmentation boom"
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
+        metadata = Metadata.model_validate_json(metadata_raw)
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.original_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.original_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.error == "augmentation boom"
+        assert metadata.passthrough_reason == PassthroughReason.AUGMENTATION_EXCEPTION
         snapshot.assert_match(
-            _serialize_snapshot_value(metadata),
+            _serialize_snapshot_value(metadata.model_dump(mode="json")),
             "augmentation_fails.json",
         )
 
-    def test_handler_writes_original_eicr_with_persistence_id_when_augmenter_constructor_fails_without_original_eicr_id(
+    def test_handler_writes_original_eicr_with_original_eicr_id_when_augmenter_constructor_fails_without_original_eicr_id(
         self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context
     ) -> None:
         original_eicr = lambda_handler.get_file_content_from_s3(
@@ -320,12 +331,16 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
+        metadata = Metadata.model_validate_json(metadata_raw)
 
-        assert metadata["original_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["augmented_eicr_id"] == TEST_PERSISTENCE_ID
-        assert metadata["error"] == "constructor boom"
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_EXCEPTION
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.original_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.original_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
+        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
+        assert metadata.error == "constructor boom"
+        assert metadata.passthrough_reason == PassthroughReason.AUGMENTATION_EXCEPTION
 
     def test_handler_writes_original_eicr_when_augmented_eicr_validation_throws(
         self,
@@ -361,12 +376,12 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
+        metadata = Metadata.model_validate_json(metadata_raw)
 
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["error"] == "validation boom"
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.error == "validation boom"
+        assert metadata.passthrough_reason == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
     def test_handler_writes_original_eicr_when_augmentation_introduces_new_validation_error(
         self,
@@ -413,13 +428,13 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
+        metadata = Metadata.model_validate_json(metadata_raw)
 
-        assert metadata["original_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata["augmented_eicr_id"] == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
         # Only the newly-introduced error is recorded, not the pre-existing one.
-        assert metadata["error"] == json.dumps([new_error.model_dump()])
-        assert metadata["passthrough_reason"] == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
+        assert metadata.error == json.dumps([new_error.model_dump()])
+        assert metadata.passthrough_reason == PassthroughReason.AUGMENTATION_VALIDATION_FAILURE
 
     def test_handler_emits_augmented_eicr_when_validation_errors_are_preexisting(
         self,
@@ -461,11 +476,11 @@ class TestHandler:
             bucket_name=S3_BUCKET,
             object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
         )
-        metadata = json.loads(metadata_raw)
+        metadata = Metadata.model_validate_json(metadata_raw)
 
-        assert metadata["augmented_eicr_id"] == EXPECTED_AUGMENTED_EICR_ID
-        assert metadata["error"] is None
-        assert metadata["passthrough_reason"] is None
+        assert metadata.augmented_eicr_id == EXPECTED_AUGMENTED_EICR_ID
+        assert metadata.error is None
+        assert metadata.passthrough_reason is None
 
     def test_build_augmentation_output_uses_root_and_extension_when_passthrough_reason_is_present(
         self, mocker
@@ -477,7 +492,7 @@ class TestHandler:
             augmenter_input=TTCAugmenterInput(
                 persistence_id=TEST_PERSISTENCE_ID,
                 original_eicr_id=CdaInstanceIdentifier(
-                    root=EXPECTED_ORIGINAL_EICR_ID,
+                    root=EXPECTED_ORIGINAL_EICR_ID.root,
                     extension="extension-1",
                 ),
                 passthrough_reason=PassthroughReason.NO_CODE_MATCHES,
@@ -487,8 +502,14 @@ class TestHandler:
         augmenter_mock.assert_not_called()
         assert output.persistence_id == TEST_PERSISTENCE_ID
         assert output.augmented_eicr == "<ClinicalDocument />"
-        assert output.metadata.original_eicr_id == f"{EXPECTED_ORIGINAL_EICR_ID}^extension-1"
-        assert output.metadata.augmented_eicr_id == f"{EXPECTED_ORIGINAL_EICR_ID}^extension-1"
+        assert output.metadata.original_eicr_id == CdaInstanceIdentifier(
+            root=EXPECTED_ORIGINAL_EICR_ID.root,
+            extension="extension-1",
+        )
+        assert output.metadata.augmented_eicr_id == CdaInstanceIdentifier(
+            root=EXPECTED_ORIGINAL_EICR_ID.root,
+            extension="extension-1",
+        )
         assert output.metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
 
     def test_build_augmentation_output_uses_extension_when_passthrough_reason_is_present(
@@ -508,8 +529,10 @@ class TestHandler:
         augmenter_mock.assert_not_called()
         assert output.persistence_id == TEST_PERSISTENCE_ID
         assert output.augmented_eicr == "<ClinicalDocument />"
-        assert output.metadata.original_eicr_id == "extension-only"
-        assert output.metadata.augmented_eicr_id == "extension-only"
+        assert output.metadata.original_eicr_id == CdaInstanceIdentifier(extension="extension-only")
+        assert output.metadata.augmented_eicr_id == CdaInstanceIdentifier(
+            extension="extension-only"
+        )
         assert output.metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
 
     def test_build_original_eicr_output_sets_metadata_ids_to_original_eicr_id(self) -> None:
@@ -523,13 +546,11 @@ class TestHandler:
 
         assert output.persistence_id == TEST_PERSISTENCE_ID
         assert output.augmented_eicr == "<ClinicalDocument />"
-        assert output.metadata.model_dump(mode="json") == {
-            "original_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
-            "augmented_eicr_id": EXPECTED_ORIGINAL_EICR_ID,
-            "nonstandard_codes": [],
-            "error": None,
-            "passthrough_reason": PassthroughReason.NO_CODE_MATCHES.value,
-        }
+        assert output.metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert output.metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
+        assert output.metadata.nonstandard_codes == []
+        assert output.metadata.error is None
+        assert output.metadata.passthrough_reason == PassthroughReason.NO_CODE_MATCHES
 
     def test_handler_source_bucket_routing(
         self,

@@ -8,7 +8,7 @@ from lxml.etree import Element
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
 from augmentation.services.eicr_utils import CDA_NSMAP, cda_element, cda_xpath, parse_document
-from shared_models import NonstandardCodeInstance
+from shared_models import CdaInstanceIdentifier, NonstandardCodeInstance
 
 _AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
 _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
@@ -46,8 +46,18 @@ class EICRAugmenter:
 
         self.augmentation_date = datetime.now(UTC)
 
-        self.original_eicr_id = self._get_augmented_tag_by_xpath("/ClinicalDocument/id/@root")
-        self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
+        self.original_eicr_id = CdaInstanceIdentifier(
+            root=self._get_augmented_attribute_by_xpath("/ClinicalDocument/id/@root"),
+            extension=self._get_optional_augmented_attribute_by_xpath(
+                "/ClinicalDocument/id/@extension"
+            ),
+        )
+        self.deterministic_id_seed = (
+            deterministic_id_seed
+            or self.original_eicr_id.root
+            or self.original_eicr_id.extension
+            or ""
+        )
         self.new_doc_id: str = self._generate_deterministic_id("document")
         self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
@@ -81,8 +91,8 @@ class EICRAugmenter:
         return AugmentResult(
             augmented_xml,
             Metadata(
-                original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
-                augmented_eicr_id=self.new_doc_id,
+                original_eicr_id=self.original_eicr_id,
+                augmented_eicr_id=CdaInstanceIdentifier(root=self.new_doc_id, extension=None),
                 nonstandard_codes=nonstandard_code_metadata,
             ),
         )
@@ -144,12 +154,27 @@ class EICRAugmenter:
         """Get element from the augmented eICR by XPath."""
         return self._get_element_by_xpath(self._augmented_element, xpath)
 
+    def _get_augmented_attribute_by_xpath(self, xpath: str) -> str:
+        return self._get_attribute_by_xpath(self._augmented_element, xpath)
+
+    def _get_optional_augmented_attribute_by_xpath(self, xpath: str) -> str | None:
+        results = self._augmented_element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
+        if not results:
+            return None
+        return str(results[0])
+
     def _get_element_by_xpath(self, element: Element, xpath: str) -> Element:
         """Get the first matching child element by XPath, or raise if not found."""
         results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
         if not results:
             raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
         return results[0]
+
+    def _get_attribute_by_xpath(self, element: Element, xpath: str) -> str:
+        results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
+        if not results:
+            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
+        return str(results[0])
 
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
@@ -195,7 +220,7 @@ class EICRAugmenter:
         return effective_time_tag
 
     def _get_new_version_number(self) -> Element:
-        """Generate a versionNumber element for the augmented eICR document."""
+        """Generate a new versionNumber element for the augmented eICR document."""
         old_version_number = self._get_old_version_number()
         version_number_tag = cda_element("versionNumber")
         version_number_tag.set("value", old_version_number.get("value", "1"))

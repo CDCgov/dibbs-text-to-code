@@ -8,12 +8,14 @@ from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import Code, DataField, NonstandardCodeInstance
+from shared_models import CdaInstanceIdentifier, Code, DataField, NonstandardCodeInstance
 
 EXAMPLE_EICRS_DIRECTORY = Path(__file__).parent.parent / "assets"
 BASE_XPATH = "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/originalText/text()"
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
-ORIGINAL_EICR_ID = "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+ORIGINAL_EICR_ID = CdaInstanceIdentifier(
+    root="c8516bdc-8bb2-40aa-8dae-20a77546488f", extension=None
+)
 
 eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
 with eicr_path.open() as f:
@@ -66,7 +68,7 @@ class TestEicrAugmenter:
         snapshot.assert_match(result.augmented_xml.strip(), "basic_eicr_augmented.xml")
         assert result.metadata == Metadata(
             original_eicr_id=ORIGINAL_EICR_ID,
-            augmented_eicr_id=augmenter.new_doc_id,
+            augmented_eicr_id=CdaInstanceIdentifier(root=augmenter.new_doc_id),
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
@@ -104,7 +106,7 @@ class TestEicrAugmenter:
         snapshot.assert_match(result.augmented_xml.strip(), "basic_eicr_related_doc_augmented.xml")
         assert result.metadata == Metadata(
             original_eicr_id=ORIGINAL_EICR_ID,
-            augmented_eicr_id=augmenter.new_doc_id,
+            augmented_eicr_id=CdaInstanceIdentifier(root=augmenter.new_doc_id),
             nonstandard_codes=[
                 NonstandardCodeInstanceMetadata(
                     schematron_error_xpath="/ClinicalDocument/component/structuredBody/component/section/entry/component/observation",
