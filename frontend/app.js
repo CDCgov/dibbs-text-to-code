@@ -1,13 +1,3 @@
-// ── GOV BANNER TOGGLE ──
-(function () {
-  const btn = document.getElementById('banner-toggle');
-  const content = document.getElementById('banner-content');
-  btn.addEventListener('click', () => {
-    const open = content.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-})();
-
 // ── STEP INDICATOR (Upload → Review → Export) ──
 function setStep(n) {
   document.querySelectorAll('#step-indicator .usa-step-indicator__segment').forEach(seg => {
