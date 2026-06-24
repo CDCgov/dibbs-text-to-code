@@ -6,8 +6,7 @@ from uuid import NAMESPACE_URL, uuid5
 from lxml import etree
 from lxml.etree import Element
 
-from augmentation.models import Metadata
-from augmentation.models.application import NonstandardCodeInstanceMetadata
+from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
 from augmentation.services.eicr_utils import CDA_NSMAP, cda_element, cda_xpath, parse_document
 from shared_models import NonstandardCodeInstance
 
