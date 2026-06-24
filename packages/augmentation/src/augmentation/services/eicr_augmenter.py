@@ -1,4 +1,5 @@
 import copy
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid5
 
@@ -15,6 +16,14 @@ _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
 _AUTHOR_FUNCTION_CODE_SYSTEM_NAME: str = "eCRDataAugmentation"
 _APPLICATION_CODE_VALUE: str = "text-to-code"
 _APPLICATION_CODE_DISPLAY: str = "Text-to-Code"
+
+
+@dataclass(frozen=True)
+class AugmentResult:
+    """The augmented XML and the associated metadata."""
+
+    augmented_xml: str
+    metadata: Metadata
 
 
 class EICRAugmenter:
@@ -47,15 +56,7 @@ class EICRAugmenter:
         self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
 
-    @property
-    def augmented_xml(self) -> str:
-        """Get the augmented XML document as a string."""
-        etree.indent(self._augmented_element, space="    ")
-        return etree.tostring(
-            self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
-        ).decode()
-
-    def augment(self) -> Metadata:
+    def augment(self) -> AugmentResult:
         """Apply augmentation to the eICR."""
         self._handle_document_id_header()
         self._handle_related_document_header()
@@ -76,10 +77,18 @@ class EICRAugmenter:
                 )
             )
 
-        return Metadata(
-            original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
-            augmented_eicr_id=self.new_doc_id,
-            nonstandard_codes=nonstandard_code_metadata,
+        etree.indent(self._augmented_element, space="    ")
+        augmented_xml = etree.tostring(
+            self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
+        ).decode()
+
+        return AugmentResult(
+            augmented_xml,
+            Metadata(
+                original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
+                augmented_eicr_id=self.new_doc_id,
+                nonstandard_codes=nonstandard_code_metadata,
+            ),
         )
 
     def _replace_element(self, xpath: str, new_element: Element) -> None:
