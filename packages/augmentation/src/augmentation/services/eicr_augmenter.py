@@ -135,7 +135,7 @@ class EICRAugmenter:
             self._augmented_element, "/ClinicalDocument/setId"
         )
         new_set_id_element = self._get_new_set_id()
-        if old_set_id_element:
+        if old_set_id_element is not None:
             # we need to retain the old tags 'tail' to preserve the spacing format
             new_set_id_element.tail = old_set_id_element.tail
             self._add_previous_element_comment("new-document-setId ", old_set_id_element)
@@ -149,7 +149,7 @@ class EICRAugmenter:
             self._augmented_element, "/ClinicalDocument/versionNumber"
         )
         new_version_element = self._get_new_version_number()
-        if old_version_element:
+        if old_version_element is not None:
             # we need to retain the old tags 'tail' to preserve the spacing format
             new_version_element.tail = old_version_element.tail
             self._add_previous_element_comment("new-document-versionNumber ", old_version_element)
@@ -188,14 +188,14 @@ class EICRAugmenter:
         parent_set_id = self._get_element_by_xpath(
             self._original_element, "/ClinicalDocument/setId"
         )
-        if parent_set_id:
+        if parent_set_id is not None:
             parent_doc.append(parent_set_id)
             self._add_previous_element_comment("input-document-setId ", parent_set_id)
 
         parent_version_number = self._get_element_by_xpath(
             self._original_element, "/ClinicalDocument/versionNumber"
         )
-        if parent_version_number:
+        if parent_version_number is not None:
             parent_doc.append(parent_version_number)
             self._add_previous_element_comment(
                 "input-document-versionNumber ", parent_version_number
@@ -259,7 +259,7 @@ class EICRAugmenter:
         )
 
         version_number_tag = _cda_element("versionNumber")
-        if old_version_number:
+        if old_version_number is not None:
             version_number_tag.set("value", old_version_number.get("value", "1"))
         else:
             version_number_tag.set("value", "1")
