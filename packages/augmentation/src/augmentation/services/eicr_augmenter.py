@@ -74,9 +74,6 @@ class EICRAugmenter:
             self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
         ).decode()
 
-    def _get_application_code_display(self) -> str:
-        return self.application_code.display
-
     def augment(self) -> Metadata:
         """Apply augmentation to the eICR."""
         self._handle_document_id_header()
@@ -297,7 +294,7 @@ class EICRAugmenter:
         software_name.set("code", value=self.application_code.code)
         software_name.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
         software_name.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
-        software_name.set("displayName", self._get_application_code_display())
+        software_name.set("displayName", self.application_code.display)
         self._add_previous_element_comment(
             " assignedAuthoringDevice/softwareName specifies that this document has been transformed using the Text-to-Code data augmentation tool",
             software_name,
