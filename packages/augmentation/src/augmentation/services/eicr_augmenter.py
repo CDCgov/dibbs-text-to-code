@@ -74,9 +74,6 @@ class EICRAugmenter:
             self._augmented_element, pretty_print=True, encoding="utf-8", xml_declaration=True
         ).decode()
 
-    def _get_application_code_value(self) -> str:
-        return self.application_code.code
-
     def _get_application_code_display(self) -> str:
         return self.application_code.display
 
@@ -210,7 +207,7 @@ class EICRAugmenter:
         return str(
             uuid5(
                 NAMESPACE_URL,
-                f"{self._get_application_code_value()}:{self.deterministic_id_seed}:{identifier_type}",
+                f"{self.application_code.code}:{self.deterministic_id_seed}:{identifier_type}",
             )
         )
 
@@ -218,7 +215,7 @@ class EICRAugmenter:
         """Generate a new document ID element for the augmented eICR document."""
         doc_id_tag = _cda_element("id")
         doc_id_tag.set("root", self.new_doc_id)
-        doc_id_tag.set("assigningAuthorityName", self._get_application_code_value())
+        doc_id_tag.set("assigningAuthorityName", self.application_code.code)
         return doc_id_tag
 
     def _get_new_set_id(self) -> Element:
@@ -297,7 +294,7 @@ class EICRAugmenter:
             " set to 'Data Augmentation Tool' ", assigned_authoring_device
         )
         software_name = _cda_element("softwareName", assigned_authoring_device)
-        software_name.set("code", value=self._get_application_code_value())
+        software_name.set("code", value=self.application_code.code)
         software_name.set("codeSystem", value=_AUTHOR_FUNCTION_CODE_SYSTEM)
         software_name.set("codeSystemName", value=_AUTHOR_FUNCTION_CODE_SYSTEM_NAME)
         software_name.set("displayName", self._get_application_code_display())
