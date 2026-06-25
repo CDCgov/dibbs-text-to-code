@@ -104,6 +104,7 @@ class EICRAugmenter:
         self._augmented_element.replace(old, new_element)
 
     def _handle_document_id_header(self) -> None:
+        """Replace the document ID, effectiveTime, setId, and versionNumber in the augmented eICR."""
         self._replace_element("/ClinicalDocument/id", self._get_new_document_id())
 
         old_eff_time = self._get_augmented_tag_by_xpath("/ClinicalDocument/effectiveTime")
@@ -155,9 +156,11 @@ class EICRAugmenter:
         return self._get_element_by_xpath(self._augmented_element, xpath)
 
     def _get_augmented_attribute_by_xpath(self, xpath: str) -> str:
+        """Get attribute from the augmented eICR by XPath."""
         return self._get_attribute_by_xpath(self._augmented_element, xpath)
 
     def _get_optional_augmented_attribute_by_xpath(self, xpath: str) -> str | None:
+        """Get attribute from the augmented eICR by XPath, or None if not found."""
         results = self._augmented_element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
         if not results:
             return None
@@ -171,6 +174,7 @@ class EICRAugmenter:
         return results[0]
 
     def _get_attribute_by_xpath(self, element: Element, xpath: str) -> str:
+        """Get the first matching attribute by XPath, or raise if not found."""
         results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
         if not results:
             raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
@@ -239,6 +243,7 @@ class EICRAugmenter:
         element.addprevious(etree.Comment(f"DATA AUGMENTATION: {comment.strip()} "))
 
     def _generate_author(self, is_header: bool = True) -> Element:
+        """Generate an author element for the augmented eICR document."""
         null_flavor_comment = " set to nullFlavor 'NA' "
         author = cda_element("author")
         if not is_header:
@@ -289,12 +294,14 @@ class EICRAugmenter:
         return author
 
     def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
+        """Add an author entry for the given nonstandard code augmentation."""
         entry = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath)
         entry.append(self._generate_author(is_header=False))
 
     # TODO: this will need to be modified in the future when we have
     # other data elements, other than observation.codes that are being augmented
     def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
+        """Add a translation element for the given nonstandard code augmentation."""
         entry_code = self._get_augmented_tag_by_xpath(augmentation.schematron_error_xpath + "/code")
         self._add_previous_element_comment(
             "This data has been augmented with a standard LOINC code", entry_code
@@ -316,6 +323,12 @@ class EICRAugmenter:
 
 
 def _set_attribute(element: Element, key: str, value: str | None) -> None:
+    """Set an attribute on an element if the value is not None.
+
+    :param element: The XML element to set the attribute on.
+    :param key: The attribute name.
+    :param value: The attribute value. If None, the attribute will not be set.
+    """
     if value:
         element.set(key, value)
 

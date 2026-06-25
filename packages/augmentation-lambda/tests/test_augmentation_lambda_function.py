@@ -287,60 +287,27 @@ class TestHandler:
             "augmentation_fails.json",
         )
 
-    def test_handler_writes_original_eicr_with_original_eicr_id_when_augmenter_constructor_fails_without_original_eicr_id(
-        self, example_sqs_event, mock_aws_setup, mocker, mock_lambda_context
+    def test_build_augmentation_output_uses_null_flavor_when_passthrough_reason_is_present_without_original_eicr_id(
+        self, mocker
     ) -> None:
-        original_eicr = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
+        augmenter_mock = mocker.patch("augmentation_lambda.lambda_function.EICRAugmenter")
+
+        output = lambda_function._build_augmentation_output(
+            persistence_id=TEST_PERSISTENCE_ID,
+            original_eicr="<ClinicalDocument />",
+            augmenter_input=TTCAugmenterInput(
+                persistence_id=TEST_PERSISTENCE_ID,
+                original_eicr_id=None,
+                passthrough_reason=PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS,
+            ),
         )
 
-        ttc_output = json.loads(
-            lambda_handler.get_file_content_from_s3(
-                bucket_name=S3_BUCKET,
-                object_key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            )
-        )
-        ttc_output.pop("original_eicr_id", None)
-        ttc_output["passthrough_reason"] = None
-
-        mock_aws_setup.put_object(
-            Bucket=S3_BUCKET,
-            Key=f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
-            Body=json.dumps(ttc_output).encode("utf-8"),
-        )
-
-        mocker.patch(
-            "augmentation_lambda.lambda_function.EICRAugmenter",
-            side_effect=Exception("constructor boom"),
-        )
-
-        result = lambda_function.handler(example_sqs_event, mock_lambda_context)
-
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
-
-        augmented_eicr = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"{AUGMENTED_EICR_PREFIX}{TEST_PERSISTENCE_ID}",
-        )
-        assert augmented_eicr == original_eicr
-
-        metadata_raw = lambda_handler.get_file_content_from_s3(
-            bucket_name=S3_BUCKET,
-            object_key=f"{AUGMENTATION_METADATA_PREFIX}{TEST_PERSISTENCE_ID}",
-        )
-        metadata = Metadata.model_validate_json(metadata_raw)
-
-        assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata.augmented_eicr_id == EXPECTED_ORIGINAL_EICR_ID
-        assert metadata.original_eicr_id.root != TEST_PERSISTENCE_ID
-        assert metadata.original_eicr_id.extension != TEST_PERSISTENCE_ID
-        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
-        assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
-        assert metadata.error == "constructor boom"
-        assert metadata.passthrough_reason == PassthroughReason.AUGMENTATION_EXCEPTION
+        augmenter_mock.assert_not_called()
+        assert output.persistence_id == TEST_PERSISTENCE_ID
+        assert output.augmented_eicr == "<ClinicalDocument />"
+        assert output.metadata.original_eicr_id == CdaInstanceIdentifier(null_flavor="NI")
+        assert output.metadata.augmented_eicr_id == CdaInstanceIdentifier(null_flavor="NI")
+        assert output.metadata.passthrough_reason == PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
 
     def test_handler_writes_original_eicr_when_augmented_eicr_validation_throws(
         self,

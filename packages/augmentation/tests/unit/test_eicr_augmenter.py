@@ -46,6 +46,21 @@ class TestEicrAugmenter:
         augmenter = EICRAugmenter(BASIC_ECR, [])
         assert augmenter.original_xml == BASIC_ECR
 
+    def test_original_eicr_id_includes_extension_when_present(self):
+        """Tests original eICR ID includes extension when present."""
+        eicr_with_extension = BASIC_ECR.replace(
+            'root="c8516bdc-8bb2-40aa-8dae-20a77546488f"',
+            'root="c8516bdc-8bb2-40aa-8dae-20a77546488f" extension="extension-1"',
+            1,
+        )
+
+        augmenter = EICRAugmenter(eicr_with_extension, [])
+
+        assert augmenter.original_eicr_id == CdaInstanceIdentifier(
+            root="c8516bdc-8bb2-40aa-8dae-20a77546488f",
+            extension="extension-1",
+        )
+
     def test_basic_eicr(self, snapshot: Snapshot):
         """Tests augmenter run method."""
         augmenter = EICRAugmenter(
@@ -174,6 +189,16 @@ class TestEicrAugmenter:
             match=r"Unable to find tag in eICR document for XPath: /ClinicalDocument/id/@root",
         ):
             EICRAugmenter(EMPTY_ECR, [])
+
+    def test_get_augmented_tag_by_xpath_raises_when_element_is_missing(self):
+        """Tests missing augmented element raises a helpful error."""
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+
+        with pytest.raises(
+            ValueError,
+            match=r"Unable to find tag in eICR document for XPath: /ClinicalDocument/notARealTag",
+        ):
+            augmenter._get_augmented_tag_by_xpath("/ClinicalDocument/notARealTag")
 
     def test_get_new_version_number_defaults_to_one_when_value_is_missing(self):
         """Tests versionNumber defaults to 1 when value attribute is missing."""

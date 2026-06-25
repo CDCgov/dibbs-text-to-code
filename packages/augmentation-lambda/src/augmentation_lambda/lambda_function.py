@@ -6,13 +6,11 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from lxml.etree import Element
 
 import lambda_handler
 from augmentation.models import Metadata
 from augmentation.models.application import NonstandardCodeInstanceMetadata, TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from augmentation.services.eicr_utils import CDA_NSMAP, cda_xpath, parse_document
 from shared_models import CdaInstanceIdentifier, PassthroughReason, TTCAugmenterInput
 from validation import validate_eicr
 
@@ -193,17 +191,12 @@ def _build_augmentation_output(
     :param augmenter_input: The parsed TTC augmenter input.
     :return: The augmentation-stage output to write to S3.
     """
-    original_eicr_identifier = augmenter_input.original_eicr_id
-    original_eicr_id = (
-        original_eicr_identifier
-        if original_eicr_identifier is not None
-        else _get_original_eicr_id(original_eicr)
-    )
+    original_eicr_id = augmenter_input.original_eicr_id
 
     if augmenter_input.passthrough_reason is not None:
         return _build_original_eicr_output(
             persistence_id=persistence_id,
-            original_eicr_id=original_eicr_id,
+            original_eicr_id=original_eicr_id or CdaInstanceIdentifier(null_flavor="NI"),
             original_eicr=original_eicr,
             passthrough_reason=augmenter_input.passthrough_reason,
         )
@@ -215,7 +208,7 @@ def _build_augmentation_output(
             deterministic_id_seed=augmenter_input.persistence_id,
         )
 
-        if augmenter_input.original_eicr_id is None:
+        if original_eicr_id is None:
             original_eicr_id = augmenter.original_eicr_id
 
         output = _build_augmented_eicr_output(
@@ -223,6 +216,14 @@ def _build_augmentation_output(
             augmenter=augmenter,
         )
     except Exception as e:
+        if original_eicr_id is None:
+            logger.exception(
+                "Augmentation failed before original eICR ID could be resolved",
+                status="error",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            raise
+
         logger.exception(
             "Augmentation failed; writing original eICR output",
             status="passthrough",
@@ -312,28 +313,6 @@ def _build_augmented_eicr_output(
         augmented_eicr=result.augmented_xml,
         metadata=result.metadata,
     )
-
-
-def _get_original_eicr_id(original_eicr: str) -> CdaInstanceIdentifier:
-    document = parse_document(original_eicr)
-    root = _get_required_attribute_by_xpath(document, "/ClinicalDocument/id/@root")
-    extension = _get_optional_attribute_by_xpath(document, "/ClinicalDocument/id/@extension")
-
-    return CdaInstanceIdentifier(root=root, extension=extension)
-
-
-def _get_required_attribute_by_xpath(element: Element, xpath: str) -> str:
-    results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
-    if not results:
-        raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
-    return str(results[0])
-
-
-def _get_optional_attribute_by_xpath(element: Element, xpath: str) -> str | None:
-    results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
-    if not results:
-        return None
-    return str(results[0])
 
 
 def _load_ttc_output(persistence_id: str, bucket_name: str) -> TTCAugmenterInput:
