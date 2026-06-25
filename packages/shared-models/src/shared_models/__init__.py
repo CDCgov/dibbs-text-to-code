@@ -6,10 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class FrozenBaseModel(BaseModel):
     """A custom base model that all other models can inherit so that they are frozen and do not allow extra attributes."""
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = ConfigDict(frozen=True, extra="forbid", populate_by_name=True)
 
 
 class CdaInstanceIdentifier(FrozenBaseModel):
