@@ -110,7 +110,9 @@ class EICRAugmenter:
             self._add_previous_element_comment("new-document-setId ", old_set_id)
             self._replace_element("/ClinicalDocument/setId", new_set_id)
         else:
-            self._augmented_element.append(new_set_id)
+            self._get_required_element_by_xpath(
+                self._augmented_element, "/ClinicalDocument/languageCode"
+            ).addnext(new_set_id)
             self._add_previous_element_comment("new-document-setId ", new_set_id)
 
         old_version = self._get_element_by_xpath(
@@ -121,7 +123,7 @@ class EICRAugmenter:
             self._add_previous_element_comment("new-document-versionNumber ", old_version)
             self._replace_element("/ClinicalDocument/versionNumber", self._get_new_version_number())
         else:
-            self._augmented_element.append(new_version)
+            new_set_id.addnext(new_version)
             self._add_previous_element_comment("new-document-versionNumber ", new_version)
 
         new_id = self._get_required_element_by_xpath(
