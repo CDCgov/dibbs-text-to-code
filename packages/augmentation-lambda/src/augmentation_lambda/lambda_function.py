@@ -310,12 +310,12 @@ def _build_augmented_eicr_output(
     :param augmenter: The initialized EICRAugmenter for the original eICR.
     :return: The augmentation-stage output containing the augmented eICR.
     """
-    metadata = augmenter.augment()
+    result = augmenter.augment()
 
     return TTCAugmenterOutput(
         persistence_id=persistence_id,
-        augmented_eicr=augmenter.augmented_xml,
-        metadata=metadata,
+        augmented_eicr=result.augmented_xml,
+        metadata=result.metadata,
     )
 
 

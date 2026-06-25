@@ -60,13 +60,11 @@ class TestEicrAugmenter:
                 )
             ],
         )
-        metadata = augmenter.augment()
-
-        result = augmenter.augmented_xml
+        result = augmenter.augment()
 
         # test was failing due to whitespace at the end of the result so stripping it here
-        snapshot.assert_match(result.strip(), "basic_eicr_augmented.xml")
-        assert metadata == Metadata(
+        snapshot.assert_match(result.augmented_xml.strip(), "basic_eicr_augmented.xml")
+        assert result.metadata == Metadata(
             original_eicr_id=ORIGINAL_EICR_ID,
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
@@ -100,12 +98,11 @@ class TestEicrAugmenter:
             BASIC_ECR_RELATED_DOC,
             nonstandard_codes,
         )
-        metadata = augmenter.augment()
+        result = augmenter.augment()
 
-        result = augmenter.augmented_xml
         # test was failing due to whitespace at the end of the result so stripping it here
-        snapshot.assert_match(result.strip(), "basic_eicr_related_doc_augmented.xml")
-        assert metadata == Metadata(
+        snapshot.assert_match(result.augmented_xml.strip(), "basic_eicr_related_doc_augmented.xml")
+        assert result.metadata == Metadata(
             original_eicr_id=ORIGINAL_EICR_ID,
             augmented_eicr_id=augmenter.new_doc_id,
             nonstandard_codes=[
@@ -146,9 +143,9 @@ class TestEicrAugmenter:
         ]
         augmenter = EICRAugmenter(BASIC_ECR, nonstandard_codes)
 
-        metadata = augmenter.augment()
+        result = augmenter.augment()
 
-        assert metadata.nonstandard_codes[1].new_translation_xpath == (
+        assert result.metadata.nonstandard_codes[1].new_translation_xpath == (
             "/ClinicalDocument/component/structuredBody/component/section/entry/component/observation/code/translation[2]"
         )
 
