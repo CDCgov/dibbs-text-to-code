@@ -166,7 +166,10 @@ class EICRAugmenter:
             )
 
     def _get_required_element_by_xpath(self, element: Element, xpath: str) -> Element:
-        """Get the first matching child element by XPath, or raise if not found."""
+        """Get the first matching child element by XPath, or raise if not found.
+
+        While it is possible that an XPath could return multiple results, we are currently only using this to look for elements that either should only have at most one instance (such as `effectiveTime`, `setId`), or the XPath should be specific enough to uniquely identify an element (such as the XPath to an `observation`).
+        """
         result = self._get_element_by_xpath(element, xpath)
         if result is None:
             raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
