@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 from pytest_snapshot.plugin import Snapshot
 
@@ -308,6 +309,27 @@ class TestHandler:
         assert output.metadata.original_eicr_id == CdaInstanceIdentifier(null_flavor="NI")
         assert output.metadata.augmented_eicr_id == CdaInstanceIdentifier(null_flavor="NI")
         assert output.metadata.passthrough_reason == PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
+
+    def test_build_augmentation_output_raises_when_augmenter_constructor_fails_without_original_eicr_id(
+        self, mocker
+    ) -> None:
+        augmenter_mock = mocker.patch(
+            "augmentation_lambda.lambda_function.EICRAugmenter",
+            side_effect=RuntimeError("constructor boom"),
+        )
+
+        with pytest.raises(RuntimeError, match="constructor boom"):
+            lambda_function._build_augmentation_output(
+                persistence_id=TEST_PERSISTENCE_ID,
+                original_eicr="<ClinicalDocument />",
+                augmenter_input=TTCAugmenterInput(
+                    persistence_id=TEST_PERSISTENCE_ID,
+                    original_eicr_id=None,
+                    passthrough_reason=None,
+                ),
+            )
+
+        augmenter_mock.assert_called_once()
 
     def test_handler_writes_original_eicr_when_augmented_eicr_validation_throws(
         self,
