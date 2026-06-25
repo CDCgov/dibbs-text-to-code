@@ -128,5 +128,7 @@ def put_new_cached_result(  # noqa: PLR0913
         opensearch_retrieved_scores=opensearch_retrieved_scores,
         reranker_processed_results={"results": reranker_processed_results},
     )
-    put_response = opensearch_client.index(index=index, id=cache_key, body=new_cache_hit)
+    put_response = opensearch_client.index(
+        index=index, id=cache_key, body=new_cache_hit.model_dump(by_alias=True)
+    )
     return put_response["result"] == "created"
