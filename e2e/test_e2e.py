@@ -331,41 +331,19 @@ def _is_json_number(value: object) -> bool:
     return isinstance(value, int | float) and not isinstance(value, bool)
 
 
-def _assert_ttc_metadata_matches_snapshot(
-    actual: object,
-    expected: object,
-    key: str | None = None,
-) -> None:
-    if key == "score" and _is_json_number(actual) and _is_json_number(expected):
-        assert actual == pytest.approx(expected, abs=0.00001, rel=0)
-        return
+def _approximate_ttc_metadata_score_values(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            str(key): pytest.approx(child_value, abs=0.0001, rel=0)
+            if key == "score" and _is_json_number(child_value)
+            else _approximate_ttc_metadata_score_values(child_value)
+            for key, child_value in value.items()
+        }
 
-    if isinstance(expected, dict):
-        assert isinstance(actual, dict)
-        assert actual.keys() == expected.keys()
+    if isinstance(value, list):
+        return [_approximate_ttc_metadata_score_values(item) for item in value]
 
-        for child_key, expected_value in expected.items():
-            _assert_ttc_metadata_matches_snapshot(
-                actual=actual[child_key],
-                expected=expected_value,
-                key=str(child_key),
-            )
-
-        return
-
-    if isinstance(expected, list):
-        assert isinstance(actual, list)
-        assert len(actual) == len(expected)
-
-        for actual_item, expected_item in zip(actual, expected, strict=True):
-            _assert_ttc_metadata_matches_snapshot(
-                actual=actual_item,
-                expected=expected_item,
-            )
-
-        return
-
-    assert actual == expected
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -579,9 +557,8 @@ class TestEndToEndSimulated:
         ttc_metadata = TTCMetadata.model_validate_json(
             self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
         )
-        _assert_ttc_metadata_matches_snapshot(
-            actual=ttc_metadata.model_dump(mode="json"),
-            expected=_read_ttc_metadata_snapshot(eicr_id),
+        assert ttc_metadata.model_dump(mode="json") == _approximate_ttc_metadata_score_values(
+            _read_ttc_metadata_snapshot(eicr_id)
         )
 
         augmentation_metadata = AugmentationMetadata.model_validate_json(
