@@ -121,7 +121,7 @@ class EICRAugmenter:
         new_version = self._get_new_version_number()
         if old_version is not None:
             self._add_previous_element_comment("new-document-versionNumber ", old_version)
-            self._replace_element("/ClinicalDocument/versionNumber", self._get_new_version_number())
+            self._replace_element("/ClinicalDocument/versionNumber", new_version)
         else:
             new_set_id.addnext(new_version)
             self._add_previous_element_comment("new-document-versionNumber ", new_version)
