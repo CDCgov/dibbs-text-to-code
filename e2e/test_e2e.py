@@ -315,19 +315,57 @@ def _assert_augmented_eicr_retains_original_content(
     )
 
 
-def _normalize_ttc_metadata_snapshot_value(value: object) -> object:
-    if isinstance(value, dict):
-        return {
-            key: round(child_value, 5)
-            if key == "score" and isinstance(child_value, float)
-            else _normalize_ttc_metadata_snapshot_value(child_value)
-            for key, child_value in value.items()
-        }
+def _read_ttc_metadata_snapshot(eicr_id: str) -> object:
+    snapshot_path = (
+        BASE_FOLDER
+        / "snapshots"
+        / "test_e2e"
+        / "test_upload_and_process"
+        / eicr_id
+        / f"{eicr_id}_ttc_metadata.json"
+    )
+    return json.loads(snapshot_path.read_text(encoding="utf-8"))
 
-    if isinstance(value, list):
-        return [_normalize_ttc_metadata_snapshot_value(item) for item in value]
 
-    return value
+def _is_json_number(value: object) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _assert_ttc_metadata_matches_snapshot(
+    actual: object,
+    expected: object,
+    key: str | None = None,
+) -> None:
+    if key == "score" and _is_json_number(actual) and _is_json_number(expected):
+        assert actual == pytest.approx(expected, abs=0.00001, rel=0)
+        return
+
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict)
+        assert actual.keys() == expected.keys()
+
+        for child_key, expected_value in expected.items():
+            _assert_ttc_metadata_matches_snapshot(
+                actual=actual[child_key],
+                expected=expected_value,
+                key=str(child_key),
+            )
+
+        return
+
+    if isinstance(expected, list):
+        assert isinstance(actual, list)
+        assert len(actual) == len(expected)
+
+        for actual_item, expected_item in zip(actual, expected, strict=True):
+            _assert_ttc_metadata_matches_snapshot(
+                actual=actual_item,
+                expected=expected_item,
+            )
+
+        return
+
+    assert actual == expected
 
 
 # ---------------------------------------------------------------------------
@@ -541,13 +579,9 @@ class TestEndToEndSimulated:
         ttc_metadata = TTCMetadata.model_validate_json(
             self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
         )
-        snapshot.assert_match(
-            json.dumps(
-                _normalize_ttc_metadata_snapshot_value(ttc_metadata.model_dump(mode="json")),
-                indent=2,
-                sort_keys=True,
-            ),
-            f"{eicr_id}_ttc_metadata.json",
+        _assert_ttc_metadata_matches_snapshot(
+            actual=ttc_metadata.model_dump(mode="json"),
+            expected=_read_ttc_metadata_snapshot(eicr_id),
         )
 
         augmentation_metadata = AugmentationMetadata.model_validate_json(
