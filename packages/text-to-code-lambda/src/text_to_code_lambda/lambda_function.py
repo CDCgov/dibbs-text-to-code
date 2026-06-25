@@ -149,7 +149,6 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
         ttc_metadata = Metadata(
             persistence_id=persistence_id,
-            passthrough=True,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             error=str(error),
             model_info=TTCModelInfo(
@@ -159,7 +158,6 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         )
         ttc_output = TTCAugmenterInput(
             persistence_id=persistence_id,
-            passthrough=True,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
         )
 
@@ -524,14 +522,12 @@ def _process_record_pipeline(  # noqa: PLR0915
         persistence_id=persistence_id,
         original_eicr_id=eicr_metadata.eicr_id,
         nonstandard_codes=nonstandard_code_replacements,
-        passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
     )
     ttc_metadata = Metadata(
         persistence_id=persistence_id,
         eicr_metadata=eicr_metadata,
         ttc_schematron_issues=ttc_schematron_issues_details,
-        passthrough=passthrough_reason is not None,
         passthrough_reason=passthrough_reason,
         model_info=TTCModelInfo(
             retriever=RETRIEVER_MODEL_INFO,

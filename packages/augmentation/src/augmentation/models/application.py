@@ -1,22 +1,4 @@
-from enum import Enum
-
 from shared_models import FrozenBaseModel, NonstandardCodeInstance, PassthroughReason
-
-
-class ApplicationCode(Enum):
-    """The list of applications that will leveraging Augmentation functionality."""
-
-    code: str
-    display: str
-    TEXT_TO_CODE = ("text-to-code", "Text-to-Code")
-
-    def __new__(cls, value: str, display: str) -> "ApplicationCode":
-        """Initialize ApplicationCode enum."""
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.display = display
-        obj.code = value
-        return obj
 
 
 class NonstandardCodeInstanceMetadata(NonstandardCodeInstance):
@@ -37,7 +19,6 @@ class Metadata(FrozenBaseModel):
     nonstandard_codes: list[NonstandardCodeInstanceMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None
-    passthrough: bool = False
     passthrough_reason: PassthroughReason | None = None
 
 

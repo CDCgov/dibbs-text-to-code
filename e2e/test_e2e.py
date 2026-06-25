@@ -538,7 +538,7 @@ class TestEndToEndSimulated:
 
         actual_validation_results = validate_eicr(augmented_eicr)
 
-        if augmentation_metadata.passthrough:
+        if augmentation_metadata.passthrough_reason is not None:
             original_eicr = self._read_s3_object(
                 aws,
                 f"{TTC_INPUT_PREFIX}{TEST_PERSISTENCE_ID}",
@@ -558,10 +558,8 @@ class TestEndToEndSimulated:
                 PassthroughReason.AUGMENTATION_EXCEPTION,
                 PassthroughReason.AUGMENTATION_VALIDATION_FAILURE,
             ]:
-                assert ttc_output.passthrough is True
                 assert ttc_output.passthrough_reason == passthrough_reason
         else:
-            assert augmentation_metadata.passthrough in [None, False]
             assert augmented_eicr != ""
 
             augmented_observations: list[etree._Element] = augmented_root.xpath(

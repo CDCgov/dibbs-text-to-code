@@ -116,7 +116,7 @@ def _process_record(record: SQSRecord) -> None:
         _save_augmentation_outputs(persistence_id, output, bucket_name)
         logger.info(
             "Augmentation processing completed",
-            status="passthrough" if output.metadata.passthrough else "success",
+            status="passthrough" if output.metadata.passthrough_reason is not None else "success",
             passthrough_reason=output.metadata.passthrough_reason,
         )
 
@@ -205,7 +205,7 @@ def _build_augmentation_output(
         elif extension:
             original_eicr_id = extension
 
-    if augmenter_input.passthrough:
+    if augmenter_input.passthrough_reason is not None:
         return _build_original_eicr_output(
             persistence_id=persistence_id,
             original_eicr_id=original_eicr_id,
@@ -287,7 +287,6 @@ def _build_original_eicr_output(  # noqa: PLR0913
         augmented_eicr_id=original_eicr_id,
         nonstandard_codes=nonstandard_codes,
         error=error,
-        passthrough=True,
         passthrough_reason=passthrough_reason,
     )
 
@@ -311,12 +310,12 @@ def _build_augmented_eicr_output(
     :param augmenter: The initialized EICRAugmenter for the original eICR.
     :return: The augmentation-stage output containing the augmented eICR.
     """
-    metadata = augmenter.augment()
+    result = augmenter.augment()
 
     return TTCAugmenterOutput(
         persistence_id=persistence_id,
-        augmented_eicr=augmenter.augmented_xml,
-        metadata=metadata,
+        augmented_eicr=result.augmented_xml,
+        metadata=result.metadata,
     )
 
 
@@ -382,7 +381,6 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmented_eicr_key,
         status="success",
-        passthrough=output.metadata.passthrough,
         passthrough_reason=output.metadata.passthrough_reason,
     )
 
@@ -397,6 +395,5 @@ def _save_augmentation_outputs(
         bucket_name=bucket_name,
         s3_key=augmentation_metadata_key,
         status="success",
-        passthrough=output.metadata.passthrough,
         passthrough_reason=output.metadata.passthrough_reason,
     )
