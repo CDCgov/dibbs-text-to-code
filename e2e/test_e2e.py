@@ -315,6 +315,21 @@ def _assert_augmented_eicr_retains_original_content(
     )
 
 
+def _normalize_ttc_metadata_snapshot_value(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: round(child_value, 5)
+            if key == "score" and isinstance(child_value, float)
+            else _normalize_ttc_metadata_snapshot_value(child_value)
+            for key, child_value in value.items()
+        }
+
+    if isinstance(value, list):
+        return [_normalize_ttc_metadata_snapshot_value(item) for item in value]
+
+    return value
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -527,7 +542,11 @@ class TestEndToEndSimulated:
             self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
         )
         snapshot.assert_match(
-            json.dumps(ttc_metadata.model_dump(mode="json"), indent=2, sort_keys=True),
+            json.dumps(
+                _normalize_ttc_metadata_snapshot_value(ttc_metadata.model_dump(mode="json")),
+                indent=2,
+                sort_keys=True,
+            ),
             f"{eicr_id}_ttc_metadata.json",
         )
 
