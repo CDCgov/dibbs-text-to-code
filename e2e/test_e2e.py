@@ -15,6 +15,7 @@ from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from shared_models import PassthroughReason, TTCAugmenterInput
 from text_to_code_lambda.lambda_function import handler as ttc_handler
+from text_to_code_lambda.models.metadata import Metadata as TTCMetadata
 from validation import validate_eicr
 
 AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
@@ -27,6 +28,7 @@ S3_BUCKET = os.environ["S3_BUCKET"]
 SCHEMATRON_ERROR_PREFIX = os.environ["SCHEMATRON_ERROR_PREFIX"]
 TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 
 ACCOUNT_ID = "123456789012"
 
@@ -460,9 +462,12 @@ class TestEndToEndSimulated:
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
-        _ = ttc_handler(sqs_event, mock_lambda_context)
+        with time_machine.travel(
+            datetime(2026, 2, 13, 15, 27, 0, tzinfo=ZoneInfo("America/New_York")), tick=False
+        ):
+            _ = ttc_handler(sqs_event, mock_lambda_context)
 
-        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
+            q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
 
         if q2 == []:
             return
@@ -516,6 +521,14 @@ class TestEndToEndSimulated:
                 aws,
                 f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
+        )
+
+        ttc_metadata = TTCMetadata.model_validate_json(
+            self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
+        )
+        snapshot.assert_match(
+            json.dumps(ttc_metadata.model_dump(mode="json"), indent=2, sort_keys=True),
+            f"{eicr_id}_ttc_metadata.json",
         )
 
         augmentation_metadata = AugmentationMetadata.model_validate_json(
