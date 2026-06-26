@@ -7,7 +7,6 @@
     "root": "1.2.840.113619.21.1.139060385287897942.5.3"
   },
   "error": "Unable to find tag in eICR document for XPath: /ClinicalDocument/setId",
-  "nonstandard_codes": [],
   "original_eicr_id": {
     "assigning_authority_name": null,
     "displayable": null,
@@ -15,5 +14,91 @@
     "null_flavor": null,
     "root": "1.2.840.113619.21.1.139060385287897942.5.3"
   },
-  "passthrough_reason": "augmentation_exception"
+  "passthrough_reason": "augmentation_exception",
+  "nonstandard_codes": [
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "CHLAMURETHRA",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[1]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
+    },
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "CHLAMTHROAT",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[2]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[2]/observation[1]"
+    },
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "CHLAMRECNAAT",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[3]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[3]/observation[1]"
+    },
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "CHLAM DNA PR",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[4]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[4]/observation[1]"
+    },
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "GC-THROAT",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[6]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[6]/observation[1]"
+    },
+    {
+      "field_type": "Lab Test Name Resulted",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "GC RECTUM",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component[10]/section/entry/organizer/component[7]/observation/code/translation",
+      "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[10]/section[1]/entry[1]/organizer[1]/component[7]/observation[1]"
+    }
+  ]
 }
