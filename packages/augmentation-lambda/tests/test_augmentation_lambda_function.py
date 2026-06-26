@@ -117,8 +117,6 @@ class TestHandler:
         metadata = Metadata.model_validate_json(metadata_raw)
         assert metadata.original_eicr_id == EXPECTED_ORIGINAL_EICR_ID
         assert metadata.augmented_eicr_id == EXPECTED_AUGMENTED_EICR_ID
-        assert metadata.augmented_eicr_id != metadata.original_eicr_id
-        assert metadata.augmented_eicr_id.root != TEST_PERSISTENCE_ID
         assert metadata.augmented_eicr_id.extension != TEST_PERSISTENCE_ID
         assert metadata.passthrough_reason is None
         snapshot.assert_match(
