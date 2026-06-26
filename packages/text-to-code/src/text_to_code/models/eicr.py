@@ -35,4 +35,4 @@ class TextCandidateExtractionLogContext:
 
     base_xpath: str
     data_field: DataField
-    sub_xpaths: list[str]
+    sub_xpaths: list[LabXPaths]

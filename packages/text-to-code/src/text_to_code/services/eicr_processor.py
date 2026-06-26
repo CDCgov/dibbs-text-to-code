@@ -4,7 +4,7 @@ from lxml import etree
 from lxml.etree import Element
 
 from shared_models import CdaInstanceIdentifier, DataField
-from text_to_code.models import Candidate
+from text_to_code.models import Candidate, LabXPaths
 from text_to_code.models.eicr import Metadata, TextCandidateExtractionLogContext
 from text_to_code.services.utils import get_config_for_data_field
 
@@ -109,7 +109,7 @@ class EicrProcessor:
         return candidates
 
     def _append_text_candidates_from_sub_node(
-        self, candidates: list[Candidate], sub_node: Element | str, xpath: str
+        self, candidates: list[Candidate], sub_node: Element | str, xpath: LabXPaths
     ) -> bool:
         """Append text candidates from a sub-node to the list of candidates.
 
@@ -135,7 +135,7 @@ class EicrProcessor:
         self,
         log_context: TextCandidateExtractionLogContext,
         extraction_error_count: int,
-        sub_xpath: str | None = None,
+        sub_xpath: LabXPaths | None = None,
         full_xpath: str | None = None,
     ) -> None:
         """Log an error that occurred during text candidate extraction.
