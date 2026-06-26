@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from lxml import etree
 from lxml.etree import XMLSyntaxError
 
 from shared_models import CdaInstanceIdentifier, DataField
@@ -37,7 +38,7 @@ class TestEmptyEicrProcessor:
         expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
 
         with (
-            patch.object(processor, "_get_by_xpath", side_effect=Exception("boom")),
+            patch.object(processor, "_get_by_xpath", side_effect=etree.XPathError("boom")),
             patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
         ):
             result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
@@ -49,7 +50,165 @@ class TestEmptyEicrProcessor:
                 "base_xpath": BASE_XPATH,
                 "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
                 "sub_xpaths": expected_sub_xpaths,
+                "sub_xpath": None,
+                "full_xpath": None,
                 "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+            },
+        )
+
+    def test_get_text_candidates_logs_when_no_candidates_are_found(self):
+        processor = EicrProcessor("<tag />")
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
+
+        with patch("text_to_code.services.eicr_processor.logger.info") as mock_info:
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == []
+        mock_info.assert_called_once_with(
+            "No text candidates found in eICR",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "no_candidates",
+                "metric_name": "eicr_text_candidates_no_candidates",
+                "no_candidate_count": 0,
+            },
+        )
+
+    def test_get_text_candidates_continues_when_sub_xpath_lookup_fails(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
+        failed_sub_xpath = expected_sub_xpaths[0]
+        successful_sub_xpath = expected_sub_xpaths[1]
+
+        def get_by_xpath(xpath) -> list[str | etree._Element]:
+            if xpath == BASE_XPATH:
+                return [processor._xml_root]
+            if xpath == f"{BASE_XPATH}/{failed_sub_xpath}":
+                raise etree.XPathError("boom")
+            if xpath == f"{BASE_XPATH}/{successful_sub_xpath}":
+                return ["successful candidate"]
+            return []
+
+        with (
+            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
+            patch("text_to_code.services.eicr_processor.logger.warning") as mock_warning,
+        ):
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == [Candidate(value="successful candidate", xpath=successful_sub_xpath)]
+        mock_exception.assert_called_once_with(
+            "Failed to extract text candidates from eICR",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "sub_xpath": failed_sub_xpath,
+                "full_xpath": f"{BASE_XPATH}/{failed_sub_xpath}",
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+            },
+        )
+        mock_warning.assert_called_once_with(
+            "Completed eICR text candidate extraction with errors",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+                "candidate_count": 1,
+            },
+        )
+
+    def test_get_text_candidates_continues_when_sub_node_extraction_fails(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
+        failed_sub_xpath = expected_sub_xpaths[0]
+
+        def get_by_xpath(xpath) -> list[str | etree._Element]:
+            if xpath == BASE_XPATH:
+                return [processor._xml_root]
+            if xpath == f"{BASE_XPATH}/{failed_sub_xpath}":
+                return ["first candidate", processor._xml_root, "second candidate"]
+            return []
+
+        with (
+            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch.object(
+                processor,
+                "_extract_text_candidates_from_element",
+                side_effect=ValueError("boom"),
+            ),
+            patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
+            patch("text_to_code.services.eicr_processor.logger.warning") as mock_warning,
+        ):
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == [
+            Candidate(value="first candidate", xpath=failed_sub_xpath),
+            Candidate(value="second candidate", xpath=failed_sub_xpath),
+        ]
+        mock_exception.assert_called_once_with(
+            "Failed to extract text candidates from eICR",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "sub_xpath": failed_sub_xpath,
+                "full_xpath": f"{BASE_XPATH}/{failed_sub_xpath}",
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+            },
+        )
+        mock_warning.assert_called_once_with(
+            "Completed eICR text candidate extraction with errors",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+                "candidate_count": 2,
+            },
+        )
+
+    def test_get_text_candidates_logs_no_candidates_when_sub_node_is_empty_text(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
+        empty_sub_xpath = expected_sub_xpaths[0]
+
+        def get_by_xpath(xpath) -> list[str | etree._Element]:
+            if xpath == BASE_XPATH:
+                return [processor._xml_root]
+            if xpath == f"{BASE_XPATH}/{empty_sub_xpath}":
+                return ["   "]
+            return []
+
+        with (
+            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch("text_to_code.services.eicr_processor.logger.info") as mock_info,
+        ):
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == []
+        mock_info.assert_called_once_with(
+            "No text candidates found in eICR",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "no_candidates",
+                "metric_name": "eicr_text_candidates_no_candidates",
+                "no_candidate_count": len(expected_sub_xpaths),
             },
         )
 

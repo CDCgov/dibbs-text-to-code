@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from enum import StrEnum
 
-from shared_models import CdaInstanceIdentifier, FrozenBaseModel
+from shared_models import CdaInstanceIdentifier, DataField, FrozenBaseModel
 
 
 class LabXPaths(StrEnum):
@@ -26,3 +27,12 @@ class Metadata(FrozenBaseModel):
 
     eicr_id: CdaInstanceIdentifier | None
     eicr_vendor: str | None = None
+
+
+@dataclass(frozen=True)
+class TextCandidateExtractionLogContext:
+    """Context for logging text candidate extraction errors and summaries."""
+
+    base_xpath: str
+    data_field: DataField
+    sub_xpaths: list[str]
