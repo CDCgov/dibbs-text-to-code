@@ -104,15 +104,15 @@
       "reranker_processed_results": [
         {
           "code_string": "Weed Allerg Mix3 IgE Qn",
-          "score": 0.5339937806129456
+          "score": 0.5339932441711426
         },
         {
           "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
-          "score": 0.48232710361480713
+          "score": 0.48232781887054443
         },
         {
           "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
-          "score": 0.3767828643321991
+          "score": 0.3767828047275543
         }
       ],
       "unmatched_reason": null
