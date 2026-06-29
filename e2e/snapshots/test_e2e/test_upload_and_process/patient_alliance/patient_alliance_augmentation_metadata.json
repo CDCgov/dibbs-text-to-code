@@ -6,7 +6,7 @@
     "null_flavor": null,
     "root": "1.2.840.113619.21.1.139060385287897942.5.3"
   },
-  "error": "'EICRAugmenter' object has no attribute '_get_required_element_by_xpath'",
+  "error": "Unable to find tag in eICR document for XPath: /ClinicalDocument/setId",
   "nonstandard_codes": [],
   "original_eicr_id": {
     "assigning_authority_name": null,
