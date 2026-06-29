@@ -4,6 +4,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
+from lxml import etree
 from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
@@ -32,6 +33,38 @@ with eicr_path.open() as f:
 eicr_path = EXAMPLE_EICRS_DIRECTORY / "test_eicr_covid.xml"
 with eicr_path.open() as f:
     COVID_ECR = f.read()
+
+
+def _remove_first_element_by_local_name(xml: str, local_name: str) -> str:
+    root = etree.fromstring(xml.encode("utf-8"))
+
+    for element in root.iter():
+        if etree.QName(element).localname == local_name:
+            parent = element.getparent()
+            assert parent is not None
+            parent.remove(element)
+            return etree.tostring(root, encoding="unicode")
+
+    pytest.fail(f"Missing element: {local_name}")
+
+
+def _add_language_code_after_effective_time(xml: str) -> str:
+    root = etree.fromstring(xml.encode("utf-8"))
+    namespace = etree.QName(root).namespace
+    language_code_tag = f"{{{namespace}}}languageCode" if namespace else "languageCode"
+
+    for element in root:
+        if etree.QName(element).localname == "languageCode":
+            return etree.tostring(root, encoding="unicode")
+
+    for element in root:
+        if etree.QName(element).localname == "effectiveTime":
+            language_code = etree.Element(language_code_tag)
+            language_code.set("code", "en-US")
+            element.addnext(language_code)
+            return etree.tostring(root, encoding="unicode")
+
+    pytest.fail("Missing element: effectiveTime")
 
 
 @pytest.mark.time_machine(datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")))
@@ -136,6 +169,47 @@ class TestEicrAugmenter:
             ],
         )
 
+    def test_adds_set_id_when_missing(self):
+        """Tests augmenter adds setId when the original eICR does not have one."""
+        eicr_with_language_code = _add_language_code_after_effective_time(BASIC_ECR)
+        eicr_without_set_id = _remove_first_element_by_local_name(
+            eicr_with_language_code,
+            "setId",
+        )
+
+        augmenter = EICRAugmenter(eicr_without_set_id, [])
+
+        result = augmenter.augment()
+
+        root = etree.fromstring(result.augmented_xml.encode("utf-8"))
+        set_ids = [
+            element
+            for element in root
+            if isinstance(element.tag, str) and etree.QName(element).localname == "setId"
+        ]
+
+        assert set_ids[0].get("root") == augmenter.new_set_id
+
+    def test_adds_version_number_when_missing(self):
+        """Tests augmenter adds versionNumber when the original eICR does not have one."""
+        eicr_without_version_number = _remove_first_element_by_local_name(
+            BASIC_ECR,
+            "versionNumber",
+        )
+
+        augmenter = EICRAugmenter(eicr_without_version_number, [])
+
+        result = augmenter.augment()
+
+        root = etree.fromstring(result.augmented_xml.encode("utf-8"))
+        version_numbers = [
+            element
+            for element in root
+            if isinstance(element.tag, str) and etree.QName(element).localname == "versionNumber"
+        ]
+
+        assert version_numbers[0].get("value") == "1"
+
     def test_translation_xpath_adds_index_when_same_tag_siblings_exist(self):
         """Tests translation XPath adds index when same tag siblings exist."""
         nonstandard_codes = [
@@ -190,6 +264,14 @@ class TestEicrAugmenter:
         ):
             EICRAugmenter(EMPTY_ECR, [])
 
+    def test_get_original_by_xpath_returns_original_element(self):
+        """Tests original XPath lookup returns an element from the original eICR."""
+        augmenter = EICRAugmenter(BASIC_ECR, [])
+
+        original_id = augmenter._get_original_by_xpath("/ClinicalDocument/id")
+
+        assert original_id.get("root") == ORIGINAL_EICR_ID.root
+
     def test_get_augmented_tag_by_xpath_raises_when_element_is_missing(self):
         """Tests missing augmented element raises a helpful error."""
         augmenter = EICRAugmenter(BASIC_ECR, [])
@@ -210,6 +292,19 @@ class TestEicrAugmenter:
         assert eicr_without_version_number_value != BASIC_ECR
 
         augmenter = EICRAugmenter(eicr_without_version_number_value, [])
+
+        version_number = augmenter._get_new_version_number()
+
+        assert version_number.get("value") == "1"
+
+    def test_get_new_version_number_defaults_to_one_when_element_is_missing(self):
+        """Tests versionNumber defaults to 1 when versionNumber is missing."""
+        eicr_without_version_number = _remove_first_element_by_local_name(
+            BASIC_ECR,
+            "versionNumber",
+        )
+
+        augmenter = EICRAugmenter(eicr_without_version_number, [])
 
         version_number = augmenter._get_new_version_number()
 
