@@ -315,37 +315,6 @@ def _assert_augmented_eicr_retains_original_content(
     )
 
 
-def _read_ttc_metadata_snapshot(eicr_id: str) -> object:
-    snapshot_path = (
-        BASE_FOLDER
-        / "snapshots"
-        / "test_e2e"
-        / "test_upload_and_process"
-        / eicr_id
-        / f"{eicr_id}_ttc_metadata.json"
-    )
-    return json.loads(snapshot_path.read_text(encoding="utf-8"))
-
-
-def _is_json_number(value: object) -> bool:
-    return isinstance(value, int | float) and not isinstance(value, bool)
-
-
-def _approximate_ttc_metadata_score_values(value: object) -> object:
-    if isinstance(value, dict):
-        return {
-            str(key): pytest.approx(child_value, abs=0.0001, rel=0)
-            if key == "score" and _is_json_number(child_value)
-            else _approximate_ttc_metadata_score_values(child_value)
-            for key, child_value in value.items()
-        }
-
-    if isinstance(value, list):
-        return [_approximate_ttc_metadata_score_values(item) for item in value]
-
-    return value
-
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -557,8 +526,9 @@ class TestEndToEndSimulated:
         ttc_metadata = TTCMetadata.model_validate_json(
             self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
         )
-        assert ttc_metadata.model_dump(mode="json") == _approximate_ttc_metadata_score_values(
-            _read_ttc_metadata_snapshot(eicr_id)
+        snapshot.assert_match(
+            json.dumps(ttc_metadata.model_dump(mode="json"), indent=2, sort_keys=True),
+            f"{eicr_id}_ttc_metadata.json",
         )
 
         augmentation_metadata = AugmentationMetadata.model_validate_json(
