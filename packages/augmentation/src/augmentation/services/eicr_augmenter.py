@@ -92,7 +92,7 @@ class EICRAugmenter:
             augmented_xml,
             Metadata(
                 original_eicr_id=self.original_eicr_id,
-                augmented_eicr_id=CdaInstanceIdentifier(root=self.new_doc_id, extension=None),
+                augmented_eicr_id=CdaInstanceIdentifier(root=self.new_doc_id),
                 nonstandard_codes=nonstandard_code_metadata,
             ),
         )
@@ -176,11 +176,11 @@ class EICRAugmenter:
 
     def _get_original_by_xpath(self, xpath: str) -> Element:
         """Get element from the original eICR by XPath."""
-        return self._get_element_by_xpath(self._original_element, xpath)
+        return self._get_required_element_by_xpath(self._original_element, xpath)
 
     def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
         """Get element from the augmented eICR by XPath."""
-        return self._get_element_by_xpath(self._augmented_element, xpath)
+        return self._get_required_element_by_xpath(self._augmented_element, xpath)
 
     def _get_augmented_attribute_by_xpath(self, xpath: str) -> str:
         """Get attribute from the augmented eICR by XPath."""
@@ -193,12 +193,12 @@ class EICRAugmenter:
             return None
         return str(results[0])
 
-    def _get_element_by_xpath(self, element: Element, xpath: str) -> Element:
-        """Get the first matching child element by XPath, or raise if not found."""
+    def _get_element_by_xpath(self, element: Element, xpath: str) -> Element | None:
+        """Get the first matching child element by XPath, or `None` if not found."""
         results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
-        if not results:
-            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
-        return results[0]
+        if results:
+            return results[0]
+        return None
 
     def _get_attribute_by_xpath(self, element: Element, xpath: str) -> str:
         """Get the first matching attribute by XPath, or raise if not found."""
