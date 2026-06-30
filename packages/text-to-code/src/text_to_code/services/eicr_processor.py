@@ -87,7 +87,7 @@ class EicrProcessor:
                             sub_node=sub_node,
                             xpath=sub_xpath,
                         )
-                    except (etree.XPathError, AttributeError, ValueError):
+                    except (etree.XPathError, AttributeError, SyntaxError, ValueError):
                         extraction_error_count += 1
                         self._log_text_candidate_extraction_error(
                             log_context=log_context,

@@ -226,6 +226,65 @@ class TestEmptyEicrProcessor:
 
         assert processor.resolve_reference("#missing-id") is None
 
+    def test_get_text_candidates_continues_when_reference_xpath_is_malformed(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <component>
+                    <structuredBody>
+                        <component>
+                            <section>
+                                <entry>
+                                    <component>
+                                        <observation>
+                                            <text>
+                                                <reference value="#foo&quot;" />
+                                            </text>
+                                        </observation>
+                                    </component>
+                                </entry>
+                            </section>
+                        </component>
+                    </structuredBody>
+                </component>
+            </ClinicalDocument>
+            """
+        )
+        expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
+
+        with (
+            patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
+            patch("text_to_code.services.eicr_processor.logger.warning") as mock_warning,
+        ):
+            result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == []
+        mock_exception.assert_called_once_with(
+            "Failed to extract text candidates from eICR",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "sub_xpath": LabXPaths.OBSERVATION_TEXT,
+                "full_xpath": f"{BASE_XPATH}/{LabXPaths.OBSERVATION_TEXT}",
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+            },
+        )
+        mock_warning.assert_called_once_with(
+            "Completed eICR text candidate extraction with errors",
+            extra={
+                "base_xpath": BASE_XPATH,
+                "data_field": str(DataField.LAB_TEST_NAME_RESULTED),
+                "sub_xpaths": expected_sub_xpaths,
+                "status": "error",
+                "metric_name": "eicr_text_candidates_extraction_raised",
+                "extraction_error_count": 1,
+                "candidate_count": 0,
+            },
+        )
+
     def test_extract_text_candidates_from_element_includes_child_tail_text(self):
         processor = EicrProcessor(
             """
