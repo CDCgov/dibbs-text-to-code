@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import LOINC_NAME, LOINC_OID, DataField, FrozenBaseModel
+from shared_models import LOINC_NAME, LOINC_URN, DataField, FrozenBaseModel
 
 from ..models.eicr import LabXPaths
 
@@ -27,7 +27,7 @@ class CodeSystemValues(list[str]):
 
     LOINC_VALUES: ClassVar[list[str]] = [
         "http://loinc.org",
-        f"urn:oid:{LOINC_OID}",
+        LOINC_URN,
     ]
 
     SNOMED_VALUES: ClassVar[list[str]] = [
@@ -172,7 +172,7 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
             loinc_system_values=[
                 "http://loinc.org",
-                f"urn:oid:{LOINC_OID}",
+                LOINC_URN,
             ],
             snomed_system_values=[
                 "http://snomed.info/sct",

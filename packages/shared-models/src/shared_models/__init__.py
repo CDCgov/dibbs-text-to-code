@@ -3,6 +3,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 LOINC_OID = "2.16.840.1.113883.6.1"
+LOINC_URN = f"urn:oid:{LOINC_OID}"
 LOINC_NAME = "LOINC"
 
 

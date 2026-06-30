@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from shared_models import LOINC_OID, DataField
+from shared_models import LOINC_URN, DataField
 from text_to_code.models.eicr import Candidate, LabXPaths
 from text_to_code.models.evaluator import (
     LabTestNameResultedEvaluationCriteria,
@@ -164,7 +164,7 @@ def test_select_relevant_text_selection_strategy_first(mocker):
             strategy=TranslationSelectionStrategy.FIRST,
             loinc_system_values=[
                 "http://loinc.org",
-                f"urn:oid:{LOINC_OID}",
+                LOINC_URN,
             ],
             snomed_system_values=[
                 "http://snomed.info/sct",
