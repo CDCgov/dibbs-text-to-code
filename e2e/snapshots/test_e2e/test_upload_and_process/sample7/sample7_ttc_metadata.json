@@ -1,0 +1,121 @@
+{
+  "eicr_metadata": {
+    "eicr_id": {
+      "assigning_authority_name": null,
+      "displayable": null,
+      "extension": "72975",
+      "null_flavor": null,
+      "root": "2.16.840.1.113883.3.432.0.16.1.100.779.2"
+    },
+    "eicr_vendor": "NWN.LIVEN"
+  },
+  "error": null,
+  "model_info": {
+    "reranker": {
+      "author": "NCHS",
+      "created_at": "2026-04-02T16:48:39Z",
+      "id": "NCHS/ttc-reranker-mvp",
+      "last_modified": "2026-04-02T17:19:19Z"
+    },
+    "retriever": {
+      "author": "NCHS",
+      "created_at": "2026-03-30T13:52:42Z",
+      "id": "NCHS/ttc-retriever-mvp",
+      "last_modified": "2026-03-30T14:12:37Z"
+    }
+  },
+  "passthrough_reason": null,
+  "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "processed_at": "2026-02-13T20:27:00Z",
+  "ttc_schematron_issues": [
+    {
+      "candidate": {
+        "system": null,
+        "value": "Influenza A & B Antigen",
+        "xpath": "code/originalText"
+      },
+      "field_type": "Lab Test Name Resulted",
+      "issue_context": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[8]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
+      "issue_id": "ttc-labTestNameResulted-code-missing",
+      "issue_message": "Text to Code: Lab Test Name Resulted does not have a @code attribute.",
+      "issue_test": "not(cda:code)                  or cda:code/@code                 or cda:code/cda:translation/@code",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "Influenza A & B Antigen",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "opensearch_retrieved_scores": {
+        "hits": {
+          "hits": [
+            {
+              "id": "rbLli5wBhppl0u9qtwLN",
+              "index": "ttc_index",
+              "score": 0.95,
+              "source": {
+                "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+                "id": 0,
+                "loinc_code": "109224-6",
+                "loinc_name_type": "Long Common Name",
+                "loinc_type": "Order"
+              }
+            },
+            {
+              "id": "123455wBhppl0u9qtABC",
+              "index": "ttc_index",
+              "score": 0.88,
+              "source": {
+                "description": "Weed Allerg Mix3 IgE Qn",
+                "id": 1,
+                "loinc_code": "82041-5",
+                "loinc_name_type": "Short Name",
+                "loinc_type": "Order"
+              }
+            },
+            {
+              "id": "123455wBhppl0u9qtABC",
+              "index": "ttc_index",
+              "score": 0.65,
+              "source": {
+                "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+                "id": 4,
+                "loinc_code": "15273-6",
+                "loinc_name_type": "Fully-Specified Name",
+                "loinc_type": "Both"
+              }
+            }
+          ],
+          "total": {
+            "value": 3
+          }
+        },
+        "shards": {
+          "failed": 0,
+          "skipped": 0,
+          "successful": 1,
+          "total": 1
+        },
+        "timed_out": false,
+        "took": 57
+      },
+      "reranker_processed_results": [
+        {
+          "code_string": "Weed Allerg Mix3 IgE Qn",
+          "score": 0.7127664685249329
+        },
+        {
+          "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+          "score": 0.5247528553009033
+        },
+        {
+          "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+          "score": 0.35545864701271057
+        }
+      ],
+      "unmatched_reason": null
+    }
+  ]
+}

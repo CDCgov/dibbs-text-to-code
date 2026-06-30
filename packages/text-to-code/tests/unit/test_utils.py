@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from huggingface_hub import errors
 
 from shared_models import DataField
 from text_to_code.models import LabTestNameResulted
@@ -44,3 +45,31 @@ class TestGetModelInfo:
     def test_get_model_info_raises_for_nonexistent_model(self):
         with pytest.raises(Exception, match=r"Model name 'nonexistent-model' was not found"):
             get_model_info("nonexistent-model")
+
+    def test_get_model_info_skips_hub_lookup_for_local_path(self, tmp_path, mocker):
+        # Models baked into the container image are referenced by a local path
+        # (e.g. /opt/retriever_model), which is not a valid Hub repo id. This must
+        # not crash module import by hitting the Hub. Regression test for the prod
+        # outage where TTC_RETRIEVER=/opt/retriever_model raised HFValidationError.
+        spy = mocker.patch("text_to_code.services.utils.model_info")
+
+        info = get_model_info(str(tmp_path))
+
+        spy.assert_not_called()
+        assert info == ModelInfo(
+            id=str(tmp_path), author=None, created_at=None, last_modified=None
+        )
+
+    def test_get_model_info_degrades_for_invalid_repo_id(self, mocker):
+        # A value that is neither a local path nor a valid repo id should degrade
+        # to just the id rather than raise and crash startup.
+        mocker.patch(
+            "text_to_code.services.utils.model_info",
+            side_effect=errors.HFValidationError("bad repo id"),
+        )
+
+        info = get_model_info("/opt/retriever_model")
+
+        assert info == ModelInfo(
+            id="/opt/retriever_model", author=None, created_at=None, last_modified=None
+        )

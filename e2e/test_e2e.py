@@ -14,7 +14,9 @@ from pytest_snapshot.plugin import Snapshot
 from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from shared_models import PassthroughReason, TTCAugmenterInput
-from text_to_code_lambda.lambda_function import handler as ttc_handler
+from text_to_code.services.reranker import ScoredResult
+from text_to_code_lambda import lambda_function
+from text_to_code_lambda.models.metadata import Metadata as TTCMetadata
 from validation import validate_eicr
 
 AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
@@ -27,6 +29,7 @@ S3_BUCKET = os.environ["S3_BUCKET"]
 SCHEMATRON_ERROR_PREFIX = os.environ["SCHEMATRON_ERROR_PREFIX"]
 TTC_INPUT_PREFIX = os.environ["TTC_INPUT_PREFIX"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
+TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 
 ACCOUNT_ID = "123456789012"
 
@@ -313,6 +316,26 @@ def _assert_augmented_eicr_retains_original_content(
     )
 
 
+def _mock_ttc_rerank(mocker) -> None:
+    ranked_results: list[ScoredResult] = [
+        {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
+        {
+            "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
+            "score": 0.5247528553009033,
+        },
+        {
+            "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+            "score": 0.35545864701271057,
+        },
+    ]
+
+    mocker.patch.object(
+        lambda_function,
+        "rerank",
+        return_value=ranked_results,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -460,9 +483,12 @@ class TestEndToEndSimulated:
         # Feed it to the handler as Lambda would receive it
         sqs_event = _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME)
 
-        _ = ttc_handler(sqs_event, mock_lambda_context)
+        with time_machine.travel(
+            datetime(2026, 2, 13, 15, 27, 0, tzinfo=ZoneInfo("America/New_York")), tick=False
+        ):
+            _ = lambda_function.handler(sqs_event, mock_lambda_context)
 
-        q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
+            q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
 
         if q2 == []:
             return
@@ -492,7 +518,10 @@ class TestEndToEndSimulated:
         snapshot: Snapshot,
         mock_opensearch,
         mock_lambda_context,
+        mocker,
     ):
+        _mock_ttc_rerank(mocker)
+
         self._run_eicr_pipeline(
             aws,
             infra,
@@ -516,6 +545,14 @@ class TestEndToEndSimulated:
                 aws,
                 f"{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
             )
+        )
+
+        ttc_metadata = TTCMetadata.model_validate_json(
+            self._read_s3_object(aws, f"{TTC_METADATA_PREFIX}{TEST_PERSISTENCE_ID}.json")
+        )
+        snapshot.assert_match(
+            json.dumps(ttc_metadata.model_dump(mode="json"), indent=2, sort_keys=True),
+            f"{eicr_id}_ttc_metadata.json",
         )
 
         augmentation_metadata = AugmentationMetadata.model_validate_json(
@@ -607,7 +644,10 @@ class TestNamespacePreservation:
         infra,
         mock_opensearch,
         mock_lambda_context,
+        mocker,
     ):
+        _mock_ttc_rerank(mocker)
+
         with open(NAMESPACE_PRESERVATION_SCHEMATRON_PATH, "rb") as schematron_file:
             aws["s3"].upload_fileobj(
                 schematron_file,
@@ -628,7 +668,7 @@ class TestNamespacePreservation:
             )
 
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
-        ttc_handler(
+        lambda_function.handler(
             _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context
         )
 
