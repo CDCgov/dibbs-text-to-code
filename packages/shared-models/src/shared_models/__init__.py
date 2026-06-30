@@ -7,6 +7,10 @@ LOINC_URN = f"urn:oid:{LOINC_OID}"
 LOINC_NAME = "LOINC"
 LOINC_URL = "http://loinc.org"
 
+SNOMED_OID = "2.16.840.1.113883.6.96"
+SNOMED_URN = f"urn:oid:{SNOMED_OID}"
+SNOMED_URL = "http://snomed.info/sct"
+
 
 class FrozenBaseModel(BaseModel):
     """A custom base model that all other models can inherit so that they are frozen and do not allow extra attributes."""

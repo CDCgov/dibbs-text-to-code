@@ -3,7 +3,15 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import LOINC_NAME, LOINC_URL, LOINC_URN, DataField, FrozenBaseModel
+from shared_models import (
+    LOINC_NAME,
+    LOINC_URL,
+    LOINC_URN,
+    SNOMED_URL,
+    SNOMED_URN,
+    DataField,
+    FrozenBaseModel,
+)
 
 from ..models.eicr import LabXPaths
 
@@ -31,8 +39,8 @@ class CodeSystemValues(list[str]):
     ]
 
     SNOMED_VALUES: ClassVar[list[str]] = [
-        "http://snomed.info/sct",
-        "urn:oid:2.16.840.1.113883.6.96",
+        SNOMED_URL,
+        SNOMED_URN,
     ]
 
 
@@ -175,8 +183,8 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
                 LOINC_URN,
             ],
             snomed_system_values=[
-                "http://snomed.info/sct",
-                "urn:oid:2.16.840.1.113883.6.96",
+                SNOMED_URL,
+                SNOMED_URN,
             ],
         )
     )
