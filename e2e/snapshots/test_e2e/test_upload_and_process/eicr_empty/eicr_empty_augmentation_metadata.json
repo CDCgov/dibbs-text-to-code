@@ -1,7 +1,19 @@
 {
-  "augmented_eicr_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "augmented_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": "NI",
+    "root": null
+  },
   "error": null,
   "nonstandard_codes": [],
-  "original_eicr_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "original_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": "NI",
+    "root": null
+  },
   "passthrough_reason": "no_relevant_schematron_errors"
 }
