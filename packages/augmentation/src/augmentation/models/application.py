@@ -1,4 +1,9 @@
-from shared_models import FrozenBaseModel, NonstandardCodeInstance, PassthroughReason
+from shared_models import (
+    CdaInstanceIdentifier,
+    FrozenBaseModel,
+    NonstandardCodeInstance,
+    PassthroughReason,
+)
 
 
 class NonstandardCodeInstanceMetadata(NonstandardCodeInstance):
@@ -14,8 +19,8 @@ class NonstandardCodeInstanceMetadata(NonstandardCodeInstance):
 class Metadata(FrozenBaseModel):
     """Model to hold augmentation metadata."""
 
-    original_eicr_id: str
-    augmented_eicr_id: str
+    original_eicr_id: CdaInstanceIdentifier
+    augmented_eicr_id: CdaInstanceIdentifier
     nonstandard_codes: list[NonstandardCodeInstanceMetadata]
     """List of the nonstandard codes TTC attempted to resolve."""
     error: str | None = None

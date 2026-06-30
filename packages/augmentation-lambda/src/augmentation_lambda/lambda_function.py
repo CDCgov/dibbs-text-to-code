@@ -11,7 +11,7 @@ import lambda_handler
 from augmentation.models import Metadata
 from augmentation.models.application import NonstandardCodeInstanceMetadata, TTCAugmenterOutput
 from augmentation.services.eicr_augmenter import EICRAugmenter
-from shared_models import PassthroughReason, TTCAugmenterInput
+from shared_models import CdaInstanceIdentifier, PassthroughReason, TTCAugmenterInput
 from validation import validate_eicr
 
 logger = Logger(service="augmentation-lambda")
@@ -191,24 +191,12 @@ def _build_augmentation_output(
     :param augmenter_input: The parsed TTC augmenter input.
     :return: The augmentation-stage output to write to S3.
     """
-    original_eicr_identifier = augmenter_input.original_eicr_id
-    original_eicr_id = persistence_id
-
-    if original_eicr_identifier is not None:
-        root = original_eicr_identifier.root
-        extension = original_eicr_identifier.extension
-
-        if root and extension:
-            original_eicr_id = f"{root}^{extension}"
-        elif root:
-            original_eicr_id = root
-        elif extension:
-            original_eicr_id = extension
+    original_eicr_id = augmenter_input.original_eicr_id
 
     if augmenter_input.passthrough_reason is not None:
         return _build_original_eicr_output(
             persistence_id=persistence_id,
-            original_eicr_id=original_eicr_id,
+            original_eicr_id=original_eicr_id or CdaInstanceIdentifier(null_flavor="NI"),
             original_eicr=original_eicr,
             passthrough_reason=augmenter_input.passthrough_reason,
         )
@@ -220,14 +208,22 @@ def _build_augmentation_output(
             deterministic_id_seed=augmenter_input.persistence_id,
         )
 
-        if augmenter_input.original_eicr_id is None:
-            original_eicr_id = str(augmenter.original_eicr_id)
+        if original_eicr_id is None:
+            original_eicr_id = augmenter.original_eicr_id
 
         output = _build_augmented_eicr_output(
             persistence_id=persistence_id,
             augmenter=augmenter,
         )
     except Exception as e:
+        if original_eicr_id is None:
+            logger.exception(
+                "Augmentation failed before original eICR ID could be resolved",
+                status="error",
+                passthrough_reason=PassthroughReason.AUGMENTATION_EXCEPTION,
+            )
+            raise
+
         logger.exception(
             "Augmentation failed; writing original eICR output",
             status="passthrough",
@@ -258,7 +254,7 @@ def _build_augmentation_output(
 
 def _build_original_eicr_output(  # noqa: PLR0913
     persistence_id: str,
-    original_eicr_id: str,
+    original_eicr_id: CdaInstanceIdentifier,
     original_eicr: str,
     passthrough_reason: PassthroughReason | None,
     nonstandard_codes: list[NonstandardCodeInstanceMetadata] | None = None,
