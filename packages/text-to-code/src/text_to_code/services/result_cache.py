@@ -27,7 +27,7 @@ def get_cached_result(
     :returns: The Source of the OpenSearch Cache Result, expressed as a structured
       object.
     """
-    response = opensearch_client.get(index=index, id=os_doc_id)
+    response = opensearch_client.get(index=index, id=os_doc_id, ignore=404)
     if response and response["found"]:
         response_source = response["_source"]
         response_loinc = response_source["loinc_code"]
