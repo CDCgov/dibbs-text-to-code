@@ -15,3 +15,8 @@ all *ARGS:
 [doc("Run tests with coverage, specifying the package to measure coverage for")]
 coverage *ARGS:
     uv run pytest {{ ARGS }} --cov={{ARGS}} --cov-report=term-missing
+
+[doc("Regenerate validation temp files and run validation tests")]
+validation:
+    uv run python -c "from pathlib import Path; output = Path('validation/src/validation/eicr-validator/output'); [file.unlink(missing_ok=True) for file in (output / 'stage1.sch.tmp', output / 'stage2.sch.tmp', output / 'validator.xsl.tmp', output / 'voc_ttc.xml')]"
+    uv run pytest packages/validation
