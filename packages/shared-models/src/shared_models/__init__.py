@@ -2,14 +2,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-LOINC_OID = "2.16.840.1.113883.6.1"
-LOINC_URN = f"urn:oid:{LOINC_OID}"
 LOINC_NAME = "LOINC"
+LOINC_OID = "2.16.840.1.113883.6.1"
 LOINC_URL = "http://loinc.org"
+LOINC_URN = f"urn:oid:{LOINC_OID}"
 
 SNOMED_OID = "2.16.840.1.113883.6.96"
-SNOMED_URN = f"urn:oid:{SNOMED_OID}"
 SNOMED_URL = "http://snomed.info/sct"
+SNOMED_URN = f"urn:oid:{SNOMED_OID}"
 
 
 class FrozenBaseModel(BaseModel):
