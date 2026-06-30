@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import LOINC_NAME, LOINC_URN, DataField, FrozenBaseModel
+from shared_models import LOINC_NAME, LOINC_URL, LOINC_URN, DataField, FrozenBaseModel
 
 from ..models.eicr import LabXPaths
 
@@ -26,7 +26,7 @@ class CodeSystemValues(list[str]):
     """A list of code system identifier strings used to classify translation candidates."""
 
     LOINC_VALUES: ClassVar[list[str]] = [
-        "http://loinc.org",
+        LOINC_URL,
         LOINC_URN,
     ]
 
@@ -171,7 +171,7 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
         default_factory=lambda: TranslationPreference(
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
             loinc_system_values=[
-                "http://loinc.org",
+                LOINC_URL,
                 LOINC_URN,
             ],
             snomed_system_values=[

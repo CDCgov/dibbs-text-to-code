@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from shared_models import LOINC_URN, DataField
+from shared_models import LOINC_URL, LOINC_URN, DataField
 from text_to_code.models.eicr import Candidate, LabXPaths
 from text_to_code.models.evaluator import (
     LabTestNameResultedEvaluationCriteria,
@@ -37,7 +37,7 @@ def test_falls_back_to_translation_display_name_when_code_display_name_missing()
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
             value="SARS-CoV-2 RNA Spec Ql NAA+probe",
-            system="http://loinc.org",
+            system=LOINC_URL,
         ),
         Candidate(
             xpath=LabXPaths.CODE_ORIGINAL_TEXT,
@@ -61,7 +61,7 @@ def test_prefers_loinc_translation_over_snomed_when_multiple_translation_display
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
             value="Preferred LOINC text",
-            system="http://loinc.org",
+            system=LOINC_URL,
         ),
     ]
 
@@ -101,7 +101,7 @@ def test_prefers_loinc_translation_original_text_when_multiple_translation_origi
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_ORIGINAL_TEXT,
             value="Preferred LOINC original text",
-            system="http://loinc.org",
+            system=LOINC_URL,
         ),
     ]
 
@@ -139,7 +139,7 @@ def test_returns_none_when_all_candidates_are_blank_or_missing_for_priorities() 
         Candidate(
             xpath=LabXPaths.CODE_TRANSLATION_DISPLAY_NAME,
             value="   ",
-            system="http://loinc.org",
+            system=LOINC_URL,
         ),
         Candidate(
             xpath=LabXPaths.CODE_ORIGINAL_TEXT,
