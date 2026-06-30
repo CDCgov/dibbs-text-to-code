@@ -33,15 +33,9 @@ class CodeTranslation(StrEnum):
 class CodeSystemValues(list[str]):
     """A list of code system identifier strings used to classify translation candidates."""
 
-    LOINC_VALUES: ClassVar[list[str]] = [
-        LOINC_URL,
-        LOINC_URN,
-    ]
+    LOINC_VALUES: ClassVar[list[str]] = [LOINC_URL, LOINC_URN]
 
-    SNOMED_VALUES: ClassVar[list[str]] = [
-        SNOMED_URL,
-        SNOMED_URN,
-    ]
+    SNOMED_VALUES: ClassVar[list[str]] = [SNOMED_URL, SNOMED_URN]
 
 
 class TranslationSelectionStrategy(StrEnum):
@@ -178,14 +172,8 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
     translation_preference: TranslationPreference = Field(
         default_factory=lambda: TranslationPreference(
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=[
-                LOINC_URL,
-                LOINC_URN,
-            ],
-            snomed_system_values=[
-                SNOMED_URL,
-                SNOMED_URN,
-            ],
+            loinc_system_values=[LOINC_URL, LOINC_URN],
+            snomed_system_values=[SNOMED_URL, SNOMED_URN],
         )
     )
 
