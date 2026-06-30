@@ -8,7 +8,7 @@ from lxml.etree import Element
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
 from augmentation.services.eicr_utils import CDA_NSMAP, cda_element, cda_xpath, parse_document
-from shared_models import CdaInstanceIdentifier, NonstandardCodeInstance
+from shared_models import LOINC_OID, CdaInstanceIdentifier, NonstandardCodeInstance
 
 _AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
 _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
@@ -355,7 +355,7 @@ class EICRAugmenter:
         )
         new_translation = cda_element("translation", entry_code)
         _set_attribute(new_translation, "code", augmentation.new_translation.code)
-        new_translation.set("codeSystem", "2.16.840.1.113883.6.1")
+        new_translation.set("codeSystem", LOINC_OID)
         new_translation.set("codeSystemName", "LOINC")
         _set_attribute(new_translation, "DisplayName", augmentation.new_translation.display_name)
         _set_attribute(new_translation, "originalText", augmentation.new_translation.original_text)

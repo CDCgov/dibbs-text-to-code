@@ -8,7 +8,13 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import Code, NonstandardCodeInstance, PassthroughReason, TTCAugmenterInput
+from shared_models import (
+    LOINC_OID,
+    Code,
+    NonstandardCodeInstance,
+    PassthroughReason,
+    TTCAugmenterInput,
+)
 from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
@@ -394,7 +400,7 @@ def _process_record_pipeline(
                         )
                         new_translation = Code(
                             code=top_result.source.loinc_code,
-                            code_system="2.16.840.1.113883.6.1",
+                            code_system=LOINC_OID,
                             code_system_name="LOINC",
                             display_name=top_result.source.description,
                             original_text=selected_candidate.value,

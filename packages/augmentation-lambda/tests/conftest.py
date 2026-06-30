@@ -9,6 +9,7 @@ import pytest
 from botocore.client import BaseClient
 
 from augmentation_lambda import lambda_function
+from shared_models import LOINC_OID
 
 S3_BUCKET = os.environ["S3_BUCKET"]
 AWS_REGION = os.environ["AWS_REGION"]
@@ -41,7 +42,7 @@ def test_ttc_output() -> dict[str, object]:
                 "field_type": "Lab Test Name Resulted",
                 "new_translation": {
                     "code": "109224-6",
-                    "code_system": "2.16.840.1.113883.6.1",
+                    "code_system": LOINC_OID,
                     "code_system_name": "LOINC",
                     "display_name": "Weed Allergen Mix 3 IgE Ab",
                     "value_set": None,

@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
+LOINC_OID = "2.16.840.1.113883.6.1"
+
 
 class FrozenBaseModel(BaseModel):
     """A custom base model that all other models can inherit so that they are frozen and do not allow extra attributes."""

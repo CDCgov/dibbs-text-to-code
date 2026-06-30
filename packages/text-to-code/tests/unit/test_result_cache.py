@@ -2,7 +2,7 @@ import json
 from typing import cast
 from unittest.mock import MagicMock
 
-from shared_models import Code
+from shared_models import LOINC_OID, Code
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
@@ -26,7 +26,7 @@ class TestResultCacheAPIs:
                 "data_field": "Lab Test Name Ordered",
                 "loinc_code": json.dumps(
                     Code(
-                        code_system="2.16.840.1.113883.6.1",
+                        code_system=LOINC_OID,
                         code_system_name="LOINC",
                         display_name="fentaNYL [Presence] in Urine by Screen method",
                     ).__dict__
@@ -80,7 +80,7 @@ class TestResultCacheAPIs:
 
         standard_loinc_code = Code(
             code="6299-2",
-            code_system="2.16.840.1.113883.6.1",
+            code_system=LOINC_OID,
             code_system_name="LOINC",
             display_name="Urea nitrogen [Mass/volume] in Blood",
         )
