@@ -5,7 +5,7 @@ import pytest
 
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from lambda_handler.models.opensearch import OpenSearchHit, OpenSearchHitSource
-from shared_models import Code, DataField
+from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
 from text_to_code_lambda import service
 
 
@@ -62,8 +62,8 @@ def test_code_for_text_returns_top_reranked_code(mocker):
     assert code is not None
     assert code.code == "2222-2"
     assert code.display_name == "Second candidate"
-    assert code.code_system == service.LOINC_CODE_SYSTEM
-    assert code.code_system_name == "LOINC"
+    assert code.code_system == LOINC_OID
+    assert code.code_system_name == LOINC_NAME
     assert code.original_text == "glucose"
 
 
@@ -101,8 +101,8 @@ def test_results_for_inputs_skips_blank_without_querying(mocker):
         "code_for_text",
         return_value=Code(
             code="1111-1",
-            code_system=service.LOINC_CODE_SYSTEM,
-            code_system_name="LOINC",
+            code_system=LOINC_OID,
+            code_system_name=LOINC_NAME,
             display_name="Glucose",
             original_text="glucose",
         ),

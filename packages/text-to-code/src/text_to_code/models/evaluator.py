@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import LOINC_OID, DataField, FrozenBaseModel
+from shared_models import LOINC_NAME, LOINC_OID, DataField, FrozenBaseModel
 
 from ..models.eicr import LabXPaths
 
@@ -18,7 +18,7 @@ class CodeTranslation(StrEnum):
         code system list, otherwise None.
     """
 
-    LOINC = "LOINC"
+    LOINC = LOINC_NAME
     SNOMED = "SNOMED"
 
 

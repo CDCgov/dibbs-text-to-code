@@ -16,15 +16,13 @@ from aws_lambda_powertools import Logger
 from opensearchpy import OpenSearch
 
 import lambda_handler
-from shared_models import LOINC_OID, Code, DataField
+from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
 from text_to_code.models import query as query_models
 from text_to_code.services.embedder import embed
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import rerank
 
 logger = Logger(service="ttc-api", child=True)
-
-LOINC_CODE_SYSTEM_NAME = "LOINC"
 
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 
@@ -99,7 +97,7 @@ def code_for_text(
     return Code(
         code=top_result.source.loinc_code,
         code_system=LOINC_OID,
-        code_system_name=LOINC_CODE_SYSTEM_NAME,
+        code_system_name=LOINC_NAME,
         display_name=top_result.source.description,
         original_text=text,
     )
