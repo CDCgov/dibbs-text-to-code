@@ -1,7 +1,19 @@
 {
-  "augmented_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f",
+  "augmented_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+  },
   "error": null,
   "nonstandard_codes": [],
-  "original_eicr_id": "c8516bdc-8bb2-40aa-8dae-20a77546488f",
+  "original_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+  },
   "passthrough_reason": "no_code_matches"
 }

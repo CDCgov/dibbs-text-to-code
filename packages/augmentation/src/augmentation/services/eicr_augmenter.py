@@ -8,7 +8,7 @@ from lxml.etree import Element
 
 from augmentation.models import Metadata, NonstandardCodeInstanceMetadata
 from augmentation.services.eicr_utils import CDA_NSMAP, cda_element, cda_xpath, parse_document
-from shared_models import NonstandardCodeInstance
+from shared_models import CdaInstanceIdentifier, NonstandardCodeInstance
 
 _AUTHOR_FUNCTION_CODE: str = "code-text-to-code"
 _AUTHOR_FUNCTION_CODE_SYSTEM: str = "2.16.840.1.113883.10.20.15.2.7.1"
@@ -46,10 +46,18 @@ class EICRAugmenter:
 
         self.augmentation_date = datetime.now(UTC)
 
-        self.original_eicr_id = self._get_required_element_by_xpath(
-            self._augmented_element, "/ClinicalDocument/id/@root"
+        self.original_eicr_id = CdaInstanceIdentifier(
+            root=self._get_augmented_attribute_by_xpath("/ClinicalDocument/id/@root"),
+            extension=self._get_optional_augmented_attribute_by_xpath(
+                "/ClinicalDocument/id/@extension"
+            ),
         )
-        self.deterministic_id_seed = deterministic_id_seed or self.original_eicr_id
+        self.deterministic_id_seed = (
+            deterministic_id_seed
+            or self.original_eicr_id.root
+            or self.original_eicr_id.extension
+            or ""
+        )
         self.new_doc_id: str = self._generate_deterministic_id("document")
         self.new_set_id: str = self._generate_deterministic_id("set")
         self.nonstandard_codes = nonstandard_codes
@@ -83,8 +91,8 @@ class EICRAugmenter:
         return AugmentResult(
             augmented_xml,
             Metadata(
-                original_eicr_id=self.original_eicr_id,  # ty:ignore[invalid-argument-type]
-                augmented_eicr_id=self.new_doc_id,
+                original_eicr_id=self.original_eicr_id,
+                augmented_eicr_id=CdaInstanceIdentifier(root=self.new_doc_id),
                 nonstandard_codes=nonstandard_code_metadata,
             ),
         )
@@ -96,6 +104,7 @@ class EICRAugmenter:
         self._augmented_element.replace(old, new_element)
 
     def _handle_document_id_header(self) -> None:
+        """Replace the document ID, effectiveTime, setId, and versionNumber in the augmented eICR."""
         self._replace_element("/ClinicalDocument/id", self._get_new_document_id())
 
         old_eff_time = self._get_required_element_by_xpath(
@@ -165,15 +174,24 @@ class EICRAugmenter:
                 "input-document-versionNumber ", parent_version_number
             )
 
-    def _get_required_element_by_xpath(self, element: Element, xpath: str) -> Element:
-        """Get the first matching child element by XPath, or raise if not found.
+    def _get_original_by_xpath(self, xpath: str) -> Element:
+        """Get element from the original eICR by XPath."""
+        return self._get_required_element_by_xpath(self._original_element, xpath)
 
-        While it is possible that an XPath could return multiple results, we are currently only using this to look for elements that either should only have at most one instance (such as `effectiveTime`, `setId`), or the XPath should be specific enough to uniquely identify an element (such as the XPath to an `observation`).
-        """
-        result = self._get_element_by_xpath(element, xpath)
-        if result is None:
-            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
-        return result
+    def _get_augmented_tag_by_xpath(self, xpath: str) -> Element:
+        """Get element from the augmented eICR by XPath."""
+        return self._get_required_element_by_xpath(self._augmented_element, xpath)
+
+    def _get_augmented_attribute_by_xpath(self, xpath: str) -> str:
+        """Get attribute from the augmented eICR by XPath."""
+        return self._get_attribute_by_xpath(self._augmented_element, xpath)
+
+    def _get_optional_augmented_attribute_by_xpath(self, xpath: str) -> str | None:
+        """Get attribute from the augmented eICR by XPath, or None if not found."""
+        results = self._augmented_element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
+        if not results:
+            return None
+        return str(results[0])
 
     def _get_element_by_xpath(self, element: Element, xpath: str) -> Element | None:
         """Get the first matching child element by XPath, or `None` if not found."""
@@ -181,6 +199,13 @@ class EICRAugmenter:
         if results:
             return results[0]
         return None
+
+    def _get_attribute_by_xpath(self, element: Element, xpath: str) -> str:
+        """Get the first matching attribute by XPath, or raise if not found."""
+        results = element.xpath(cda_xpath(xpath), namespaces=CDA_NSMAP)
+        if not results:
+            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
+        return str(results[0])
 
     def _get_old_document_id(self) -> Element:
         """Extract the parent document ID from original eICR document."""
@@ -199,6 +224,16 @@ class EICRAugmenter:
                 f"{_APPLICATION_CODE_VALUE}:{self.deterministic_id_seed}:{identifier_type}",
             )
         )
+
+    def _get_required_element_by_xpath(self, element: Element, xpath: str) -> Element:
+        """Get the first matching child element by XPath, or raise if not found.
+
+        While it is possible that an XPath could return multiple results, we are currently only using this to look for elements that either should only have at most one instance (such as `effectiveTime`, `setId`), or the XPath should be specific enough to uniquely identify an element (such as the XPath to an `observation`).
+        """
+        result = self._get_element_by_xpath(element, xpath)
+        if result is None:
+            raise ValueError(f"Unable to find tag in eICR document for XPath: {xpath}")
+        return result
 
     def _get_new_document_id(self) -> Element:
         """Generate a new document ID element for the augmented eICR document."""
@@ -220,7 +255,7 @@ class EICRAugmenter:
         return effective_time_tag
 
     def _get_new_version_number(self) -> Element:
-        """Generate a versionNumber element for the augmented eICR document."""
+        """Generate a new versionNumber element for the augmented eICR document."""
         old_version_number = self._get_element_by_xpath(
             self._original_element, "/ClinicalDocument/versionNumber"
         )
@@ -246,6 +281,7 @@ class EICRAugmenter:
         element.addprevious(etree.Comment(f"DATA AUGMENTATION: {comment.strip()} "))
 
     def _generate_author(self, is_header: bool = True) -> Element:
+        """Generate an author element for the augmented eICR document."""
         null_flavor_comment = " set to nullFlavor 'NA' "
         author = cda_element("author")
         if not is_header:
@@ -296,6 +332,7 @@ class EICRAugmenter:
         return author
 
     def _handle_author_entry(self, augmentation: NonstandardCodeInstance) -> None:
+        """Add an author entry for the given nonstandard code augmentation."""
         entry = self._get_required_element_by_xpath(
             self._augmented_element, augmentation.schematron_error_xpath
         )
@@ -305,6 +342,7 @@ class EICRAugmenter:
     # TODO: this will need to be modified in the future when we have
     # other data elements, other than observation.codes that are being augmented
     def _handle_translation(self, augmentation: NonstandardCodeInstance) -> str:
+        """Add a translation element for the given nonstandard code augmentation."""
         entry_code = self._get_required_element_by_xpath(
             self._augmented_element, augmentation.schematron_error_xpath + "/code"
         )
@@ -328,6 +366,12 @@ class EICRAugmenter:
 
 
 def _set_attribute(element: Element, key: str, value: str | None) -> None:
+    """Set an attribute on an element if the value is not None.
+
+    :param element: The XML element to set the attribute on.
+    :param key: The attribute name.
+    :param value: The attribute value. If None, the attribute will not be set.
+    """
     if value:
         element.set(key, value)
 
