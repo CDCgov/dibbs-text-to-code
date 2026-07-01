@@ -265,52 +265,34 @@ def test_validation_regenerates_stale_generated_files(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     """Tests that stale generated validation files are regenerated when source files are newer."""
-    stage1_output = tmp_path / "stage1.sch.tmp"
-    stage2_output = tmp_path / "stage2.sch.tmp"
-    validator_output = tmp_path / "validator.xsl.tmp"
-    voc_output = tmp_path / "voc_ttc.xml"
-
-    aphl_schematron = tmp_path / "schema.sch"
-    xslt_include = tmp_path / "include.xsl"
-    xslt_expand = tmp_path / "expand.xsl"
-    xslt_compile = tmp_path / "compile.xsl"
-    voc_source = tmp_path / "source_voc_ttc.xml"
-
-    stage1_output.write_text("old stage 1")
-    stage2_output.write_text("old stage 2")
-    validator_output.write_text("old validator")
-    voc_output.write_text("old voc")
-
-    aphl_schematron.write_text("<schema />")
-    xslt_include.write_text("<include />")
-    xslt_expand.write_text("<expand />")
-    xslt_compile.write_text("<compile />")
-    voc_source.write_text("<voc />")
+    outputs = {
+        "STAGE1_OUTPUT": tmp_path / "stage1.sch.tmp",
+        "STAGE2_OUTPUT": tmp_path / "stage2.sch.tmp",
+        "VALIDATOR_OUTPUT": tmp_path / "validator.xsl.tmp",
+        "VOC_OUTPUT": tmp_path / "voc_ttc.xml",
+    }
+    sources = {
+        "APHL_SCHEMATRON": tmp_path / "schema.sch",
+        "XSLT_INCLUDE": tmp_path / "include.xsl",
+        "XSLT_EXPAND": tmp_path / "expand.xsl",
+        "XSLT_COMPILE": tmp_path / "compile.xsl",
+        "VOC_SOURCE": tmp_path / "source_voc_ttc.xml",
+    }
 
     old_time = 1_000_000_000
     new_time = 1_000_000_100
 
-    for output_file in (stage1_output, stage2_output, validator_output, voc_output):
-        output_file.touch()
-        output_file.chmod(0o644)
-        output_file.write_text(output_file.read_text())
-        output_file.stat()
-        output_file.touch()
-
+    for output_file in outputs.values():
+        output_file.write_text("old generated file")
         os.utime(output_file, (old_time, old_time))
 
-    for source_file in (aphl_schematron, xslt_include, xslt_expand, xslt_compile, voc_source):
+    for source_file in sources.values():
+        source_file.write_text("<source />")
         os.utime(source_file, (new_time, new_time))
 
-    monkeypatch.setattr(validation_main, "STAGE1_OUTPUT", stage1_output)
-    monkeypatch.setattr(validation_main, "STAGE2_OUTPUT", stage2_output)
-    monkeypatch.setattr(validation_main, "VALIDATOR_OUTPUT", validator_output)
-    monkeypatch.setattr(validation_main, "VOC_OUTPUT", voc_output)
-    monkeypatch.setattr(validation_main, "APHL_SCHEMATRON", aphl_schematron)
-    monkeypatch.setattr(validation_main, "XSLT_INCLUDE", xslt_include)
-    monkeypatch.setattr(validation_main, "XSLT_EXPAND", xslt_expand)
-    monkeypatch.setattr(validation_main, "XSLT_COMPILE", xslt_compile)
-    monkeypatch.setattr(validation_main, "VOC_SOURCE", voc_source)
+    for attribute, file_path in [*outputs.items(), *sources.items()]:
+        monkeypatch.setattr(validation_main, attribute, file_path)
+
     monkeypatch.setattr(validation_main, "PySaxonProcessor", FakeSaxonProcessor)
 
     results = validate_eicr("<ClinicalDocument />")
@@ -321,7 +303,7 @@ def test_validation_regenerates_stale_generated_files(
             location=FAKE_LOCATION,
         )
     ]
-    assert stage1_output.read_text() == "<generated />"
-    assert stage2_output.read_text() == "<generated />"
-    assert validator_output.read_text() == "<generated />"
-    assert voc_output.read_text() == "<voc />"
+    assert outputs["STAGE1_OUTPUT"].read_text() == "<generated />"
+    assert outputs["STAGE2_OUTPUT"].read_text() == "<generated />"
+    assert outputs["VALIDATOR_OUTPUT"].read_text() == "<generated />"
+    assert outputs["VOC_OUTPUT"].read_text() == "<source />"
