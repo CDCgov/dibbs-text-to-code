@@ -50,47 +50,8 @@
       },
       "opensearch_retrieved_scores": {
         "hits": {
-          "hits": [
-            {
-              "id": "rbLli5wBhppl0u9qtwLN",
-              "index": "ttc_index",
-              "score": 0.95,
-              "source": {
-                "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
-                "id": 0,
-                "loinc_code": "109224-6",
-                "loinc_name_type": "Long Common Name",
-                "loinc_type": "Order"
-              }
-            },
-            {
-              "id": "123455wBhppl0u9qtABC",
-              "index": "ttc_index",
-              "score": 0.88,
-              "source": {
-                "description": "Weed Allerg Mix3 IgE Qn",
-                "id": 1,
-                "loinc_code": "82041-5",
-                "loinc_name_type": "Short Name",
-                "loinc_type": "Order"
-              }
-            },
-            {
-              "id": "123455wBhppl0u9qtABC",
-              "index": "ttc_index",
-              "score": 0.65,
-              "source": {
-                "description": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
-                "id": 4,
-                "loinc_code": "15273-6",
-                "loinc_name_type": "Fully-Specified Name",
-                "loinc_type": "Both"
-              }
-            }
-          ],
-          "total": {
-            "value": 3
-          }
+          "hits": [],
+          "total": {}
         },
         "shards": {
           "failed": 0,
@@ -99,22 +60,9 @@
           "total": 1
         },
         "timed_out": false,
-        "took": 57
+        "took": 234
       },
-      "reranker_processed_results": [
-        {
-          "code_string": "Weed Allerg Mix3 IgE Qn",
-          "score": 0.7127664685249329
-        },
-        {
-          "code_string": "(Artemisia vulgaris+Chenopodium album+Plantago lanceolata+Solidago virgaurea+Urtica dioica) Ab.IgE:PrThr:Pt:Ser:Ord:Multidisk",
-          "score": 0.5247528553009033
-        },
-        {
-          "code_string": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
-          "score": 0.35545864701271057
-        }
-      ],
+      "reranker_processed_results": [],
       "unmatched_reason": null
     }
   ]
