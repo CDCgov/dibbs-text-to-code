@@ -9,6 +9,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
 
 from utils.regex_patterns import MULTIPLE_SPACE
 
@@ -21,6 +22,14 @@ CHANGE_LOG_DIRECTORY = BASE_FOLDER / "change_log"
 # Keys - the UMLS key is used for more than
 #   one terminology set so it's here in General
 UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
+
+
+class TerminologyUpdateResponse(TypedDict):
+    """Defines dictionary for Terminology Update Response."""
+
+    terminology: list[str]
+    result: str
+    message: str
 
 
 def clean_text_string(value: str | None) -> str:

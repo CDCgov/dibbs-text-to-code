@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from data_curation.terminologies.general import (
+    TerminologyUpdateResponse,
     get_date_from_filename,
     get_latest_extract_file_name,
-    load_extract_file_to_dict,
     save_jsonl_file,
 )
 from data_curation.terminologies.loinc import (
@@ -11,6 +11,7 @@ from data_curation.terminologies.loinc import (
     extract_full_loinc_lab_names,
     get_loinc_current_version_data,
     get_loinc_embedding_records,
+    set_loinc_response,
 )
 from text_to_code.services.embedder import embed
 
@@ -18,38 +19,39 @@ from text_to_code.services.embedder import embed
 # this current function is just set to work for
 # labnames, but can be modified to perform some or all
 # of the various LOINC valuesets
-def update_loinc_embeddings() -> None:
+def update_loinc_embeddings() -> TerminologyUpdateResponse:
     """Process to get the latest updates from LOINC and convert all the new loinc codes and changes to existing loinc codes into embedding records that can be uploaded into TTC Opensearch.
 
-    Returns nothing at this time.
-    TODO: Currently prints out progress and status
-        but we will need to convert that to logging statements
-        in subsequent PRs
+    :returns: Terminology Update Response object that contains terminologies, result, and any messages
     """
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     if current_loinc_file is None:
-        return
+        return set_loinc_response(
+            result="error", message="Unable to locate latest LOINC Lab Names Extract"
+        )
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_filename(current_loinc_file, "loinc")
     if file_date <= loinc_version_date:
-        # TODO: In Subsequent PR update this to be a logging statement
-        print(f"Getting all updates from LOINC since {loinc_version_date}!")
-        # get the current extract into a dict
-        loinc_current_dict = load_extract_file_to_dict(current_loinc_file)
         loinc_updates = get_loinc_embedding_records(
-            loinc_current_dict, loinc_version, loinc_version_date, current_loinc_file
+            loinc_version,
+            loinc_version_date,
+            current_loinc_file,
         )
     else:
-        # TODO: In Subsequent PR update this to be a logging statement
-        print(f"No updates found for the latest LOINC ({loinc_version}) Version!")
-        return
+        return set_loinc_response(
+            result="success",
+            message=f"No updates found for the latest LOINC ({loinc_version}) Version!",
+        )
 
     # add embeddings to any of the records for the various descriptions
     if len(loinc_updates) > 0:
-        print(f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}")
+        loinc_response = set_loinc_response(
+            result="success",
+            message=f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}",
+        )
         for loinc_update_record in loinc_updates:
             if (
                 loinc_update_record.get("description") is not None
@@ -62,6 +64,7 @@ def update_loinc_embeddings() -> None:
 
         # if all goes well write a new valueset file with all the existing codes
         extract_full_loinc_lab_names()
+    return loinc_response
 
 
 def main(all: bool = False, loinc: bool = False) -> None:
@@ -73,9 +76,6 @@ def main(all: bool = False, loinc: bool = False) -> None:
         LOINC terminology updates.  Defaults to False.
 
     Returns nothing at this time.
-    TODO: Currently prints out progress and status
-        but we will need to convert that to logging statements
-        in subsequent PRs
     """
     if all or loinc:
         update_loinc_embeddings()

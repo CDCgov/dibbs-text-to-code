@@ -194,6 +194,7 @@ def _validation_result_xml(raw: _RawAssert) -> str:
     return (
         '        <validationResult xmlns="">\n'
         '            <issue severity="errors">\n'
+        f"                <assertionID>{escape(raw.error_id)}</assertionID>\n"
         f"                <message>{escape(raw.message)}</message>\n"
         f"                <context>{escape(_normalize_location(raw.location))}</context>\n"
         f"                <test>{escape(raw.test)}</test>\n"

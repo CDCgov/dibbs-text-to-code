@@ -70,7 +70,7 @@ RESULT_CACHE_INDEX_MAPPING: OpenSearchIndexMapping = {
 def handler(event: dict, context: LambdaContext) -> dict:
     """Lambda function to manage the OpenSearch index for LOINC code embeddings.
 
-    Supports six actions via the event dict:
+    Supports seven actions via the event dict:
     - "clear_index": Deletes the existing index (if any) and recreates it empty.
       Use this before re-ingesting embeddings to avoid duplicates.
     - "clear_result_cache": As above, but for the Result Cache index rather than
@@ -81,6 +81,8 @@ def handler(event: dict, context: LambdaContext) -> dict:
     - "set_slowlog": Changes logging parameters for AWS across multiple types
       of logging information.
     - "set_result_cache_slowlog": As above, but for the Result Cache index.
+    - "update_term_embeddings": Perform Update process for all terminology
+       embeddings (now only LOINC Lab Names).
 
     :param event: The event dict passed by AWS Lambda. Reads "action" key.
     :param context: The context dict passed by AWS Lambda (not used).
@@ -229,4 +231,15 @@ def _create_index(
         "index_exists": status,
         "index_settings": settings,
         "index_mappings": mappings,
+    }
+
+
+def _update_terminology_embeddings(terminology_set: str) -> dict:
+    """Updates the embeddings in our Opensearch for a specific terminology set, which could be for multiple data elements.
+
+    :param terminology_set: The Terminology set being updated (ie. SNOMED, LOINC, etc...)
+    """
+    return {
+        "statusCode": 200,
+        "terminology": terminology_set,
     }

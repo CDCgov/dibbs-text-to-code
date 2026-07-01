@@ -10,7 +10,9 @@ from datetime import datetime
 from .general import (
     BASE_FOLDER,
     CHANGE_LOG_DIRECTORY,
+    TerminologyUpdateResponse,
     clean_text_string,
+    load_extract_file_to_dict,
     save_json_file,
     save_valueset_csv_file,
 )
@@ -43,6 +45,35 @@ LOINC_TEXT_TO_FILTER = [
 
 LoincRow = dict[str, str | None]
 EmbeddingRecord = dict[str, object]
+
+
+class LoincUpdateResponse(TerminologyUpdateResponse):
+    """Defines dictionary for a LOINC Terminology Update Response."""
+
+    change_log: dict
+    embedding_records: list[EmbeddingRecord]
+
+
+def set_loinc_response(
+    result: str,
+    message: str,
+    change_log: dict | None = None,
+    embedding_records: list[EmbeddingRecord] | None = None,
+) -> LoincUpdateResponse:
+    """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs."""
+    if embedding_records is None:
+        embedding_records = []
+    if change_log is None:
+        change_log = {}
+    loinc_response: LoincUpdateResponse = {
+        "terminology": ["loinc"],
+        "result": result,
+        "message": message,
+        "change_log": change_log,
+        "embedding_records": embedding_records,
+    }
+
+    return loinc_response
 
 
 def extract_full_loinc_lab_names() -> None:
@@ -387,7 +418,10 @@ def get_loinc_current_version_data() -> tuple[str, str]:
 
 
 def get_loinc_embedding_records(
-    current_loinc_dict: dict, new_version: str, loinc_version_date: str, current_loinc_file: str
+    new_version: str,
+    loinc_version_date: str,
+    current_loinc_file: str,
+    response: LoincUpdateResponse,
 ) -> list[dict]:
     """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
@@ -403,8 +437,6 @@ def get_loinc_embedding_records(
     This is currently just for the LOINC Lab Names data, but this can be
     modified to be more flexible for ALL LOINC extraction types as needed.
 
-    :param current_loinc_dict: The current LOINC data, from the existing LOINC Lab Names
-        csv file, loaded into an easier to compare dictionary structure.
     :param new_version: The string of the NEW LOINC version number to be used to
         get the delta from the LOINC API call.
     :param loinc_version_date: The date string of the new loinc version number
@@ -419,9 +451,9 @@ def get_loinc_embedding_records(
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
     #  then add 1
+    current_loinc_dict = load_extract_file_to_dict(current_loinc_file)
     loinc_record_max_id = len(current_loinc_dict) * 5
     embedding_records = []
-    change_log_filename = f"{LAB_NAMES}_DELTA_{datetime.now().strftime('%Y%m%d')}.json"
     change_log = {
         "New Loinc Version": f"{new_version} as of {loinc_version_date}",
         "Compared to file": current_loinc_file,
@@ -489,8 +521,6 @@ def get_loinc_embedding_records(
         )
         embedding_records.extend(new_embedding_records)
         loinc_record_max_id += len(new_embedding_records)
-    # store the record of changes
-    _write_change_log_file(change_log_filename, change_log)
     return embedding_records
 
 
