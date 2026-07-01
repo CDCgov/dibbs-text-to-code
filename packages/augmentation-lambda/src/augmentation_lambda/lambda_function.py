@@ -45,10 +45,11 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         try:
             _process_record(record)
             successes.append(record.message_id)
-        except Exception:
+        except Exception as e:
             logger.exception(
                 "Error processing record",
                 message_id=record.message_id,
+                error=str(e),
                 status="error",
             )
             failures.append({"itemIdentifier": record.message_id})

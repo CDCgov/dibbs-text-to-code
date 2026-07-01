@@ -81,6 +81,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
             logger.exception(
                 "Error processing record",
                 message_id=record.message_id,
+                error=str(e),
                 status="error",
             )
             passthrough_written = _write_ttc_exception_passthrough_output(record, e)
