@@ -392,11 +392,6 @@ def _process_record_pipeline(  # noqa: PLR0915
 
             selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
 
-            logger.info(
-                "Embedding the relevant text strings for each error in the eICR",
-                status="processing",
-            )
-
             if selected_candidate:
                 # Before we run the full embedding, searching, and reranking process,
                 # first let's check if we've seen this nonstandard input before
@@ -408,6 +403,7 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # We've got a hit--no need to run our usual processes, we'll
                 # just pull out the fields we want to use directly
                 if cached_result is not None:
+                    logger.info("Cache hit, retrieving cached results", status="processing")
                     _record_cache_metric(HitValue.hit)
                     new_translation = cached_result.loinc_code
                     nonstandard_code_replacements.append(
@@ -424,6 +420,10 @@ def _process_record_pipeline(  # noqa: PLR0915
                 # Cache miss, so log that, run everything normally, and then finally store
                 # the prediction in the cache for future use
                 else:
+                    logger.info(
+                        "Embedding the relevant text strings for each error in the eICR",
+                        status="processing",
+                    )
                     _record_cache_metric(HitValue.miss)
 
                     vector_embedding = embed(selected_candidate.value)
