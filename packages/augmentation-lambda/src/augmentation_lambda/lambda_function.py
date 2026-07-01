@@ -34,40 +34,24 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     :param event: The SQS event containing S3 event data.
     :param context: The AWS Lambda context object.
-    :return: A dictionary containing processing results and any batch item failures.
+    :return: A dictionary containing SQS batch item failures.
     """
     logger.info("Received event", record_count=len(event["Records"]))
 
-    failures = []
-    successes = []
+    failures: list[dict[str, str]] = []
+    successes: list[str] = []
 
     for record in event.records:
         try:
             _process_record(record)
             successes.append(record.message_id)
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "Error processing record",
                 message_id=record.message_id,
                 status="error",
             )
-            failures.append({"message_id": record.message_id, "error": str(e)})
-
-    result = (
-        {
-            "statusCode": 207,
-            "message": "Augmentation processed with some failures!",
-            "failures": failures,
-            "num_failure_eicrs": len(failures),
-            "num_success_eicrs": len(successes),
-        }
-        if failures
-        else {
-            "statusCode": 200,
-            "message": "Augmentation processed successfully!",
-            "num_success_eicrs": len(successes),
-        }
-    )
+            failures.append({"itemIdentifier": record.message_id})
 
     logger.info(
         "Augmentation invocation completed",
@@ -76,7 +60,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         num_success_eicrs=len(successes),
     )
 
-    return result
+    return {"batchItemFailures": failures}
 
 
 def _process_record(record: SQSRecord) -> None:

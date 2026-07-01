@@ -98,9 +98,7 @@ class TestHandler:
             result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         # Assert handler function returns expected values
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
 
         # Verify augmented eICR was written
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -160,9 +158,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
         augmenter_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -215,9 +211,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -258,9 +252,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -348,9 +340,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
         validate_mock.assert_called_once()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -400,9 +390,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -448,9 +436,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -587,6 +573,7 @@ class TestHandler:
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
             result = lambda_function.handler(event, mock_lambda_context)
+        assert result == {"batchItemFailures": []}
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_source_bucket_routing_result.json",
@@ -626,8 +613,7 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_failure_eicrs"] == 1
-        assert len(result["failures"]) == 1
+        assert result == {"batchItemFailures": [{"itemIdentifier": "msg-missing-eicr"}]}
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_error_missing_eicr_result.json",
@@ -653,8 +639,7 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_failure_eicrs"] == 1
-        assert len(result["failures"]) == 1
+        assert result == {"batchItemFailures": [{"itemIdentifier": "msg-missing-ttc"}]}
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_error_missing_ttc_output_result.json",
@@ -680,8 +665,7 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_success_eicrs"] == 1
-        assert result["num_failure_eicrs"] == 1
+        assert result == {"batchItemFailures": [{"itemIdentifier": "msg-fail"}]}
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_mixed_batch_results_result.json",
@@ -692,6 +676,4 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == {"batchItemFailures": []}

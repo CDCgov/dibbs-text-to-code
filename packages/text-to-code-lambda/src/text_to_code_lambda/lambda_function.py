@@ -38,14 +38,14 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     :param event: The SQS event containing the S3 event data for processing.
     :param context: The Lambda context object.
-    :return: A dictionary containing the status code, message, and any relevant data about the processing results.
+    :return: A dictionary containing SQS batch item failures.
     """
     opensearch_client = lambda_handler.create_opensearch_client()
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
-    failures = []
-    successes = []
+    failures: list[dict[str, str]] = []
+    successes: list[str] = []
 
     for record in event.records:
         try:
@@ -61,23 +61,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
             if passthrough_written:
                 successes.append(record.message_id)
             else:
-                failures.append({"message_id": record.message_id, "error": str(e)})
-
-    result = (
-        {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": failures,
-            "num_failure_eicrs": len(failures),
-            "num_success_eicrs": len(successes),
-        }
-        if failures
-        else {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": len(successes),
-        }
-    )
+                failures.append({"itemIdentifier": record.message_id})
 
     logger.info(
         "TTC invocation completed",
@@ -86,7 +70,7 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
         num_success_eicrs=len(successes),
     )
 
-    return result
+    return {"batchItemFailures": failures}
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:

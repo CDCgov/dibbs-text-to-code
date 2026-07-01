@@ -1,5 +1,3 @@
 {
-  "message": "Augmentation processed successfully!",
-  "num_success_eicrs": 1,
-  "statusCode": 200
+  "batchItemFailures": []
 }

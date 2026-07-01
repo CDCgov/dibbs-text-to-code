@@ -1,0 +1,10 @@
+{
+  "batchItemFailures": [
+    {
+      "itemIdentifier": "first-message-id"
+    },
+    {
+      "itemIdentifier": "second-message-id"
+    }
+  ]
+}
