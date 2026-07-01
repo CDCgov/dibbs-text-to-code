@@ -24,6 +24,8 @@ TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 
 EXPECTED_EXCEPTION_RESULTS = 2
 
+NO_BATCH_ITEM_FAILURES = {"batchItemFailures": []}
+
 
 def _get_serialized_object(key: str) -> str:
     return json.dumps(
@@ -76,7 +78,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
@@ -177,7 +179,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
@@ -192,7 +194,7 @@ class TestHandler:
         example_sqs_event["Records"] = []
         expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
         assert resp["batchItemFailures"] == []
         assert mock_opensearch.search.call_count == expected_num_errors
 
@@ -204,7 +206,7 @@ class TestHandler:
         expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert "Empty SQS body" in caplog_warning.text
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
         assert mock_opensearch.search.call_count == expected_num_errors
 
     def test_handler_fails_when_event_has_no_bucket(
@@ -244,7 +246,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "no_relevant_schematron_fields_ttc_output.json")
@@ -346,7 +348,7 @@ class TestHandler:
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == 1
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "record_exception_id_ttc_output.json")
@@ -438,7 +440,7 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         retriever_embed_mock.assert_not_called()
         reranker_mock.assert_not_called()
@@ -496,7 +498,7 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         assert mock_opensearch.search.call_count == 0
         assert reranker_mock.call_count == 0
@@ -517,7 +519,7 @@ class TestHandler:
         snapshot,
     ):
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(
             f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id}"
@@ -552,7 +554,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {"batchItemFailures": []}
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "reranker_returns_empty_ttc_output.json")

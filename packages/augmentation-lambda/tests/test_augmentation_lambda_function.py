@@ -27,6 +27,7 @@ EXPECTED_ORIGINAL_EICR_ID = CdaInstanceIdentifier(
 EXPECTED_AUGMENTED_EICR_ID = CdaInstanceIdentifier(
     root="d44dc1c6-8a0c-5236-906e-12f6475589ec", extension=None
 )
+NO_BATCH_ITEM_FAILURES = {"batchItemFailures": []}
 
 
 def _serialize_snapshot_value(value: dict[str, object]) -> str:
@@ -98,7 +99,7 @@ class TestHandler:
             result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         # Assert handler function returns expected values
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
 
         # Verify augmented eICR was written
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -158,7 +159,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
         augmenter_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -211,7 +212,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -252,7 +253,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -340,7 +341,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
         validate_mock.assert_called_once()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -390,7 +391,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -436,7 +437,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -573,7 +574,7 @@ class TestHandler:
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
             result = lambda_function.handler(event, mock_lambda_context)
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_source_bucket_routing_result.json",
@@ -676,4 +677,4 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result == {"batchItemFailures": []}
+        assert result == NO_BATCH_ITEM_FAILURES
