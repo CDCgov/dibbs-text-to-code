@@ -177,11 +177,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == {"batchItemFailures": []}
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
