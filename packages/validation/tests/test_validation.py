@@ -1,3 +1,4 @@
+import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -258,3 +259,51 @@ def test_build_schematron_report_xml_normalizes_real_location():
     assert context is not None
     assert context.startswith("/ClinicalDocument[1]/")
     assert context.endswith("/observation[1]")
+
+
+def test_validation_regenerates_stale_generated_files(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Tests that stale generated validation files are regenerated when source files are newer."""
+    outputs = {
+        "STAGE1_OUTPUT": tmp_path / "stage1.sch.tmp",
+        "STAGE2_OUTPUT": tmp_path / "stage2.sch.tmp",
+        "VALIDATOR_OUTPUT": tmp_path / "validator.xsl.tmp",
+        "VOC_OUTPUT": tmp_path / "voc_ttc.xml",
+    }
+    sources = {
+        "APHL_SCHEMATRON": tmp_path / "schema.sch",
+        "XSLT_INCLUDE": tmp_path / "include.xsl",
+        "XSLT_EXPAND": tmp_path / "expand.xsl",
+        "XSLT_COMPILE": tmp_path / "compile.xsl",
+        "VOC_SOURCE": tmp_path / "source_voc_ttc.xml",
+    }
+
+    old_time = 1_000_000_000
+    new_time = 1_000_000_100
+
+    for output_file in outputs.values():
+        output_file.write_text("old generated file")
+        os.utime(output_file, (old_time, old_time))
+
+    for source_file in sources.values():
+        source_file.write_text("<source />")
+        os.utime(source_file, (new_time, new_time))
+
+    for attribute, file_path in [*outputs.items(), *sources.items()]:
+        monkeypatch.setattr(validation_main, attribute, file_path)
+
+    monkeypatch.setattr(validation_main, "PySaxonProcessor", FakeSaxonProcessor)
+
+    results = validate_eicr("<ClinicalDocument />")
+
+    assert results == [
+        ValidationResult(
+            error_id=LabTestNameOrderedSchematronErrors.MISSING_CODE_ATTRIBUTE.value,
+            location=FAKE_LOCATION,
+        )
+    ]
+    assert outputs["STAGE1_OUTPUT"].read_text() == "<generated />"
+    assert outputs["STAGE2_OUTPUT"].read_text() == "<generated />"
+    assert outputs["VALIDATOR_OUTPUT"].read_text() == "<generated />"
+    assert outputs["VOC_OUTPUT"].read_text() == "<source />"
