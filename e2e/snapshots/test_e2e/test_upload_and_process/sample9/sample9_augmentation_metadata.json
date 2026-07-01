@@ -1,7 +1,19 @@
 {
-  "augmented_eicr_id": "1.2.840.114350.1.13.370.2.7.8.688883.608381234",
+  "augmented_eicr_id": {
+    "assigning_authority_name": "EPC",
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "1.2.840.114350.1.13.370.2.7.8.688883.608381234"
+  },
   "error": null,
   "nonstandard_codes": [],
-  "original_eicr_id": "1.2.840.114350.1.13.370.2.7.8.688883.608381234",
+  "original_eicr_id": {
+    "assigning_authority_name": "EPC",
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "1.2.840.114350.1.13.370.2.7.8.688883.608381234"
+  },
   "passthrough_reason": "no_relevant_schematron_errors"
 }

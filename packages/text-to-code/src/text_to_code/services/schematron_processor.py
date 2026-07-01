@@ -66,12 +66,18 @@ def get_data_fields_from_schematron_error(
     xml_root = etree.fromstring(schematron_output.encode("utf-8"))
     eicr_id = _get_eicr_id(xml_root)
     schematron_errors: list[SchematronErrorDetail] = []
+    extraction_error_count = 0
+    missing_assertion_id_count = 0
 
     validation_results = xml_root.xpath(".//*[local-name()='validationResult']")
     if etree.QName(xml_root).localname == "validationResult":
         validation_results.insert(0, xml_root)
 
     for vr in validation_results:
+        message_elem: etree._Element | None = None
+        context_elem: etree._Element | None = None
+        assertion_id_elem: etree._Element | None = None
+
         try:
             issue = vr.find("issue")
             if issue is None:
@@ -86,6 +92,19 @@ def get_data_fields_from_schematron_error(
                 or context_elem is None
                 or context_elem.text is None
             ):
+                continue
+            if assertion_id_elem is None or assertion_id_elem.text is None:
+                missing_assertion_id_count += 1
+                logger.warning(
+                    "Skipping schematron error detail without assertionID",
+                    extra={
+                        "error_message": message_elem.text,
+                        "error_context": context_elem.text,
+                        "status": "missing_assertion_id",
+                        "metric_name": "schematron_error_missing_assertion_id",
+                        "missing_assertion_id_count": missing_assertion_id_count,
+                    },
+                )
                 continue
             error_message = message_elem.text.strip()
             error_context = context_elem.text.strip()
@@ -110,7 +129,8 @@ def get_data_fields_from_schematron_error(
             )
             if error_detail not in schematron_errors:
                 schematron_errors.append(error_detail)
-        except Exception:
+        except (etree.XPathError, AttributeError, ValueError):
+            extraction_error_count += 1
             logger.exception(
                 "Failed to process a schematron error detail",
                 extra={
@@ -118,8 +138,19 @@ def get_data_fields_from_schematron_error(
                     "error_message": message_elem.text if message_elem is not None else None,
                     "error_context": context_elem.text if context_elem is not None else None,
                     "status": "error",
+                    "metric_name": "schematron_error_extraction_raised",
+                    "extraction_error_count": extraction_error_count,
                 },
             )
             continue
+
+    if not schematron_errors and extraction_error_count == 0:
+        logger.info(
+            "No schematron error details found",
+            extra={
+                "status": "no_candidates",
+                "metric_name": "schematron_errors_no_candidates",
+            },
+        )
 
     return schematron_errors

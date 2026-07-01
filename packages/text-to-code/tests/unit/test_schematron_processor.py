@@ -199,6 +199,35 @@ class TestSchematronProcessor:
 
         assert result == []
 
+    def test_get_schematron_error_logs_when_assertion_id_is_missing(self):
+        schematron_errors = """
+        <root>
+            <result>
+                <validationResult>
+                    <issue>
+                        <message>Text to Code: Lab Test Name Resulted does not have a @code attribute.</message>
+                        <context>/ClinicalDocument/component[1]</context>
+                    </issue>
+                </validationResult>
+            </result>
+        </root>
+        """
+
+        with patch("text_to_code.services.schematron_processor.logger.warning") as mock_warning:
+            result = get_data_fields_from_schematron_error(schematron_errors)
+
+        assert result == []
+        mock_warning.assert_called_once_with(
+            "Skipping schematron error detail without assertionID",
+            extra={
+                "error_message": self.LAB_TEST_RESULTED_ERROR,
+                "error_context": "/ClinicalDocument/component[1]",
+                "status": "missing_assertion_id",
+                "metric_name": "schematron_error_missing_assertion_id",
+                "missing_assertion_id_count": 1,
+            },
+        )
+
     def test_get_schematron_error_skips_when_message_has_no_matching_data_field(self):
         schematron_errors = """
         <root>
@@ -294,7 +323,7 @@ class TestSchematronProcessor:
         with (
             patch(
                 "text_to_code.services.schematron_processor.get_data_element_from_schematron_error",
-                side_effect=Exception("boom"),
+                side_effect=ValueError("boom"),
             ),
             patch("text_to_code.services.schematron_processor.logger.exception") as mock_exception,
         ):
@@ -308,5 +337,7 @@ class TestSchematronProcessor:
                 "error_message": self.LAB_TEST_RESULTED_ERROR,
                 "error_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[5]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]",
                 "status": "error",
+                "metric_name": "schematron_error_extraction_raised",
+                "extraction_error_count": 1,
             },
         )
