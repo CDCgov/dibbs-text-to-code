@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock
 
-from shared_models import LOINC_NAME, LOINC_OID, Code
 from lambda_handler.models import (
     OpenSearchHit,
     OpenSearchHits,
@@ -8,7 +7,7 @@ from lambda_handler.models import (
     OpenSearchResult,
     OpenSearchShards,
 )
-from shared_models import Code
+from shared_models import LOINC_NAME, LOINC_OID, Code
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
@@ -32,8 +31,8 @@ class TestResultCacheAPIs:
                 "data_field": "Lab Test Name Ordered",
                 "loinc_code": {
                     "code": "51459-2",
-                    code_system=LOINC_OID,
-                    code_system_name=LOINC_NAME,
+                    "code_system": LOINC_OID,
+                    "code_system_name": LOINC_NAME,
                     "display_name": "fentaNYL [Presence] in Urine by Screen method",
                     "original_text": "Screening urine fentanyl detection",
                 },
