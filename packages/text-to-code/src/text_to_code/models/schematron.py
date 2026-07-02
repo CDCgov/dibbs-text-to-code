@@ -11,6 +11,7 @@ class LabTestNameOrderedSchematronErrors(StrEnum):
     BLANK_CODE_ATTRIBUTE = "ttc-labOrder-code-empty"
     NULL_CODE_ATTRIBUTE = "ttc-labOrder-code-nullFlavor"
     INVALID_CODE_SYSTEM = "ttc-labOrder-wrongCode"
+    NO_CODE = "ttc-labTestNameOrdered-noCode"
 
 
 class LabTestNameResultedSchematronErrors(StrEnum):
@@ -20,6 +21,7 @@ class LabTestNameResultedSchematronErrors(StrEnum):
     BLANK_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-empty"
     NULL_CODE_ATTRIBUTE = "ttc-labTestNameResulted-code-nullFlavor"
     INVALID_CODE_SYSTEM = "ttc-labTestNameResulted-wrongCode"
+    NO_CODE = "ttc-labTestNameOrdered-noCode"
 
 
 SchematronErrors = LabTestNameOrderedSchematronErrors | LabTestNameResultedSchematronErrors

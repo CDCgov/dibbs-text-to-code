@@ -14,12 +14,12 @@ with covid_ecr_path.open() as f:
 
 class TestEicrUtils:
     def test_parse_eicr_xml_preserves_default_namespace(self):
-        result = eicr_utils.parse_eicr_xml(EICR_OUTPUT)
+        result = eicr_utils._parse_eicr_xml(EICR_OUTPUT)
         assert result.tag == f"{{{eicr_utils.CDA_NS}}}ClinicalDocument"
         assert result.nsmap.get(None) == eicr_utils.CDA_NS
 
     def test_parse_eicr_xml_preserves_sdtc_namespace(self):
-        result = eicr_utils.parse_eicr_xml(COVID_ECR)
+        result = eicr_utils._parse_eicr_xml(COVID_ECR)
         assert result.nsmap.get("sdtc") == "urn:hl7-org:sdtc"
 
     def test_cda_xpath_prefixes_unprefixed_elements(self):

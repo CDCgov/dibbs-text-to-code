@@ -1,0 +1,69 @@
+{
+  "eicr_metadata": {
+    "eicr_id": {
+      "assigning_authority_name": null,
+      "displayable": null,
+      "extension": null,
+      "null_flavor": null,
+      "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
+    },
+    "eicr_vendor": "Test eCR Vendor Name"
+  },
+  "error": null,
+  "model_info": {
+    "reranker": {
+      "author": "NCHS",
+      "created_at": "2026-04-02T16:48:39Z",
+      "id": "NCHS/ttc-reranker-mvp",
+      "last_modified": "2026-04-02T17:19:19Z"
+    },
+    "retriever": {
+      "author": "NCHS",
+      "created_at": "2026-03-30T13:52:42Z",
+      "id": "NCHS/ttc-retriever-mvp",
+      "last_modified": "2026-03-30T14:12:37Z"
+    }
+  },
+  "passthrough_reason": null,
+  "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+  "processed_at": "2026-02-13T20:27:00Z",
+  "ttc_schematron_issues": [
+    {
+      "candidate": {
+        "system": null,
+        "value": "A custom code in display name.",
+        "xpath": "code/@displayName"
+      },
+      "field_type": "Lab Test Name Ordered",
+      "issue_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]",
+      "issue_id": "ttc-labOrder-code-missing",
+      "issue_message": "Text to Code: Planned observation code data element has no @code attribute",
+      "issue_test": "not(cda:code) or cda:code/@code or cda:code/cda:translation/@code",
+      "new_translation": {
+        "code": "82041-5",
+        "code_system": "2.16.840.1.113883.6.1",
+        "code_system_name": "LOINC",
+        "display_name": "Weed Allerg Mix3 IgE Qn",
+        "original_text": "A custom code in display name.",
+        "value_set": null,
+        "value_set_version": null
+      },
+      "opensearch_retrieved_scores": {
+        "hits": {
+          "hits": [],
+          "total": {}
+        },
+        "shards": {
+          "failed": 0,
+          "skipped": 0,
+          "successful": 1,
+          "total": 1
+        },
+        "timed_out": false,
+        "took": 234
+      },
+      "reranker_processed_results": [],
+      "unmatched_reason": null
+    }
+  ]
+}

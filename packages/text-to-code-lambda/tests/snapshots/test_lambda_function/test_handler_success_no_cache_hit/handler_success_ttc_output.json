@@ -1,12 +1,4 @@
 {
-  "augmented_eicr_id": {
-    "assigning_authority_name": null,
-    "displayable": null,
-    "extension": null,
-    "null_flavor": null,
-    "root": "d44dc1c6-8a0c-5236-906e-12f6475589ec"
-  },
-  "error": null,
   "nonstandard_codes": [
     {
       "field_type": "Lab Test Name Ordered",
@@ -19,7 +11,6 @@
         "value_set": null,
         "value_set_version": null
       },
-      "new_translation_xpath": "/ClinicalDocument/component/structuredBody/component/section/entry/observation/code/translation",
       "schematron_error_xpath": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]"
     }
   ],
@@ -30,5 +21,6 @@
     "null_flavor": null,
     "root": "c8516bdc-8bb2-40aa-8dae-20a77546488f"
   },
-  "passthrough_reason": null
+  "passthrough_reason": null,
+  "persistence_id": "2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234"
 }

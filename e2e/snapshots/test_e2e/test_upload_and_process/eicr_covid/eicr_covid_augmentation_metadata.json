@@ -1,5 +1,11 @@
 {
-  "augmented_eicr_id": "d44dc1c6-8a0c-5236-906e-12f6475589ec",
+  "augmented_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "d44dc1c6-8a0c-5236-906e-12f6475589ec"
+  },
   "error": null,
   "nonstandard_codes": [
     {
@@ -17,6 +23,12 @@
       "schematron_error_xpath": "/ClinicalDocument[1]/component[1]/structuredBody[1]/component[6]/section[1]/entry[1]/organizer[1]/component[1]/observation[1]"
     }
   ],
-  "original_eicr_id": "10c13861-86a8-4a9a-aec6-b615921178df",
+  "original_eicr_id": {
+    "assigning_authority_name": null,
+    "displayable": null,
+    "extension": null,
+    "null_flavor": null,
+    "root": "10c13861-86a8-4a9a-aec6-b615921178df"
+  },
   "passthrough_reason": null
 }

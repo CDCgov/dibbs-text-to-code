@@ -11,27 +11,6 @@
 </head>
 <body>
 
-  <!-- ── GOVERNMENT BANNER ── -->
-  <section class="usa-banner" aria-label="Official government website">
-    <div class="usa-banner__inner">
-      <span class="banner-flag" aria-hidden="true"></span>
-      <span class="usa-banner__text">An official website of the United States government</span>
-      <button class="usa-banner__button" id="banner-toggle" aria-expanded="false" aria-controls="banner-content">
-        Here's how you know <span class="arrow">▼</span>
-      </button>
-    </div>
-    <div class="usa-banner__content" id="banner-content">
-      <div class="usa-banner__guidance">
-        <span class="ico ico-gov" aria-hidden="true">⌂</span>
-        <p><strong>Official websites use .gov</strong>A <strong>.gov</strong> website belongs to an official government organization in the United States.</p>
-      </div>
-      <div class="usa-banner__guidance">
-        <span class="ico ico-https" aria-hidden="true"><span class="lock"></span></span>
-        <p><strong>Secure .gov websites use HTTPS</strong>A lock (<span class="lock" style="vertical-align:-1px"></span>) or <strong>https://</strong> means you've safely connected to the .gov website.</p>
-      </div>
-    </div>
-  </section>
-
   <!-- ── HEADER ── -->
   <header class="usa-header">
     <div class="usa-header__inner">
@@ -45,7 +24,7 @@
       <nav class="usa-nav" aria-label="Primary navigation">
         <ul class="usa-nav__primary">
           <li><button class="nav-link active" onclick="showPage('demo', this)">Demo</button></li>
-          <li><button class="nav-link" onclick="showPage('testing', this)">Testing</button></li>
+          <li><button class="nav-link" onclick="showPage('testing', this)">Evaluate</button></li>
         </ul>
       </nav>
     </div>
@@ -57,13 +36,51 @@
       <div class="page-intro">
         <div class="grid-container">
           <p class="kicker">Text-to-Code · Demo</p>
-          <h1>Map lab test names to standardized codes</h1>
-          <p class="lead">See how TTC maps nonstandard lab test names to standardized LOINC and SNOMED codes for public health surveillance.</p>
+          <h1>Translate clinical text into standardized codes</h1>
+          <p class="lead">Clinical data in eICRs often arrives as free text or local codes that existing systems can't reliably read. When RCKMS can't parse a data field, reportable conditions may go undetected, or fall to public health staff to resolve manually.</p>
+          <p class="intro-text">Text-to-Code (TTC) uses machine learning to map these values to LOINC and SNOMED-CT, standardizing data upstream in the AIMS pipeline before it reaches RCKMS and downstream tools like eCR Refiner. Original values are always preserved, so the data stays transparent and traceable.</p>
         </div>
       </div>
 
+      <section class="how-it-works">
+        <div class="grid-container">
+          <h2 class="hiw-title">How it works</h2>
+          <ol class="hiw-steps">
+            <li class="hiw-step">
+              <span class="hiw-num" aria-hidden="true">1</span>
+              <div>
+                <h3>Enter lab data</h3>
+                <p>Paste in a value, or try an example.</p>
+              </div>
+            </li>
+            <li class="hiw-step">
+              <span class="hiw-num" aria-hidden="true">2</span>
+              <div>
+                <h3>Run TTC</h3>
+                <p>TTC maps your input to standardized codes like LOINC and SNOMED.</p>
+              </div>
+            </li>
+            <li class="hiw-step">
+              <span class="hiw-num" aria-hidden="true">3</span>
+              <div>
+                <h3>Review outputs</h3>
+                <p>See the suggested codes that TTC produced.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
       <div class="grid-container">
         <div class="demo-body">
+
+          <div class="usa-alert usa-alert--info" role="note" style="margin-top:2rem;">
+            <span class="usa-alert__icon" aria-hidden="true">i</span>
+            <div>
+              <p class="usa-alert__heading">For demonstration only</p>
+              <p>This demo doesn't process real eICRs or any live data. It's here to show how the model would map lab data once it's running in production on AIMS.</p>
+            </div>
+          </div>
 
           <div class="form-section">
             <span class="section-label">Data element type</span>
@@ -141,9 +158,9 @@
     <div id="page-testing" class="page">
       <div class="page-intro">
         <div class="grid-container">
-          <p class="kicker">Text-to-Code · Testing</p>
-          <h1>Validate TTC against your own data</h1>
-          <p class="lead">Upload a CSV of lab test strings, review TTC's suggested codes, and export your annotated results.</p>
+          <p class="kicker">Text-to-Code · Evaluate</p>
+          <h1>Evaluate TTC's suggested codes</h1>
+          <p class="lead">Upload a CSV of nonstandard lab data, review TTC's suggested codes, and export your annotated results.</p>
         </div>
       </div>
 
@@ -287,29 +304,6 @@
       </nav>
     </div>
   </footer>
-
-  <!-- ── USWDS IDENTIFIER ── -->
-  <section class="usa-identifier" aria-label="Agency identifier">
-    <div class="usa-identifier__inner">
-      <div class="usa-identifier__masthead">
-        <span class="usa-identifier__logo" aria-hidden="true">CDC</span>
-        <p class="usa-identifier__id">
-          An official website of the <strong>Centers for Disease Control and Prevention</strong>, part of the U.S. Department of Health and Human Services.
-        </p>
-      </div>
-      <nav class="usa-identifier__required" aria-label="Important links">
-        <a href="#">About CDC</a>
-        <a href="#">Accessibility</a>
-        <a href="#">FOIA requests</a>
-        <a href="#">No FEAR Act data</a>
-        <a href="#">Privacy policy</a>
-        <a href="#">Vulnerability disclosure</a>
-      </nav>
-      <p class="usa-identifier__gov">
-        Looking for U.S. government information and services? Visit <a href="https://www.usa.gov">USA.gov</a>
-      </p>
-    </div>
-  </section>
 
   <script src="app.js"></script>
 

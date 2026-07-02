@@ -6,13 +6,13 @@ dependencies = [
   "aws-lambda-powertools>=2.0.0",
   "boto3>=1.40.60",
   "opensearch-py>=2.0.0",
-  "requests-aws4auth>=1.1.3",
+  "requests-aws4auth>=1.3.2",
 ]
 
 [dependency-groups]
 # `fastapi`/`uvicorn` power the local dev server (local_server.py) only; they are
 # intentionally NOT runtime dependencies so they stay out of the Lambda image.
-dev = ["moto", "fastapi>=0.115.0", "uvicorn>=0.30.0"]
+dev = ["fastapi>=0.138.2", "moto", "uvicorn>=0.30.0"]
 
 [build-system]
 requires = ["hatchling"]
