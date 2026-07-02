@@ -11,6 +11,8 @@ from opensearchpy import OpenSearch
 
 import lambda_handler
 from shared_models import (
+    LOINC_NAME,
+    LOINC_OID,
     Code,
     NonstandardCodeInstance,
     PassthroughReason,
