@@ -1,17 +1,13 @@
-from datetime import datetime
-
 from data_curation.terminologies.general import (
     TerminologyUpdateResponse,
     get_date_from_filename,
     get_latest_extract_file_name,
-    save_jsonl_file,
 )
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
-    extract_full_loinc_lab_names,
+    LoincUpdateResponse,
     get_loinc_current_version_data,
     get_loinc_embedding_records,
-    set_loinc_response,
 )
 from text_to_code.services.embedder import embed
 
@@ -24,46 +20,49 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
 
     :returns: Terminology Update Response object that contains terminologies, result, and any messages
     """
+    general_response: TerminologyUpdateResponse
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     if current_loinc_file is None:
-        return set_loinc_response(
-            result="error", message="Unable to locate latest LOINC Lab Names Extract"
-        )
+        raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_filename(current_loinc_file, "loinc")
     if file_date <= loinc_version_date:
-        loinc_updates = get_loinc_embedding_records(
+        loinc_response: LoincUpdateResponse = get_loinc_embedding_records(
             loinc_version,
             loinc_version_date,
             current_loinc_file,
         )
     else:
-        return set_loinc_response(
-            result="success",
-            message=f"No updates found for the latest LOINC ({loinc_version}) Version!",
-        )
+        general_response = {
+            "result": "success",
+            "message": f"No updates found for the latest LOINC ({loinc_version}) Version!",
+        }
+        return general_response
 
     # add embeddings to any of the records for the various descriptions
-    if len(loinc_updates) > 0:
-        loinc_response = set_loinc_response(
-            result="success",
-            message=f"LOINC Lab Name Embedding Records to add: {len(loinc_updates)}",
-        )
-        for loinc_update_record in loinc_updates:
+    if len(loinc_response["embedding_records"]) > 0:
+        for loinc_update_record in loinc_response["embedding_records"]:
             if (
                 loinc_update_record.get("description") is not None
                 and loinc_update_record.get("description", "").strip()
             ):
                 embedding = embed(loinc_update_record["description"])
                 loinc_update_record["description_vector"] = embedding.tolist()
-        ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
-        save_jsonl_file(ingestion_file_name, loinc_updates)
+        # TODO:
+        # use this same filename convention but store these in an
+        # S3 Bucket instead of a file locally - this is for the JSONL Files
+        #  ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
 
         # if all goes well write a new valueset file with all the existing codes
-        extract_full_loinc_lab_names()
+        # TODO: this should be passed back to be written back into S3 Bucket by the LAMBDA
+
+        # TODO: the Lambda then needs to extract and store the FULL
+        # LOINC File in S3 as well for the next comparison AND
+        # Delete the current extract file
+        # extract_full_loinc_lab_names()
     return loinc_response
 
 

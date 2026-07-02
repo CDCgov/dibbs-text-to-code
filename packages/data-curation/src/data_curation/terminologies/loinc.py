@@ -9,12 +9,9 @@ from datetime import datetime
 
 from .general import (
     BASE_FOLDER,
-    CHANGE_LOG_DIRECTORY,
     TerminologyUpdateResponse,
     clean_text_string,
     load_extract_file_to_dict,
-    save_json_file,
-    save_valueset_csv_file,
 )
 from .http_client import STATUS_CODE_OK, get_with_timeout
 
@@ -33,7 +30,6 @@ LOINC_PWD = os.environ.get("LOINC_PWD")
 
 # LOINC Specific Files & Directories
 LOINC_CS_NAMES = BASE_FOLDER / "loinc_other" / "consumer_names.csv"
-LOINC_PARTS_ABBRV_SYNONYMS = BASE_FOLDER / "loinc_other" / "loinc_parts_abbrv_synonyms.txt"
 LAB_NAMES = "loinc_lab_names"
 LAB_ORDERS = "loinc_lab_orders"
 LAB_RESULT = "loinc_lab_result"
@@ -54,17 +50,17 @@ class LoincUpdateResponse(TerminologyUpdateResponse):
     embedding_records: list[EmbeddingRecord]
 
 
-def set_loinc_response(
+def _set_loinc_response(
     result: str,
     message: str,
     change_log: dict | None = None,
     embedding_records: list[EmbeddingRecord] | None = None,
 ) -> LoincUpdateResponse:
     """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs."""
-    if embedding_records is None:
-        embedding_records = []
     if change_log is None:
         change_log = {}
+    if embedding_records is None:
+        embedding_records = []
     loinc_response: LoincUpdateResponse = {
         "terminology": ["loinc"],
         "result": result,
@@ -76,30 +72,41 @@ def set_loinc_response(
     return loinc_response
 
 
-def extract_full_loinc_lab_names() -> None:
+def extract_full_loinc_lab_names() -> list[dict]:
     """Function that extracts all the latest LOINC Lab Names (all loinc codes regardless of being of type 'Order', 'Observation' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # TODO:
+    # use this same filename convention but store these in an
+    # S3 Bucket instead of a file locally
+    #  loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # For now will return the loinc rows
     all_loinc_rows = _get_loinc_lab_names()
 
-    save_valueset_csv_file(loinc_filename, all_loinc_rows, False)
+    return all_loinc_rows
 
 
-def extract_full_loinc_lab_orders() -> None:
+def extract_full_loinc_lab_orders() -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # TODO:
+    # use this same filename convention but store these in an
+    # S3 Bucket instead of a file locally
+    #  loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # For now will return the loinc rows
     loinc_order_rows = _get_loinc_lab_orders()
+    return loinc_order_rows
 
-    save_valueset_csv_file(loinc_filename, loinc_order_rows, False)
 
-
-def extract_full_loinc_lab_results() -> None:
+def extract_full_loinc_lab_results() -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # TODO:
+    # use this same filename convention but store these in an
+    # S3 Bucket instead of a file locally
+    #  loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
+    # For now will return the loinc rows
     loinc_result_rows = _get_loinc_lab_results()
-    save_valueset_csv_file(loinc_filename, loinc_result_rows, False)
+    return loinc_result_rows
 
 
-def _get_loinc_lab_names(version: str = "") -> list:
+def _get_loinc_lab_names(version: str = "") -> list[dict]:
     """Process to get the all, or version specific, LOINC Codes and terms via the LOINC API for all labs (Lab Names) that are categorized as 'Observations', 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -123,7 +130,7 @@ def _get_loinc_lab_names(version: str = "") -> list:
     return all_loinc_rows
 
 
-def _get_loinc_lab_orders(version: str = "") -> list:
+def _get_loinc_lab_orders(version: str = "") -> list[dict]:
     """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -150,7 +157,7 @@ def _get_loinc_lab_orders(version: str = "") -> list:
     return loinc_order_rows
 
 
-def _get_loinc_lab_results(version: str = "") -> list:
+def _get_loinc_lab_results(version: str = "") -> list[dict]:
     """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -176,7 +183,7 @@ def _get_loinc_lab_results(version: str = "") -> list:
     return loinc_result_rows
 
 
-def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict]:
+def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list:
     """Function that makes the LOINC API calls based upon the url and the loinc_Valueset_type passed in.  It confirms that the LOINC User/PWD are configured, makes the calls and then passes the output into another function for more detailed processing. This function also performs the looping and row count maintanence as LOINC can only return 500 rows at a time.
 
     :param api_url: LOINC url for the specific API used for requesting
@@ -194,19 +201,14 @@ def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict
         )
     loinc_response = get_with_timeout(api_url, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != STATUS_CODE_OK:
-        # TODO: In Subsequent PR update this to be a logging statement
-        print(
+        raise RuntimeError(
             f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {loinc_response.status_code}: {loinc_response.text}"
         )
-        return []
 
     loinc_codes = loinc_response.json()
     loinc_rows = []
     loinc_umls_urls = {}
 
-    record_count = loinc_codes["ResponseSummary"]["RecordsFound"]
-    # TODO: In Subsequent PR update this to be a logging statement
-    print(f"{loinc_valueset_type} Record Count: {record_count}")
     current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
     next_url_call = loinc_codes["ResponseSummary"]["Next"]
 
@@ -225,11 +227,9 @@ def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list[dict
         if next_url_call is not None:
             next_loinc_response = get_with_timeout(next_url_call, auth=(LOINC_USERNAME, LOINC_PWD))
             if next_loinc_response.status_code != STATUS_CODE_OK:
-                # TODO: In Subsequent PR update this to be a logging statement
-                print(
+                raise RuntimeError(
                     f"ERROR Retrieving LOINC {loinc_valueset_type} CODES: {next_loinc_response.status_code}: {next_loinc_response.text}"
                 )
-                return []
             loinc_codes = next_loinc_response.json()
             current_row_count = loinc_codes["ResponseSummary"]["RowsReturned"]
             next_url_call = loinc_codes.get("ResponseSummary").get("Next")
@@ -255,9 +255,7 @@ def _process_loinc_results(
         axis data.
     """
     if len(loinc_results) == 0:
-        # TODO: In Subsequent PR update this to be a logging statement
-        print("NO RESULTS TO PROCESS!")
-        return loinc_rows
+        raise RuntimeError("NO RESULTS TO PROCESS!")
 
     for loinc_result in loinc_results:
         loinc_rows = _get_all_loinc_terms_per_code(loinc_result, loinc_rows)
@@ -360,6 +358,8 @@ def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     cs_names = {}
     # loop through all the loinc rows and get the code
     # use that to look up the consumer name for each and add it to the row
+    # TODO: We need to modify this to accept the results of the entire
+    # file and leverage them instead of opening a local file
     with open(LOINC_CS_NAMES, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for cs_row in reader:
@@ -404,10 +404,6 @@ def get_loinc_current_version_data() -> tuple[str, str]:
         )
     loinc_response = get_with_timeout(LOINC_META_URL, auth=(LOINC_USERNAME, LOINC_PWD))
     if loinc_response.status_code != STATUS_CODE_OK:
-        # TODO: In Subsequent PR update this to be a logging statement
-        print(
-            f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
-        )
         raise RuntimeError(
             f"ERROR Retrieving LOINC META Data for current Version: {loinc_response.status_code}: {loinc_response.text}"
         )
@@ -421,7 +417,6 @@ def get_loinc_embedding_records(
     new_version: str,
     loinc_version_date: str,
     current_loinc_file: str,
-    response: LoincUpdateResponse,
 ) -> list[dict]:
     """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
@@ -521,7 +516,13 @@ def get_loinc_embedding_records(
         )
         embedding_records.extend(new_embedding_records)
         loinc_record_max_id += len(new_embedding_records)
-    return embedding_records
+
+    return _set_loinc_response(
+        result="success",
+        message=f"Updated {len(embedding_records)} LOINC Embedding Records!",
+        change_log=change_log,
+        embedding_records=embedding_records,
+    )
 
 
 def _create_embedding_records(
@@ -670,7 +671,3 @@ def _create_embedding_record(
         "class_type": loinc_axis["class"],
     }
     return embedding_record
-
-
-def _write_change_log_file(file_name: str, content: dict) -> None:
-    save_json_file(str(CHANGE_LOG_DIRECTORY), file_name, content)
