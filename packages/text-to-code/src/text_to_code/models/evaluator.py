@@ -172,8 +172,8 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
     translation_preference: TranslationPreference = Field(
         default_factory=lambda: TranslationPreference(
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=[LOINC_URL, LOINC_URN],
-            snomed_system_values=[SNOMED_URL, SNOMED_URN],
+            loinc_system_values=CodeSystemValues.LOINC_VALUES,
+            snomed_system_values=CodeSystemValues.SNOMED_VALUES,
         )
     )
 
