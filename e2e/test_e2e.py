@@ -55,21 +55,25 @@ REGENERATED_DOCUMENT_HEADER_TAGS: tuple[str, str, str, str] = (
 )
 ElementSignature = tuple[str, tuple[tuple[str, str], ...], str]
 
-EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
+
+EICR_CASES = (
     (
         "eicr_test",
         ASSETS_FOLDER / "eicr_test" / "eicr_test.xml",
         ASSETS_FOLDER / "eicr_test" / "eicr_test_schematron_errors.xml",
+        ["A custom code in display name."],
     ),
     (
         "eicr_covid",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid.xml",
         ASSETS_FOLDER / "eicr_covid" / "eicr_covid_schematron_errors.xml",
+        ["COVID-19 Spike IgG Interpretation"],
     ),
     (
         "eicr_empty",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty.xml",
         ASSETS_FOLDER / "eicr_empty" / "eicr_empty_schematron_errors.xml",
+        [""],
     ),
     (
         "patient_alliance",
@@ -77,11 +81,20 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         ASSETS_FOLDER
         / "patient_alliance"
         / "eICR Sample Patient Alliance 03132020_schematron_errors.xml",
+        [
+            "CHLAMURETHRA",
+            "CHLAMRECNAAT",
+            "CHLAMTHROAT",
+            "CHLAM DNA PR",
+            "GC-THROAT",
+            "GC RECTUM",
+        ],
     ),
     (
         "sample7",
         ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues.xml",
         ASSETS_FOLDER / "sample7" / "eICR_Sample7_nullFlavorResultValues_schematron_errors.xml",
+        ["Influenza A & B Antigen"],
     ),
     (
         "sample9",
@@ -89,9 +102,9 @@ EICR_CASES: tuple[tuple[str, Path, Path], ...] = (
         ASSETS_FOLDER
         / "sample9"
         / "eICR_Sample9_nullFlavorResultValues_localCodes_schematron_errors.xml",
+        [""],
     ),
 )
-
 NAMESPACE_PRESERVATION_SCHEMATRON_PATH = (
     ASSETS_FOLDER / "namespace_preservation" / "namespace_preservation_schematron_errors.xml"
 )
@@ -504,9 +517,10 @@ class TestEndToEndSimulated:
         return aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)["Body"].read().decode("utf-8")
 
     @pytest.mark.parametrize(
-        ("eicr_id", "eicr_path", "schematron_path"),
+        ("eicr_id", "eicr_path", "schematron_path", "mock_opensearch"),
         EICR_CASES,
         ids=[eicr_case[0] for eicr_case in EICR_CASES],
+        indirect=["mock_opensearch"],
     )
     def test_upload_and_process(
         self,

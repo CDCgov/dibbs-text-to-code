@@ -56,18 +56,18 @@ Given TTC results, the augmenter:
 
 This is a **uv workspace** (Python). All Python packages live under `packages/`.
 
-| Package                                                | Role                                                                                                 |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| [`shared-models`](packages/shared-models/)             | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput`          |
-| [`text-to-code`](packages/text-to-code/)               | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building          |
-| [`augmentation`](packages/augmentation/)               | Writes TTC results back into eICR XML as `<translation>` elements                                    |
-| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow (S3 → SQS triggered); also exposes the synchronous demo API   |
-| [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events                            |
-| [`index-lambda`](packages/index-lambda/)               | AWS Lambda that bootstraps the OpenSearch KNN index (1024-dim HNSW/faiss/cosine) at deploy time      |
-| [`lambda-handler`](packages/lambda-handler/)           | Shared Lambda runtime utilities (S3/OpenSearch clients, event parsing) used by the Lambda packages   |
-| [`utils`](packages/utils/)                             | Path, regex, and LOINC name parsing utilities                                                        |
-| [`data-curation`](packages/data-curation/)             | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data |
-| [`validation`](packages/validation/)                   | Functionality to validate an eICR and to create Schematron output                                    |
+| Package                                                | Role                                                                                                       |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| [`shared-models`](packages/shared-models/)             | Pydantic models shared across packages: `DataField`, `TTCAugmentation`, `TTCAugmenterInput`                |
+| [`text-to-code`](packages/text-to-code/)               | Core TTC logic: XML parsing, candidate evaluation, embedding, and OpenSearch query building                |
+| [`augmentation`](packages/augmentation/)               | Writes TTC results back into eICR XML as `<translation>` elements                                          |
+| [`text-to-code-lambda`](packages/text-to-code-lambda/) | AWS Lambda handler for the TTC workflow (S3 → SQS triggered); also exposes the synchronous demo API        |
+| [`augmentation-lambda`](packages/augmentation-lambda/) | AWS Lambda handler for the augmentation workflow, triggered by SQS events                                  |
+| [`index-lambda`](packages/index-lambda/)               | AWS Lambda that bootstraps the OpenSearch KNN index (1024-dim HNSW/faiss/cosine) at deploy time            |
+| [`lambda-handler`](packages/lambda-handler/)           | Shared Lambda runtime utilities (S3/OpenSearch clients, event parsing) used by the Lambda packages         |
+| [`utils`](packages/utils/)                             | Path, regex, and LOINC name parsing utilities                                                              |
+| [`data-curation`](packages/data-curation/)             | Scripts for pulling terminology data from LOINC, SNOMED, UMLS, and HL7 APIs; generates training data       |
+| [`validation`](packages/validation/)                   | Functionality to validate an eICR and to create Schematron output                                          |
 | [`frontend`](frontend/)                                | Static HTML/CSS/JS demo page for the synchronous text-to-code API (run with [`demo.sh`](frontend/demo.sh)) |
 
 ### Architecture Diagram
@@ -201,6 +201,14 @@ just test e2e
 ```
 
 e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS systems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
+
+## Validation test:
+
+To ensure the latest schematron updates are being used when running `packages/validation` locally, use the following command:
+
+```sh
+just test validation
+```
 
 ### Type checks
 

@@ -3,6 +3,7 @@ from .labs import BaseLabField, LabTestNameOrdered, LabTestNameResulted
 from .model_info import ModelInfo, TTCModelInfo
 from .query import DataFieldTypeMapping, VectorSearchParams
 from .registry import EICR_REGISTRY, TTC_RERANKER, TTC_RETRIEVER
+from .result_cache import OpenSearchResultCacheSource
 from .schematron import (
     _SCHEMATRON_ENUM_TO_FIELD,
     LabTestNameOrderedSchematronErrors,
@@ -26,6 +27,7 @@ __all__ = [
     "LabTestNameResultedSchematronErrors",
     "LabXPaths",
     "ModelInfo",
+    "OpenSearchResultCacheSource",
     "SchematronConfig",
     "SchematronErrorDetail",
     "SchematronErrors",

@@ -73,6 +73,21 @@ def _normalize_whitespace(value: str | None) -> str:
     return " ".join(value.split()) if value else ""
 
 
+def _needs_regeneration(output_file: Path, source_files: tuple[Path, ...]) -> bool:
+    """Determine whether a generated validation file is missing or stale.
+
+    :param output_file: The generated validation file to check.
+    :param source_files: The source files used to generate the output file.
+    :return: True when the generated file should be regenerated.
+    """
+    if not output_file.exists():
+        return True
+
+    output_modified_time = output_file.stat().st_mtime
+
+    return any(source_file.stat().st_mtime > output_modified_time for source_file in source_files)
+
+
 def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawAssert]:
     """Compile the schematron and run it against the eICR, returning failed asserts.
 
@@ -100,7 +115,7 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
             else:
                 logger.info("Will use existing files for Step 1-3")
 
-            if not STAGE1_OUTPUT.exists():
+            if _needs_regeneration(STAGE1_OUTPUT, (APHL_SCHEMATRON, XSLT_INCLUDE)):
                 # Step 1: Process includes
                 # Note: For schxslt, you typically apply the XSLT to the SCH file as the source
                 logger.info("--- Step 1: Process Includes against Schematron File")
@@ -110,7 +125,7 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
                     output_file=str(STAGE1_OUTPUT),
                 )
 
-            if not STAGE2_OUTPUT.exists():
+            if _needs_regeneration(STAGE2_OUTPUT, (STAGE1_OUTPUT, XSLT_EXPAND)):
                 # Step 2: Expand abstract rules
                 logger.info("--- Step 2: Expand abstract rules using output from Step 1")
                 xsltproc.transform_to_file(
@@ -119,7 +134,7 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
                     output_file=str(STAGE2_OUTPUT),
                 )
 
-            if not VALIDATOR_OUTPUT.exists():
+            if _needs_regeneration(VALIDATOR_OUTPUT, (STAGE2_OUTPUT, XSLT_COMPILE)):
                 # Step 3: Compile to an SVRL-producing XSLT stylesheet
                 logger.info(
                     "--- Step 3: Compile to an SVRL-producing XSLT stylesheet using the output from Step 2"
@@ -134,7 +149,7 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
             # Guarded like the stage artifacts above: on Lambda the package dir is read-only
             # and this file is baked into the image at build time (Dockerfile.augmentation),
             # so an unconditional copy would crash with OSError [Errno 30] on every invocation.
-            if not VOC_OUTPUT.exists():
+            if _needs_regeneration(VOC_OUTPUT, (VOC_SOURCE,)):
                 shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
 
             # Step 4: Apply the generated XSLT to the source XML
@@ -194,6 +209,7 @@ def _validation_result_xml(raw: _RawAssert) -> str:
     return (
         '        <validationResult xmlns="">\n'
         '            <issue severity="errors">\n'
+        f"                <assertionID>{escape(raw.error_id)}</assertionID>\n"
         f"                <message>{escape(raw.message)}</message>\n"
         f"                <context>{escape(_normalize_location(raw.location))}</context>\n"
         f"                <test>{escape(raw.test)}</test>\n"

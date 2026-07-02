@@ -2238,7 +2238,7 @@
                                         <originalText>chlamydia, nucleic acid amplification test
                                             (NAAT) result, throat culture</originalText>
                                         <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                        <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="CHLAMTHROAT"/>
+                                        <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="CHLAMRECNAAT"/>
                                     </code>
                                     <statusCode code="completed"/>
                                     <effectiveTime value="20190927095220-0500"/>
@@ -2277,7 +2277,7 @@
                                         <originalText>Chlamydia Rectal Nucleic acid amplification
                                             test (NAAT)</originalText>
                                         <!--DATA AUGMENTATION: The data in the translation is the augmented data -->
-                                        <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="CHLAMRECNAAT"/>
+                                        <translation code="82041-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" DisplayName="Weed Allerg Mix3 IgE Qn" originalText="CHLAMTHROAT"/>
                                     </code>
                                     <statusCode code="completed"/>
                                     <effectiveTime value="20190927095220-0500"/>
