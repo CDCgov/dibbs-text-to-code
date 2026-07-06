@@ -11,6 +11,8 @@ from opensearchpy import OpenSearch
 
 import lambda_handler
 from shared_models import (
+    LOINC_NAME,
+    LOINC_OID,
     Code,
     NonstandardCodeInstance,
     PassthroughReason,
@@ -504,8 +506,8 @@ def _process_record_pipeline(  # noqa: PLR0915
                             )
                             new_translation = Code(
                                 code=top_result.source.loinc_code,
-                                code_system="2.16.840.1.113883.6.1",
-                                code_system_name="LOINC",
+                                code_system=LOINC_OID,
+                                code_system_name=LOINC_NAME,
                                 display_name=top_result.source.description,
                                 original_text=selected_candidate.value,
                             )
