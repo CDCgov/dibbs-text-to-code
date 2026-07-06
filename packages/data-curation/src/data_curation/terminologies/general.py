@@ -83,6 +83,8 @@ def get_latest_extract_file_name(filename_prefix: str | None) -> str | None:
     if filename_prefix is None:
         return None
 
+    # TODO: This will need to change to pull the file
+    # from the S3 Bucket and return the file name
     files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(filename_prefix)]
     if filename_prefix != "" and files:
         latest_file = max(files)
@@ -98,6 +100,9 @@ def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]
 
     :returns: A dictionary of the data pulled from a csv file.
     """
+    # TODO: This will need to change to pull the file
+    # from the S3 Bucket and load the contents into
+    # a dict
     if not filename or filename == "":
         return {}
     file_path = BASE_FOLDER / filename
@@ -125,6 +130,9 @@ def save_valueset_csv_file(
 
     :returns: Nothing.
     """
+    # TODO: This will need to change to write the csv
+    # file into an S3 bucket
+    # maybe will need a service for all the S3 work?
     if not filename.strip():
         print("No filename supplied.  Failed to save CSV file!")
         return
@@ -169,6 +177,9 @@ def save_json_file(
 
     :returns: Nothing.
     """
+    # TODO: This will need to change to write the csv
+    # file into an S3 bucket
+    # maybe will need a service for all the S3 work?
     if not filename.strip() or not directory_path:
         print("No filename & path supplied.  Failed to save JSON File!")
         return
@@ -205,6 +216,9 @@ def save_jsonl_file(filename: str, contents: list[dict]) -> None:
 
     :returns: Nothing.
     """
+    # TODO: This will need to change to write the csv
+    # file into an S3 bucket
+    # maybe will need a service for all the S3 work?
     full_file_path = BASE_FOLDER / filename
     try:
         with open(full_file_path, "w") as f:
