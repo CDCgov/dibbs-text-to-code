@@ -6,5 +6,27 @@
     {
       "itemIdentifier": "second-message-id"
     }
-  ]
+  ],
+  "failures": [
+    {
+      "error": "first failure",
+      "error_type": "Exception",
+      "message_id": "first-message-id",
+      "passthrough_written": false,
+      "sqs_retry": true
+    },
+    {
+      "error": "second failure",
+      "error_type": "Exception",
+      "message_id": "second-message-id",
+      "passthrough_written": false,
+      "sqs_retry": true
+    }
+  ],
+  "message": "TTC invocation completed",
+  "num_failure_eicrs": 2,
+  "num_processing_error_eicrs": 2,
+  "num_success_eicrs": 0,
+  "status": "partial_failure",
+  "successes": []
 }

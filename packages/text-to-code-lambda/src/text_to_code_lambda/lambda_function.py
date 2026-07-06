@@ -70,33 +70,93 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
-    failures: list[dict[str, str]] = []
-    successes: list[str] = []
+    batch_item_failures: list[dict[str, str]] = []
+    failures: list[dict[str, object]] = []
+    successes: list[dict[str, str]] = []
 
     for record in event.records:
         try:
-            process_record(record, opensearch_client)
-            successes.append(record.message_id)
+            output = process_record(record, opensearch_client)
+
+            if output is None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "skipped",
+                    }
+                )
+            elif output.passthrough_reason is not None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "passthrough_written",
+                    }
+                )
+            else:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "processed",
+                    }
+                )
         except Exception as e:
             logger.exception(
                 "Error processing record",
+                error=str(e),
                 message_id=record.message_id,
                 status="error",
             )
             passthrough_written = _write_ttc_exception_passthrough_output(record, e)
+            failures.append(
+                {
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "message_id": record.message_id,
+                    "passthrough_written": passthrough_written,
+                    "sqs_retry": not passthrough_written,
+                }
+            )
+
             if passthrough_written:
-                successes.append(record.message_id)
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "passthrough_written",
+                    }
+                )
             else:
-                failures.append({"itemIdentifier": record.message_id})
+                batch_item_failures.append({"itemIdentifier": record.message_id})
+
+    if batch_item_failures:
+        status = "partial_failure"
+    elif any(success["status"] == "passthrough_written" for success in successes):
+        status = "success_with_passthrough"
+    else:
+        status = "success"
+
+    response: dict[str, object] = {
+        "batchItemFailures": batch_item_failures,
+        "failures": failures,
+        "message": "TTC invocation completed",
+        "num_failure_eicrs": len(batch_item_failures),
+        "num_processing_error_eicrs": len(failures),
+        "num_success_eicrs": len(successes),
+        "status": status,
+        "successes": successes,
+    }
 
     logger.info(
         "TTC invocation completed",
-        status="partial_failure" if failures else "success",
-        num_failure_eicrs=len(failures),
+        batch_item_failures=batch_item_failures,
+        failures=failures,
+        num_failure_eicrs=len(batch_item_failures),
+        num_processing_error_eicrs=len(failures),
         num_success_eicrs=len(successes),
+        status=status,
+        successes=successes,
     )
 
-    return {"batchItemFailures": failures}
+    return response
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
@@ -168,14 +228,14 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         return False
 
 
-def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
+def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> TTCAugmenterInput | None:
     """Process each SQS record.
 
     :param record: The SQS record to process
     """
     if not record.body:
         logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
-        return
+        return None
 
     s3_event = json.loads(record.body)
 
@@ -201,7 +261,7 @@ def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
         trigger_s3_key=object_key,
     ):
         logger.info("Processing TTC event", status="processing")
-        _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
+        return _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
 
 
 def _load_schematron_data_fields(persistence_id: str, bucket_name: str) -> list:
@@ -330,7 +390,7 @@ def _process_record_pipeline(  # noqa: PLR0915
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
-) -> None:
+) -> TTCAugmenterInput:
     """The main pipeline for processing each record.
 
     The pipeline includes:
@@ -526,6 +586,8 @@ def _process_record_pipeline(  # noqa: PLR0915
         status="matched" if ttc_output.nonstandard_codes else "no_matches_found",
         passthrough_reason=passthrough_reason,
     )
+
+    return ttc_output
 
 
 def _save_outputs(
