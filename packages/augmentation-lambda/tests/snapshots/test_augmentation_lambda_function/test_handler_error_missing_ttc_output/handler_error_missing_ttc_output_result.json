@@ -3,5 +3,20 @@
     {
       "itemIdentifier": "msg-missing-ttc"
     }
-  ]
+  ],
+  "failures": [
+    {
+      "error": "S3 object not found: dibbs-text-to-code/TTCAugmentationMetadataV2/2025/09/03/1-5f84c7a5-91d7f5c6a2b7c9e08f0d1234",
+      "error_type": "FileNotFoundError",
+      "message_id": "msg-missing-ttc",
+      "passthrough_written": false,
+      "sqs_retry": true
+    }
+  ],
+  "message": "Augmentation invocation completed",
+  "num_failure_eicrs": 1,
+  "num_processing_error_eicrs": 1,
+  "num_success_eicrs": 0,
+  "status": "partial_failure",
+  "successes": []
 }
