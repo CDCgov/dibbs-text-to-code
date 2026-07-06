@@ -5,7 +5,7 @@ readme = "README.md"
 dependencies = [
   "lxml>=6.0.2",
   "pydantic>=2.12.5",
-  "sentence-transformers",
+  "sentence-transformers>=5.3.0,<5.4.0", # sentence-tranformers introduces a breaking change at 5.4.0 that we would want to more carefully evaluate before upgrading to it
   "torch",
 ]
 

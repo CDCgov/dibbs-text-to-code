@@ -3,7 +3,15 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from shared_models import DataField, FrozenBaseModel
+from shared_models import (
+    LOINC_NAME,
+    LOINC_URL,
+    LOINC_URN,
+    SNOMED_URL,
+    SNOMED_URN,
+    DataField,
+    FrozenBaseModel,
+)
 
 from ..models.eicr import LabXPaths
 
@@ -18,22 +26,16 @@ class CodeTranslation(StrEnum):
         code system list, otherwise None.
     """
 
-    LOINC = "LOINC"
+    LOINC = LOINC_NAME
     SNOMED = "SNOMED"
 
 
 class CodeSystemValues(list[str]):
     """A list of code system identifier strings used to classify translation candidates."""
 
-    LOINC_VALUES: ClassVar[list[str]] = [
-        "http://loinc.org",
-        "urn:oid:2.16.840.1.113883.6.1",
-    ]
+    LOINC_VALUES: ClassVar[list[str]] = [LOINC_URL, LOINC_URN]
 
-    SNOMED_VALUES: ClassVar[list[str]] = [
-        "http://snomed.info/sct",
-        "urn:oid:2.16.840.1.113883.6.96",
-    ]
+    SNOMED_VALUES: ClassVar[list[str]] = [SNOMED_URL, SNOMED_URN]
 
 
 class TranslationSelectionStrategy(StrEnum):
@@ -170,14 +172,8 @@ class LabTestNameResultedEvaluationCriteria(BaseEvaluationCriteria):
     translation_preference: TranslationPreference = Field(
         default_factory=lambda: TranslationPreference(
             strategy=TranslationSelectionStrategy.PREFER_SYSTEM_ORDER,
-            loinc_system_values=[
-                "http://loinc.org",
-                "urn:oid:2.16.840.1.113883.6.1",
-            ],
-            snomed_system_values=[
-                "http://snomed.info/sct",
-                "urn:oid:2.16.840.1.113883.6.96",
-            ],
+            loinc_system_values=CodeSystemValues.LOINC_VALUES,
+            snomed_system_values=CodeSystemValues.SNOMED_VALUES,
         )
     )
 
