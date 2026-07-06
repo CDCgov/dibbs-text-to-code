@@ -30,6 +30,7 @@ class TerminologyUpdateResponse(TypedDict):
     terminology: list[str]
     result: str
     message: str
+    change_log: dict
 
 
 def clean_text_string(value: str | None) -> str:

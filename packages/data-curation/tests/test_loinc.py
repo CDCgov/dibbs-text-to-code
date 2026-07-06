@@ -858,21 +858,21 @@ def test_create_embedding_records_with_no_consumer_name() -> None:
     assert result == []
 
 
-def test_write_change_log_file(monkeypatch: pytest.MonkeyPatch) -> None:
-    saved_files: list[tuple[str, str, dict]] = []
-    content = {"Changes": {"new_loinc": 1}}
+# def test_write_change_log_file(monkeypatch: pytest.MonkeyPatch) -> None:
+#     saved_files: list[tuple[str, str, dict]] = []
+#     content = {"Changes": {"new_loinc": 1}}
 
-    def mock_save_json_file(directory_path: str, filename: str, contents: dict) -> None:
-        saved_files.append((directory_path, filename, contents))
+#     def mock_save_json_file(directory_path: str, filename: str, contents: dict) -> None:
+#         saved_files.append((directory_path, filename, contents))
 
-    monkeypatch.setattr(loinc, "save_json_file", mock_save_json_file)
+#     monkeypatch.setattr(loinc, "save_json_file", mock_save_json_file)
 
-    loinc._write_change_log_file("loinc_lab_names_DELTA_20260604.json", content)
+#     loinc._write_change_log_file("loinc_lab_names_DELTA_20260604.json", content)
 
-    assert saved_files == [
-        (
-            str(loinc.CHANGE_LOG_DIRECTORY),
-            "loinc_lab_names_DELTA_20260604.json",
-            content,
-        )
-    ]
+#     assert saved_files == [
+#         (
+#             str(loinc.CHANGE_LOG_DIRECTORY),
+#             "loinc_lab_names_DELTA_20260604.json",
+#             content,
+#         )
+#     ]

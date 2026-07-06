@@ -46,7 +46,6 @@ EmbeddingRecord = dict[str, object]
 class LoincUpdateResponse(TerminologyUpdateResponse):
     """Defines dictionary for a LOINC Terminology Update Response."""
 
-    change_log: dict
     embedding_records: list[EmbeddingRecord]
 
 

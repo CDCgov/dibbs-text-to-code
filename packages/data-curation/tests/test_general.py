@@ -74,12 +74,12 @@ def test_get_latest_extract_file_name_valid() -> None:
 
 
 def test_load_extract_file_to_dict_no_file() -> None:
-    result = general._load_extract_file_to_dict("")
+    result = general.load_extract_file_to_dict("")
     assert result == {}
 
 
 def test_load_extract_file_to_dict_valid() -> None:
-    result = general._load_extract_file_to_dict("hl7_lab_interp_20260223.csv")
+    result = general.load_extract_file_to_dict("hl7_lab_interp_20260223.csv")
     assert result != {}
 
 

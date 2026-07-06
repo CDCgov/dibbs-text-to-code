@@ -66,7 +66,9 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
     return loinc_response
 
 
-def main(all: bool = False, loinc: bool = False) -> None:
+def update_terminology_embeddings(
+    all: bool = False, loinc: bool = False
+) -> TerminologyUpdateResponse:
     """Currently the main entry into the process of updating medical terminologies leveraged by TTC.  We can change this into a different mechanism as we wrap this up into a Lambda.
 
     :param all: Boolean flag to indicate if you want to perform all
@@ -77,8 +79,5 @@ def main(all: bool = False, loinc: bool = False) -> None:
     Returns nothing at this time.
     """
     if all or loinc:
-        update_loinc_embeddings()
-
-
-if __name__ == "__main__":
-    main(all=True)
+        response = update_loinc_embeddings()
+    return response

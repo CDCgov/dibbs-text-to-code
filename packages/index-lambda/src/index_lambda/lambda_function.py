@@ -2,6 +2,9 @@ from typing import TypedDict
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from data_curation.terminologies.maintenance import (
+    update_terminology_embeddings,
+)
 from opensearchpy import OpenSearch
 
 import lambda_handler
@@ -118,6 +121,11 @@ def handler(event: dict, context: LambdaContext) -> dict:
             result = _create_index(os_client, index_name, INDEX_MAPPING)
         elif action == "create_result_cache":
             result = _create_index(os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING)
+        elif action == "update_term_embeddings":
+            # for now only LOINC updates will occur
+            # TODO: Update this to accept another piece of data
+            # from a config or context to know, which to update
+            result = _update_terminology_embeddings("all")
         else:
             raise ValueError(f"Received unknown action: {action!r}")
 
@@ -242,7 +250,16 @@ def _update_terminology_embeddings(terminology_set: str) -> dict:
 
     :param terminology_set: The Terminology set being updated (ie. SNOMED, LOINC, etc...)
     """
-    return {
-        "statusCode": 200,
-        "terminology": terminology_set,
-    }
+    result = {}
+    if terminology_set in ("all", "loinc"):
+        response = update_terminology_embeddings(all=True)
+        status_code = 200 if response["result"] == "success" else 400
+        change_log = response["change_log"]
+        logger.info(change_log)
+        # TODO: write the change log here
+        result = {
+            "statusCode": status_code,
+            "terminology": response["terminology"],
+            "message": response["message"],
+        }
+    return result
