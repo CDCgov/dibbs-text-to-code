@@ -5,11 +5,11 @@
   "num_failure_eicrs": 0,
   "num_processing_error_eicrs": 0,
   "num_success_eicrs": 1,
-  "status": "success",
+  "status": "success_with_passthrough",
   "successes": [
     {
-      "message_id": "msg-routing",
-      "status": "processed"
+      "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+      "status": "passthrough_written"
     }
   ]
 }

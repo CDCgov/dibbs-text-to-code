@@ -38,32 +38,86 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """
     logger.info("Received event", record_count=len(event["Records"]))
 
-    failures: list[dict[str, str]] = []
-    successes: list[str] = []
+    batch_item_failures: list[dict[str, str]] = []
+    failures: list[dict[str, object]] = []
+    successes: list[dict[str, str]] = []
 
     for record in event.records:
         try:
-            _process_record(record)
-            successes.append(record.message_id)
-        except Exception:
+            output = _process_record(record)
+
+            if output is None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "skipped",
+                    }
+                )
+            elif output.metadata.passthrough_reason is not None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "passthrough_written",
+                    }
+                )
+            else:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "processed",
+                    }
+                )
+        except Exception as e:
             logger.exception(
                 "Error processing record",
+                error=str(e),
                 message_id=record.message_id,
                 status="error",
             )
-            failures.append({"itemIdentifier": record.message_id})
+            batch_item_failures.append({"itemIdentifier": record.message_id})
+            failures.append(
+                {
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "message_id": record.message_id,
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            )
+
+    if batch_item_failures:
+        status = "partial_failure"
+    elif any(success["status"] == "passthrough_written" for success in successes):
+        status = "success_with_passthrough"
+    else:
+        status = "success"
+
+    response: dict[str, object] = {
+        "batchItemFailures": batch_item_failures,
+        "failures": failures,
+        "message": "Augmentation invocation completed",
+        "num_failure_eicrs": len(batch_item_failures),
+        "num_processing_error_eicrs": len(failures),
+        "num_success_eicrs": len(successes),
+        "status": status,
+        "successes": successes,
+    }
 
     logger.info(
         "Augmentation invocation completed",
-        status="partial_failure" if failures else "success",
-        num_failure_eicrs=len(failures),
+        batch_item_failures=batch_item_failures,
+        failures=failures,
+        num_failure_eicrs=len(batch_item_failures),
+        num_processing_error_eicrs=len(failures),
         num_success_eicrs=len(successes),
+        status=status,
+        successes=successes,
     )
 
-    return {"batchItemFailures": failures}
+    return response
 
 
-def _process_record(record: SQSRecord) -> None:
+def _process_record(record: SQSRecord) -> TTCAugmenterOutput | None:
     """Process a single SQS record containing an S3 event.
 
     :param record: The SQS record with an EventBridge S3 event in the body.
@@ -71,7 +125,7 @@ def _process_record(record: SQSRecord) -> None:
     """
     if not record.body:
         logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
-        return
+        return None
 
     s3_event = json.loads(record.body)
 
@@ -103,6 +157,8 @@ def _process_record(record: SQSRecord) -> None:
             status="passthrough" if output.metadata.passthrough_reason is not None else "success",
             passthrough_reason=output.metadata.passthrough_reason,
         )
+
+        return output
 
 
 def _introduced_validation_error(original_eicr: str, augmented_eicr: str) -> str | None:
