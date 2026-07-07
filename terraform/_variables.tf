@@ -198,3 +198,9 @@ variable "debug_iam_principals" {
   default     = []
 }
 
+### S3 Prefix Variables for Medical Terminologies
+variable "terminology_prefix" {
+  type        = string
+  default     = "Terminologies"
+  description = "The prefix for the terminologies extract and update pipeline 'folder' in the s3 bucket. Files added to this prefix will be used for keeping ther terminolgies and hence embeddings up to date."
+}

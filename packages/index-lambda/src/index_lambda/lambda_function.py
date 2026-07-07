@@ -2,9 +2,6 @@ from typing import TypedDict
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from data_curation.terminologies.maintenance import (
-    update_terminology_embeddings,
-)
 from opensearchpy import OpenSearch
 
 import lambda_handler
@@ -76,7 +73,7 @@ RESULT_CACHE_INDEX_MAPPING: OpenSearchIndexMapping = {
 def handler(event: dict, context: LambdaContext) -> dict:
     """Lambda function to manage the OpenSearch index for LOINC code embeddings.
 
-    Supports seven actions via the event dict:
+    Supports six actions via the event dict:
     - "clear_index": Deletes the existing index (if any) and recreates it empty.
       Use this before re-ingesting embeddings to avoid duplicates.
     - "clear_result_cache": As above, but for the Result Cache index rather than
@@ -87,8 +84,6 @@ def handler(event: dict, context: LambdaContext) -> dict:
     - "set_slowlog": Changes logging parameters for AWS across multiple types
       of logging information.
     - "set_result_cache_slowlog": As above, but for the Result Cache index.
-    - "update_term_embeddings": Perform Update process for all terminology
-       embeddings (now only LOINC Lab Names).
 
     :param event: The event dict passed by AWS Lambda. Reads "action" key.
     :param context: The context dict passed by AWS Lambda (not used).
@@ -121,11 +116,6 @@ def handler(event: dict, context: LambdaContext) -> dict:
             result = _create_index(os_client, index_name, INDEX_MAPPING)
         elif action == "create_result_cache":
             result = _create_index(os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING)
-        elif action == "update_term_embeddings":
-            # for now only LOINC updates will occur
-            # TODO: Update this to accept another piece of data
-            # from a config or context to know, which to update
-            result = _update_terminology_embeddings("all")
         else:
             raise ValueError(f"Received unknown action: {action!r}")
 
@@ -243,23 +233,3 @@ def _create_index(
         "index_settings": settings,
         "index_mappings": mappings,
     }
-
-
-def _update_terminology_embeddings(terminology_set: str) -> dict:
-    """Updates the embeddings in our Opensearch for a specific terminology set, which could be for multiple data elements.
-
-    :param terminology_set: The Terminology set being updated (ie. SNOMED, LOINC, etc...)
-    """
-    result = {}
-    if terminology_set in ("all", "loinc"):
-        response = update_terminology_embeddings(all=True)
-        status_code = 200 if response["result"] == "success" else 400
-        change_log = response["change_log"]
-        logger.info(change_log)
-        # TODO: write the change log here
-        result = {
-            "statusCode": status_code,
-            "terminology": response["terminology"],
-            "message": response["message"],
-        }
-    return result
