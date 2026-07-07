@@ -66,55 +66,99 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     :param event: The SQS event containing the S3 event data for processing.
     :param context: The Lambda context object.
-    :return: A dictionary containing the status code, message, and any relevant data about the processing results.
+    :return: A dictionary containing SQS batch item failures.
     """
     opensearch_client = lambda_handler.create_opensearch_client()
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
-    failures = []
-    successes = []
+    batch_item_failures: list[dict[str, str]] = []
+    failures: list[dict[str, object]] = []
+    successes: list[dict[str, str]] = []
 
     for record in event.records:
         try:
-            process_record(record, opensearch_client)
-            successes.append(record.message_id)
+            output = process_record(record, opensearch_client)
+
+            if output is None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "skipped",
+                    }
+                )
+            elif output.passthrough_reason is not None:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "passthrough_written",
+                    }
+                )
+            else:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "processed",
+                    }
+                )
         except Exception as e:
             logger.exception(
                 "Error processing record",
+                error=str(e),
                 message_id=record.message_id,
                 status="error",
             )
             passthrough_written = _write_ttc_exception_passthrough_output(record, e)
-            if passthrough_written:
-                successes.append(record.message_id)
-            else:
-                failures.append({"message_id": record.message_id, "error": str(e)})
+            failures.append(
+                {
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "message_id": record.message_id,
+                    "passthrough_written": passthrough_written,
+                    "sqs_retry": not passthrough_written,
+                }
+            )
 
-    result = (
-        {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": failures,
-            "num_failure_eicrs": len(failures),
-            "num_success_eicrs": len(successes),
-        }
-        if failures
-        else {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": len(successes),
-        }
-    )
+            if passthrough_written:
+                successes.append(
+                    {
+                        "message_id": record.message_id,
+                        "status": "passthrough_written",
+                    }
+                )
+            else:
+                batch_item_failures.append({"itemIdentifier": record.message_id})
+
+    if batch_item_failures:
+        status = "partial_failure"
+    elif any(success["status"] == "passthrough_written" for success in successes):
+        status = "success_with_passthrough"
+    else:
+        status = "success"
+
+    response: dict[str, object] = {
+        "batchItemFailures": batch_item_failures,
+        "failures": failures,
+        "message": "TTC invocation completed",
+        "num_failure_eicrs": len(batch_item_failures),
+        "num_processing_error_eicrs": len(failures),
+        "num_success_eicrs": len(successes),
+        "status": status,
+        "successes": successes,
+    }
 
     logger.info(
         "TTC invocation completed",
-        status="partial_failure" if failures else "success",
-        num_failure_eicrs=len(failures),
+        batch_item_failures=batch_item_failures,
+        failures=failures,
+        num_failure_eicrs=len(batch_item_failures),
+        num_processing_error_eicrs=len(failures),
         num_success_eicrs=len(successes),
+        status=status,
+        successes=successes,
     )
 
-    return result
+    return response
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
@@ -186,14 +230,14 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         return False
 
 
-def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
+def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> TTCAugmenterInput | None:
     """Process each SQS record.
 
     :param record: The SQS record to process
     """
     if not record.body:
         logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
-        return
+        return None
 
     s3_event = json.loads(record.body)
 
@@ -219,7 +263,7 @@ def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> None:
         trigger_s3_key=object_key,
     ):
         logger.info("Processing TTC event", status="processing")
-        _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
+        return _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
 
 
 def _load_schematron_data_fields(persistence_id: str, bucket_name: str) -> list:
@@ -348,7 +392,7 @@ def _process_record_pipeline(  # noqa: PLR0915
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
-) -> None:
+) -> TTCAugmenterInput:
     """The main pipeline for processing each record.
 
     The pipeline includes:
@@ -462,8 +506,8 @@ def _process_record_pipeline(  # noqa: PLR0915
                             )
                             new_translation = Code(
                                 code=top_result.source.loinc_code,
-                                code_system="2.16.840.1.113883.6.1",
-                                code_system_name="LOINC",
+                                code_system=LOINC_OID,
+                                code_system_name=LOINC_NAME,
                                 display_name=top_result.source.description,
                                 original_text=selected_candidate.value,
                             )
@@ -545,10 +589,19 @@ def _process_record_pipeline(  # noqa: PLR0915
         passthrough_reason=passthrough_reason,
     )
 
+    return ttc_output
+
 
 def _save_outputs(
     persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: Metadata
 ) -> None:
+    """Save TTC output and metadata output to S3.
+
+    :param persistence_id: The persistence ID extracted from the S3 object key
+    :param bucket_name: The S3 bucket name to write to.
+    :param ttc_output: The TTC output dictionary.
+    :param ttc_metadata: The TTC metadata output dictionary.
+    """
     _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
     _save_ttc_metadata_output(
         persistence_id,

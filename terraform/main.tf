@@ -737,9 +737,10 @@ resource "aws_cloudwatch_event_target" "augmentation_sqs_target" {
 #############
 
 resource "aws_lambda_event_source_mapping" "augmentation_sqs" {
-  event_source_arn = aws_sqs_queue.augmentation_queue.arn
-  function_name    = aws_lambda_function.augmentation_lambda.arn
-  batch_size       = 1
+  event_source_arn        = aws_sqs_queue.augmentation_queue.arn
+  function_name           = aws_lambda_function.augmentation_lambda.arn
+  batch_size              = 1
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_iam_role_policy" "augmentation_sqs_policy" {
@@ -830,9 +831,10 @@ resource "aws_cloudwatch_event_target" "ttc_input_sqs_target" {
 #############
 
 resource "aws_lambda_event_source_mapping" "ttc_input_sqs" {
-  event_source_arn = aws_sqs_queue.ttc_input_queue.arn
-  function_name    = aws_lambda_function.lambda.arn
-  batch_size       = 1
+  event_source_arn        = aws_sqs_queue.ttc_input_queue.arn
+  function_name           = aws_lambda_function.lambda.arn
+  batch_size              = 1
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_iam_role_policy" "ttc_input_sqs_policy" {

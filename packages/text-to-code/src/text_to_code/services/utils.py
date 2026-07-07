@@ -1,6 +1,6 @@
-from hashlib import sha256
 import logging
 import os
+from hashlib import sha256
 
 from huggingface_hub import errors, model_info
 

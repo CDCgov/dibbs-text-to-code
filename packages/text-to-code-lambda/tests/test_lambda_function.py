@@ -25,6 +25,38 @@ TTC_METADATA_PREFIX = os.environ["TTC_METADATA_PREFIX"]
 EXPECTED_EXCEPTION_RESULTS = 2
 
 
+def _expected_handler_response(
+    batch_item_failures: list[dict[str, str]] | None = None,
+    failures: list[dict[str, object]] | None = None,
+    successes: list[dict[str, str]] | None = None,
+    status: str = "success",
+) -> dict[str, object]:
+    resolved_batch_item_failures = batch_item_failures or []
+    resolved_failures = failures or []
+    resolved_successes = successes or []
+
+    return {
+        "batchItemFailures": resolved_batch_item_failures,
+        "failures": resolved_failures,
+        "message": "TTC invocation completed",
+        "num_failure_eicrs": len(resolved_batch_item_failures),
+        "num_processing_error_eicrs": len(resolved_failures),
+        "num_success_eicrs": len(resolved_successes),
+        "status": status,
+        "successes": resolved_successes,
+    }
+
+
+NO_BATCH_ITEM_FAILURES = _expected_handler_response(
+    successes=[
+        {
+            "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+            "status": "processed",
+        }
+    ],
+)
+
+
 def _get_serialized_object(key: str) -> str:
     return json.dumps(
         json.loads(
@@ -36,6 +68,11 @@ def _get_serialized_object(key: str) -> str:
         indent=2,
         sort_keys=True,
     )
+
+
+def _serialize_snapshot_value(value: dict[str, object]) -> str:
+    normalized = json.loads(json.dumps(value))
+    return json.dumps(normalized, indent=2, sort_keys=True)
 
 
 @pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
@@ -71,11 +108,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
@@ -176,11 +209,7 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "handler_success_ttc_output.json")
@@ -195,12 +224,8 @@ class TestHandler:
         example_sqs_event["Records"] = []
         expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 0,
-        }
-        assert resp["num_success_eicrs"] == 0
+        assert resp == _expected_handler_response()
+        assert resp["batchItemFailures"] == []
         assert mock_opensearch.search.call_count == expected_num_errors
 
     def test_handler_with_empty_body(
@@ -211,15 +236,22 @@ class TestHandler:
         expected_num_errors = 0
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
         assert "Empty SQS body" in caplog_warning.text
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "skipped",
+                }
+            ],
+        )
         assert mock_opensearch.search.call_count == expected_num_errors
 
     def test_handler_fails_when_event_has_no_bucket(
-        self, example_sqs_event, mock_opensearch, mock_lambda_context
+        self,
+        example_sqs_event,
+        mock_opensearch,
+        mock_lambda_context,
+        snapshot: Snapshot,
     ):
         """Test handler reports failure when S3 event payload is missing a bucket name."""
         payload = json.loads(example_sqs_event["Records"][0]["body"])
@@ -228,9 +260,24 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp["num_failure_eicrs"] == 1
-        assert resp["num_success_eicrs"] == 0
-        assert "No bucket name found" in resp["failures"][0]["error"]
+        assert resp == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": example_sqs_event["Records"][0]["messageId"]}],
+            failures=[
+                {
+                    "error": "No bucket name found in S3 event payload. The TTC lambda derives its target bucket from the event and does not use a static bucket configuration. Ensure the EventBridge/S3 event includes detail.bucket.name.",
+                    "error_type": "ValueError",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[],
+            status="partial_failure",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(resp),
+            "handler_fails_when_event_has_no_bucket_result.json",
+        )
 
     def test_handler_saves_metadata_when_no_relevant_schematron_fields(
         self,
@@ -247,11 +294,15 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "no_relevant_schematron_fields_ttc_output.json")
@@ -264,7 +315,12 @@ class TestHandler:
         )
 
     def test_handler_continues_processing_after_record_exception(
-        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
+        self,
+        example_sqs_event,
+        mocker,
+        mock_opensearch,
+        mock_lambda_context,
+        snapshot: Snapshot,
     ):
         """Test handler continues processing remaining records when one record raises an exception."""
         example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
@@ -274,23 +330,47 @@ class TestHandler:
             "text_to_code_lambda.lambda_function.process_record",
             side_effect=[Exception("boom"), None],
         )
+        passthrough_output_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._write_ttc_exception_passthrough_output",
+            return_value=False,
+        )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": [
-                {"message_id": example_sqs_event["Records"][0]["messageId"], "error": "boom"}
+        assert passthrough_output_mock.call_count == 1
+        assert resp == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": example_sqs_event["Records"][0]["messageId"]}],
+            failures=[
+                {
+                    "error": "boom",
+                    "error_type": "Exception",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
             ],
-            "num_failure_eicrs": 1,
-            "num_success_eicrs": 1,
-        }
+            successes=[
+                {
+                    "message_id": "second-message-id",
+                    "status": "skipped",
+                }
+            ],
+            status="partial_failure",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(resp),
+            "handler_continues_processing_after_record_exception_result.json",
+        )
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_returns_failures_when_all_records_raise(
-        self, example_sqs_event, mocker, mock_opensearch, mock_lambda_context
+        self,
+        example_sqs_event,
+        mocker,
+        mock_opensearch,
+        mock_lambda_context,
+        snapshot: Snapshot,
     ):
         """Test handler returns aggregated failures when all records raise exceptions."""
         example_sqs_event["Records"].append(json.loads(json.dumps(example_sqs_event["Records"][0])))
@@ -301,20 +381,43 @@ class TestHandler:
             "text_to_code_lambda.lambda_function.process_record",
             side_effect=[Exception("first failure"), Exception("second failure")],
         )
+        passthrough_output_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._write_ttc_exception_passthrough_output",
+            return_value=False,
+        )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == EXPECTED_EXCEPTION_RESULTS
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": [
-                {"message_id": "first-message-id", "error": "first failure"},
-                {"message_id": "second-message-id", "error": "second failure"},
+        assert passthrough_output_mock.call_count == EXPECTED_EXCEPTION_RESULTS
+        assert resp == _expected_handler_response(
+            batch_item_failures=[
+                {"itemIdentifier": "first-message-id"},
+                {"itemIdentifier": "second-message-id"},
             ],
-            "num_failure_eicrs": 2,
-            "num_success_eicrs": 0,
-        }
+            failures=[
+                {
+                    "error": "first failure",
+                    "error_type": "Exception",
+                    "message_id": "first-message-id",
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                },
+                {
+                    "error": "second failure",
+                    "error_type": "Exception",
+                    "message_id": "second-message-id",
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                },
+            ],
+            successes=[],
+            status="partial_failure",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(resp),
+            "handler_returns_failures_when_all_records_raise_result.json",
+        )
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_writes_ttc_exception_passthrough_output_when_record_exception_has_recoverable_persistence_id(
@@ -335,11 +438,24 @@ class TestHandler:
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == 1
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            failures=[
+                {
+                    "error": "boom",
+                    "error_type": "Exception",
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "passthrough_written": True,
+                    "sqs_retry": False,
+                }
+            ],
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "record_exception_id_ttc_output.json")
@@ -349,12 +465,55 @@ class TestHandler:
         )
         snapshot.assert_match(ttc_metadata_output, "record_exception_id_metadata_output.json")
 
+    def test_handler_returns_failure_when_ttc_exception_passthrough_write_fails(
+        self,
+        example_sqs_event,
+        mocker,
+        mock_opensearch,
+        mock_lambda_context,
+        snapshot: Snapshot,
+    ):
+        """Test handler returns failure when TTC exception passthrough output cannot be written."""
+        process_record_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.process_record",
+            side_effect=Exception("boom"),
+        )
+        save_outputs_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._save_outputs",
+            side_effect=Exception("save failed"),
+        )
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert process_record_mock.call_count == 1
+        assert save_outputs_mock.call_count == 1
+        assert resp == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": example_sqs_event["Records"][0]["messageId"]}],
+            failures=[
+                {
+                    "error": "boom",
+                    "error_type": "Exception",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[],
+            status="partial_failure",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(resp),
+            "handler_returns_failure_when_ttc_exception_passthrough_write_fails_result.json",
+        )
+        assert mock_opensearch.search.call_count == 0
+
     def test_handler_returns_failure_when_record_exception_has_empty_body(
         self,
         example_sqs_event,
         mocker,
         mock_opensearch,
         mock_lambda_context,
+        snapshot: Snapshot,
     ):
         """Test handler returns failure when a record exception cannot produce passthrough output from an empty body."""
         example_sqs_event["Records"][0]["body"] = None
@@ -367,15 +526,24 @@ class TestHandler:
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         assert process_record_mock.call_count == 1
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed with some failures!",
-            "failures": [
-                {"message_id": example_sqs_event["Records"][0]["messageId"], "error": "boom"}
+        assert resp == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": example_sqs_event["Records"][0]["messageId"]}],
+            failures=[
+                {
+                    "error": "boom",
+                    "error_type": "Exception",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
             ],
-            "num_failure_eicrs": 1,
-            "num_success_eicrs": 0,
-        }
+            successes=[],
+            status="partial_failure",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(resp),
+            "handler_returns_failure_when_record_exception_has_empty_body_result.json",
+        )
         assert mock_opensearch.search.call_count == 0
 
     def test_handler_continues_when_selected_candidate_is_none(
@@ -401,11 +569,15 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         retriever_embed_mock.assert_not_called()
         reranker_mock.assert_not_called()
@@ -463,11 +635,15 @@ class TestHandler:
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         assert mock_opensearch.search.call_count == 0
         assert reranker_mock.call_count == 0
@@ -488,11 +664,15 @@ class TestHandler:
         snapshot,
     ):
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         ttc_output = _get_serialized_object(
             f"{TTC_OUTPUT_PREFIX}{mock_aws_setup_malformed_eicr_no_relevant_schematron.persistence_id}"
@@ -527,11 +707,15 @@ class TestHandler:
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
-        assert resp == {
-            "statusCode": 200,
-            "message": "TTC processed successfully!",
-            "num_success_eicrs": 1,
-        }
+        assert resp == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "reranker_returns_empty_ttc_output.json")

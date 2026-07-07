@@ -18,7 +18,7 @@ TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
 AUGMENTED_EICR_PREFIX = os.environ["AUGMENTED_EICR_PREFIX"]
 AUGMENTATION_METADATA_PREFIX = os.environ["AUGMENTATION_METADATA_PREFIX"]
 TEST_PERSISTENCE_ID = os.environ["TEST_PERSISTENCE_ID"]
-SUCCESS_CODE = 200
+
 # The diff-based gate validates the augmented eICR, then the original as a baseline.
 EXPECTED_DIFF_VALIDATION_CALLS = 2
 EXPECTED_ORIGINAL_EICR_ID = CdaInstanceIdentifier(
@@ -26,6 +26,38 @@ EXPECTED_ORIGINAL_EICR_ID = CdaInstanceIdentifier(
 )
 EXPECTED_AUGMENTED_EICR_ID = CdaInstanceIdentifier(
     root="d44dc1c6-8a0c-5236-906e-12f6475589ec", extension=None
+)
+
+
+def _expected_handler_response(
+    batch_item_failures: list[dict[str, str]] | None = None,
+    failures: list[dict[str, object]] | None = None,
+    successes: list[dict[str, str]] | None = None,
+    status: str = "success",
+) -> dict[str, object]:
+    resolved_batch_item_failures = batch_item_failures or []
+    resolved_failures = failures or []
+    resolved_successes = successes or []
+
+    return {
+        "batchItemFailures": resolved_batch_item_failures,
+        "failures": resolved_failures,
+        "message": "Augmentation invocation completed",
+        "num_failure_eicrs": len(resolved_batch_item_failures),
+        "num_processing_error_eicrs": len(resolved_failures),
+        "num_success_eicrs": len(resolved_successes),
+        "status": status,
+        "successes": resolved_successes,
+    }
+
+
+NO_BATCH_ITEM_FAILURES = _expected_handler_response(
+    successes=[
+        {
+            "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+            "status": "processed",
+        }
+    ],
 )
 
 
@@ -98,9 +130,11 @@ class TestHandler:
             result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
         # Assert handler function returns expected values
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == NO_BATCH_ITEM_FAILURES
+        snapshot.assert_match(
+            _serialize_snapshot_value(result),
+            "handler_success_result.json",
+        )
 
         # Verify augmented eICR was written
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -160,9 +194,19 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(result),
+            "ttc_passthrough_result.json",
+        )
         augmenter_mock.assert_not_called()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -215,9 +259,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == NO_BATCH_ITEM_FAILURES
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -258,9 +300,19 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
+        snapshot.assert_match(
+            _serialize_snapshot_value(result),
+            "augmentation_fails_result.json",
+        )
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
             bucket_name=S3_BUCKET,
@@ -348,9 +400,15 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
         validate_mock.assert_called_once()
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -400,9 +458,15 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -448,9 +512,7 @@ class TestHandler:
 
         result = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == NO_BATCH_ITEM_FAILURES
         assert validate_mock.call_count == EXPECTED_DIFF_VALIDATION_CALLS
 
         augmented_eicr = lambda_handler.get_file_content_from_s3(
@@ -587,6 +649,14 @@ class TestHandler:
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
             result = lambda_function.handler(event, mock_lambda_context)
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "msg-routing",
+                    "status": "processed",
+                }
+            ],
+        )
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_source_bucket_routing_result.json",
@@ -626,8 +696,20 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_failure_eicrs"] == 1
-        assert len(result["failures"]) == 1
+        assert result == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": "msg-missing-eicr"}],
+            failures=[
+                {
+                    "error": f"S3 object not found: {S3_BUCKET}/TextToCodeSubmissionV2/{TEST_PERSISTENCE_ID}",
+                    "error_type": "FileNotFoundError",
+                    "message_id": "msg-missing-eicr",
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[],
+            status="partial_failure",
+        )
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_error_missing_eicr_result.json",
@@ -653,8 +735,20 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_failure_eicrs"] == 1
-        assert len(result["failures"]) == 1
+        assert result == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": "msg-missing-ttc"}],
+            failures=[
+                {
+                    "error": f"S3 object not found: {S3_BUCKET}/{TTC_OUTPUT_PREFIX}{TEST_PERSISTENCE_ID}",
+                    "error_type": "FileNotFoundError",
+                    "message_id": "msg-missing-ttc",
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[],
+            status="partial_failure",
+        )
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_error_missing_ttc_output_result.json",
@@ -680,8 +774,25 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["num_success_eicrs"] == 1
-        assert result["num_failure_eicrs"] == 1
+        assert result == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": "msg-fail"}],
+            failures=[
+                {
+                    "error": f"S3 object not found: {S3_BUCKET}/{TTC_OUTPUT_PREFIX}nonexistent/id",
+                    "error_type": "FileNotFoundError",
+                    "message_id": "msg-fail",
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[
+                {
+                    "message_id": "msg-success",
+                    "status": "processed",
+                }
+            ],
+            status="partial_failure",
+        )
         snapshot.assert_match(
             _serialize_snapshot_value(result),
             "handler_mixed_batch_results_result.json",
@@ -692,6 +803,11 @@ class TestHandler:
 
         result = lambda_function.handler(event, mock_lambda_context)
 
-        assert result["statusCode"] == SUCCESS_CODE
-        assert result["message"] == "Augmentation processed successfully!"
-        assert result["num_success_eicrs"] == 1
+        assert result == _expected_handler_response(
+            successes=[
+                {
+                    "message_id": "msg-empty-body",
+                    "status": "skipped",
+                }
+            ],
+        )
