@@ -595,6 +595,13 @@ def _process_record_pipeline(  # noqa: PLR0915
 def _save_outputs(
     persistence_id: str, bucket_name: str, ttc_output: TTCAugmenterInput, ttc_metadata: Metadata
 ) -> None:
+    """Save TTC output and metadata output to S3.
+
+    :param persistence_id: The persistence ID extracted from the S3 object key
+    :param bucket_name: The S3 bucket name to write to.
+    :param ttc_output: The TTC output dictionary.
+    :param ttc_metadata: The TTC metadata output dictionary.
+    """
     _save_ttc_outputs(persistence_id, ttc_output, bucket_name)
     _save_ttc_metadata_output(
         persistence_id,
