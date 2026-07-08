@@ -8,6 +8,11 @@ locals {
   }
 }
 
+variable "dlq_alarm_action_arns" {
+  description = "CloudWatch alarm action ARNs notified when Lambda DLQs contain visible messages."
+  type        = list(string)
+}
+
 #############
 # ECR Repository
 #############
@@ -678,6 +683,28 @@ resource "aws_sqs_queue" "augmentation_dlq" {
   tags = local.tags
 }
 
+resource "aws_cloudwatch_metric_alarm" "augmentation_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.augmentation_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the augmentation Lambda DLQ."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = var.dlq_alarm_action_arns
+
+  dimensions = {
+    QueueName = aws_sqs_queue.augmentation_dlq.name
+  }
+
+  tags = local.tags
+}
+
 resource "aws_sqs_queue" "augmentation_queue" {
   name                       = "${var.augmentation_lambda_function_name}-queue"
   visibility_timeout_seconds = var.augmentation_lambda_timeout * 6
@@ -769,6 +796,28 @@ resource "aws_iam_role_policy" "augmentation_sqs_policy" {
 
 resource "aws_sqs_queue" "ttc_input_dlq" {
   name = "${var.lambda_function_name}-dlq"
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "ttc_input_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.ttc_input_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the TTC input Lambda DLQ."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = var.dlq_alarm_action_arns
+
+  dimensions = {
+    QueueName = aws_sqs_queue.ttc_input_dlq.name
+  }
+
   tags = local.tags
 }
 
