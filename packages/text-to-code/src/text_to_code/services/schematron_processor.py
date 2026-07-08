@@ -7,6 +7,12 @@ from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD, Schematron
 
 logger = logging.getLogger(__name__)
 
+_ERROR_ID_TO_FIELD: dict[str, DataField] = {
+    member.value: data_field
+    for error_enum, data_field in _SCHEMATRON_ENUM_TO_FIELD.items()
+    for member in error_enum
+}
+
 
 def get_data_element_from_schematron_error(schematron_error_id: str) -> DataField | None:
     """Return the data field that the error message is associated with, if any.
@@ -15,10 +21,7 @@ def get_data_element_from_schematron_error(schematron_error_id: str) -> DataFiel
     :returns: The data field the schematron error is associated with,
         or None if not found.
     """
-    for error_enum, data_field in _SCHEMATRON_ENUM_TO_FIELD.items():
-        if schematron_error_id in (e.value for e in error_enum):
-            return data_field
-    return None
+    return _ERROR_ID_TO_FIELD.get(schematron_error_id)
 
 
 def _get_error_enum_value(schematron_error_id: str) -> str | None:
@@ -27,11 +30,7 @@ def _get_error_enum_value(schematron_error_id: str) -> str | None:
     :param schematron_error: The schematron error message being evaluated.
     :returns: The matching enum member value, or None if not found.
     """
-    for error_enum in _SCHEMATRON_ENUM_TO_FIELD:
-        for error in error_enum:
-            if schematron_error_id == error.value:
-                return error.value
-    return None
+    return schematron_error_id if schematron_error_id in _ERROR_ID_TO_FIELD else None
 
 
 def _get_eicr_id(xml_root: etree._Element) -> CdaInstanceIdentifier | None:

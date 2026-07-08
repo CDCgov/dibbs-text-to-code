@@ -10,6 +10,20 @@ from text_to_code.services.utils import get_config_for_data_field
 
 logger = logging.getLogger(__name__)
 
+# The sub-xpaths are static config values evaluated once per matched context
+# node, so compile them once at import instead of on every .xpath() call.
+_SUB_XPATH_EVALUATORS: dict[str, etree.XPath] = {
+    xp.value: etree.XPath(xp.value) for xp in LabXPaths
+}
+
+
+def _sub_xpath_evaluator(sub_xpath: str) -> etree.XPath:
+    evaluator = _SUB_XPATH_EVALUATORS.get(sub_xpath)
+    if evaluator is None:
+        evaluator = etree.XPath(sub_xpath)
+        _SUB_XPATH_EVALUATORS[sub_xpath] = evaluator
+    return evaluator
+
 
 class EicrProcessor:
     """Processes an eICR."""
@@ -60,12 +74,14 @@ class EicrProcessor:
             )
             return candidates
 
-        for _ in nodes:
+        for node in nodes:
             for sub_xpath in sub_xpaths:
+                # Absolute path kept only for error-log payloads; extraction
+                # evaluates the sub-xpath relative to the matched node.
                 full_xpath = f"{base_xpath}/{sub_xpath}"
 
                 try:
-                    sub_nodes = self._get_by_xpath(full_xpath)
+                    sub_nodes = _sub_xpath_evaluator(sub_xpath)(node)
                 except etree.XPathError:
                     extraction_error_count += 1
                     self._log_text_candidate_extraction_error(
