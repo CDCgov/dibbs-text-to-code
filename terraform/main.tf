@@ -8,11 +8,6 @@ locals {
   }
 }
 
-variable "dlq_alarm_action_arns" {
-  description = "CloudWatch alarm action ARNs notified when Lambda DLQs contain visible messages."
-  type        = list(string)
-}
-
 #############
 # ECR Repository
 #############
@@ -674,6 +669,12 @@ resource "aws_lambda_function" "augmentation_lambda" {
   tags = { Name = var.augmentation_lambda_function_name }
 }
 
+resource "aws_sns_topic" "dlq_alarm_notifications" {
+  name = "ttc-dlq-alarm-notifications"
+
+  tags = local.tags
+}
+
 #############
 # Augmentation Lambda SQS Queue
 #############
@@ -696,7 +697,7 @@ resource "aws_cloudwatch_metric_alarm" "augmentation_dlq_visible_messages" {
   comparison_operator = "GreaterThanThreshold"
   treat_missing_data  = "notBreaching"
   actions_enabled     = true
-  alarm_actions       = var.dlq_alarm_action_arns
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
 
   dimensions = {
     QueueName = aws_sqs_queue.augmentation_dlq.name
@@ -812,7 +813,7 @@ resource "aws_cloudwatch_metric_alarm" "ttc_input_dlq_visible_messages" {
   comparison_operator = "GreaterThanThreshold"
   treat_missing_data  = "notBreaching"
   actions_enabled     = true
-  alarm_actions       = var.dlq_alarm_action_arns
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
 
   dimensions = {
     QueueName = aws_sqs_queue.ttc_input_dlq.name
