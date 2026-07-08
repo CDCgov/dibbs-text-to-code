@@ -5,6 +5,7 @@ import boto3
 from aws_lambda_powertools import Logger
 from aws_lambda_typing import events as lambda_events
 from botocore.client import BaseClient
+from botocore.config import Config
 from botocore.credentials import Credentials
 from botocore.exceptions import ClientError
 from opensearchpy import OpenSearch, RequestsHttpConnection
@@ -20,6 +21,16 @@ logger = Logger(service="lambda-handler", child=True)
 _cached_aws_auth: AWS4Auth | None = None
 _cached_s3_client: BaseClient | None = None
 _cached_opensearch_client: OpenSearch | None = None
+
+# Without explicit timeouts a stalled connection blocks until the Lambda
+# itself times out (up to 900s); bound each call well below that instead.
+_S3_CLIENT_CONFIG = Config(
+    connect_timeout=5,
+    read_timeout=60,
+    retries={"mode": "adaptive", "max_attempts": 3},
+)
+_OPENSEARCH_TIMEOUT_SECONDS = 30
+_OPENSEARCH_MAX_RETRIES = 2
 
 
 def reset_cached_clients() -> None:
@@ -84,6 +95,7 @@ def create_s3_client() -> BaseClient:
             "s3",
             endpoint_url=endpoint_url,
             region_name=region_name,
+            config=_S3_CLIENT_CONFIG,
         )
         logger.info("Created S3 client", status="success")
 
@@ -107,6 +119,9 @@ def create_opensearch_client() -> OpenSearch:
             use_ssl=True,
             verify_certs=True,
             connection_class=RequestsHttpConnection,
+            timeout=_OPENSEARCH_TIMEOUT_SECONDS,
+            max_retries=_OPENSEARCH_MAX_RETRIES,
+            retry_on_timeout=True,
         )
         logger.info("Created OpenSearch client", status="success")
 
@@ -129,17 +144,21 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
         status="processing",
     )
 
-    # Check if object exists
-    if not check_s3_object_exists(client, bucket_name, object_key):
-        logger.warning(
-            "S3 object not found",
-            bucket_name=bucket_name,
-            s3_key=object_key,
-            status="error",
-        )
-        raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}")
-
-    response = client.get_object(Bucket=bucket_name, Key=object_key)
+    try:
+        response = client.get_object(Bucket=bucket_name, Key=object_key)
+    except ClientError as e:
+        # GET reports a missing key as NoSuchKey (HEAD reports 404); a
+        # pre-flight existence check would double the round trips, so map
+        # the GET error to the same FileNotFoundError callers rely on.
+        if e.response["Error"]["Code"] in ("404", "NoSuchKey"):
+            logger.warning(
+                "S3 object not found",
+                bucket_name=bucket_name,
+                s3_key=object_key,
+                status="error",
+            )
+            raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}") from e
+        raise
     logger.info(
         "Retrieved file content from S3",
         bucket_name=bucket_name,
