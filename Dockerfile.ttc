@@ -23,9 +23,12 @@ RUN pip install --no-cache-dir huggingface_hub
 # the workspace pin and trips CVE-2025-47273. Upgrade explicitly.
 RUN pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
 
-# Download retriever at build time (private repo, needs token)
+# Download retriever at build time (private repo, needs token). The cache
+# cleanup must happen in the same RUN: snapshot_download duplicates blobs into
+# /root/.cache, and a separate RUN would freeze them into this layer.
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
-  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])"
+  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-mvp', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
+  && rm -rf /root/.cache/huggingface
 
 # Download reranker at build time (private repo, needs token)
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
@@ -54,5 +57,12 @@ RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/utils ${LAMBDA_
 
 ENV RETRIEVER_MODEL_PATH="/opt/retriever_model"
 ENV RERANKER_MODEL_PATH="/opt/reranker_model"
+
+# Models load from the baked-in local paths above, but huggingface_hub still
+# attempts Hub metadata checks by default. The prod VPC has no internet, so
+# each attempt would hang until socket timeout on every cold start — force
+# offline mode. Placed after all RUN layers so build-time downloads still work.
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
 
 CMD ["text_to_code_lambda.lambda_function.handler"]
