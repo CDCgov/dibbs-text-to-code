@@ -201,6 +201,46 @@ def test_validation_raises_when_validator_errors(
     assert "An error occurred during validation: validator failed" in caplog.text
 
 
+def test_validation_reuses_cached_processor_and_executable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Consecutive validations reuse one Saxon processor and one compiled stylesheet."""
+    stage1_output = tmp_path / "stage1.sch.tmp"
+    stage2_output = tmp_path / "stage2.sch.tmp"
+    validator_output = tmp_path / "validator.xsl.tmp"
+
+    stage1_output.write_text("existing stage 1")
+    stage2_output.write_text("existing stage 2")
+    validator_output.write_text("existing validator")
+
+    class CountingXsltProcessor(FakeXsltProcessor):
+        compile_count = 0
+
+        def compile_stylesheet(self, stylesheet_file: str) -> FakeExecutable:
+            CountingXsltProcessor.compile_count += 1
+            return super().compile_stylesheet(stylesheet_file)
+
+    class CountingSaxonProcessor(FakeSaxonProcessor):
+        init_count = 0
+
+        def __init__(self, license: bool) -> None:
+            CountingSaxonProcessor.init_count += 1
+            super().__init__(license)
+            self.xslt_processor = CountingXsltProcessor()
+
+    monkeypatch.setattr(validation_main, "STAGE1_OUTPUT", stage1_output)
+    monkeypatch.setattr(validation_main, "STAGE2_OUTPUT", stage2_output)
+    monkeypatch.setattr(validation_main, "VALIDATOR_OUTPUT", validator_output)
+    monkeypatch.setattr(validation_main, "PySaxonProcessor", CountingSaxonProcessor)
+
+    first = validate_eicr("<ClinicalDocument />")
+    second = validate_eicr("<ClinicalDocument />")
+
+    assert first == second
+    assert CountingSaxonProcessor.init_count == 1
+    assert CountingXsltProcessor.compile_count == 1
+
+
 def test_normalize_location_strips_eqname_prefixes():
     """Tests that Saxon EQName namespace prefixes are stripped to plain XPath steps."""
     raw = (
