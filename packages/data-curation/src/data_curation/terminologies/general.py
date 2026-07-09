@@ -31,6 +31,7 @@ class TerminologyUpdateResponse(TypedDict):
     result: str
     message: str
     change_log: dict
+    embedding_records: list[dict]
 
 
 def clean_text_string(value: str | None) -> str:

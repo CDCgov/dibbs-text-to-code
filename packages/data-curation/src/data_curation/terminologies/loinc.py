@@ -43,24 +43,18 @@ LoincRow = dict[str, str | None]
 EmbeddingRecord = dict[str, object]
 
 
-class LoincUpdateResponse(TerminologyUpdateResponse):
-    """Defines dictionary for a LOINC Terminology Update Response."""
-
-    embedding_records: list[dict]
-
-
-def _set_loinc_response(
+def set_loinc_response(
     result: str,
     message: str,
     change_log: dict | None = None,
     embedding_records: list[dict] | None = None,
-) -> LoincUpdateResponse:
+) -> TerminologyUpdateResponse:
     """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs."""
     if change_log is None:
         change_log = {}
     if embedding_records is None:
         embedding_records = []
-    loinc_response: LoincUpdateResponse = {
+    loinc_response: TerminologyUpdateResponse = {
         "terminology": ["loinc"],
         "result": result,
         "message": message,
@@ -105,7 +99,7 @@ def extract_full_loinc_lab_results() -> list[dict]:
     return loinc_result_rows
 
 
-def _get_loinc_lab_names(version: str = "") -> list[dict]:
+def _get_loinc_lab_names(version: str = "", include_consumer_names: bool = False) -> list[dict]:
     """Process to get the all, or version specific, LOINC Codes and terms via the LOINC API for all labs (Lab Names) that are categorized as 'Observations', 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -125,11 +119,12 @@ def _get_loinc_lab_names(version: str = "") -> list[dict]:
     all_loinc_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
     # Now let's add the ConsumerName for each of the loinc codes
-    all_loinc_rows = _get_loinc_consumer_names(all_loinc_rows)
+    if include_consumer_names:
+        all_loinc_rows = _get_loinc_consumer_names(all_loinc_rows)
     return all_loinc_rows
 
 
-def _get_loinc_lab_orders(version: str = "") -> list[dict]:
+def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = False) -> list[dict]:
     """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -151,12 +146,13 @@ def _get_loinc_lab_orders(version: str = "") -> list[dict]:
     loinc_order_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
     # Now let's add the ConsumerName for each of the loinc codes
-    loinc_order_rows = _get_loinc_consumer_names(loinc_order_rows)
+    if include_consumer_names:
+        loinc_order_rows = _get_loinc_consumer_names(loinc_order_rows)
 
     return loinc_order_rows
 
 
-def _get_loinc_lab_results(version: str = "") -> list[dict]:
+def _get_loinc_lab_results(version: str = "", include_consumer_names: bool = False) -> list[dict]:
     """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
 
     :param version: Text string of the version number you want to
@@ -178,7 +174,8 @@ def _get_loinc_lab_results(version: str = "") -> list[dict]:
     loinc_result_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
     # Now let's add the ConsumerName for each of the loinc codes
-    loinc_result_rows = _get_loinc_consumer_names(loinc_result_rows)
+    if include_consumer_names:
+        loinc_result_rows = _get_loinc_consumer_names(loinc_result_rows)
     return loinc_result_rows
 
 
@@ -416,7 +413,8 @@ def get_loinc_embedding_records(
     new_version: str,
     loinc_version_date: str,
     current_loinc_file: str,
-) -> LoincUpdateResponse:
+    include_consumer_names: bool = False,
+) -> TerminologyUpdateResponse:
     """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
     5 new embedding records will be created for each 'NEW' LOINC code and
@@ -440,7 +438,7 @@ def get_loinc_embedding_records(
 
     :returns: List of embedding records (dictionaries).
     """
-    delta_extract_rows = _get_loinc_lab_names(new_version)
+    delta_extract_rows = _get_loinc_lab_names(new_version, include_consumer_names)
     # get the max number to ensure no id collisions in Opensearch
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
@@ -516,7 +514,7 @@ def get_loinc_embedding_records(
         embedding_records.extend(new_embedding_records)
         loinc_record_max_id += len(new_embedding_records)
 
-    return _set_loinc_response(
+    return set_loinc_response(
         result="success",
         message=f"Updated {len(embedding_records)} LOINC Embedding Records!",
         change_log=change_log,
