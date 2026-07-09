@@ -7,9 +7,13 @@ from text_to_code.models.schematron import _SCHEMATRON_ENUM_TO_FIELD, Schematron
 
 logger = logging.getLogger(__name__)
 
+# Built in reverse registry order so that when two enums share an error id
+# (e.g. "ttc-labTestNameOrdered-noCode" appears in both the Ordered and
+# Resulted enums) the FIRST enum's mapping wins, matching the original
+# first-match lookup loop.
 _ERROR_ID_TO_FIELD: dict[str, DataField] = {
     member.value: data_field
-    for error_enum, data_field in _SCHEMATRON_ENUM_TO_FIELD.items()
+    for error_enum, data_field in reversed(_SCHEMATRON_ENUM_TO_FIELD.items())
     for member in error_enum
 }
 

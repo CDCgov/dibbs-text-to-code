@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from lxml import etree
@@ -10,19 +11,15 @@ from text_to_code.services.utils import get_config_for_data_field
 
 logger = logging.getLogger(__name__)
 
-# The sub-xpaths are static config values evaluated once per matched context
-# node, so compile them once at import instead of on every .xpath() call.
-_SUB_XPATH_EVALUATORS: dict[str, etree.XPath] = {
-    xp.value: etree.XPath(xp.value) for xp in LabXPaths
-}
 
-
+@functools.cache
 def _sub_xpath_evaluator(sub_xpath: str) -> etree.XPath:
-    evaluator = _SUB_XPATH_EVALUATORS.get(sub_xpath)
-    if evaluator is None:
-        evaluator = etree.XPath(sub_xpath)
-        _SUB_XPATH_EVALUATORS[sub_xpath] = evaluator
-    return evaluator
+    """Compile the evaluator for a static sub-xpath config value, once per process.
+
+    :param sub_xpath: The sub-xpath expression to compile.
+    :returns: The compiled XPath evaluator.
+    """
+    return etree.XPath(sub_xpath)
 
 
 class EicrProcessor:
@@ -75,6 +72,14 @@ class EicrProcessor:
             return candidates
 
         for node in nodes:
+            if not isinstance(node, etree._Element):
+                # The base xpath can select attribute or text nodes (lxml smart
+                # strings), which cannot anchor a relative sub-xpath — calling
+                # the evaluator on one raises TypeError, not XPathError. The old
+                # absolute-path evaluation returned no matches here, so count
+                # each sub-xpath as candidate-less and move on.
+                no_candidate_count += len(sub_xpaths)
+                continue
             for sub_xpath in sub_xpaths:
                 # Absolute path kept only for error-log payloads; extraction
                 # evaluates the sub-xpath relative to the matched node.

@@ -266,6 +266,23 @@ class TestEmptyEicrProcessor:
             Candidate(value="Second lab name.", xpath=LabXPaths.CODE_DISPLAY_NAME),
         ]
 
+    def test_get_text_candidates_skips_non_element_base_nodes(self):
+        """A base xpath selecting attribute nodes yields no candidates instead of crashing.
+
+        Relative sub-xpath evaluation raises TypeError (not XPathError) on lxml
+        smart strings; the old absolute-path evaluation just found no matches.
+        """
+        processor = EicrProcessor(
+            '<ClinicalDocument><observation><code code="12345" displayName="Lab name." />'
+            "</observation></ClinicalDocument>"
+        )
+
+        result = processor.get_text_candidates(
+            "/ClinicalDocument/observation/code/@code", DataField.LAB_TEST_NAME_RESULTED
+        )
+
+        assert result == []
+
     def test_resolve_reference_returns_none_for_empty_reference_value(self):
         processor = EicrProcessor("<ClinicalDocument />")
 

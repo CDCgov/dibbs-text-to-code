@@ -64,10 +64,14 @@ def _get_saxon() -> tuple:
     global _cached_validator_key  # noqa: PLW0603
 
     if _cached_proc is None or _cached_proc_factory is not PySaxonProcessor:
+        # Assign the globals only after every init step succeeds — a failure
+        # in new_xslt30_processor() must not leave a half-initialized cache
+        # that poisons every later call.
         proc = PySaxonProcessor(license=False).__enter__()
+        xsltproc = proc.new_xslt30_processor()
         _cached_proc = proc
         _cached_proc_factory = PySaxonProcessor
-        _cached_xsltproc = proc.new_xslt30_processor()
+        _cached_xsltproc = xsltproc
         _cached_executable = None
         _cached_validator_key = None
 

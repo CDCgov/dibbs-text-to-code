@@ -760,6 +760,81 @@ class TestHandler:
             "/ClinicalDocument[1]/observation[2]",
         ]
 
+    def test_pipeline_reuses_resolution_for_duplicate_candidates(
+        self,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+    ):
+        """Errors sharing a candidate embed, search, and cache-write once.
+
+        Mirrors the old sequential loop, where the second occurrence hit the
+        cache entry the first occurrence had just written.
+        """
+        errors = [
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-one",
+                error_message="first error",
+                error_context="/ClinicalDocument[1]/observation[1]",
+            ),
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-two",
+                error_message="second error",
+                error_context="/ClinicalDocument[1]/observation[2]",
+            ),
+        ]
+        candidate = Candidate(value="repeated input", xpath=LabXPaths.CODE_DISPLAY_NAME)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=errors,
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            side_effect=[candidate, candidate],
+        )
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
+
+        embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
+        embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
+
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
+        ]
+        rerank_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.rerank", return_value=ranked_results
+        )
+        put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
+        metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
+        mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+
+        ttc_output = lambda_function._process_record_pipeline(
+            "persistence-id", mock_opensearch, S3_BUCKET
+        )
+
+        # The duplicate is embedded, searched, and cache-written exactly once.
+        embed_batch_mock.assert_called_once_with(["repeated input"])
+        rerank_mock.assert_called_once()
+        put_cached_mock.assert_called_once()
+
+        # First occurrence is a miss; the reused successful match counts as a hit.
+        assert [call.args[0] for call in metric_mock.call_args_list] == [
+            lambda_function.HitValue.miss,
+            lambda_function.HitValue.hit,
+        ]
+
+        # Both errors still produce translations, in the original error order.
+        assert [c.schematron_error_xpath for c in ttc_output.nonstandard_codes] == [
+            "/ClinicalDocument[1]/observation[1]",
+            "/ClinicalDocument[1]/observation[2]",
+        ]
+
     def test_handler_malformed_eicr_with_no_schematron_issues(
         self,
         example_sqs_event,

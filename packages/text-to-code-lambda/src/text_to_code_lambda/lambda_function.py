@@ -542,35 +542,41 @@ def _process_record_pipeline(  # noqa: PLR0912, PLR0915
         if cache_keys:
             cached_results = get_cached_results(opensearch_client, RESULT_CACHE_INDEX, cache_keys)
             for work in work_items:
-                if work.cache_key is None:
-                    continue
-                work.cached_result = cached_results.get(work.cache_key)
-                _record_cache_metric(
-                    HitValue.hit if work.cached_result is not None else HitValue.miss
-                )
+                if work.cache_key is not None:
+                    work.cached_result = cached_results.get(work.cache_key)
 
-        # Phase 3: embed all cache-miss candidates in one batched encode call.
-        miss_texts = [
-            work.selected_candidate.value
-            for work in work_items
-            if work.selected_candidate is not None and work.cached_result is None
-        ]
-        if miss_texts:
+        # Phase 3: embed the cache-miss candidates in one batched encode call.
+        # Errors that share a cache key share one resolution in phase 4, so
+        # only the first occurrence of each missing key is embedded.
+        cache_misses: list[_ErrorWork] = []
+        miss_texts: list[str] = []
+        seen_miss_keys: set[str] = set()
+        for work in work_items:
+            if work.selected_candidate is None or work.cached_result is not None:
+                continue
+            if work.cache_key is None or work.cache_key in seen_miss_keys:
+                continue
+            seen_miss_keys.add(work.cache_key)
+            cache_misses.append(work)
+            miss_texts.append(work.selected_candidate.value)
+        if cache_misses:
             logger.info(
                 "Embedding the relevant text strings for each error in the eICR",
                 status="processing",
             )
             embeddings = embed_batch(miss_texts)
-            cache_misses = [
-                work
-                for work in work_items
-                if work.selected_candidate is not None and work.cached_result is None
-            ]
             for work, vector in zip(cache_misses, embeddings, strict=True):
                 work.embedding = vector.tolist()
 
         # Phase 4: resolve each error — from the cache when hit, otherwise via
         # KNN search + rerank — and assemble details in the original error order.
+        # Duplicate candidates reuse the first occurrence's resolution, mirroring
+        # the sequential flow where later duplicates hit the cache entry written
+        # moments earlier — including in the cache metric, which counts a reused
+        # successful match as a hit.
+        resolved_misses: dict[
+            str, tuple[Code | None, str | None, OpenSearchResult, list[ScoredResult] | None]
+        ] = {}
         for work in work_items:
             error = work.error
             selected_candidate = work.selected_candidate
@@ -586,6 +592,7 @@ def _process_record_pipeline(  # noqa: PLR0912, PLR0915
             # just pull out the fields we want to use directly
             elif work.cached_result is not None:
                 logger.info("Cache hit, retrieving cached results", status="processing")
+                _record_cache_metric(HitValue.hit)
                 cached_result = work.cached_result
                 new_translation = cached_result.loinc_code
                 opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
@@ -594,23 +601,44 @@ def _process_record_pipeline(  # noqa: PLR0912, PLR0915
             # Cache miss, so run everything normally, and then finally store
             # the prediction in the cache for future use
             else:
-                if work.embedding is None:
-                    # Unreachable: phase 3 embeds every cache-miss candidate.
-                    raise ValueError(
-                        f"Missing embedding for cache-miss candidate: {selected_candidate.value}"
+                if work.cache_key is None:
+                    # Unreachable: phase 1 computes a key for every candidate.
+                    raise ValueError(f"Missing cache key for candidate: {selected_candidate.value}")
+                if work.cache_key in resolved_misses:
+                    (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    ) = resolved_misses[work.cache_key]
+                    _record_cache_metric(
+                        HitValue.hit if new_translation is not None else HitValue.miss
                     )
-                (
-                    new_translation,
-                    unmatched_message,
-                    opensearch_retrieved_scores,
-                    ranked_results,
-                ) = _match_candidate(
-                    selected_candidate,
-                    work.embedding,
-                    error.field,
-                    work.cache_key,
-                    opensearch_client,
-                )
+                else:
+                    _record_cache_metric(HitValue.miss)
+                    if work.embedding is None:
+                        # Unreachable: phase 3 embeds every cache-miss candidate.
+                        raise ValueError(
+                            f"Missing embedding for cache-miss candidate: {selected_candidate.value}"
+                        )
+                    (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    ) = _match_candidate(
+                        selected_candidate,
+                        work.embedding,
+                        error.field,
+                        work.cache_key,
+                        opensearch_client,
+                    )
+                    resolved_misses[work.cache_key] = (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    )
 
             if new_translation is not None:
                 nonstandard_code_replacements.append(

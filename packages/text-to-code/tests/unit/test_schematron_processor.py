@@ -35,6 +35,16 @@ class TestSchematronProcessor:
 
         assert result is None
 
+    def test_get_data_element_prefers_first_registry_match_for_duplicated_error_id(self):
+        """A duplicated error id must resolve to the first registry entry.
+
+        'ttc-labTestNameOrdered-noCode' appears in BOTH error enums; Lab Test
+        Name Ordered must win, matching the original first-match lookup.
+        """
+        result = get_data_element_from_schematron_error("ttc-labTestNameOrdered-noCode")
+
+        assert result == DataField.LAB_TEST_NAME_ORDERED
+
     def test_get_error_enum_value_returns_none_for_unknown_message(self):
         result = _get_error_enum_value("unknown schematron error")
 

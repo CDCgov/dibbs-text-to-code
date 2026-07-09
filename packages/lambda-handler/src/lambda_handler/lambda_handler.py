@@ -150,7 +150,7 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
         # GET reports a missing key as NoSuchKey (HEAD reports 404); a
         # pre-flight existence check would double the round trips, so map
         # the GET error to the same FileNotFoundError callers rely on.
-        if e.response["Error"]["Code"] in ("404", "NoSuchKey"):
+        if e.response.get("Error", {}).get("Code") in ("404", "NoSuchKey"):
             logger.warning(
                 "S3 object not found",
                 bucket_name=bucket_name,
@@ -158,6 +158,12 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
                 status="error",
             )
             raise FileNotFoundError(f"S3 object not found: {bucket_name}/{object_key}") from e
+        logger.error(
+            "Unexpected error while fetching file from S3",
+            bucket_name=bucket_name,
+            s3_key=object_key,
+            status="error",
+        )
         raise
     logger.info(
         "Retrieved file content from S3",
