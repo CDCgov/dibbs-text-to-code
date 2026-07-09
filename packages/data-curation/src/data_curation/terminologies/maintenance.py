@@ -36,9 +36,10 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
         )
     else:
         general_response: TerminologyUpdateResponse = {
-            "terminology": "loinc",
+            "terminology": ["loinc"],
             "result": "success",
             "message": f"No updates found for the latest LOINC ({loinc_version}) Version!",
+            "change_log": {},
         }
         return general_response
 
