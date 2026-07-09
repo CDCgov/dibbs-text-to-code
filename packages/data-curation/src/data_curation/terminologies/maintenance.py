@@ -42,9 +42,10 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
         }
         return general_response
 
+    embedding_records = loinc_response["embedding_records"]
     # add embeddings to any of the records for the various descriptions
-    if len(loinc_response["embedding_records"]) > 0:
-        for loinc_update_record in loinc_response["embedding_records"]:
+    if len(embedding_records) > 0:
+        for loinc_update_record in embedding_records:
             if (
                 loinc_update_record.get("description") is not None
                 and loinc_update_record.get("description", "").strip()

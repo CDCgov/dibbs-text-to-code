@@ -594,18 +594,18 @@ def test_get_loinc_current_version_data_requires_credentials(
 
 
 def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
-    current_loinc_dict = {
-        "TYPE-CHANGE": _loinc_row(code="TYPE-CHANGE", lab_type="Order"),
-        "TERM-CHANGE": _loinc_row(
-            code="TERM-CHANGE",
-            short_name="OLD SHORT NAME",
-            long_name="OLD LONG NAME",
-            display_name="OLD DISPLAY",
-            full_name="OLD FULL NAME",
-            consumer_name="OLD CONSUMER NAME",
-        ),
-        "NO-CHANGE": _loinc_row(code="NO-CHANGE"),
-    }
+    # current_loinc_dict = {
+    #     "TYPE-CHANGE": _loinc_row(code="TYPE-CHANGE", lab_type="Order"),
+    #     "TERM-CHANGE": _loinc_row(
+    #         code="TERM-CHANGE",
+    #         short_name="OLD SHORT NAME",
+    #         long_name="OLD LONG NAME",
+    #         display_name="OLD DISPLAY",
+    #         full_name="OLD FULL NAME",
+    #         consumer_name="OLD CONSUMER NAME",
+    #     ),
+    #     "NO-CHANGE": _loinc_row(code="NO-CHANGE"),
+    # }
     delta_rows = [
         _loinc_row(code="NEW-CODE"),
         _loinc_row(code="TYPE-CHANGE", lab_type="Both"),
@@ -625,7 +625,6 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(loinc, "_write_change_log_file", mock_write_change_log_file)
 
     result = loinc.get_loinc_embedding_records(
-        current_loinc_dict,
         "2.80",
         "2026-02-23",
         "loinc_lab_names_20260223.csv",

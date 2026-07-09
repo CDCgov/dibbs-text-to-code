@@ -416,7 +416,7 @@ def get_loinc_embedding_records(
     new_version: str,
     loinc_version_date: str,
     current_loinc_file: str,
-) -> list[dict]:
+) -> LoincUpdateResponse:
     """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
     5 new embedding records will be created for each 'NEW' LOINC code and
