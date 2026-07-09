@@ -50,7 +50,7 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
                 loinc_update_record.get("description") is not None
                 and loinc_update_record.get("description", "").strip()
             ):
-                embedding = embed(loinc_update_record["description"])
+                embedding = embed(loinc_update_record.get("description"))
                 loinc_update_record["description_vector"] = embedding.tolist()
         # TODO:
         # use this same filename convention but store these in an

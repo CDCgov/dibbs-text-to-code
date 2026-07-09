@@ -629,7 +629,8 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
         "2026-02-23",
         "loinc_lab_names_20260223.csv",
     )
-    descriptions = [record.get("description") for record in result]
+    emb_records = result["embedding_records"]
+    descriptions = [record.get("description") for record in emb_records]
 
     assert "TEST SHORT NAME" in descriptions
     assert "TEST LONG NAME" in descriptions
