@@ -46,14 +46,14 @@ EmbeddingRecord = dict[str, object]
 class LoincUpdateResponse(TerminologyUpdateResponse):
     """Defines dictionary for a LOINC Terminology Update Response."""
 
-    embedding_records: list[EmbeddingRecord]
+    embedding_records: list[dict]
 
 
 def _set_loinc_response(
     result: str,
     message: str,
     change_log: dict | None = None,
-    embedding_records: list[EmbeddingRecord] | None = None,
+    embedding_records: list[dict] | None = None,
 ) -> LoincUpdateResponse:
     """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs."""
     if change_log is None:
