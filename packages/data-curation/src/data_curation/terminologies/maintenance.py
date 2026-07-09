@@ -46,11 +46,9 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
     # add embeddings to any of the records for the various descriptions
     if len(embedding_records) > 0:
         for loinc_update_record in embedding_records:
-            if (
-                loinc_update_record.get("description") is not None
-                and loinc_update_record.get("description", "").strip()
-            ):
-                embedding = embed(loinc_update_record.get("description"))
+            description = loinc_update_record.get("description", "").strip()
+            if description is not None:
+                embedding = embed(description)
                 loinc_update_record["description_vector"] = embedding.tolist()
         # TODO:
         # use this same filename convention but store these in an
