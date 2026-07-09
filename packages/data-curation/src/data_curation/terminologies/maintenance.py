@@ -20,7 +20,6 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
 
     :returns: Terminology Update Response object that contains terminologies, result, and any messages
     """
-    general_response: TerminologyUpdateResponse
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
@@ -36,7 +35,8 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
             current_loinc_file,
         )
     else:
-        general_response = {
+        general_response: TerminologyUpdateResponse = {
+            "terminology": "loinc",
             "result": "success",
             "message": f"No updates found for the latest LOINC ({loinc_version}) Version!",
         }
@@ -46,8 +46,10 @@ def update_loinc_embeddings() -> TerminologyUpdateResponse:
     # add embeddings to any of the records for the various descriptions
     if len(embedding_records) > 0:
         for loinc_update_record in embedding_records:
-            description = loinc_update_record.get("description", "")
-            if description is not None and description.strip():
+            if (
+                loinc_update_record.get("description") is not None
+                and loinc_update_record.get("description", "").strip()
+            ):
                 embedding = embed(loinc_update_record.get("description"))
                 loinc_update_record["description_vector"] = embedding.tolist()
         # TODO:
