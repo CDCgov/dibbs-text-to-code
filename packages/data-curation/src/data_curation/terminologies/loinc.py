@@ -44,6 +44,7 @@ EmbeddingRecord = dict[str, object]
 
 
 def set_loinc_response(
+    terminology_set: str,
     result: str,
     message: str,
     change_log: dict | None = None,
@@ -55,7 +56,7 @@ def set_loinc_response(
     if embedding_records is None:
         embedding_records = []
     loinc_response: TerminologyUpdateResponse = {
-        "terminology": ["loinc"],
+        "terminology": [f"{terminology_set}"],
         "result": result,
         "message": message,
         "change_log": change_log,
@@ -515,6 +516,7 @@ def get_loinc_embedding_records(
         loinc_record_max_id += len(new_embedding_records)
 
     return set_loinc_response(
+        terminology_set=LAB_NAMES,
         result="success",
         message=f"Updated {len(embedding_records)} LOINC Embedding Records!",
         change_log=change_log,

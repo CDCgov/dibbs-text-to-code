@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 from typing import BinaryIO
@@ -20,6 +21,7 @@ from text_to_code.services.embedder import embed
 REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
 TERMINOLOGY_EXTRACT_PREFIX = os.getenv("TERMINOLOGY_EXTRACT_PREFIX", "Terminologies/")
+INGESTION_PREFIX = os.getenv("INGESTION_PREFIX", "ingestion/")
 
 logger = logging.getLogger(__name__)
 _cached_s3_client: BaseClient | None = None
@@ -140,12 +142,60 @@ def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     return loinc_rows
 
 
+def load_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdateResponse:
+    """Accepts Terminology Update Response and loads embedding records into JSONL Files and then into the Opensearch ingestion pipeline.
+
+    :returns: Terminology Update Response object that contains terminologies, result, and any messages
+    """
+    record_max = 1000
+
+    embedding_records = response.get("embedding_records")
+
+    if response.get("result") == "success" and embedding_records and len(embedding_records) > 0:
+        record_count = 1
+        max_records = []
+        for emb_rec in embedding_records:
+            record_count += 1
+            max_records.append(emb_rec)
+
+            if record_count % record_max == 0 or record_count == len(embedding_records):
+                ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
+                try:
+                    put_file(
+                        (json.dumps(doc) + "\n" for doc in max_records),
+                        S3_BUCKET,
+                        ingestion_file_name,
+                    )
+                    max_records = []
+                    response["message"] = (
+                        f"{response['message']}\nFile {ingestion_file_name} successfully added to Opensearch Ingestion Pipeline!"
+                    )
+                except Exception as error:
+                    response["result"] = "error"
+                    response["message"] = (
+                        f"{response['message']}\nUnable to land file {ingestion_file_name} in Opensearch Ingestion Pipeline!\n{error}"
+                    )
+    return response
+
+
 def update_loinc() -> TerminologyUpdateResponse:
     """Process to get the latest updates from LOINC and convert all the new loinc codes as well as changes to existing loinc codes into embedding records that can be uploaded into TTC Opensearch ingestion pipeline.
 
     :returns: Terminology Update Response object that contains terminologies, result, and any messages
     """
+    # only handling loinc lab names, but we can modify this function
+    # to handle all other loinc code types in the future
     response = update_loinc_lab_names()
+    load_jsonl_files(response)
+
+    # if all goes well write a new valueset file with all the existing codes
+    # TODO: this should be passed back to be written back into S3 Bucket by the LAMBDA
+
+    # TODO: the Lambda then needs to extract and store the FULL
+    # LOINC File in S3 as well for the next comparison AND
+    # Delete the current extract file
+    # extract_full_loinc_lab_names()
+
     return response
 
 
@@ -171,7 +221,9 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
         loinc_response["embedding_records"] = loinc_records
     else:
         return set_loinc_response(
-            "success", f"No updates found for the latest LOINC ({loinc_version}) Version!"
+            LAB_NAMES,
+            "success",
+            f"No updates found for the latest LOINC ({loinc_version}) Version!",
         )
 
     embedding_records = loinc_response["embedding_records"]
@@ -182,9 +234,6 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
             if description is not None:
                 embedding = embed(description)
                 loinc_update_record["description_vector"] = embedding.tolist()
-
-        ingestion_file_name = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.jsonl"
-        print(ingestion_file_name)
 
         # if all goes well write a new valueset file with all the existing codes
         # TODO: this should be passed back to be written back into S3 Bucket by the LAMBDA
