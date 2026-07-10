@@ -675,6 +675,39 @@ resource "aws_sns_topic" "dlq_alarm_notifications" {
   tags = local.tags
 }
 
+resource "aws_sqs_queue" "dlq_alarm_notifications_queue" {
+  name = "ttc-dlq-alarm-notifications-queue"
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "dlq_alarm_notifications_queue_policy" {
+  queue_url = aws_sqs_queue.dlq_alarm_notifications_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "sns.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.dlq_alarm_notifications_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_sns_topic.dlq_alarm_notifications.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_sns_topic_subscription" "dlq_alarm_notifications_queue" {
+  topic_arn = aws_sns_topic.dlq_alarm_notifications.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.dlq_alarm_notifications_queue.arn
+}
+
 #############
 # Augmentation Lambda SQS Queue
 #############
