@@ -1,4 +1,6 @@
+import csv
 import datetime
+import io
 import json
 import logging
 import os
@@ -11,6 +13,7 @@ from data_curation.terminologies.loinc import (
     LAB_NAMES,
     LOINC_CS_NAMES,
     LoincRow,
+    extract_full_loinc_lab_names,
     get_loinc_current_version_data,
     get_loinc_embedding_records,
     set_loinc_response,
@@ -142,7 +145,7 @@ def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     return loinc_rows
 
 
-def load_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdateResponse:
+def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdateResponse:
     """Accepts Terminology Update Response and loads embedding records into JSONL Files and then into the Opensearch ingestion pipeline.
 
     :returns: Terminology Update Response object that contains terminologies, result, and any messages
@@ -178,6 +181,33 @@ def load_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdateRe
     return response
 
 
+def upload_csv_extract_files(filename: str, contents: list[dict]) -> str:
+    """Accepts Valueset Extract record rows and a file name and loads into the Terminology Extract Bucket.
+
+    :returns: Terminology Update Response object that contains terminologies, result, and any messages
+    """
+    if not filename.strip():
+        return "No filename supplied.  Failed to save CSV file!"
+    if contents is None or len(contents) == 0:
+        return f"Empty file contents!  Failed to save CSV for {filename}"
+
+    object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{filename}"
+    csv_buffer = io.StringIO()
+    headers = contents[0].keys()
+    writer = csv.DictWriter(csv_buffer, fieldnames=headers, delimiter="|")
+    writer.writeheader()
+    writer.writerows(contents)
+    try:
+        put_file(
+            csv_buffer.getvalue(),
+            S3_BUCKET,
+            object_key,
+        )
+        return f"Full Extract File {filename} successfully added to S3 Bucket!"
+    except Exception as error:
+        return f"Unable to load file {filename} in Terminologies in S3 Bucket!\n{error}"
+
+
 def update_loinc() -> TerminologyUpdateResponse:
     """Process to get the latest updates from LOINC and convert all the new loinc codes as well as changes to existing loinc codes into embedding records that can be uploaded into TTC Opensearch ingestion pipeline.
 
@@ -186,15 +216,16 @@ def update_loinc() -> TerminologyUpdateResponse:
     # only handling loinc lab names, but we can modify this function
     # to handle all other loinc code types in the future
     response = update_loinc_lab_names()
-    load_jsonl_files(response)
+    response = upload_jsonl_files(response)
 
-    # if all goes well write a new valueset file with all the existing codes
-    # TODO: this should be passed back to be written back into S3 Bucket by the LAMBDA
-
-    # TODO: the Lambda then needs to extract and store the FULL
-    # LOINC File in S3 as well for the next comparison AND
-    # Delete the current extract file
-    # extract_full_loinc_lab_names()
+    if response.get("result") == "success":
+        full_loinc_labnames = extract_full_loinc_lab_names()
+        full_loinc_labnames = _get_loinc_consumer_names(full_loinc_labnames)
+        full_labnames_filename = (
+            f"{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}.csv"
+        )
+        upload_response = upload_csv_extract_files(full_labnames_filename, full_loinc_labnames)
+        response["message"] = f"{response['message']}\n{upload_response}"
 
     return response
 
@@ -234,14 +265,6 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
             if description is not None:
                 embedding = embed(description)
                 loinc_update_record["description_vector"] = embedding.tolist()
-
-        # if all goes well write a new valueset file with all the existing codes
-        # TODO: this should be passed back to be written back into S3 Bucket by the LAMBDA
-
-        # TODO: the Lambda then needs to extract and store the FULL
-        # LOINC File in S3 as well for the next comparison AND
-        # Delete the current extract file
-        # extract_full_loinc_lab_names()
     return loinc_response
 
 
@@ -258,5 +281,6 @@ def main(terminology: str = "all") -> None:
     if terminology in ("all", "loinc"):
         response = update_loinc()
 
-    change_log = response.get("change_log")
-    print(change_log)
+    if response.get("change_log") != {}:
+        logger.info(response.get("change_log"))
+    logger.info(f"{response.get('result')}:\n{response.get('message')}")
