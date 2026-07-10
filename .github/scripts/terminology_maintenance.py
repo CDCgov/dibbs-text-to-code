@@ -76,7 +76,7 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
 
 
 def get_latest_extract_file_name(filename_prefix: str) -> str | None:
-    """Process to get t."""
+    """Process to get the latest ValueSet Extract (csv) file name from the TTC S3 Bucket (Terminologies)."""
     if filename_prefix is None:
         return None
     s3_client = boto3.resource("s3")
@@ -164,6 +164,9 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
             if record_count % record_max == 0 or record_count == len(embedding_records):
                 ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
                 try:
+                    # TODO: Do we need to transform the json.dumps into some kind of IO
+                    # like we do for the full extract file to ensure it writes into S3
+                    # properly??
                     put_file(
                         (json.dumps(doc) + "\n" for doc in max_records),
                         S3_BUCKET,
