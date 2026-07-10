@@ -119,6 +119,44 @@ You must have AWS credentials available in the environment (e.g. via `aws sso lo
 
 Depedencies and installation instructions for those dependencies are exactly the same as for the `aws_e2e.sh` script above.
 
+## `load_test.sh`
+
+An A/B load test for the deployed pipeline, built to prove that a change does (or does not) move performance — something `batch_aws_test.sh` cannot show, because it runs serially against a single warm Lambda container.
+
+For one *arm* (a deployed image version), the script:
+
+1. Templates a corpus of a few hundred eICRs from the test-cases JSON. Each document's candidate text is **salted** with a unique run/arm/index marker (e.g. `K+, Whole Blood [lt-3f9a2c1b-baseline-042]`). The TTC result cache keys on a hash of the candidate text, so salting guarantees every document misses the cache and takes the full embedding + OpenSearch KNN path — no OpenSearch access is needed to reset state between runs or arms.
+2. Generates the paired Schematron reports locally in a single Saxon process (reports are validated once per base case and reused when their content is document-independent).
+3. Uploads all reports, then bursts the eICR uploads in parallel — forcing Lambda scale-out (SQS `batch_size = 1`, no reserved concurrency), which is what samples cold starts under load.
+4. Waits for the pipeline to drain (all augmented eICRs present), then measures from the source of truth rather than by log-tailing:
+   - **CloudWatch Logs Insights** over both lambdas' `REPORT` lines: duration p50/p90/p99, cold-start count, init duration, max memory, error count.
+   - **End-to-end latency** per document from S3 `LastModified` (submission → augmented object).
+   - **Correctness**: every augmented eICR's predicted LOINC translation vs. the expected code.
+5. Writes a `results_<pass>.json` per pass and prints a summary.
+
+With `--passes 2`, the second pass re-submits the *same salted texts* under fresh filenames/UUIDs — pass 1 measures the cold-cache (full KNN) path, pass 2 the warm result-cache path.
+
+### A/B protocol
+
+```sh
+# 1. Deploy the baseline (e.g. main) image, then:
+./scripts/load_test.sh run --arm baseline --docs 300 --passes 2
+
+# 2. Deploy the candidate branch image, then:
+./scripts/load_test.sh run --arm branch --docs 300 --passes 2
+
+# 3. Compare (repeat for p2):
+./scripts/load_test.sh compare \
+    load_test_runs/<run-id>-baseline/results_p1.json \
+    load_test_runs/<run-id>-branch/results_p1.json
+```
+
+Each redeploy recycles all Lambda containers, so both arms get a fair cold-start sample. Run the arms close together in time, in a window with **no other traffic** to the lambdas — invocations are attributed to the run by time window, and the report warns when invocation counts exceed the document count.
+
+Flags: `--docs` (default 300, max 900), `--passes` (default 1), `--concurrency` (parallel uploads, default 24), `--cases`, `--bucket` (default `dibbs-text-to-code`), `--out-dir` (default `load_test_runs/`, gitignored), `--drain-timeout` (default 1800s).
+
+Dependencies: only `aws` (CLI v2), `uv`, and `bash` — no `gum`/`jq`/`unbuffer`. Helper logic lives in `load_test_corpus.py` (corpus + Schematron reports) and `load_test_report.py` (Logs Insights metrics, S3 latency join, correctness check, and the `compare` table).
+
 ## Test Cases File Information
 
 The batch testing script relies on a JSON file of curated test cases to process in-bulk. The file can contain any number of test cases, but the structure of the file should be a JSON dictionary with a single key-value pair, with key `"test_cases"` and a value of an array of dictionaries. Each dictionary in the array is expected to have three properties: `nonstandard_in` (the narrative, free-text string representing the nonstandard eICR input), `correct_standardized_code` (the true name variant of the LOINC code represented by the input), and `numeric_loinc_code` (a string giving the hyphenated digit string assigned to the code in the LOINC hierarchy).
