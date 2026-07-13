@@ -17,6 +17,7 @@ from data_curation.terminologies.loinc import (
     get_loinc_embedding_records,
     set_loinc_response,
 )
+from torch import tensor
 
 from text_to_code.services.embedder import embed
 
@@ -86,7 +87,7 @@ def get_latest_extract_file_name(filename_prefix: str) -> str | None:
     return None
 
 
-def put_file(body: bytes, bucket: str, key: str) -> None:
+def put_file(body: str, bucket: str, key: str) -> None:
     """Uploads a file object to a S3 bucket.
 
     :param file_obj: The file object to upload.
@@ -116,7 +117,7 @@ def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     cs_names_file = get_file_content_from_s3(S3_BUCKET, object_key)
     for cs_raw_row in cs_names_file.splitlines():
         if cs_raw_row:
-            cs_row = json.loads(cs_raw_row.decode("utf-8"))
+            cs_row = json.loads(cs_raw_row)
         cs_code = cs_row.get("LoincNumber")
         cs_name = cs_row.get("ConsumerName")
         if cs_code and cs_name:
@@ -250,9 +251,9 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     # add embeddings to any of the records for the various descriptions
     if len(embedding_records) > 0:
         for loinc_update_record in embedding_records:
-            description = loinc_update_record.get("description", "").strip()
-            if description is not None:
-                embedding = embed(description)
+            description = loinc_update_record.get("description", "")
+            if description and description.strip() is not None:
+                embedding: tensor = embed(description)
                 loinc_update_record["description_vector"] = embedding.tolist()
     return loinc_response
 
