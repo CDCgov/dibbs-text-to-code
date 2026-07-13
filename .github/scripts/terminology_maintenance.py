@@ -1,13 +1,12 @@
 import csv
-import datetime
 import io
 import json
 import logging
 import os
-from typing import BinaryIO
+from datetime import datetime
 
 import boto3
-from boto3 import BaseClient
+from botocore.client import BaseClient
 from data_curation.terminologies.general import TerminologyUpdateResponse, get_date_from_filename
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
@@ -45,7 +44,7 @@ def create_s3_client() -> BaseClient:
             # endpoint_url=endpoint_url,
             region_name=region_name,
         )
-        logger.info("Created S3 client", status="success")
+        logger.info("Created S3 client: status=success")
 
     return _cached_s3_client
 
@@ -60,17 +59,11 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
     client = create_s3_client()
 
     logger.info(
-        "Retrieving file content from S3",
-        bucket_name=bucket_name,
-        s3_key=object_key,
-        status="processing",
+        f"Retrieving file content from S3,\nbucket_name={bucket_name},\ns3_key={object_key},\nstatus='processing'"
     )
     response = client.get_object(Bucket=bucket_name, Key=object_key)
     logger.info(
-        "Retrieved file content from S3",
-        bucket_name=bucket_name,
-        s3_key=object_key,
-        status="success",
+        f"Retrieving file content from S3,\nbucket_name={bucket_name},\ns3_key={object_key},\nstatus='success'"
     )
     return response["Body"].read().decode("utf-8")
 
@@ -93,7 +86,7 @@ def get_latest_extract_file_name(filename_prefix: str) -> str | None:
     return None
 
 
-def put_file(file_obj: BinaryIO, bucket_name: str, object_key: str) -> None:
+def put_file(body: bytes, bucket: str, key: str) -> None:
     """Uploads a file object to a S3 bucket.
 
     :param file_obj: The file object to upload.
@@ -102,18 +95,10 @@ def put_file(file_obj: BinaryIO, bucket_name: str, object_key: str) -> None:
     """
     client = create_s3_client()
     logger.info(
-        "Uploading file to S3",
-        bucket_name=bucket_name,
-        s3_key=object_key,
-        status="processing",
+        f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='processing'"
     )
-    client.put_object(Body=file_obj, Bucket=bucket_name, Key=object_key)
-    logger.info(
-        "Uploaded file to S3",
-        bucket_name=bucket_name,
-        s3_key=object_key,
-        status="success",
-    )
+    client.put_object(Body=body, Bucket=bucket, Key=key)
+    logger.info(f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='success'")
 
 
 def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
@@ -129,7 +114,9 @@ def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
     cs_names = {}
     object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{LOINC_CS_NAMES}"
     cs_names_file = get_file_content_from_s3(S3_BUCKET, object_key)
-    for cs_row in cs_names_file.splitlines():
+    for cs_raw_row in cs_names_file.splitlines():
+        if cs_raw_row:
+            cs_row = json.loads(cs_raw_row.decode("utf-8"))
         cs_code = cs_row.get("LoincNumber")
         cs_name = cs_row.get("ConsumerName")
         if cs_code and cs_name:
@@ -167,10 +154,9 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
                     # TODO: Do we need to transform the json.dumps into some kind of IO
                     # like we do for the full extract file to ensure it writes into S3
                     # properly??
+                    jsonl_string = "\n".join(json.dumps(rec) for rec in max_records) + "\n"
                     put_file(
-                        (json.dumps(doc) + "\n" for doc in max_records),
-                        S3_BUCKET,
-                        ingestion_file_name,
+                        body=jsonl_string.encode("utf-8"), bucket=S3_BUCKET, key=ingestion_file_name
                     )
                     max_records = []
                     response["message"] = (
@@ -202,9 +188,9 @@ def upload_csv_extract_files(filename: str, contents: list[dict]) -> str:
     writer.writerows(contents)
     try:
         put_file(
-            csv_buffer.getvalue(),
-            S3_BUCKET,
-            object_key,
+            body=csv_buffer.getvalue(),
+            bucket=S3_BUCKET,
+            key=object_key,
         )
         return f"Full Extract File {filename} successfully added to S3 Bucket!"
     except Exception as error:
