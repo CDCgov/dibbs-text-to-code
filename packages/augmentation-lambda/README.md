@@ -357,9 +357,7 @@ If all records succeed, the Lambda returns:
 
 ```json
 {
-  "statusCode": 200,
-  "message": "Augmentation processed successfully!",
-  "num_success_eicrs": 1
+  "batchItemFailures": []
 }
 ```
 
@@ -367,16 +365,11 @@ If one or more records fail, the Lambda returns:
 
 ```json
 {
-  "statusCode": 207,
-  "message": "Augmentation processed with some failures!",
-  "failures": [
+  "batchItemFailures": [
     {
-      "message_id": "<message id>",
-      "error": "<error>"
+      "itemIdentifier": "<message id>"
     }
-  ],
-  "num_failure_eicrs": 1,
-  "num_success_eicrs": 0
+  ]
 }
 ```
 

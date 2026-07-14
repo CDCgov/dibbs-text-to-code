@@ -1,12 +1,27 @@
 {
+  "batchItemFailures": [
+    {
+      "itemIdentifier": "msg-fail"
+    }
+  ],
   "failures": [
     {
       "error": "S3 object not found: dibbs-text-to-code/TTCAugmentationMetadataV2/nonexistent/id",
-      "message_id": "msg-fail"
+      "error_type": "FileNotFoundError",
+      "message_id": "msg-fail",
+      "passthrough_written": false,
+      "sqs_retry": true
     }
   ],
-  "message": "Augmentation processed with some failures!",
+  "message": "Augmentation invocation completed",
   "num_failure_eicrs": 1,
+  "num_processing_error_eicrs": 1,
   "num_success_eicrs": 1,
-  "statusCode": 207
+  "status": "partial_failure",
+  "successes": [
+    {
+      "message_id": "msg-success",
+      "status": "processed"
+    }
+  ]
 }

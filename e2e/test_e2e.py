@@ -499,7 +499,8 @@ class TestEndToEndSimulated:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 0, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            _ = lambda_function.handler(sqs_event, mock_lambda_context)
+            ttc_result = lambda_function.handler(sqs_event, mock_lambda_context)
+            assert ttc_result["batchItemFailures"] == []
 
             q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
 
@@ -511,7 +512,8 @@ class TestEndToEndSimulated:
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            _ = augmentation_lambda(sqs_event, mock_lambda_context)
+            augmentation_result = augmentation_lambda(sqs_event, mock_lambda_context)
+            assert augmentation_result["batchItemFailures"] == []
 
     def _read_s3_object(self, aws, key: str) -> str:
         return aws["s3"].get_object(Bucket=S3_BUCKET, Key=key)["Body"].read().decode("utf-8")
@@ -682,18 +684,20 @@ class TestNamespacePreservation:
             )
 
         q1 = _drain_sqs_for_prefix(aws["sqs"], infra["queue1_url"], TTC_INPUT_PREFIX)
-        lambda_function.handler(
+        ttc_result = lambda_function.handler(
             _build_sqs_event([json.loads(q1[0]["Body"])], QUEUE_1_NAME), mock_lambda_context
         )
+        assert ttc_result["batchItemFailures"] == []
 
         q2 = _drain_sqs_for_prefix(aws["sqs"], infra["queue2_url"], TTC_OUTPUT_PREFIX)
         with time_machine.travel(
             datetime(2026, 2, 13, 15, 27, 57, tzinfo=ZoneInfo("America/New_York")), tick=False
         ):
-            augmentation_lambda(
+            augmentation_result = augmentation_lambda(
                 _build_sqs_event([json.loads(q2[0]["Body"])], QUEUE_2_NAME),
                 mock_lambda_context,
             )
+            assert augmentation_result["batchItemFailures"] == []
 
         augmented_eicr = (
             aws["s3"]

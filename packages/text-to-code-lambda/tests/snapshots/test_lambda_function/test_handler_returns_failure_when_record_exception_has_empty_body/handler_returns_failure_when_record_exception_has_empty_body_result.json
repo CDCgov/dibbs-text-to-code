@@ -1,0 +1,22 @@
+{
+  "batchItemFailures": [
+    {
+      "itemIdentifier": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7"
+    }
+  ],
+  "failures": [
+    {
+      "error": "boom",
+      "error_type": "Exception",
+      "message_id": "f9ccdff5-0acb-4933-8995-bd7f0ab5f2f7",
+      "passthrough_written": false,
+      "sqs_retry": true
+    }
+  ],
+  "message": "TTC invocation completed",
+  "num_failure_eicrs": 1,
+  "num_processing_error_eicrs": 1,
+  "num_success_eicrs": 0,
+  "status": "partial_failure",
+  "successes": []
+}
