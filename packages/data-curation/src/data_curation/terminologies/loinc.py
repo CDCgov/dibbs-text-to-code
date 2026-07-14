@@ -39,9 +39,6 @@ LOINC_TEXT_TO_FILTER = [
     "This term is intended to collate similar measurements for the LOINC SNOMED CT Collaboration"
 ]
 
-LoincRow = dict[str, str | None]
-EmbeddingRecord = dict[str, object]
-
 
 def set_loinc_response(
     terminology_set: str,
@@ -239,8 +236,8 @@ def _process_loinc_valueset(api_url: str, loinc_valueset_type: str) -> list:
 
 
 def _process_loinc_results(
-    loinc_results: list[dict[str, str]], loinc_rows: list[LoincRow]
-) -> list[LoincRow]:
+    loinc_results: list[dict[str, str]], loinc_rows: list[dict]
+) -> list[dict]:
     """Function that loops through the LOINC results, returned via the various API calls, and sends them into another function to extract and add all the different terms/names for each loinc code.
 
     :param loinc_results: The current iteration of LOINC data returned
@@ -300,7 +297,7 @@ def process_loincs_for_umls_urls() -> dict:
     return umls_loinc_results[0]
 
 
-def _get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]) -> list[LoincRow]:
+def _get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) -> list[dict]:
     """This function receives the most recent result from the LOINC API and extracts the various terms/names and adds to the list of records ready for consumption into TTC model DB.
 
     :param loinc_results: The current iteration of LOINC data returned
@@ -342,7 +339,7 @@ def _get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[LoincRow]
     return loinc_rows
 
 
-def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
+def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
     """Function that utilizes the downloaded consumer_names.csv file, in the 'other' data folder, to related the consumer name term with each loinc code.
 
     :param loinc_rows: The list of dictionaries that contain all the LOINC

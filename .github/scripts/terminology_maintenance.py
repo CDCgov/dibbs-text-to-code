@@ -11,7 +11,6 @@ from data_curation.terminologies.general import TerminologyUpdateResponse, get_d
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
     LOINC_CS_NAMES,
-    LoincRow,
     extract_full_loinc_lab_names,
     get_loinc_current_version_data,
     get_loinc_embedding_records,
@@ -86,10 +85,10 @@ def get_latest_extract_file_name(filename_prefix: str) -> str | None:
     return None
 
 
-def put_file(body: str, bucket: str, key: str) -> None:
+def put_file(body: str | bytes, bucket: str, key: str) -> None:
     """Uploads a file object to a S3 bucket.
 
-    :param file_obj: The file object to upload.
+    :param body: The file object to upload.
     :param bucket_name: The name of the S3 bucket to upload to.
     :param object_key: The key to assign to the uploaded object in S3.
     """
@@ -101,7 +100,7 @@ def put_file(body: str, bucket: str, key: str) -> None:
     logger.info(f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='success'")
 
 
-def _get_loinc_consumer_names(loinc_rows: list[LoincRow]) -> list[LoincRow]:
+def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
     """Function that utilizes the consumer_names.csv file in the Terminologies S3 Bucket Folder for TTC to related the consumer name term with each loinc code.
 
     :param loinc_rows: The list of dictionaries that contain all the LOINC
@@ -154,9 +153,7 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
                     # TODO: Do we need to transform the json.dumps into some kind of IO
                     # like we do for the full extract file to ensure it writes into S3
                     # properly??
-                    jsonl_string = (
-                        "\n".join(json.dumps(rec).encode("utf-8") for rec in max_records) + "\n"
-                    )
+                    jsonl_string = "\n".join(json.dumps(rec) for rec in max_records) + "\n"
                     put_file(body=jsonl_string, bucket=S3_BUCKET, key=ingestion_file_name)
                     max_records = []
                     response["message"] = (

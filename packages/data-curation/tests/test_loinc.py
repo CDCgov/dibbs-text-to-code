@@ -117,7 +117,7 @@ def test_extract_full_loinc_lab_names_handles_empty_api_results(
         "LoincNumber|ConsumerName\n",
         encoding="utf-8",
     )
-    saved_files: list[tuple[str, list[loinc.LoincRow], bool]] = []
+    saved_files: list[tuple[str, list[list[dict]], bool]] = []
 
     def mock_get_with_timeout(
         api_url: str,
@@ -126,7 +126,7 @@ def test_extract_full_loinc_lab_names_handles_empty_api_results(
         return MockResponse(200, payload)
 
     def mock_save_valueset_csv_file(
-        filename: str, contents: list[loinc.LoincRow], append_to_file: bool = False
+        filename: str, contents: list[list[dict]], append_to_file: bool = False
     ) -> None:
         saved_files.append((filename, contents, append_to_file))
 
