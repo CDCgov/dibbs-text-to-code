@@ -17,7 +17,6 @@ from data_curation.terminologies.loinc import (
     get_loinc_embedding_records,
     set_loinc_response,
 )
-from torch import tensor
 
 from text_to_code.services.embedder import embed
 
@@ -155,10 +154,10 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
                     # TODO: Do we need to transform the json.dumps into some kind of IO
                     # like we do for the full extract file to ensure it writes into S3
                     # properly??
-                    jsonl_string = "\n".join(json.dumps(rec) for rec in max_records) + "\n"
-                    put_file(
-                        body=jsonl_string.encode("utf-8"), bucket=S3_BUCKET, key=ingestion_file_name
+                    jsonl_string = (
+                        "\n".join(json.dumps(rec).encode("utf-8") for rec in max_records) + "\n"
                     )
+                    put_file(body=jsonl_string, bucket=S3_BUCKET, key=ingestion_file_name)
                     max_records = []
                     response["message"] = (
                         f"{response['message']}\nFile {ingestion_file_name} successfully added to Opensearch Ingestion Pipeline!"
@@ -251,9 +250,9 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     # add embeddings to any of the records for the various descriptions
     if len(embedding_records) > 0:
         for loinc_update_record in embedding_records:
-            description = loinc_update_record.get("description", "")
+            description = loinc_update_record.get("description")
             if description and description.strip() is not None:
-                embedding: tensor = embed(description)
+                embedding = embed(description)
                 loinc_update_record["description_vector"] = embedding.tolist()
     return loinc_response
 
@@ -274,3 +273,7 @@ def main(terminology: str = "all") -> None:
     if response.get("change_log") != {}:
         logger.info(response.get("change_log"))
     logger.info(f"{response.get('result')}:\n{response.get('message')}")
+
+
+if __name__ == "__main__":
+    main("all")
