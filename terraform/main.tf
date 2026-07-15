@@ -676,7 +676,8 @@ resource "aws_sns_topic" "dlq_alarm_notifications" {
 }
 
 resource "aws_sqs_queue" "dlq_alarm_notifications_queue" {
-  name = "ttc-dlq-alarm-notifications-queue"
+  name                      = "ttc-dlq-alarm-notifications-queue"
+  message_retention_seconds = 1209600
 
   tags = local.tags
 }
@@ -713,8 +714,9 @@ resource "aws_sns_topic_subscription" "dlq_alarm_notifications_queue" {
 #############
 
 resource "aws_sqs_queue" "augmentation_dlq" {
-  name = "${var.augmentation_lambda_function_name}-dlq"
-  tags = local.tags
+  name                      = "${var.augmentation_lambda_function_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
 }
 
 resource "aws_cloudwatch_metric_alarm" "augmentation_dlq_visible_messages" {
@@ -829,8 +831,9 @@ resource "aws_iam_role_policy" "augmentation_sqs_policy" {
 #############
 
 resource "aws_sqs_queue" "ttc_input_dlq" {
-  name = "${var.lambda_function_name}-dlq"
-  tags = local.tags
+  name                      = "${var.lambda_function_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
 }
 
 resource "aws_cloudwatch_metric_alarm" "ttc_input_dlq_visible_messages" {
