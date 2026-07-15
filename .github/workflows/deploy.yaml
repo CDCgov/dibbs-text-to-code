@@ -5,11 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: "Apply changes (if false, only runs plan)"
+        description: 'Apply changes (if false, only runs plan)'
         type: boolean
         default: false
       destroy:
-        description: "Destroy all resources (WARNING: irreversible)"
+        description: 'Destroy all resources (WARNING: irreversible)'
         type: boolean
         default: false
   push:
@@ -34,6 +34,8 @@ jobs:
       # Unset/empty secrets fall back to the [] default in _variables.tf.
       TF_VAR_debug_allowed_ips: ${{ secrets.DEBUG_ALLOWED_IPS }}
       TF_VAR_debug_iam_principals: ${{ secrets.DEBUG_IAM_PRINCIPALS }}
+      TF_VAR_slack_team_id: ${{ secrets.SLACK_SKYLIGHT_ID }}
+      TF_VAR_slack_channel_id: ${{ secrets.SLACK_TTC_ENG_CHANNEL_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
