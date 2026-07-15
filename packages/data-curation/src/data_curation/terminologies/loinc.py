@@ -63,37 +63,37 @@ def set_loinc_response(
     return loinc_response
 
 
-def extract_full_loinc_lab_names() -> list[dict]:
+def extract_full_loinc_lab_names(include_consumer_names: bool = False) -> list[dict]:
     """Function that extracts all the latest LOINC Lab Names (all loinc codes regardless of being of type 'Order', 'Observation' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     # TODO:
     # use this same filename convention but store these in an
     # S3 Bucket instead of a file locally
     #  loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
     # For now will return the loinc rows
-    all_loinc_rows = _get_loinc_lab_names()
+    all_loinc_rows = _get_loinc_lab_names(include_consumer_names=include_consumer_names)
 
     return all_loinc_rows
 
 
-def extract_full_loinc_lab_orders() -> list[dict]:
+def extract_full_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     # TODO:
     # use this same filename convention but store these in an
     # S3 Bucket instead of a file locally
     #  loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
     # For now will return the loinc rows
-    loinc_order_rows = _get_loinc_lab_orders()
+    loinc_order_rows = _get_loinc_lab_orders(include_consumer_names=include_consumer_names)
     return loinc_order_rows
 
 
-def extract_full_loinc_lab_results() -> list[dict]:
+def extract_full_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
     # TODO:
     # use this same filename convention but store these in an
     # S3 Bucket instead of a file locally
     #  loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
     # For now will return the loinc rows
-    loinc_result_rows = _get_loinc_lab_results()
+    loinc_result_rows = _get_loinc_lab_results(include_consumer_names=include_consumer_names)
     return loinc_result_rows
 
 
@@ -436,7 +436,9 @@ def get_loinc_embedding_records(
 
     :returns: List of embedding records (dictionaries).
     """
-    delta_extract_rows = _get_loinc_lab_names(new_version, include_consumer_names)
+    delta_extract_rows = _get_loinc_lab_names(
+        version=new_version, include_consumer_names=include_consumer_names
+    )
     # get the max number to ensure no id collisions in Opensearch
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
