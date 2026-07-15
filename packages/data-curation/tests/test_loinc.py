@@ -557,18 +557,6 @@ def test_get_loinc_current_version_data_requires_credentials(
 
 
 def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
-    # current_loinc_dict = {
-    #     "TYPE-CHANGE": _loinc_row(code="TYPE-CHANGE", lab_type="Order"),
-    #     "TERM-CHANGE": _loinc_row(
-    #         code="TERM-CHANGE",
-    #         short_name="OLD SHORT NAME",
-    #         long_name="OLD LONG NAME",
-    #         display_name="OLD DISPLAY",
-    #         full_name="OLD FULL NAME",
-    #         consumer_name="OLD CONSUMER NAME",
-    #     ),
-    #     "NO-CHANGE": _loinc_row(code="NO-CHANGE"),
-    # }
     delta_rows = [
         _loinc_row(code="NEW-CODE"),
         _loinc_row(code="TYPE-CHANGE", lab_type="Both"),
@@ -593,7 +581,6 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
     descriptions = [record.get("description") for record in emb_records]
     emb_results = result.get("embedding_records")
     change_log = result.get("change_log")
-    print(f"HERE: {emb_results}")
 
     assert "TEST SHORT NAME" in descriptions
     assert "TEST LONG NAME" in descriptions
