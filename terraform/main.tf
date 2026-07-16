@@ -1,3 +1,13 @@
+variable "slack_team_id" {
+  description = "Slack workspace ID authorized for Amazon Q Developer in chat applications."
+  type        = string
+}
+
+variable "slack_channel_id" {
+  description = "Slack channel ID for TTC DLQ alarm notifications."
+  type        = string
+}
+
 locals {
   vpc_name = "${var.project}-${var.owner}-${terraform.workspace}"
   tags = {
@@ -669,12 +679,110 @@ resource "aws_lambda_function" "augmentation_lambda" {
   tags = { Name = var.augmentation_lambda_function_name }
 }
 
+resource "aws_sns_topic" "dlq_alarm_notifications" {
+  name = "ttc-dlq-alarm-notifications"
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "dlq_alarm_notifications_queue" {
+  name                      = "ttc-dlq-alarm-notifications-queue"
+  message_retention_seconds = 1209600
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "dlq_alarm_notifications_queue_policy" {
+  queue_url = aws_sqs_queue.dlq_alarm_notifications_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "sns.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.dlq_alarm_notifications_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_sns_topic.dlq_alarm_notifications.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_sns_topic_subscription" "dlq_alarm_notifications_queue" {
+  topic_arn = aws_sns_topic.dlq_alarm_notifications.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.dlq_alarm_notifications_queue.arn
+}
+
+data "aws_iam_policy_document" "dlq_alarm_chatbot_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["chatbot.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "dlq_alarm_chatbot_role" {
+  name               = "ttc-dlq-alarm-chatbot-role"
+  assume_role_policy = data.aws_iam_policy_document.dlq_alarm_chatbot_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "dlq_alarm_chatbot_cloudwatch_read_only" {
+  role       = aws_iam_role.dlq_alarm_chatbot_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
+}
+
+resource "aws_chatbot_slack_channel_configuration" "dlq_alarm_slack" {
+  configuration_name    = "proj-cdc-dibbs-text-to-code-engineering"
+  iam_role_arn          = aws_iam_role.dlq_alarm_chatbot_role.arn
+  slack_channel_id      = var.slack_channel_id
+  slack_team_id         = var.slack_team_id
+  sns_topic_arns        = [aws_sns_topic.dlq_alarm_notifications.arn]
+  guardrail_policy_arns = ["arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"]
+  logging_level         = "ERROR"
+
+  tags = local.tags
+}
+
 #############
 # Augmentation Lambda SQS Queue
 #############
 
 resource "aws_sqs_queue" "augmentation_dlq" {
-  name = "${var.augmentation_lambda_function_name}-dlq"
+  name                      = "${var.augmentation_lambda_function_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "augmentation_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.augmentation_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the augmentation Lambda DLQ."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
+
+  dimensions = {
+    QueueName = aws_sqs_queue.augmentation_dlq.name
+  }
+
   tags = local.tags
 }
 
@@ -768,7 +876,30 @@ resource "aws_iam_role_policy" "augmentation_sqs_policy" {
 #############
 
 resource "aws_sqs_queue" "ttc_input_dlq" {
-  name = "${var.lambda_function_name}-dlq"
+  name                      = "${var.lambda_function_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "ttc_input_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.ttc_input_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the TTC input Lambda DLQ."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
+
+  dimensions = {
+    QueueName = aws_sqs_queue.ttc_input_dlq.name
+  }
+
   tags = local.tags
 }
 
