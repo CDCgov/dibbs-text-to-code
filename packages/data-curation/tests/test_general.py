@@ -215,7 +215,7 @@ def test_save_jsonl_file_value_error(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setattr(general, "BASE_FOLDER", tmp_path)
 
     class MockFile:
-        def __enter__(self) -> "MockFile":
+        def __enter__(self) -> MockFile:
             return self
 
         def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
