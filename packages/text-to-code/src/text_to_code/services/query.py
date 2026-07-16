@@ -55,7 +55,7 @@ class QueryBuilder:
         self._must: list[dict] = []
         self._filters: list[dict] = []
 
-    def with_knn(self, params: VectorSearchParams) -> "QueryBuilder":
+    def with_knn(self, params: VectorSearchParams) -> QueryBuilder:
         """Builds query with KNN.
 
         :param params: The parameters for the vector search.
@@ -66,7 +66,7 @@ class QueryBuilder:
         self._must.append(query.to_opensearch())
         return self
 
-    def with_terms_filter(self, params: VectorSearchParams) -> "QueryBuilder":
+    def with_terms_filter(self, params: VectorSearchParams) -> QueryBuilder:
         """Adds a filter to the query.
 
         :param params: The parameters for the vector search.
@@ -76,7 +76,7 @@ class QueryBuilder:
         self._filters.append(filter.to_opensearch())
         return self
 
-    def with_vector_search(self, params: VectorSearchParams) -> "QueryBuilder":
+    def with_vector_search(self, params: VectorSearchParams) -> QueryBuilder:
         """Adds a vector search to the query based on the provided parameters.
 
         :param params: The parameters for the vector search.
