@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from data_curation.terminologies import loinc
+from data_curation.terminologies.general import load_local_extract_file_to_dict
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"
@@ -572,10 +573,12 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(loinc, "_get_loinc_lab_names", mock_get_loinc_lab_names)
 
+    loinc_file_contents = load_local_extract_file_to_dict("loinc_lab_names_20260223.csv")
+
     result = loinc.get_loinc_embedding_records(
         "2.80",
         "2026-02-23",
-        "loinc_lab_names_20260223.csv",
+        loinc_file_contents,
     )
     emb_records = result["embedding_records"]
     descriptions = [record.get("description") for record in emb_records]
