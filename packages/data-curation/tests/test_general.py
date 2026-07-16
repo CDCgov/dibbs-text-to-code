@@ -27,7 +27,7 @@ def test_get_date_from_filename_no_date() -> None:
     with pytest.raises(
         ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
     ):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
 def test_get_date_from_filename_no_file() -> None:
@@ -35,51 +35,51 @@ def test_get_date_from_filename_no_file() -> None:
     with pytest.raises(
         ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
     ):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
 def test_get_date_from_filename_valid_loinc() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = general.get_date_from_filename(file_name, "loinc")
+    result = general.get_date_from_file_name(file_name, "loinc")
     assert result == "2026-05-14"
 
 
 def test_get_date_from_filename_valid_other() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = general.get_date_from_filename(file_name, "")
+    result = general.get_date_from_file_name(file_name, "")
     assert result == "20260514"
 
 
 def test_get_date_from_filename_invalid_date() -> None:
     file_name = "my_extract_file_20265555.csv"
     with pytest.raises(ValueError, match="unconverted data remains: 55"):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
 def test_get_latest_extract_file_name_empty() -> None:
     with pytest.raises(FileNotFoundError):
-        general.get_latest_extract_file_name("")
+        general.get_latest_local_extract_file_name("")
 
 
 def test_get_latest_extract_file_name_none() -> None:
-    result = general.get_latest_extract_file_name(None)
+    result = general.get_latest_local_extract_file_name(None)
     assert result is None
 
 
 def test_get_latest_extract_file_name_valid() -> None:
     prefix = "loinc_lab_names"
-    result = general.get_latest_extract_file_name(prefix)
+    result = general.get_latest_local_extract_file_name(prefix)
     assert result is not None
     assert prefix in result
 
 
 def test_load_extract_file_to_dict_no_file() -> None:
-    result = general.load_extract_file_to_dict("")
+    result = general.load_local_extract_file_to_dict("")
     assert result == {}
 
 
 def test_load_extract_file_to_dict_valid() -> None:
-    result = general.load_extract_file_to_dict("hl7_lab_interp_20260223.csv")
+    result = general.load_local_extract_file_to_dict("hl7_lab_interp_20260223.csv")
     assert result != {}
 
 

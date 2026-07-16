@@ -47,10 +47,10 @@ def clean_text_string(value: str | None) -> str:
     return ""
 
 
-def get_date_from_filename(filename: str, terminology: str) -> str:
-    """Function that extracts and formats the date from any of the value set extract files and formats the date string into a pattern used by the terminology set in their Versioning API call (ie. get the latest version and version date).
+def get_date_from_file_name(file_name: str, terminology: str) -> str:
+    """Function that extracts and formats the date from the name of any value set extract file and formats the date string into a pattern used by the terminology set in their Versioning API call (ie. get the latest version and version date).
 
-    :param filename: Text of the filename to extact the date from.
+    :param file_name: Text of the file name to extact the date from.
     :param terminology: The name of the value set in question as the
         date formats may have different requirements based upon
         the API response for said value set.
@@ -58,9 +58,9 @@ def get_date_from_filename(filename: str, terminology: str) -> str:
     :returns: A formatted date string that can be used for comparison
         to determine if an update is required.
     """
-    match = re.search(r"\d{8}", filename)
+    match = re.search(r"\d{8}", file_name)
     if match is None:
-        raise ValueError(f"Unable to extract 8 digit date from file name: {filename}!")
+        raise ValueError(f"Unable to extract 8 digit date from file name: {file_name}!")
 
     file_date = match.group()
 
@@ -72,32 +72,32 @@ def get_date_from_filename(filename: str, terminology: str) -> str:
     return datetime.strptime(file_date, "%Y%m%d").strftime("%Y%m%d")
 
 
-def get_latest_extract_file_name(filename_prefix: str | None) -> str | None:
-    """Function that gets the most current/recent value set csv file from the TTC code repo, by filename prefix.
+def get_latest_local_extract_file_name(file_name_prefix: str | None) -> str | None:
+    """Function that gets the most current/recent value set csv file name from the TTC code repo, by file name prefix.
 
-    :param filename_prefix: The part of the filename that defines the
+    :param file_name_prefix: The part of the file name that defines the
         terminology value set type (ie. loinc_lab_names) that you want
         to find the most recent file of.
 
     :returns: The file name and file path of the most recent value set
         extract file.
     """
-    if filename_prefix is None:
+    if file_name_prefix is None:
         return None
 
     # TODO: This will need to change to pull the file
     # from the S3 Bucket and return the file name
-    files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(filename_prefix)]
-    if filename_prefix != "" and files:
+    files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(file_name_prefix)]
+    if file_name_prefix != "" and files:
         latest_file = max(files)
         return latest_file
-    raise FileNotFoundError(f"No file with prefix {filename_prefix} under {BASE_FOLDER}!")
+    raise FileNotFoundError(f"No file with prefix {file_name_prefix} under {BASE_FOLDER}!")
 
 
-def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]:
-    """Function that takes a filename, finds the file and parses it into an easier to process dictionary.
+def load_local_extract_file_to_dict(file_name: str | None) -> dict[str, dict[str, str]]:
+    """Function that takes a file name, finds the file and parses it into an easier to process dictionary.
 
-    :param filename: The filename of the file you wanted parsed
+    :param file_name: The file name of the file you wanted parsed
         into a dictionary.
 
     :returns: A dictionary of the data pulled from a csv file.
@@ -105,9 +105,9 @@ def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]
     # TODO: This will need to change to pull the file
     # from the S3 Bucket and load the contents into
     # a dict
-    if not filename or filename == "":
+    if not file_name or file_name == "":
         return {}
-    file_path = BASE_FOLDER / filename
+    file_path = BASE_FOLDER / file_name
     extract_dict = {}
     if file_path.exists():
         with open(file_path, encoding="utf-8") as file:
@@ -118,11 +118,11 @@ def load_extract_file_to_dict(filename: str | None) -> dict[str, dict[str, str]]
 
 
 def save_valueset_csv_file(
-    filename: str, contents: list[dict], append_to_file: bool = False
+    file_name: str, contents: list[dict], append_to_file: bool = False
 ) -> None:
-    """Function that takes a filename, which includes the directory, and contents (dictionary) for the file then writes the results out into a standard csv file with a '|' delimiter - specifically for terminology extract files.
+    """Function that takes a file name, which includes the directory, and contents (dictionary) for the file then writes the results out into a standard csv file with a '|' delimiter - specifically for terminology extract files.
 
-    :param filename: The directory location and filename of the file
+    :param file_name: The directory location and file name of the file
         you wanted created.
     :param contents: The dictionary containing the data that will be
         paresed into a csv file.  The keys will be the column name
@@ -135,8 +135,8 @@ def save_valueset_csv_file(
     # TODO: This will need to change to write the csv
     # file into an S3 bucket
     # maybe will need a service for all the S3 work?
-    if not filename.strip():
-        print("No filename supplied.  Failed to save CSV file!")
+    if not file_name.strip():
+        print("No file name supplied.  Failed to save CSV file!")
         return
 
     if contents is None or len(contents) == 0:
@@ -146,7 +146,7 @@ def save_valueset_csv_file(
     file_method = "a" if append_to_file else "w"
 
     try:
-        full_file_path = BASE_FOLDER / filename
+        full_file_path = BASE_FOLDER / file_name
         csv_headers = contents[0].keys()
 
         with open(full_file_path, file_method, newline="", encoding="utf-8") as csvfile:
@@ -164,13 +164,13 @@ def save_valueset_csv_file(
 
 def save_json_file(
     directory_path: str | Path,
-    filename: str,
+    file_name: str,
     contents: dict | list[dict],
     append_to_file: bool = False,
 ) -> None:
-    """Function that takes a filename, directory path, and contents (dictionary) for the file then writes the results out into a basic JSON file using the dictionary as the structure.
+    """Function that takes a file name, directory path, and contents (dictionary) for the file then writes the results out into a basic JSON file using the dictionary as the structure.
 
-    :param filename: The directory location and filename of the file
+    :param file_name: The directory location and file name of the file
         you wanted created.
     :param contents: The dictionary containing the data that will be
         paresed into a json file.
@@ -182,8 +182,8 @@ def save_json_file(
     # TODO: This will need to change to write the csv
     # file into an S3 bucket
     # maybe will need a service for all the S3 work?
-    if not filename.strip() or not directory_path:
-        print("No filename & path supplied.  Failed to save JSON File!")
+    if not file_name.strip() or not directory_path:
+        print("No file name & path supplied.  Failed to save JSON File!")
         return
 
     if contents is None or len(contents) == 0:
@@ -193,7 +193,7 @@ def save_json_file(
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
 
-    full_file_path = Path(directory_path) / filename
+    full_file_path = Path(directory_path) / file_name
 
     file_method = "a" if append_to_file else "w"
 
@@ -208,10 +208,10 @@ def save_json_file(
         print(f"An error occured: {e}")
 
 
-def save_jsonl_file(filename: str, contents: list[dict]) -> None:
-    """Function that takes a filename, which includes the directory, and contents (dictionary) for the file then writes the results out into JSONL files that can be used for ingestion into OpenSearch.
+def save_jsonl_file(file_name: str, contents: list[dict]) -> None:
+    """Function that takes a file name, which includes the directory, and contents (dictionary) for the file then writes the results out into JSONL files that can be used for ingestion into OpenSearch.
 
-    :param filename: The directory location and filename of the file
+    :param file_name: The directory location and file name of the file
         you wanted created.
     :param contents: The dictionary containing the data that will be
         parsed into a json file.
@@ -221,7 +221,7 @@ def save_jsonl_file(filename: str, contents: list[dict]) -> None:
     # TODO: This will need to change to write the csv
     # file into an S3 bucket
     # maybe will need a service for all the S3 work?
-    full_file_path = BASE_FOLDER / filename
+    full_file_path = BASE_FOLDER / file_name
     try:
         with open(full_file_path, "w") as f:
             f.writelines(json.dumps(doc) + "\n" for doc in contents)

@@ -11,7 +11,6 @@ from .general import (
     BASE_FOLDER,
     TerminologyUpdateResponse,
     clean_text_string,
-    load_extract_file_to_dict,
 )
 from .http_client import STATUS_CODE_OK, get_with_timeout
 
@@ -64,35 +63,41 @@ def set_loinc_response(
 
 
 def extract_full_loinc_lab_names(include_consumer_names: bool = False) -> list[dict]:
-    """Function that extracts all the latest LOINC Lab Names (all loinc codes regardless of being of type 'Order', 'Observation' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    # TODO:
-    # use this same filename convention but store these in an
-    # S3 Bucket instead of a file locally
-    #  loinc_filename = f"{LAB_NAMES}_{datetime.now().strftime('%Y%m%d')}.csv"
-    # For now will return the loinc rows
+    """Function that extracts all the latest LOINC Lab Names (all loinc codes regardless of being of type 'Order', 'Observation' or 'Both') and organizes them into a list of dictionaries.
+
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
+
+    :returns: A list of dictionaries containing all the latest LOINC
+        lab name records including codes, terms, and axis information.
+    """
     all_loinc_rows = _get_loinc_lab_names(include_consumer_names=include_consumer_names)
 
     return all_loinc_rows
 
 
 def extract_full_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
-    """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    # TODO:
-    # use this same filename convention but store these in an
-    # S3 Bucket instead of a file locally
-    #  loinc_filename = f"{LAB_ORDERS}_{datetime.now().strftime('%Y%m%d')}.csv"
-    # For now will return the loinc rows
+    """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both')  and organizes them into a list of dictionaries.
+
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
+
+    :returns: A list of dictionaries containing all the latest LOINC
+        lab order records including codes, terms, and axis information.
+    """
     loinc_order_rows = _get_loinc_lab_orders(include_consumer_names=include_consumer_names)
     return loinc_order_rows
 
 
 def extract_full_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
-    """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a '|' delimited CSV file in a local folder in our repo."""
-    # TODO:
-    # use this same filename convention but store these in an
-    # S3 Bucket instead of a file locally
-    #  loinc_filename = f"{LAB_RESULT}_{datetime.now().strftime('%Y%m%d')}.csv"
-    # For now will return the loinc rows
+    """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a list of dictionaries.
+
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
+
+    :returns: A list of dictionaries containing all the latest LOINC
+        lab result records including codes, terms, and axis information.
+    """
     loinc_result_rows = _get_loinc_lab_results(include_consumer_names=include_consumer_names)
     return loinc_result_rows
 
@@ -102,6 +107,8 @@ def _get_loinc_lab_names(version: str = "", include_consumer_names: bool = False
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab name records
         including codes, terms, and axis information.
@@ -118,7 +125,7 @@ def _get_loinc_lab_names(version: str = "", include_consumer_names: bool = False
 
     # Now let's add the ConsumerName for each of the loinc codes
     if include_consumer_names:
-        all_loinc_rows = _get_loinc_consumer_names(all_loinc_rows)
+        all_loinc_rows = _get_loinc_local_consumer_names(all_loinc_rows)
     return all_loinc_rows
 
 
@@ -127,6 +134,8 @@ def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = Fals
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab order records
         including codes, terms, and axis information.
@@ -145,7 +154,7 @@ def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = Fals
 
     # Now let's add the ConsumerName for each of the loinc codes
     if include_consumer_names:
-        loinc_order_rows = _get_loinc_consumer_names(loinc_order_rows)
+        loinc_order_rows = _get_loinc_local_consumer_names(loinc_order_rows)
 
     return loinc_order_rows
 
@@ -155,6 +164,8 @@ def _get_loinc_lab_results(version: str = "", include_consumer_names: bool = Fal
 
     :param version: Text string of the version number you want to
         use to filter LOINC codes for.
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab result records
         including codes, terms, and axis information.
@@ -173,7 +184,7 @@ def _get_loinc_lab_results(version: str = "", include_consumer_names: bool = Fal
 
     # Now let's add the ConsumerName for each of the loinc codes
     if include_consumer_names:
-        loinc_result_rows = _get_loinc_consumer_names(loinc_result_rows)
+        loinc_result_rows = _get_loinc_local_consumer_names(loinc_result_rows)
     return loinc_result_rows
 
 
@@ -339,7 +350,7 @@ def _get_all_loinc_terms_per_code(loinc_result: dict, loinc_rows: list[dict]) ->
     return loinc_rows
 
 
-def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
+def _get_loinc_local_consumer_names(loinc_rows: list[dict]) -> list[dict]:
     """Function that utilizes the downloaded consumer_names.csv file, in the 'other' data folder, to related the consumer name term with each loinc code.
 
     :param loinc_rows: The list of dictionaries that contain all the LOINC
@@ -350,10 +361,7 @@ def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
         the newly added consumer name term(s).
     """
     cs_names = {}
-    # loop through all the loinc rows and get the code
-    # use that to look up the consumer name for each and add it to the row
-    # TODO: We need to modify this to accept the results of the entire
-    # file and leverage them instead of opening a local file
+
     with open(LOINC_CS_NAMES, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="|")
         for cs_row in reader:
@@ -410,10 +418,10 @@ def get_loinc_current_version_data() -> tuple[str, str]:
 def get_loinc_embedding_records(
     new_version: str,
     loinc_version_date: str,
-    current_loinc_file: str,
+    current_loinc_file: list[dict],
     include_consumer_names: bool = False,
 ) -> TerminologyUpdateResponse:
-    """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) filr to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
+    """Function compares New LOINC Version delta API response against the existing version of the TTC LOINC Lab Names (csv) file to determine what changes are present. This function creates a change_log that will be used by another function to construct a list of embedding records based upon the need for the different types of changes.  This change_log will also be used to document the updates in a delta file.
 
     5 new embedding records will be created for each 'NEW' LOINC code and
     a single embedding record for each name/term change.  If the LOINC
@@ -433,8 +441,11 @@ def get_loinc_embedding_records(
         used for documenting changes in delta file.
     param current_loinc_file: The file name of the current loinc csv file to document
         which file was used for comparison in change log.
+    :param include_consumer_names: Boolean flag to add consumer_names
+        during this step of data processing.
 
-    :returns: List of embedding records (dictionaries).
+    :returns: TerminologyUpdateResponse object that contains data about the terminlogy
+        updated, the change_log and a list of embedding records (dictionaries).
     """
     delta_extract_rows = _get_loinc_lab_names(
         version=new_version, include_consumer_names=include_consumer_names
@@ -442,9 +453,7 @@ def get_loinc_embedding_records(
     # get the max number to ensure no id collisions in Opensearch
     # by getting the max loinc codes in the current file *5 for all the
     # different 'names/text' that will be used to create embeddings
-    #  then add 1
-    current_loinc_dict = load_extract_file_to_dict(current_loinc_file)
-    loinc_record_max_id = len(current_loinc_dict) * 5
+    loinc_record_max_id = len(current_loinc_file) * 5
     embedding_records = []
     change_log = {
         "New Loinc Version": f"{new_version} as of {loinc_version_date}",
@@ -462,7 +471,7 @@ def get_loinc_embedding_records(
 
     for update_loinc_record in delta_extract_rows:
         loinc_code = update_loinc_record["code"]
-        current_loinc_record = current_loinc_dict.get(loinc_code)
+        current_loinc_record = current_loinc_file.get(loinc_code)
         changes = []
 
         if current_loinc_record is None:

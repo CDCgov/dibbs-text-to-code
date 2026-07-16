@@ -500,7 +500,7 @@ def test_get_loinc_consumer_names(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(loinc, "LOINC_CS_NAMES", consumer_names_file)
 
-    result = loinc._get_loinc_consumer_names(rows)
+    result = loinc._get_loinc_local_consumer_names(rows)
 
     assert result == [
         {"code": "12345-F", "consumer_name": "TEST CONSUMER NAME"},

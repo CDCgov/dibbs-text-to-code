@@ -81,7 +81,7 @@ def get_loinc_umls_related_results():  # noqa: D103
         if umls_loinc_results is not None:
             print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
             save_json_file(
-                directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
+                directory_path=TMP_DIRECTORY, file_name=url_filename, contents=umls_loinc_results
             )
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")

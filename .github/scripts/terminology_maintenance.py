@@ -7,7 +7,7 @@ from datetime import datetime
 
 import boto3
 from botocore.client import BaseClient
-from data_curation.terminologies.general import TerminologyUpdateResponse, get_date_from_filename
+from data_curation.terminologies.general import TerminologyUpdateResponse, get_date_from_file_name
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
     LOINC_CS_NAMES,
@@ -53,6 +53,7 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
 
     :param bucket_name: The name of the S3 bucket.
     :param object_key: The key of the S3 object.
+
     :return: The content of the file as a string.
     """
     client = create_s3_client()
@@ -67,21 +68,26 @@ def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
     return response["Body"].read().decode("utf-8")
 
 
-def get_latest_extract_file_name(filename_prefix: str) -> str | None:
-    """Process to get the latest ValueSet Extract (csv) file name from the TTC S3 Bucket (Terminologies)."""
-    if filename_prefix is None:
+def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
+    """Process to get the latest ValueSet Extract (csv) file name from the TTC S3 Bucket (Terminologies).
+
+    :param file_name_prefix: The prefix of the file name we are looking for the 'max' of.
+
+    :returns: Either the latest file name with the specified prefix, if found, or None.
+    """
+    if file_name_prefix is None:
         return None
     s3_client = boto3.resource("s3")
     bucket = s3_client.Bucket(S3_BUCKET)
     files = [
         f
         for f in bucket.objects.filter(Prefix=TERMINOLOGY_EXTRACT_PREFIX)
-        if f.key.startswith(filename_prefix)
+        if f.key.startswith(file_name_prefix)
     ]
-    if filename_prefix != "" and files:
+    if file_name_prefix != "" and files:
         latest_file = max(files)
         return latest_file
-    logger.error(f"No file with prefix {filename_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
+    logger.error(f"No file with prefix {file_name_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
     return None
 
 
@@ -131,10 +137,33 @@ def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
     return loinc_rows
 
 
+def _get_terminology_extract_file(file_name: str) -> dict[str, dict[str, str]]:
+    """Function that pulls the specified termnology extract file in the Terminologies S3 Bucket Folder for TTC and returns a dictionary representation of the csv file extract.
+
+    :param file_name: The file name of the extract file you wanted parsed
+        into a dictionary from the TTC Terminology S3 Bucket.
+
+    :returns: A dictionary of the data pulled from the terminology extract file.
+    """
+    if not file_name or file_name == "":
+        return {}
+    object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{file_name}"
+    extract_file = get_file_content_from_s3(S3_BUCKET, object_key)
+    extract_dict = {}
+    reader = csv.DictReader(extract_file, delimiter="|")
+    extract_dict = {row["code"]: row for row in reader}
+
+    return extract_dict
+
+
 def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdateResponse:
     """Accepts Terminology Update Response and loads embedding records into JSONL Files and then into the Opensearch ingestion pipeline.
 
-    :returns: Terminology Update Response object that contains terminologies, result, and any messages
+    :param response: The TerminologyUpdateResponse object that contains the
+        list of embedding records that need to be used to process into a set
+        of JSONL files.
+
+    :returns: Terminology Update Response object that contains terminologies, result, and any messages from the process.
     """
     record_max = 1000
 
@@ -167,17 +196,21 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
     return response
 
 
-def upload_csv_extract_files(filename: str, contents: list[dict]) -> str:
+def upload_csv_extract_file(file_name: str, contents: list[dict]) -> str:
     """Accepts Valueset Extract record rows and a file name and loads into the Terminology Extract Bucket.
 
-    :returns: Terminology Update Response object that contains terminologies, result, and any messages
-    """
-    if not filename.strip():
-        return "No filename supplied.  Failed to save CSV file!"
-    if contents is None or len(contents) == 0:
-        return f"Empty file contents!  Failed to save CSV for {filename}"
+    :param file_name: The name of the extract file to be added to TTC S3 Bucket
+    :param contents: The content (list of dict) that should be loaded into a |
+        delimited csv file into the TTC S3 Bucket.
 
-    object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{filename}"
+    :returns: Message of status of uploading csv extract file.
+    """
+    if not file_name.strip():
+        return "No file name supplied.  Failed to save CSV file!"
+    if contents is None or len(contents) == 0:
+        return f"Empty file contents!  Failed to save CSV for {file_name}"
+
+    object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{file_name}"
     csv_buffer = io.StringIO()
     headers = contents[0].keys()
     writer = csv.DictWriter(csv_buffer, fieldnames=headers, delimiter="|")
@@ -189,9 +222,9 @@ def upload_csv_extract_files(filename: str, contents: list[dict]) -> str:
             bucket=S3_BUCKET,
             key=object_key,
         )
-        return f"Full Extract File {filename} successfully added to S3 Bucket!"
+        return f"Full Extract File {file_name} successfully added to S3 Bucket!"
     except Exception as error:
-        return f"Unable to load file {filename} in Terminologies in S3 Bucket!\n{error}"
+        return f"Unable to load file {file_name} in Terminologies in S3 Bucket!\n{error}"
 
 
 def update_loinc() -> TerminologyUpdateResponse:
@@ -207,10 +240,10 @@ def update_loinc() -> TerminologyUpdateResponse:
     if response.get("result") == "success":
         full_loinc_labnames = extract_full_loinc_lab_names()
         full_loinc_labnames = _get_loinc_consumer_names(full_loinc_labnames)
-        full_labnames_filename = (
+        full_labnames_file_name = (
             f"{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}.csv"
         )
-        upload_response = upload_csv_extract_files(full_labnames_filename, full_loinc_labnames)
+        upload_response = upload_csv_extract_file(full_labnames_file_name, full_loinc_labnames)
         response["message"] = f"{response['message']}\n{upload_response}"
 
     return response
@@ -228,10 +261,11 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     if current_loinc_file is None:
         raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
-    file_date = get_date_from_filename(current_loinc_file, "loinc")
+    file_date = get_date_from_file_name(current_loinc_file, "loinc")
     if file_date <= loinc_version_date:
+        current_loinc_file_dict = _get_terminology_extract_file(current_loinc_file)
         loinc_response: TerminologyUpdateResponse = get_loinc_embedding_records(
-            loinc_version, loinc_version_date, current_loinc_file, False
+            loinc_version, loinc_version_date, current_loinc_file_dict, False
         )
         loinc_records = loinc_response.get("embedding_records")
         loinc_records = _get_loinc_consumer_names(loinc_records)
@@ -257,10 +291,8 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
 def main(terminology: str = "all") -> None:
     """Currently the main entry into the process of updating medical terminologies leveraged by TTC.  We can change this into a different mechanism as we wrap this up into a Lambda.
 
-    :param all: Boolean flag to indicate if you want to perform all
-        medical terminology updates.  Defaults to False.
-    :param loinc: Boolean flag to indicate if you want to perform just
-        LOINC terminology updates.  Defaults to False.
+    :param terminology: A string that accepts the name of the terminology
+        you need upated.  Defaults to 'all' that will process all terminologies.
 
     Returns nothing at this time.
     """
