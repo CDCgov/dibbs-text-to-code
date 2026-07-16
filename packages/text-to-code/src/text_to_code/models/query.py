@@ -46,7 +46,7 @@ class VectorSearchParams(FrozenBaseModel):
     )
 
     @model_validator(mode="after")
-    def compute_filter_value(self) -> "VectorSearchParams":
+    def compute_filter_value(self) -> VectorSearchParams:
         """Uses the DataFieldTypeMapping to get the filter values corresponding to the data_field."""
         if self.filter_field == type(self).model_fields["filter_field"].default:
             # We have to use `object.__setattr__` because this is a frozen model.
