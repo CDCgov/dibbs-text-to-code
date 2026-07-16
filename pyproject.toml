@@ -57,7 +57,7 @@ exclude = [
 ]
 line-length = 100
 indent-width = 4
-target-version = "py312"
+target-version = "py314"
 show-fixes = true
 fix = true
 

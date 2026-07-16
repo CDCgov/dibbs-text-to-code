@@ -797,7 +797,7 @@ def test_main_block_runs_with_consumer_name_output_and_edge_rows(monkeypatch):
     ]
 
     class SourceFile:
-        def __enter__(self) -> "SourceFile":
+        def __enter__(self) -> SourceFile:
             return self
 
         def __exit__(self, exc_type, exc_value, traceback):

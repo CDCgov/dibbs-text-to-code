@@ -74,7 +74,7 @@ class FakeSaxonProcessor:
         self.license = license
         self.xslt_processor = FakeXsltProcessor()
 
-    def __enter__(self) -> "FakeSaxonProcessor":
+    def __enter__(self) -> FakeSaxonProcessor:
         """Enters the context manager, returning itself to be used for transformations."""
         return self
 
@@ -96,7 +96,7 @@ class BrokenSaxonProcessor:
         """Simulates a Saxon/C processor that raises an error when used, to test error handling in the validation function."""
         self.license = license
 
-    def __enter__(self) -> "BrokenSaxonProcessor":
+    def __enter__(self) -> BrokenSaxonProcessor:
         """Raises a RuntimeError to simulate a failure when entering the context manager."""
         raise RuntimeError("validator failed")
 
