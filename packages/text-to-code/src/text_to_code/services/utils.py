@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 from hashlib import sha256
@@ -14,13 +15,15 @@ logger = logging.getLogger(__name__)
 ConfigType = type[BaseLabField]
 
 
+@functools.cache
 def get_config_for_data_field(data_field: DataField) -> BaseLabField:
-    """Returns a fresh Pydantic config instance for a given data field.
+    """Returns the Pydantic config instance for a given data field.
 
-    Uses defaults defined in the config model unless overridden.
+    Uses defaults defined in the config model. The returned instance is a
+    cached frozen model shared across calls — callers must not mutate its
+    list fields.
 
     :param data_field: The data field of interest.
-    :param kwargs: Any overrides to use when creating the config instance.
     :returns: A Pydantic config instance for the specified data field.
     """
     try:

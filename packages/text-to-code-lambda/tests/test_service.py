@@ -39,6 +39,11 @@ def stub_embed(mocker):
     mocker.patch.object(
         service, "embed", return_value=SimpleNamespace(tolist=lambda: [0.1, 0.2, 0.3])
     )
+    mocker.patch.object(
+        service,
+        "embed_batch",
+        side_effect=lambda texts: [SimpleNamespace(tolist=lambda: [0.1, 0.2, 0.3]) for _ in texts],
+    )
 
 
 def test_code_for_text_returns_top_reranked_code(mocker):

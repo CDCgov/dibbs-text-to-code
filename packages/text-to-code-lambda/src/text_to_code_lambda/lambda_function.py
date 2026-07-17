@@ -1,5 +1,6 @@
 import json
 import os
+from dataclasses import dataclass
 from enum import StrEnum
 from io import BytesIO
 
@@ -10,22 +11,25 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from opensearchpy import OpenSearch
 
 import lambda_handler
+from lambda_handler.models import OpenSearchResult
 from shared_models import (
     LOINC_NAME,
     LOINC_OID,
     Code,
+    DataField,
     NonstandardCodeInstance,
     PassthroughReason,
     TTCAugmenterInput,
 )
-from text_to_code.models import OpenSearchResultCacheSource
+from text_to_code.models import Candidate, OpenSearchResultCacheSource
 from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
+from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
-from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed
+from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
-from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
+from text_to_code.services.result_cache import get_cached_results, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
 from .models.metadata import Metadata, TTCSchematronIssueDetail
@@ -388,7 +392,100 @@ def _record_cache_metric(hit_value: HitValue) -> None:
         metric.add_dimension(name="lastLoincUpdate", value="02-23-2026")
 
 
-def _process_record_pipeline(  # noqa: PLR0915
+@dataclass
+class _ErrorWork:
+    """Per-schematron-error state threaded through the pipeline's batched phases."""
+
+    error: SchematronErrorDetail
+    selected_candidate: Candidate | None
+    cache_key: str | None = None
+    cached_result: OpenSearchResultCacheSource | None = None
+    embedding: list[float] | None = None
+
+
+def _match_candidate(
+    selected_candidate: Candidate,
+    embedding: list[float],
+    data_field: DataField,
+    cache_key: str | None,
+    opensearch_client: OpenSearch,
+) -> tuple[Code | None, str | None, OpenSearchResult, list[ScoredResult] | None]:
+    """Match a cache-miss candidate against OpenSearch and rerank the hits.
+
+    Runs the KNN query with the candidate's precomputed embedding, reranks the
+    hits, and writes a successful match back to the result cache.
+
+    :param selected_candidate: The candidate selected for the schematron error.
+    :param embedding: The candidate's precomputed embedding vector.
+    :param data_field: The data field associated with the error.
+    :param cache_key: The precomputed result-cache key for the candidate.
+    :param opensearch_client: The OpenSearch client.
+    :return: A ``(new_translation, unmatched_message, opensearch_retrieved_scores,
+      ranked_results)`` tuple; ``new_translation`` is None when no match was made.
+    """
+    new_translation = None
+    unmatched_message = None
+    ranked_results: list[ScoredResult] | None = None
+
+    vector_parameters = query_models.VectorSearchParams(vector=embedding, data_field=data_field)
+
+    logger.info(
+        "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
+        status="processing",
+    )
+    query = QueryBuilder().with_vector_search(vector_parameters).build()
+
+    opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
+        query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
+    )
+
+    # The OpenSearch results object has a couple levels of nesting,
+    # but all we care about for reranking is extracting the actual
+    # text strings of the ANN LOINC codes
+    results_list = opensearch_retrieved_scores.hits.hits
+    if results_list:
+        retrieved_loinc_names = [hit.source.description for hit in results_list]
+        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
+
+        if ranked_results:
+            top_result = next(
+                (
+                    x
+                    for x in results_list
+                    if x.source.description == ranked_results[0]["code_string"]
+                ),
+            )
+            new_translation = Code(
+                code=top_result.source.loinc_code,
+                code_system=LOINC_OID,
+                code_system_name=LOINC_NAME,
+                display_name=top_result.source.description,
+                original_text=selected_candidate.value,
+            )
+
+            # Make sure we save the results of a successful standardization
+            # into the results cache for future use
+            put_new_cached_result(
+                opensearch_client,
+                RESULT_CACHE_INDEX,
+                selected_candidate.value,
+                data_field,
+                new_translation,
+                top_result.score,
+                ranked_results[0]["score"],
+                opensearch_retrieved_scores,
+                ranked_results,
+                cache_key=cache_key,
+            )
+        else:
+            unmatched_message = "Reranker did not return any results."
+    else:
+        unmatched_message = "Opensearch query returned no hits."
+
+    return new_translation, unmatched_message, opensearch_retrieved_scores, ranked_results
+
+
+def _process_record_pipeline(  # noqa: PLR0912, PLR0915
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
@@ -422,123 +519,135 @@ def _process_record_pipeline(  # noqa: PLR0915
     if schematron_data_fields:
         ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
         passthrough_reason: PassthroughReason | None = None
-        for error in schematron_data_fields:
-            new_translation = None
-            unmatched_message = None
-            data_field = error.field
-            opensearch_retrieved_scores = None
-            ranked_results: list[ScoredResult] | None = None
 
-            text_candidates = processor.get_text_candidates(error.error_context, data_field)
+        # Phase 1: extract and select a candidate per error (CPU only).
+        work_items: list[_ErrorWork] = []
+        for error in schematron_data_fields:
+            text_candidates = processor.get_text_candidates(error.error_context, error.field)
 
             logger.info(
                 "Evaluating candidates and selecting relevant text for each error in the eICR",
                 status="processing",
             )
 
-            selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
-
+            selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
+            work = _ErrorWork(error=error, selected_candidate=selected_candidate)
             if selected_candidate:
-                # Before we run the full embedding, searching, and reranking process,
-                # first let's check if we've seen this nonstandard input before
-                cache_key = compute_cache_key(selected_candidate.value, data_field)
-                cached_result: OpenSearchResultCacheSource | None = get_cached_result(
-                    opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
-                )
+                work.cache_key = compute_cache_key(selected_candidate.value, error.field)
+            work_items.append(work)
 
-                # We've got a hit--no need to run our usual processes, we'll
-                # just pull out the fields we want to use directly
-                if cached_result is not None:
-                    logger.info("Cache hit, retrieving cached results", status="processing")
-                    _record_cache_metric(HitValue.hit)
-                    new_translation = cached_result.loinc_code
-                    nonstandard_code_replacements.append(
-                        NonstandardCodeInstance(
-                            schematron_error_xpath=error.error_context,
-                            field_type=error.field,
-                            new_translation=new_translation,
-                        ),
-                    )
-                    opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
-                    results_list = opensearch_retrieved_scores.hits.hits
-                    ranked_results = cached_result.reranker_processed_results["results"]
+        # Phase 2: before we run the full embedding, searching, and reranking
+        # process, check all candidates against the result cache in one mget.
+        cache_keys = [work.cache_key for work in work_items if work.cache_key is not None]
+        if cache_keys:
+            cached_results = get_cached_results(opensearch_client, RESULT_CACHE_INDEX, cache_keys)
+            for work in work_items:
+                if work.cache_key is not None:
+                    work.cached_result = cached_results.get(work.cache_key)
 
-                # Cache miss, so log that, run everything normally, and then finally store
-                # the prediction in the cache for future use
-                else:
-                    logger.info(
-                        "Embedding the relevant text strings for each error in the eICR",
-                        status="processing",
-                    )
-                    _record_cache_metric(HitValue.miss)
+        # Phase 3: embed the cache-miss candidates in one batched encode call.
+        # Errors that share a cache key share one resolution in phase 4, so
+        # only the first occurrence of each missing key is embedded.
+        cache_misses: list[_ErrorWork] = []
+        miss_texts: list[str] = []
+        seen_miss_keys: set[str] = set()
+        for work in work_items:
+            if work.selected_candidate is None or work.cached_result is not None:
+                continue
+            if work.cache_key is None or work.cache_key in seen_miss_keys:
+                continue
+            seen_miss_keys.add(work.cache_key)
+            cache_misses.append(work)
+            miss_texts.append(work.selected_candidate.value)
+        if cache_misses:
+            logger.info(
+                "Embedding the relevant text strings for each error in the eICR",
+                status="processing",
+            )
+            embeddings = embed_batch(miss_texts)
+            for work, vector in zip(cache_misses, embeddings, strict=True):
+                work.embedding = vector.tolist()
 
-                    vector_embedding = embed(selected_candidate.value)
+        # Phase 4: resolve each error — from the cache when hit, otherwise via
+        # KNN search + rerank — and assemble details in the original error order.
+        # Duplicate candidates reuse the first occurrence's resolution, mirroring
+        # the sequential flow where later duplicates hit the cache entry written
+        # moments earlier — including in the cache metric, which counts a reused
+        # successful match as a hit.
+        resolved_misses: dict[
+            str, tuple[Code | None, str | None, OpenSearchResult, list[ScoredResult] | None]
+        ] = {}
+        for work in work_items:
+            error = work.error
+            selected_candidate = work.selected_candidate
+            new_translation = None
+            unmatched_message = None
+            opensearch_retrieved_scores = None
+            ranked_results: list[ScoredResult] | None = None
 
-                    vector_parameters = query_models.VectorSearchParams(
-                        vector=vector_embedding.tolist(), data_field=data_field
-                    )
-
-                    logger.info(
-                        "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
-                        status="processing",
-                    )
-                    query = QueryBuilder().with_vector_search(vector_parameters).build()
-
-                    opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-                        query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
-                    )
-
-                    # The OpenSearch results object has a couple levels of nesting,
-                    # but all we care about for reranking is extracting the actual
-                    # text strings of the ANN LOINC codes
-                    results_list = opensearch_retrieved_scores.hits.hits
-                    if results_list:
-                        retrieved_loinc_names = [hit.source.description for hit in results_list]
-                        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
-
-                        if ranked_results:
-                            top_result = next(
-                                (
-                                    x
-                                    for x in results_list
-                                    if x.source.description == ranked_results[0]["code_string"]
-                                ),
-                            )
-                            new_translation = Code(
-                                code=top_result.source.loinc_code,
-                                code_system=LOINC_OID,
-                                code_system_name=LOINC_NAME,
-                                display_name=top_result.source.description,
-                                original_text=selected_candidate.value,
-                            )
-                            nonstandard_code_replacements.append(
-                                NonstandardCodeInstance(
-                                    schematron_error_xpath=error.error_context,
-                                    field_type=error.field,
-                                    new_translation=new_translation,
-                                ),
-                            )
-
-                            # Make sure we save the results of a successful standardization
-                            # into the results cache for future use
-                            put_new_cached_result(
-                                opensearch_client,
-                                RESULT_CACHE_INDEX,
-                                selected_candidate.value,
-                                data_field,
-                                new_translation,
-                                top_result.score,
-                                ranked_results[0]["score"],
-                                opensearch_retrieved_scores,
-                                ranked_results,
-                            )
-                        else:
-                            unmatched_message = "Reranker did not return any results."
-                    else:
-                        unmatched_message = "Opensearch query returned no hits."
-
-            else:
+            if selected_candidate is None:
                 unmatched_message = "No candidate found."
+
+            # We've got a hit--no need to run our usual processes, we'll
+            # just pull out the fields we want to use directly
+            elif work.cached_result is not None:
+                logger.info("Cache hit, retrieving cached results", status="processing")
+                _record_cache_metric(HitValue.hit)
+                cached_result = work.cached_result
+                new_translation = cached_result.loinc_code
+                opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
+                ranked_results = cached_result.reranker_processed_results["results"]
+
+            # Cache miss, so run everything normally, and then finally store
+            # the prediction in the cache for future use
+            else:
+                if work.cache_key is None:
+                    # Unreachable: phase 1 computes a key for every candidate.
+                    raise ValueError(f"Missing cache key for candidate: {selected_candidate.value}")
+                if work.cache_key in resolved_misses:
+                    (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    ) = resolved_misses[work.cache_key]
+                    _record_cache_metric(
+                        HitValue.hit if new_translation is not None else HitValue.miss
+                    )
+                else:
+                    _record_cache_metric(HitValue.miss)
+                    if work.embedding is None:
+                        # Unreachable: phase 3 embeds every cache-miss candidate.
+                        raise ValueError(
+                            f"Missing embedding for cache-miss candidate: {selected_candidate.value}"
+                        )
+                    (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    ) = _match_candidate(
+                        selected_candidate,
+                        work.embedding,
+                        error.field,
+                        work.cache_key,
+                        opensearch_client,
+                    )
+                    resolved_misses[work.cache_key] = (
+                        new_translation,
+                        unmatched_message,
+                        opensearch_retrieved_scores,
+                        ranked_results,
+                    )
+
+            if new_translation is not None:
+                nonstandard_code_replacements.append(
+                    NonstandardCodeInstance(
+                        schematron_error_xpath=error.error_context,
+                        field_type=error.field,
+                        new_translation=new_translation,
+                    ),
+                )
 
             ttc_schematron_issues_details.append(
                 TTCSchematronIssueDetail(

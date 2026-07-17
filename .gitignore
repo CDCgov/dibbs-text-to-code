@@ -48,3 +48,6 @@ cov.xml
 
 # Embedding variability spike outputs
 docs/spikes/embedding-variability/outputs/
+
+# Load test corpora and results (scripts/load_test.sh)
+load_test_runs/
