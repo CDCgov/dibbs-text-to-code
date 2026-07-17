@@ -169,7 +169,7 @@ def test_get_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_names("2.80", True)
 
@@ -191,7 +191,7 @@ def test_get_loinc_lab_names_without_version(monkeypatch: pytest.MonkeyPatch) ->
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_names(include_consumer_names=True)
 
@@ -213,7 +213,7 @@ def test_get_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_orders()
 
@@ -235,7 +235,7 @@ def test_get_loinc_lab_orders_with_version(monkeypatch: pytest.MonkeyPatch) -> N
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_orders("2.80")
 
@@ -257,7 +257,7 @@ def test_get_loinc_lab_results(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_results()
 
@@ -279,7 +279,7 @@ def test_get_loinc_lab_results_with_version(monkeypatch: pytest.MonkeyPatch) -> 
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_results("2.80")
 
