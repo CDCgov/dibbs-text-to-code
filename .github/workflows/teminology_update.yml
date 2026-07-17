@@ -1,0 +1,41 @@
+name: Terminology Updates
+run-name: Update Medical Terminology codes and embeddings by @${{github.actor}}
+
+# Manually kick of process to run the Terminology updates which
+# will get the latest codes from the various terminologies and
+# create new embeddings for the deltas.  Then the latest full
+# verion of the terminologies codes/text combinations will be
+# stored for further comparison in future terminology releases
+# and updates.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update_terminologies:
+    name: Terraform
+    runs-on: ubuntu-latest
+    env:
+      # Access to the public LOINC API endpoints.
+      LOINC_USER_ID: ${{ secrets.LOINC_USER_ID }}
+      LOINC_PWD: ${{ secrets.LOINC_PWD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a3ad15b2bb5afbdf48ba1a610add95aeb26a8060 # v7.0.0
+        with:
+          fetch-depth: 2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        with:
+          role-to-assume: ${{ secrets.TERRAFORM_ROLE_ARN }}
+          role-session-name: githubDeploymentWorkflow
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terminology Maintenance
+        id: terminology-update
+        run: python3 .github/scripts/terminology_maintenance.py
