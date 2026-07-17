@@ -394,7 +394,6 @@ def test_process_loinc_valueset_returns_none_when_next_page_errors(
 def test_process_loinc_valueset_returns_none_on_error(
     monkeypatch: pytest.MonkeyPatch, mocker
 ) -> None:
-
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
@@ -535,7 +534,6 @@ def test_get_loinc_current_version_data(monkeypatch: pytest.MonkeyPatch, mocker)
 def test_get_loinc_current_version_data_raises_on_error(
     monkeypatch: pytest.MonkeyPatch, mocker
 ) -> None:
-
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
