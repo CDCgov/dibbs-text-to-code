@@ -129,7 +129,7 @@ def get_data_fields_from_schematron_error(
             )
             if error_detail not in schematron_errors:
                 schematron_errors.append(error_detail)
-        except (etree.XPathError, AttributeError, ValueError):
+        except etree.XPathError, AttributeError, ValueError:
             extraction_error_count += 1
             logger.exception(
                 "Failed to process a schematron error detail",

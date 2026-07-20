@@ -56,9 +56,7 @@ class TestGetModelInfo:
         info = get_model_info(str(tmp_path))
 
         spy.assert_not_called()
-        assert info == ModelInfo(
-            id=str(tmp_path), author=None, created_at=None, last_modified=None
-        )
+        assert info == ModelInfo(id=str(tmp_path), author=None, created_at=None, last_modified=None)
 
     def test_get_model_info_degrades_for_invalid_repo_id(self, mocker):
         # A value that is neither a local path nor a valid repo id should degrade

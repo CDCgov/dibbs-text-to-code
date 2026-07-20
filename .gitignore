@@ -44,7 +44,5 @@ data/training_files/embeddings
 
 node_modules
 
-cov.xml
-
 # Embedding variability spike outputs
 docs/spikes/embedding-variability/outputs/

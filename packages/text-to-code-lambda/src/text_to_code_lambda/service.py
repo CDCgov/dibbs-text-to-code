@@ -15,12 +15,9 @@ import os
 from aws_lambda_powertools import Logger
 from opensearchpy import OpenSearch
 
-import lambda_handler
-from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
-from text_to_code.models import query as query_models
-from text_to_code.services.embedder import embed
-from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import rerank
+from shared_models import Code, DataField
+
+from .matching import NoMatch, match_text
 
 logger = Logger(service="ttc-api", child=True)
 
@@ -60,10 +57,8 @@ def code_for_text(
 ) -> Code | None:
     """Map a single raw text string to its best LOINC ``Code``.
 
-    Mirrors the inner matching logic of ``_process_record_pipeline`` in
-    ``lambda_function.py``, but operates on a plain string instead of an eICR
-    candidate: embed the text, run the KNN query, rerank the hits, and return the
-    top result as a ``Code``.
+    Thin wrapper around ``matching.match_text`` that drops the retrieval
+    intermediates and adds no-match logging for the API path.
 
     :param text: The raw clinical text to standardize (e.g. "Glucose measurement").
     :param data_field: The data field that determines the LOINC type filter.
@@ -71,36 +66,16 @@ def code_for_text(
     :param index: The OpenSearch index to query.
     :return: The top-ranked LOINC ``Code``, or ``None`` when there is no match.
     """
-    vector_embedding = embed(text)
-    vector_parameters = query_models.VectorSearchParams(
-        vector=vector_embedding.tolist(), data_field=data_field
-    )
-    query = QueryBuilder().with_vector_search(vector_parameters).build()
+    outcome = match_text(text, data_field, opensearch_client, index)
 
-    opensearch_results = lambda_handler.retrieve_opensearch_results(
-        query=query, index=index, opensearch_client=opensearch_client
-    )
-
-    hits = opensearch_results.hits.hits
-    if not hits:
-        logger.info("OpenSearch returned no hits", status="no_match")
+    if isinstance(outcome, NoMatch):
+        if not outcome.opensearch_results.hits.hits:
+            logger.info("OpenSearch returned no hits", status="no_match")
+        else:
+            logger.info("Reranker returned no results", status="no_match")
         return None
 
-    ranked_results = rerank(text, [hit.source.description for hit in hits])
-    if not ranked_results:
-        logger.info("Reranker returned no results", status="no_match")
-        return None
-
-    top_result = next(
-        hit for hit in hits if hit.source.description == ranked_results[0]["code_string"]
-    )
-    return Code(
-        code=top_result.source.loinc_code,
-        code_system=LOINC_OID,
-        code_system_name=LOINC_NAME,
-        display_name=top_result.source.description,
-        original_text=text,
-    )
+    return outcome.code
 
 
 def _to_result(text: str, code: Code | None) -> dict:

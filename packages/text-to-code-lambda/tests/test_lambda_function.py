@@ -16,7 +16,7 @@ from lambda_handler.models import (
 from shared_models import Code
 from text_to_code.models import Candidate, LabXPaths, OpenSearchResultCacheSource
 from text_to_code.services.reranker import ScoredResult
-from text_to_code_lambda import lambda_function
+from text_to_code_lambda import lambda_function, matching
 
 S3_BUCKET = os.environ["S3_BUCKET"]
 TTC_OUTPUT_PREFIX = os.environ["TTC_OUTPUT_PREFIX"]
@@ -103,7 +103,7 @@ class TestHandler:
             },
         ]
         mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
+            "text_to_code_lambda.matching.rerank",
             return_value=ranked_results,
         )
 
@@ -561,9 +561,9 @@ class TestHandler:
             return_value=None,
         )
 
-        retriever_embed_mock = mocker.patch.object(lambda_function, "embed")
+        retriever_embed_mock = mocker.patch.object(matching, "embed")
         reranker_mock = mocker.patch.object(
-            lambda_function,
+            matching,
             "rerank",
         )
 
@@ -623,12 +623,12 @@ class TestHandler:
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
 
         mocker.patch(
-            "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
+            "text_to_code_lambda.matching.lambda_handler.retrieve_opensearch_results",
             return_value=empty_opensearch_scores,
         )
 
         reranker_mock = mocker.patch.object(
-            lambda_function,
+            matching,
             "rerank",
             return_value=[],
         )
@@ -702,7 +702,7 @@ class TestHandler:
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
 
         mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
+            "text_to_code_lambda.matching.rerank",
             return_value=[],
         )
 

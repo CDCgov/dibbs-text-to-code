@@ -73,7 +73,7 @@ def handler(event: dict, context: LambdaContext) -> dict:
 
     try:
         body = _get_body(event)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return _response(400, {"error": "Request body must be valid JSON."})
 
     inputs = body.get("inputs")

@@ -38,107 +38,32 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     """
     logger.info("Received event", record_count=len(event["Records"]))
 
-    batch_item_failures: list[dict[str, str]] = []
-    failures: list[dict[str, object]] = []
-    successes: list[dict[str, str]] = []
-
-    for record in event.records:
-        try:
-            output = _process_record(record)
-
-            if output is None:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "skipped",
-                    }
-                )
-            elif output.metadata.passthrough_reason is not None:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "passthrough_written",
-                    }
-                )
-            else:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "processed",
-                    }
-                )
-        except Exception as e:
-            logger.exception(
-                "Error processing record",
-                error=str(e),
-                message_id=record.message_id,
-                status="error",
-            )
-            batch_item_failures.append({"itemIdentifier": record.message_id})
-            failures.append(
-                {
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "message_id": record.message_id,
-                    "passthrough_written": False,
-                    "sqs_retry": True,
-                }
-            )
-
-    if batch_item_failures:
-        status = "partial_failure"
-    elif any(success["status"] == "passthrough_written" for success in successes):
-        status = "success_with_passthrough"
-    else:
-        status = "success"
-
-    response: dict[str, object] = {
-        "batchItemFailures": batch_item_failures,
-        "failures": failures,
-        "message": "Augmentation invocation completed",
-        "num_failure_eicrs": len(batch_item_failures),
-        "num_processing_error_eicrs": len(failures),
-        "num_success_eicrs": len(successes),
-        "status": status,
-        "successes": successes,
-    }
-
-    logger.info(
-        "Augmentation invocation completed",
-        batch_item_failures=batch_item_failures,
-        failures=failures,
-        num_failure_eicrs=len(batch_item_failures),
-        num_processing_error_eicrs=len(failures),
-        num_success_eicrs=len(successes),
-        status=status,
-        successes=successes,
-    )
-
-    return response
+    return lambda_handler.SqsBatchProcessor(
+        process_record=_process_record,
+        is_passthrough=lambda output: output.metadata.passthrough_reason is not None,
+        completion_message="Augmentation invocation completed",
+        logger=logger,
+    ).run(event)
 
 
 def _process_record(record: SQSRecord) -> TTCAugmenterOutput | None:
     """Process a single SQS record containing an S3 event.
 
     :param record: The SQS record with an EventBridge S3 event in the body.
-    :param s3_client: The S3 client to use for reading and writing files.
     """
-    if not record.body:
-        logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
+    parsed = lambda_handler.parse_s3_sqs_record(
+        record, TTC_OUTPUT_PREFIX, logger=logger, default_bucket=S3_BUCKET
+    )
+    if parsed is None:
         return None
 
-    s3_event = json.loads(record.body)
-
-    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-    object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name") or S3_BUCKET
-
-    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_OUTPUT_PREFIX)
+    persistence_id = parsed.persistence_id
+    bucket_name = parsed.bucket_name or S3_BUCKET
 
     with logger.append_context_keys(
         persistence_id=persistence_id,
         bucket_name=bucket_name,
-        trigger_s3_key=object_key,
+        trigger_s3_key=parsed.object_key,
     ):
         logger.info("Processing S3 object", status="processing")
 
@@ -379,7 +304,6 @@ def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
     """Load original eICR XML from S3.
 
     :param persistence_id: The persistence ID for the S3 object key.
-    :param s3_client: The S3 client.
     :param bucket_name: The S3 bucket name.
     :return: The raw eICR XML string.
     """

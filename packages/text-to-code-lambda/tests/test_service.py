@@ -6,7 +6,7 @@ import pytest
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from lambda_handler.models.opensearch import OpenSearchHit, OpenSearchHitSource
 from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
-from text_to_code_lambda import service
+from text_to_code_lambda import matching, service
 
 
 def _hit(loinc_code: str, description: str, loinc_type: str = "Order") -> OpenSearchHit:
@@ -37,7 +37,7 @@ def _result(hits: list[OpenSearchHit]) -> OpenSearchResult:
 def stub_embed(mocker):
     """Avoid running the real retriever model; the embedding value is irrelevant here."""
     mocker.patch.object(
-        service, "embed", return_value=SimpleNamespace(tolist=lambda: [0.1, 0.2, 0.3])
+        matching, "embed", return_value=SimpleNamespace(tolist=lambda: [0.1, 0.2, 0.3])
     )
 
 
@@ -45,11 +45,11 @@ def test_code_for_text_returns_top_reranked_code(mocker):
     """The reranker's top result is mapped to a LOINC Code, not OpenSearch's order."""
     hits = [_hit("1111-1", "First candidate"), _hit("2222-2", "Second candidate")]
     mocker.patch.object(
-        service.lambda_handler, "retrieve_opensearch_results", return_value=_result(hits)
+        matching.lambda_handler, "retrieve_opensearch_results", return_value=_result(hits)
     )
     # Reranker promotes the second candidate above OpenSearch's first hit.
     mocker.patch.object(
-        service,
+        matching,
         "rerank",
         return_value=[
             {"code_string": "Second candidate", "score": 0.9},
@@ -70,9 +70,9 @@ def test_code_for_text_returns_top_reranked_code(mocker):
 def test_code_for_text_returns_none_when_no_hits(mocker):
     """No OpenSearch hits short-circuits before reranking."""
     mocker.patch.object(
-        service.lambda_handler, "retrieve_opensearch_results", return_value=_result([])
+        matching.lambda_handler, "retrieve_opensearch_results", return_value=_result([])
     )
-    rerank_mock = mocker.patch.object(service, "rerank")
+    rerank_mock = mocker.patch.object(matching, "rerank")
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 
@@ -83,11 +83,11 @@ def test_code_for_text_returns_none_when_no_hits(mocker):
 def test_code_for_text_returns_none_when_rerank_empty(mocker):
     """An empty reranker result yields no match."""
     mocker.patch.object(
-        service.lambda_handler,
+        matching.lambda_handler,
         "retrieve_opensearch_results",
         return_value=_result([_hit("1111-1", "Only candidate")]),
     )
-    mocker.patch.object(service, "rerank", return_value=[])
+    mocker.patch.object(matching, "rerank", return_value=[])
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 

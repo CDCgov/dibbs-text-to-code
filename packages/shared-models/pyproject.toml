@@ -1,7 +1,7 @@
 [project]
 name = "shared-models"
 version = "0.1.0"
-description = "Add your description here"
+description = "Shared pydantic models and code-system constants used across the TTC pipeline"
 readme = "README.md"
 authors = [{ name = "Josh Nygaard", email = "jnygaard@skylight.digital" }]
 dependencies = []

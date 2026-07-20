@@ -1,4 +1,3 @@
-import json
 import os
 from enum import StrEnum
 from io import BytesIO
@@ -11,23 +10,20 @@ from opensearchpy import OpenSearch
 
 import lambda_handler
 from shared_models import (
-    LOINC_NAME,
-    LOINC_OID,
-    Code,
     NonstandardCodeInstance,
     PassthroughReason,
     TTCAugmenterInput,
 )
 from text_to_code.models import OpenSearchResultCacheSource
-from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
+from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
-from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed
-from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
+from text_to_code.services.embedder import RETRIEVER_MODEL_INFO
+from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult
 from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
+from .matching import Match, match_text
 from .models.metadata import Metadata, TTCSchematronIssueDetail
 
 metrics = Metrics()
@@ -47,6 +43,12 @@ S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 RESULT_CACHE_INDEX = os.getenv("RESULT_CACHE_INDEX", "ttc-result-cache")
+
+# The retriever/reranker model identifiers recorded in every metadata output
+_TTC_MODEL_INFO = TTCModelInfo(
+    retriever=RETRIEVER_MODEL_INFO,
+    reranker=RERANKER_MODEL_INFO,
+)
 
 
 class HitValue(StrEnum):
@@ -72,93 +74,13 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
-    batch_item_failures: list[dict[str, str]] = []
-    failures: list[dict[str, object]] = []
-    successes: list[dict[str, str]] = []
-
-    for record in event.records:
-        try:
-            output = process_record(record, opensearch_client)
-
-            if output is None:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "skipped",
-                    }
-                )
-            elif output.passthrough_reason is not None:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "passthrough_written",
-                    }
-                )
-            else:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "processed",
-                    }
-                )
-        except Exception as e:
-            logger.exception(
-                "Error processing record",
-                error=str(e),
-                message_id=record.message_id,
-                status="error",
-            )
-            passthrough_written = _write_ttc_exception_passthrough_output(record, e)
-            failures.append(
-                {
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "message_id": record.message_id,
-                    "passthrough_written": passthrough_written,
-                    "sqs_retry": not passthrough_written,
-                }
-            )
-
-            if passthrough_written:
-                successes.append(
-                    {
-                        "message_id": record.message_id,
-                        "status": "passthrough_written",
-                    }
-                )
-            else:
-                batch_item_failures.append({"itemIdentifier": record.message_id})
-
-    if batch_item_failures:
-        status = "partial_failure"
-    elif any(success["status"] == "passthrough_written" for success in successes):
-        status = "success_with_passthrough"
-    else:
-        status = "success"
-
-    response: dict[str, object] = {
-        "batchItemFailures": batch_item_failures,
-        "failures": failures,
-        "message": "TTC invocation completed",
-        "num_failure_eicrs": len(batch_item_failures),
-        "num_processing_error_eicrs": len(failures),
-        "num_success_eicrs": len(successes),
-        "status": status,
-        "successes": successes,
-    }
-
-    logger.info(
-        "TTC invocation completed",
-        batch_item_failures=batch_item_failures,
-        failures=failures,
-        num_failure_eicrs=len(batch_item_failures),
-        num_processing_error_eicrs=len(failures),
-        num_success_eicrs=len(successes),
-        status=status,
-        successes=successes,
-    )
-
-    return response
+    return lambda_handler.SqsBatchProcessor(
+        process_record=lambda record: process_record(record, opensearch_client),
+        is_passthrough=lambda output: output.passthrough_reason is not None,
+        completion_message="TTC invocation completed",
+        logger=logger,
+        on_error=_write_ttc_exception_passthrough_output,
+    ).run(event)
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:
@@ -178,12 +100,9 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         return False
 
     try:
-        s3_event = json.loads(record.body)
-        eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-        object_key = eventbridge_data["object_key"]
-        bucket_name = eventbridge_data.get("bucket_name")
+        parsed = lambda_handler.parse_s3_sqs_record(record, TTC_INPUT_PREFIX, logger=logger)
 
-        if not bucket_name:
+        if parsed is None or not parsed.bucket_name:
             logger.warning(
                 "Unable to write TTC exception passthrough output because bucket name is missing",
                 message_id=record.message_id,
@@ -192,15 +111,13 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
             )
             return False
 
-        persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
+        persistence_id = parsed.persistence_id
+        bucket_name = parsed.bucket_name
         ttc_metadata = Metadata(
             persistence_id=persistence_id,
             passthrough_reason=PassthroughReason.TTC_EXCEPTION,
             error=str(error),
-            model_info=TTCModelInfo(
-                reranker=RERANKER_MODEL_INFO,
-                retriever=RETRIEVER_MODEL_INFO,
-            ),
+            model_info=_TTC_MODEL_INFO,
         )
         ttc_output = TTCAugmenterInput(
             persistence_id=persistence_id,
@@ -210,7 +127,7 @@ def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception)
         with logger.append_context_keys(
             persistence_id=persistence_id,
             bucket_name=bucket_name,
-            trigger_s3_key=object_key,
+            trigger_s3_key=parsed.object_key,
         ):
             logger.warning(
                 "Writing TTC exception passthrough output",
@@ -235,18 +152,11 @@ def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> TTCAugme
 
     :param record: The SQS record to process
     """
-    if not record.body:
-        logger.warning("Empty SQS body", message_id=record.message_id, status="skipped")
+    parsed = lambda_handler.parse_s3_sqs_record(record, TTC_INPUT_PREFIX, logger=logger)
+    if parsed is None:
         return None
 
-    s3_event = json.loads(record.body)
-
-    # Parse the EventBridge S3 event from the SQS message body
-    eventbridge_data = lambda_handler.get_eventbridge_data_from_s3_event(s3_event)
-    object_key = eventbridge_data["object_key"]
-    bucket_name = eventbridge_data.get("bucket_name")
-
-    if not bucket_name:
+    if not parsed.bucket_name:
         raise ValueError(
             "No bucket name found in S3 event payload. "
             "The TTC lambda derives its target bucket from the event and does not use a "
@@ -254,16 +164,15 @@ def process_record(record: SQSRecord, opensearch_client: OpenSearch) -> TTCAugme
             "detail.bucket.name."
         )
 
-    # Extract persistence_id from the RR object key
-    persistence_id = lambda_handler.get_persistence_id(object_key, TTC_INPUT_PREFIX)
-
     with logger.append_context_keys(
-        persistence_id=persistence_id,
-        bucket_name=bucket_name,
-        trigger_s3_key=object_key,
+        persistence_id=parsed.persistence_id,
+        bucket_name=parsed.bucket_name,
+        trigger_s3_key=parsed.object_key,
     ):
         logger.info("Processing TTC event", status="processing")
-        return _process_record_pipeline(persistence_id, opensearch_client, bucket_name)
+        return _process_record_pipeline(
+            parsed.persistence_id, opensearch_client, parsed.bucket_name
+        )
 
 
 def _load_schematron_data_fields(persistence_id: str, bucket_name: str) -> list:
@@ -294,7 +203,6 @@ def _load_original_eicr(persistence_id: str, bucket_name: str) -> str:
     """Load the original eICR from S3.
 
     :param persistence_id: The persistence ID extracted from the S3 object key
-    :param s3_client: The S3 client to use for fetching files.
     :param bucket_name: The S3 bucket name to read from.
     :return: The original eICR content.
     """
@@ -353,7 +261,6 @@ def _save_ttc_outputs(
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param ttc_output: The TTC output dictionary.
-    :param ttc_metadata_output: The TTC metadata output dictionary.
     :param bucket_name: The S3 bucket name to write to.
     """
     # Save the TTC output to S3 for the Augmentation Lambda to consume
@@ -388,7 +295,118 @@ def _record_cache_metric(hit_value: HitValue) -> None:
         metric.add_dimension(name="lastLoincUpdate", value="02-23-2026")
 
 
-def _process_record_pipeline(  # noqa: PLR0915
+def _process_schematron_issue(
+    error: SchematronErrorDetail,
+    processor: eicr_processor.EicrProcessor,
+    opensearch_client: OpenSearch,
+) -> tuple[TTCSchematronIssueDetail, NonstandardCodeInstance | None]:
+    """Attempt to standardize the nonstandard code behind one Schematron error.
+
+    Selects the relevant text candidate from the eICR, then resolves it to a
+    LOINC code via the result cache or, on a cache miss, the full matching step
+    (embed -> KNN search -> rerank) with the successful result written back to
+    the cache.
+
+    :param error: The Schematron error's extracted data fields.
+    :param processor: The processor wrapping the parsed original eICR.
+    :param opensearch_client: The OpenSearch client.
+    :return: The issue detail for the metadata output, and the code replacement
+        for the augmenter input (``None`` when no match was found).
+    """
+    new_translation = None
+    unmatched_message = None
+    data_field = error.field
+    opensearch_retrieved_scores = None
+    ranked_results: list[ScoredResult] | None = None
+    nonstandard_code: NonstandardCodeInstance | None = None
+
+    text_candidates = processor.get_text_candidates(error.error_context, data_field)
+
+    logger.info(
+        "Evaluating candidates and selecting relevant text for each error in the eICR",
+        status="processing",
+    )
+
+    selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
+
+    if selected_candidate:
+        # Before we run the full embedding, searching, and reranking process,
+        # first let's check if we've seen this nonstandard input before
+        cache_key = compute_cache_key(selected_candidate.value, data_field)
+        cached_result: OpenSearchResultCacheSource | None = get_cached_result(
+            opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
+        )
+
+        # We've got a hit--no need to run our usual processes, we'll
+        # just pull out the fields we want to use directly
+        if cached_result is not None:
+            logger.info("Cache hit, retrieving cached results", status="processing")
+            _record_cache_metric(HitValue.hit)
+            new_translation = cached_result.loinc_code
+            opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
+            ranked_results = cached_result.reranker_processed_results["results"]
+
+        # Cache miss, so log that, run everything normally, and then finally store
+        # the prediction in the cache for future use
+        else:
+            logger.info(
+                "Embedding the relevant text strings for each error in the eICR",
+                status="processing",
+            )
+            _record_cache_metric(HitValue.miss)
+            logger.info(
+                "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
+                status="processing",
+            )
+            outcome = match_text(
+                selected_candidate.value, data_field, opensearch_client, OPENSEARCH_INDEX
+            )
+            opensearch_retrieved_scores = outcome.opensearch_results
+            ranked_results = outcome.ranked_results
+
+            if isinstance(outcome, Match):
+                new_translation = outcome.code
+                # Make sure we save the results of a successful standardization
+                # into the results cache for future use
+                put_new_cached_result(
+                    opensearch_client,
+                    RESULT_CACHE_INDEX,
+                    selected_candidate.value,
+                    data_field,
+                    new_translation,
+                    outcome.top_retriever_score,
+                    outcome.ranked_results[0]["score"],
+                    outcome.opensearch_results,
+                    outcome.ranked_results,
+                )
+            else:
+                unmatched_message = outcome.unmatched_reason
+
+        if new_translation is not None:
+            nonstandard_code = NonstandardCodeInstance(
+                schematron_error_xpath=error.error_context,
+                field_type=error.field,
+                new_translation=new_translation,
+            )
+    else:
+        unmatched_message = "No candidate found."
+
+    detail = TTCSchematronIssueDetail(
+        candidate=selected_candidate,
+        field_type=error.field,
+        issue_context=error.error_context,
+        issue_id=error.error_id,
+        issue_message=error.error_message,
+        issue_test=error.error_test,
+        unmatched_reason=unmatched_message,
+        new_translation=new_translation,
+        opensearch_retrieved_scores=opensearch_retrieved_scores,
+        reranker_processed_results=ranked_results,
+    )
+    return detail, nonstandard_code
+
+
+def _process_record_pipeline(
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
@@ -399,13 +417,10 @@ def _process_record_pipeline(  # noqa: PLR0915
     - Retrieving Schematron errors from S3.
     - Extracting relevant data fields from the Schematron errors for TTC processing
     - Retrieving the original eICR from S3
-    - Processing the eICR for TTC, which includes:
-        - Evaluating candidates and selecting relevant text for each error in the eICR
-        - Embedding the relevant text string for each error in the eICR
-        - Querying OpenSearch with the relevant text string and retrieving the code suggestions
-        - Reranking the code suggestions based on relevance to the error and returning the top suggestion
-        - Creating the output to pass to the Augmentation Lambda and saving it to S3
-        - Creating the metadata object to save in S3 for analysis of TTC results
+    - Standardizing the code behind each Schematron error (see
+      ``_process_schematron_issue``)
+    - Creating the output to pass to the Augmentation Lambda and saving it to S3
+    - Creating the metadata object to save in S3 for analysis of TTC results
 
     :param persistence_id: The persistence ID extracted from the S3 object key
     :param opensearch_client: The OpenSearch client.
@@ -417,143 +432,19 @@ def _process_record_pipeline(  # noqa: PLR0915
     processor = eicr_processor.EicrProcessor(original_eicr_content)
 
     schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
-    ttc_schematron_issues_details = None
+    ttc_schematron_issues_details: list[TTCSchematronIssueDetail] | None = None
     nonstandard_code_replacements: list[NonstandardCodeInstance] = []
+    passthrough_reason: PassthroughReason | None = None
+
     if schematron_data_fields:
-        ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
-        passthrough_reason: PassthroughReason | None = None
+        ttc_schematron_issues_details = []
         for error in schematron_data_fields:
-            new_translation = None
-            unmatched_message = None
-            data_field = error.field
-            opensearch_retrieved_scores = None
-            ranked_results: list[ScoredResult] | None = None
-
-            text_candidates = processor.get_text_candidates(error.error_context, data_field)
-
-            logger.info(
-                "Evaluating candidates and selecting relevant text for each error in the eICR",
-                status="processing",
+            detail, nonstandard_code = _process_schematron_issue(
+                error, processor, opensearch_client
             )
-
-            selected_candidate = evaluator.select_relevant_text(text_candidates, data_field)
-
-            if selected_candidate:
-                # Before we run the full embedding, searching, and reranking process,
-                # first let's check if we've seen this nonstandard input before
-                cache_key = compute_cache_key(selected_candidate.value, data_field)
-                cached_result: OpenSearchResultCacheSource | None = get_cached_result(
-                    opensearch_client, RESULT_CACHE_INDEX, os_doc_id=cache_key
-                )
-
-                # We've got a hit--no need to run our usual processes, we'll
-                # just pull out the fields we want to use directly
-                if cached_result is not None:
-                    logger.info("Cache hit, retrieving cached results", status="processing")
-                    _record_cache_metric(HitValue.hit)
-                    new_translation = cached_result.loinc_code
-                    nonstandard_code_replacements.append(
-                        NonstandardCodeInstance(
-                            schematron_error_xpath=error.error_context,
-                            field_type=error.field,
-                            new_translation=new_translation,
-                        ),
-                    )
-                    opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
-                    results_list = opensearch_retrieved_scores.hits.hits
-                    ranked_results = cached_result.reranker_processed_results["results"]
-
-                # Cache miss, so log that, run everything normally, and then finally store
-                # the prediction in the cache for future use
-                else:
-                    logger.info(
-                        "Embedding the relevant text strings for each error in the eICR",
-                        status="processing",
-                    )
-                    _record_cache_metric(HitValue.miss)
-
-                    vector_embedding = embed(selected_candidate.value)
-
-                    vector_parameters = query_models.VectorSearchParams(
-                        vector=vector_embedding.tolist(), data_field=data_field
-                    )
-
-                    logger.info(
-                        "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
-                        status="processing",
-                    )
-                    query = QueryBuilder().with_vector_search(vector_parameters).build()
-
-                    opensearch_retrieved_scores = lambda_handler.retrieve_opensearch_results(
-                        query=query, index=OPENSEARCH_INDEX, opensearch_client=opensearch_client
-                    )
-
-                    # The OpenSearch results object has a couple levels of nesting,
-                    # but all we care about for reranking is extracting the actual
-                    # text strings of the ANN LOINC codes
-                    results_list = opensearch_retrieved_scores.hits.hits
-                    if results_list:
-                        retrieved_loinc_names = [hit.source.description for hit in results_list]
-                        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
-
-                        if ranked_results:
-                            top_result = next(
-                                (
-                                    x
-                                    for x in results_list
-                                    if x.source.description == ranked_results[0]["code_string"]
-                                ),
-                            )
-                            new_translation = Code(
-                                code=top_result.source.loinc_code,
-                                code_system=LOINC_OID,
-                                code_system_name=LOINC_NAME,
-                                display_name=top_result.source.description,
-                                original_text=selected_candidate.value,
-                            )
-                            nonstandard_code_replacements.append(
-                                NonstandardCodeInstance(
-                                    schematron_error_xpath=error.error_context,
-                                    field_type=error.field,
-                                    new_translation=new_translation,
-                                ),
-                            )
-
-                            # Make sure we save the results of a successful standardization
-                            # into the results cache for future use
-                            put_new_cached_result(
-                                opensearch_client,
-                                RESULT_CACHE_INDEX,
-                                selected_candidate.value,
-                                data_field,
-                                new_translation,
-                                top_result.score,
-                                ranked_results[0]["score"],
-                                opensearch_retrieved_scores,
-                                ranked_results,
-                            )
-                        else:
-                            unmatched_message = "Reranker did not return any results."
-                    else:
-                        unmatched_message = "Opensearch query returned no hits."
-
-            else:
-                unmatched_message = "No candidate found."
-
-            ttc_schematron_issues_details.append(
-                TTCSchematronIssueDetail(
-                    candidate=selected_candidate,
-                    field_type=error.field,
-                    issue_context=error.error_context,
-                    issue_id=error.error_id,
-                    issue_message=error.error_message,
-                    issue_test=error.error_test,
-                    unmatched_reason=unmatched_message,
-                    new_translation=new_translation,
-                    opensearch_retrieved_scores=opensearch_retrieved_scores,
-                    reranker_processed_results=ranked_results,
-                ),
-            )
+            ttc_schematron_issues_details.append(detail)
+            if nonstandard_code is not None:
+                nonstandard_code_replacements.append(nonstandard_code)
     else:
         passthrough_reason = PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
 
@@ -575,10 +466,7 @@ def _process_record_pipeline(  # noqa: PLR0915
         eicr_metadata=eicr_metadata,
         ttc_schematron_issues=ttc_schematron_issues_details,
         passthrough_reason=passthrough_reason,
-        model_info=TTCModelInfo(
-            retriever=RETRIEVER_MODEL_INFO,
-            reranker=RERANKER_MODEL_INFO,
-        ),
+        model_info=_TTC_MODEL_INFO,
     )
 
     _save_outputs(persistence_id, bucket_name, ttc_output, ttc_metadata)

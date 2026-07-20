@@ -10,8 +10,13 @@ from .lambda_handler import put_file as put_file
 from .lambda_handler import reset_cached_clients as reset_cached_clients
 from .lambda_handler import retrieve_opensearch_results as retrieve_opensearch_results
 from .lambda_handler import strip_protocol as strip_protocol
+from .sqs_batch import ParsedS3Record as ParsedS3Record
+from .sqs_batch import SqsBatchProcessor as SqsBatchProcessor
+from .sqs_batch import parse_s3_sqs_record as parse_s3_sqs_record
 
 __all__ = [
+    "ParsedS3Record",
+    "SqsBatchProcessor",
     "check_s3_object_exists",
     "create_aws_auth",
     "create_opensearch_client",
@@ -20,6 +25,7 @@ __all__ = [
     "get_file_content_from_s3",
     "get_persistence_id",
     "get_s3_credentials",
+    "parse_s3_sqs_record",
     "put_file",
     "reset_cached_clients",
     "retrieve_opensearch_results",

@@ -15,7 +15,7 @@ from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
 from shared_models import PassthroughReason, TTCAugmenterInput
 from text_to_code.services.reranker import ScoredResult
-from text_to_code_lambda import lambda_function
+from text_to_code_lambda import lambda_function, matching
 from text_to_code_lambda.models.metadata import Metadata as TTCMetadata
 from validation import validate_eicr
 
@@ -343,7 +343,7 @@ def _mock_ttc_rerank(mocker) -> None:
     ]
 
     mocker.patch.object(
-        lambda_function,
+        matching,
         "rerank",
         return_value=ranked_results,
     )
