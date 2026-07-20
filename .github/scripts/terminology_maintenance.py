@@ -7,6 +7,7 @@ from datetime import datetime
 
 import boto3
 from botocore.client import BaseClient
+
 from data_curation.terminologies.general import (
     BASE_FOLDER,
     TerminologyUpdateResponse,
@@ -20,7 +21,6 @@ from data_curation.terminologies.loinc import (
     get_loinc_embedding_records,
     set_loinc_response,
 )
-
 from text_to_code.services.embedder import embed
 
 REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
