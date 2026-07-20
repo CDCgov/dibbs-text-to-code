@@ -155,6 +155,7 @@ def _get_terminology_extract_file(file_name: str) -> dict[str, dict[str, str]]:
     extract_file = get_file_content_from_s3(S3_BUCKET, object_key)
     extract_dict = {}
     reader = csv.DictReader(extract_file, delimiter="|")
+    print(f"ROW COUNT: {len(reader)}")
     extract_dict = {row["code"]: row for row in reader}
 
     return extract_dict
