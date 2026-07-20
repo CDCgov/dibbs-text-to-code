@@ -259,13 +259,17 @@ def load_initial_extract_files() -> list[str]:
     :returns: String to indicate success or failure
     """
     results = []
+    contents: list[dict] = []
     for file in BASE_FOLDER.iterdir():
         if file.is_file():
             try:
-                result = upload_csv_extract_file(file.name, file.read_text(encoding="utf-8"))
+                with open(file, encoding="utf-8") as filecontents:
+                    reader = csv.DictReader(filecontents, delimiter="|")
+                    contents = list(reader)
+                    result = upload_csv_extract_file(file.name, contents)
                 results.append(result)
             except Exception as err:
-                results.append(err)
+                results.append(str(err))
     return results
 
 
