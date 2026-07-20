@@ -82,8 +82,7 @@ def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
     if file_name_prefix is None:
         return None
     s3_client = create_s3_client()
-    bucket = s3_client.Bucket(S3_BUCKET)
-    response = s3_client.list_objects_v2(Bucket=bucket, Prefix=TERMINOLOGY_EXTRACT_PREFIX)
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=TERMINOLOGY_EXTRACT_PREFIX)
     if "Contents" not in response:
         logger.error(f"No file with prefix {file_name_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
         return None
