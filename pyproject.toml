@@ -52,6 +52,7 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
+  "data-curation",
   "docs",
   "model-tuning",
 ]
