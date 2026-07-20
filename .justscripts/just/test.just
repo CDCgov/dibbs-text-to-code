@@ -13,8 +13,8 @@ all *ARGS:
     uv run pytest {{ ARGS }}
 
 [doc("Run tests with coverage, specifying the package to measure coverage for")]
-coverage *ARGS:
-    uv run pytest {{ ARGS }} --cov={{ARGS}} --cov-report=term-missing
+coverage PATH *ARGS:
+    uv run pytest {{ PATH }} {{ ARGS }} --cov={{ PATH }} --cov-report=term-missing
 
 [doc("Regenerate validation temp files and run validation tests")]
 validation:
