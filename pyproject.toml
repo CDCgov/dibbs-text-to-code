@@ -52,7 +52,6 @@ exclude = [
   "__pycache__",
   "azure_scripts",
   "data",
-  "data-curation",
   "docs",
   "model-tuning",
 ]
@@ -102,6 +101,7 @@ suppress-none-returning = true
 known-first-party = [
   "augmentation",
   "augmentation_lambda",
+  "data_curation",
   "index_lambda",
   "lambda_handler",
   "shared_models",
