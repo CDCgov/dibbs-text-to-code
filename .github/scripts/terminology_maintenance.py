@@ -81,18 +81,21 @@ def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
     """
     if file_name_prefix is None:
         return None
-    s3_client = boto3.resource("s3")
+    s3_client = create_s3_client()
     bucket = s3_client.Bucket(S3_BUCKET)
-    files = [
-        f
-        for f in bucket.objects.filter(Prefix=TERMINOLOGY_EXTRACT_PREFIX)
-        if f.key.startswith(file_name_prefix)
-    ]
-    if file_name_prefix != "" and files:
-        latest_file = max(files)
-        return latest_file
-    logger.error(f"No file with prefix {file_name_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
-    return None
+    response = s3_client.list_objects_v2(Bucket=bucket, Prefix=TERMINOLOGY_EXTRACT_PREFIX)
+    if "Contents" not in response:
+        logger.error(f"No file with prefix {file_name_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
+        return None
+
+    file_names = []
+    for obj in response["Contents"]:
+        key = obj["Key"]
+        file_name = key.split("/")[-1]
+
+        if file_name_prefix in file_name:
+            file_names.append(file_name)
+    return max(file_names) if file_names else None
 
 
 def put_file(body: str | bytes, bucket: str, key: str) -> None:
