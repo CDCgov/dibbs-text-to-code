@@ -34,7 +34,7 @@ def main() -> None:
             stderr=subprocess.DEVNULL,
         ).decode()
         old_version = read_version(old_raw)
-    except subprocess.CalledProcessError, KeyError:
+    except (subprocess.CalledProcessError, KeyError):
         old_version = None
 
     is_release = old_version is not None and new_version != old_version
