@@ -3,6 +3,7 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from xml.sax.saxutils import escape
 
 from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
@@ -32,6 +33,76 @@ logger = logging.getLogger(__name__)
 # Saxon emits failed-assert locations in EQName (Clark) notation, e.g.
 # ``/Q{urn:hl7-org:v3}ClinicalDocument[1]/Q{urn:hl7-org:v3}component[1]``.
 _NAMESPACE_STEP = re.compile(r"Q\{[^}]*\}")
+
+# SaxonC initializes a Graal VM once per process; creating and releasing
+# PySaxonProcessor repeatedly is slow and a known source of crashes in
+# saxonche, so one processor (and its compiled validator stylesheet) is kept
+# for the life of the process. Lambda containers are single-threaded and die
+# by process teardown, so no explicit release is needed. The factory is
+# tracked so tests that monkeypatch ``PySaxonProcessor`` get a fresh instance.
+_cached_proc = None
+_cached_proc_factory = None
+_cached_xsltproc = None
+_cached_executable = None
+_cached_validator_key: tuple[str, float, str, float] | None = None
+
+
+def _get_saxon() -> tuple:
+    """Return the process-wide Saxon processor and XSLT 3.0 processor.
+
+    Built once per process (or whenever the ``PySaxonProcessor`` module
+    attribute changes, so monkeypatched fakes in tests are picked up) and
+    reused afterwards. The context-manager protocol is entered exactly once
+    and never exited; see the module-level comment for why.
+
+    :return: A ``(saxon_processor, xslt30_processor)`` tuple.
+    """
+    global _cached_proc  # noqa: PLW0603
+    global _cached_proc_factory  # noqa: PLW0603
+    global _cached_xsltproc  # noqa: PLW0603
+    global _cached_executable  # noqa: PLW0603
+    global _cached_validator_key  # noqa: PLW0603
+
+    if _cached_proc is None or _cached_proc_factory is not PySaxonProcessor:
+        # Assign the globals only after every init step succeeds — a failure
+        # in new_xslt30_processor() must not leave a half-initialized cache
+        # that poisons every later call.
+        proc = PySaxonProcessor(license=False).__enter__()
+        xsltproc = proc.new_xslt30_processor()
+        _cached_proc = proc
+        _cached_proc_factory = PySaxonProcessor
+        _cached_xsltproc = xsltproc
+        _cached_executable = None
+        _cached_validator_key = None
+
+    return _cached_proc, _cached_xsltproc
+
+
+def _get_compiled_validator(xsltproc) -> Any:  # noqa: ANN001, ANN401
+    """Return the compiled validator stylesheet, recompiling only when stale.
+
+    Compiling the APHL validator XSLT is the most expensive part of a
+    validation call, so the executable is cached and keyed on the validator
+    (and vocab) paths and mtimes; ``redo_all_steps`` regenerating the files,
+    or tests monkeypatching the paths, changes the key and forces a recompile.
+
+    :param xsltproc: The XSLT 3.0 processor used to compile the stylesheet.
+    :return: The compiled stylesheet executable.
+    """
+    global _cached_executable  # noqa: PLW0603
+    global _cached_validator_key  # noqa: PLW0603
+
+    key = (
+        str(VALIDATOR_OUTPUT),
+        VALIDATOR_OUTPUT.stat().st_mtime,
+        str(VOC_OUTPUT),
+        VOC_OUTPUT.stat().st_mtime,
+    )
+    if _cached_executable is None or key != _cached_validator_key:
+        _cached_executable = xsltproc.compile_stylesheet(stylesheet_file=str(VALIDATOR_OUTPUT))
+        _cached_validator_key = key
+
+    return _cached_executable
 
 
 class ValidationResult(FrozenBaseModel):
@@ -100,83 +171,82 @@ def _run_validator(eicr: str | None, redo_all_steps: bool = False) -> list[_RawA
     asserts: list[_RawAssert] = []
 
     try:
-        with PySaxonProcessor(license=False) as proc:
-            logger.info(f"Saxon/C version: {proc.version}")
-            xsltproc = proc.new_xslt30_processor()
-            # The cached XSLT artifacts (steps 1-3) are written here. The wheel
-            # ships no output/ dir, so create it before the first write.
-            STAGE1_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-            if redo_all_steps:
-                logger.info("Remove all previous files generated at all steps")
-                STAGE1_OUTPUT.unlink(missing_ok=True)
-                STAGE2_OUTPUT.unlink(missing_ok=True)
-                VALIDATOR_OUTPUT.unlink(missing_ok=True)
-                VOC_OUTPUT.unlink(missing_ok=True)
-            else:
-                logger.info("Will use existing files for Step 1-3")
+        proc, xsltproc = _get_saxon()
+        logger.info(f"Saxon/C version: {proc.version}")
+        # The cached XSLT artifacts (steps 1-3) are written here. The wheel
+        # ships no output/ dir, so create it before the first write.
+        STAGE1_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+        if redo_all_steps:
+            logger.info("Remove all previous files generated at all steps")
+            STAGE1_OUTPUT.unlink(missing_ok=True)
+            STAGE2_OUTPUT.unlink(missing_ok=True)
+            VALIDATOR_OUTPUT.unlink(missing_ok=True)
+            VOC_OUTPUT.unlink(missing_ok=True)
+        else:
+            logger.info("Will use existing files for Step 1-3")
 
-            if _needs_regeneration(STAGE1_OUTPUT, (APHL_SCHEMATRON, XSLT_INCLUDE)):
-                # Step 1: Process includes
-                # Note: For schxslt, you typically apply the XSLT to the SCH file as the source
-                logger.info("--- Step 1: Process Includes against Schematron File")
-                xsltproc.transform_to_file(
-                    source_file=str(APHL_SCHEMATRON),
-                    stylesheet_file=str(XSLT_INCLUDE),
-                    output_file=str(STAGE1_OUTPUT),
-                )
+        if _needs_regeneration(STAGE1_OUTPUT, (APHL_SCHEMATRON, XSLT_INCLUDE)):
+            # Step 1: Process includes
+            # Note: For schxslt, you typically apply the XSLT to the SCH file as the source
+            logger.info("--- Step 1: Process Includes against Schematron File")
+            xsltproc.transform_to_file(
+                source_file=str(APHL_SCHEMATRON),
+                stylesheet_file=str(XSLT_INCLUDE),
+                output_file=str(STAGE1_OUTPUT),
+            )
 
-            if _needs_regeneration(STAGE2_OUTPUT, (STAGE1_OUTPUT, XSLT_EXPAND)):
-                # Step 2: Expand abstract rules
-                logger.info("--- Step 2: Expand abstract rules using output from Step 1")
-                xsltproc.transform_to_file(
-                    source_file=str(STAGE1_OUTPUT),
-                    stylesheet_file=str(XSLT_EXPAND),
-                    output_file=str(STAGE2_OUTPUT),
-                )
+        if _needs_regeneration(STAGE2_OUTPUT, (STAGE1_OUTPUT, XSLT_EXPAND)):
+            # Step 2: Expand abstract rules
+            logger.info("--- Step 2: Expand abstract rules using output from Step 1")
+            xsltproc.transform_to_file(
+                source_file=str(STAGE1_OUTPUT),
+                stylesheet_file=str(XSLT_EXPAND),
+                output_file=str(STAGE2_OUTPUT),
+            )
 
-            if _needs_regeneration(VALIDATOR_OUTPUT, (STAGE2_OUTPUT, XSLT_COMPILE)):
-                # Step 3: Compile to an SVRL-producing XSLT stylesheet
-                logger.info(
-                    "--- Step 3: Compile to an SVRL-producing XSLT stylesheet using the output from Step 2"
-                )
-                xsltproc.transform_to_file(
-                    source_file=str(STAGE2_OUTPUT),
-                    stylesheet_file=str(XSLT_COMPILE),
-                    output_file=str(VALIDATOR_OUTPUT),
-                )
+        if _needs_regeneration(VALIDATOR_OUTPUT, (STAGE2_OUTPUT, XSLT_COMPILE)):
+            # Step 3: Compile to an SVRL-producing XSLT stylesheet
+            logger.info(
+                "--- Step 3: Compile to an SVRL-producing XSLT stylesheet using the output from Step 2"
+            )
+            xsltproc.transform_to_file(
+                source_file=str(STAGE2_OUTPUT),
+                stylesheet_file=str(XSLT_COMPILE),
+                output_file=str(VALIDATOR_OUTPUT),
+            )
 
-            # Ensure the document()-referenced vocab sits next to the generated stylesheet.
-            # Guarded like the stage artifacts above: on Lambda the package dir is read-only
-            # and this file is baked into the image at build time (Dockerfile.augmentation),
-            # so an unconditional copy would crash with OSError [Errno 30] on every invocation.
-            if _needs_regeneration(VOC_OUTPUT, (VOC_SOURCE,)):
-                shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
+        # Ensure the document()-referenced vocab sits next to the generated stylesheet.
+        # Guarded like the stage artifacts above: on Lambda the package dir is read-only
+        # and this file is baked into the image at build time (Dockerfile.augmentation),
+        # so an unconditional copy would crash with OSError [Errno 30] on every invocation.
+        if _needs_regeneration(VOC_OUTPUT, (VOC_SOURCE,)):
+            shutil.copy2(VOC_SOURCE, VOC_OUTPUT)
 
-            # Step 4: Apply the generated XSLT to the source XML
-            # Parse the XML string into an XDM node
-            xml_node = proc.parse_xml(xml_text=eicr)
+        # Step 4: Apply the generated XSLT to the source XML
+        # Parse the XML string into an XDM node
+        xml_node = proc.parse_xml(xml_text=eicr)
 
-            # Use the node as the source for transformation
-            executable = xsltproc.compile_stylesheet(stylesheet_file=str(VALIDATOR_OUTPUT))
-            result = executable.apply_templates_returning_value(xdm_value=xml_node)
-            logger.info(result)
+        # Use the node as the source for transformation
+        executable = _get_compiled_validator(xsltproc)
+        result = executable.apply_templates_returning_value(xdm_value=xml_node)
+        logger.info(result)
 
-            for x in result[0][0].children:
-                if x.local_name == "failed-assert":
-                    # The human-readable message lives in the <svrl:text> child.
-                    message = ""
-                    for child in x.children:
-                        if child.local_name == "text":
-                            message = (child.string_value or "").strip()
-                            break
-                    asserts.append(
-                        _RawAssert(
-                            error_id=x.get_attribute_value("id"),
-                            location=x.get_attribute_value("location"),
-                            test=_normalize_whitespace(x.get_attribute_value("test")),
-                            message=message,
-                        )
+        for x in result[0][0].children:
+            if x.local_name == "failed-assert":
+                # The human-readable message lives in the <svrl:text> child.
+                message = ""
+                for child in x.children:
+                    if child.local_name == "text":
+                        message = (child.string_value or "").strip()
+                        break
+                asserts.append(
+                    _RawAssert(
+                        error_id=x.get_attribute_value("id"),
+                        location=x.get_attribute_value("location"),
+                        test=_normalize_whitespace(x.get_attribute_value("test")),
+                        message=message,
                     )
+                )
     except Exception as e:
         logger.exception(f"An error occurred during validation: {e}")
         raise

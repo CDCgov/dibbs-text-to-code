@@ -13,9 +13,11 @@ from lambda_handler.models import (
     OpenSearchResult,
     OpenSearchShards,
 )
-from shared_models import Code
+from shared_models import Code, DataField
 from text_to_code.models import Candidate, LabXPaths, OpenSearchResultCacheSource
+from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services.reranker import ScoredResult
+from text_to_code.services.utils import compute_cache_key
 from text_to_code_lambda import lambda_function, matching
 
 S3_BUCKET = os.environ["S3_BUCKET"]
@@ -88,8 +90,9 @@ class TestHandler:
     ):
         """Test handler with no failures when the result cache misses."""
         # We can directly mock the result cache's return value, since we're
-        # testing the lambda's logic, not the result cache's
-        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+        # testing the lambda's logic, not the result cache's. An empty dict
+        # means every cache key misses.
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
@@ -187,25 +190,27 @@ class TestHandler:
             took=57,
         )
 
-        mocker.patch(
-            "text_to_code_lambda.lambda_function.get_cached_result",
-            return_value=OpenSearchResultCacheSource(
-                cache_key="1357924680",
-                text=" A custom code in display name ",
-                data_field="Lab Test Name Ordered",
-                loinc_code=Code(
-                    code="82041-5",
-                    code_system="2.16.840.1.113883.6.1",
-                    code_system_name="LOINC",
-                    display_name="Weed Allerg Mix3 IgE Qn",
-                    original_text="A custom code in display name.",
-                ),
-                search_score=0.88,
-                reranker_score=0.7127664685249329,
-                opensearch_retrieved_scores=opensearch_retrieved_scores,
-                reranker_processed_results={"results": ranked_results},
-                cached_at=datetime.fromisoformat("2026-05-15T18:14:45.020655+00:00"),
+        cached_source = OpenSearchResultCacheSource(
+            cache_key="1357924680",
+            text=" A custom code in display name ",
+            data_field="Lab Test Name Ordered",
+            loinc_code=Code(
+                code="82041-5",
+                code_system="2.16.840.1.113883.6.1",
+                code_system_name="LOINC",
+                display_name="Weed Allerg Mix3 IgE Qn",
+                original_text="A custom code in display name.",
             ),
+            search_score=0.88,
+            reranker_score=0.7127664685249329,
+            opensearch_retrieved_scores=opensearch_retrieved_scores,
+            reranker_processed_results={"results": ranked_results},
+            cached_at=datetime.fromisoformat("2026-05-15T18:14:45.020655+00:00"),
+        )
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.get_cached_results",
+            side_effect=lambda client, index, keys: dict.fromkeys(keys, cached_source),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -561,7 +566,7 @@ class TestHandler:
             return_value=None,
         )
 
-        retriever_embed_mock = mocker.patch.object(matching, "embed")
+        retriever_embed_mock = mocker.patch.object(lambda_function, "embed_batch")
         reranker_mock = mocker.patch.object(
             matching,
             "rerank",
@@ -620,7 +625,7 @@ class TestHandler:
         )
 
         # Just bypass the cache here to test the desired functionality
-        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
         mocker.patch(
             "text_to_code_lambda.matching.lambda_handler.retrieve_opensearch_results",
@@ -655,6 +660,180 @@ class TestHandler:
             f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
         snapshot.assert_match(ttc_metadata_output, "no_opensearch_hits_none_metadata_output.json")
+
+    def test_pipeline_batches_cache_lookups_and_embeddings_across_errors(
+        self,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+    ):
+        """Multiple errors share one mget and one batched encode covering only the misses."""
+        errors = [
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-one",
+                error_message="first error",
+                error_context="/ClinicalDocument[1]/observation[1]",
+            ),
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-two",
+                error_message="second error",
+                error_context="/ClinicalDocument[1]/observation[2]",
+            ),
+        ]
+        candidates = [
+            Candidate(value="cached input", xpath=LabXPaths.CODE_DISPLAY_NAME),
+            Candidate(value="uncached input", xpath=LabXPaths.CODE_DISPLAY_NAME),
+        ]
+        hit_key = compute_cache_key(candidates[0].value, DataField.LAB_TEST_NAME_ORDERED)
+        miss_key = compute_cache_key(candidates[1].value, DataField.LAB_TEST_NAME_ORDERED)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=errors,
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            side_effect=candidates,
+        )
+
+        cached_source = mocker.MagicMock()
+        cached_source.loinc_code = Code(
+            code="82041-5",
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name="Weed Allerg Mix3 IgE Qn",
+            original_text="cached input",
+        )
+        cached_source.reranker_processed_results = {"results": []}
+        cached_source.opensearch_retrieved_scores = OpenSearchResult(
+            took=1,
+            timed_out=False,
+            _shards=OpenSearchShards(total=1, successful=1, skipped=0, failed=0),
+            hits=OpenSearchHits(total={}, hits=[]),
+        )
+        get_cached_results_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.get_cached_results",
+            return_value={hit_key: cached_source, miss_key: None},
+        )
+
+        embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
+        embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
+
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
+        ]
+        mocker.patch("text_to_code_lambda.matching.rerank", return_value=ranked_results)
+        put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
+        metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
+        mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+
+        ttc_output = lambda_function._process_record_pipeline(
+            "persistence-id", mock_opensearch, S3_BUCKET
+        )
+
+        # One mget covering both keys, in error order.
+        get_cached_results_mock.assert_called_once()
+        assert get_cached_results_mock.call_args.args[2] == [hit_key, miss_key]
+
+        # One batched encode covering only the cache miss.
+        embed_batch_mock.assert_called_once_with(["uncached input"])
+
+        # One metric per error, hit before miss.
+        assert [call.args[0] for call in metric_mock.call_args_list] == [
+            lambda_function.HitValue.hit,
+            lambda_function.HitValue.miss,
+        ]
+
+        # The miss's match was written back to the cache with its precomputed key.
+        put_cached_mock.assert_called_once()
+        assert put_cached_mock.call_args.kwargs["cache_key"] == miss_key
+
+        # Both errors produced translations, in the original error order.
+        assert [c.schematron_error_xpath for c in ttc_output.nonstandard_codes] == [
+            "/ClinicalDocument[1]/observation[1]",
+            "/ClinicalDocument[1]/observation[2]",
+        ]
+
+    def test_pipeline_reuses_resolution_for_duplicate_candidates(
+        self,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+    ):
+        """Errors sharing a candidate embed, search, and cache-write once.
+
+        Mirrors the old sequential loop, where the second occurrence hit the
+        cache entry the first occurrence had just written.
+        """
+        errors = [
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-one",
+                error_message="first error",
+                error_context="/ClinicalDocument[1]/observation[1]",
+            ),
+            SchematronErrorDetail(
+                field=DataField.LAB_TEST_NAME_ORDERED,
+                error="error-two",
+                error_message="second error",
+                error_context="/ClinicalDocument[1]/observation[2]",
+            ),
+        ]
+        candidate = Candidate(value="repeated input", xpath=LabXPaths.CODE_DISPLAY_NAME)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=errors,
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            side_effect=[candidate, candidate],
+        )
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
+
+        embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
+        embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
+
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
+        ]
+        rerank_mock = mocker.patch(
+            "text_to_code_lambda.matching.rerank", return_value=ranked_results
+        )
+        put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
+        metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
+        mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+
+        ttc_output = lambda_function._process_record_pipeline(
+            "persistence-id", mock_opensearch, S3_BUCKET
+        )
+
+        # The duplicate is embedded, searched, and cache-written exactly once.
+        embed_batch_mock.assert_called_once_with(["repeated input"])
+        rerank_mock.assert_called_once()
+        put_cached_mock.assert_called_once()
+
+        # First occurrence is a miss; the reused successful match counts as a hit.
+        assert [call.args[0] for call in metric_mock.call_args_list] == [
+            lambda_function.HitValue.miss,
+            lambda_function.HitValue.hit,
+        ]
+
+        # Both errors still produce translations, in the original error order.
+        assert [c.schematron_error_xpath for c in ttc_output.nonstandard_codes] == [
+            "/ClinicalDocument[1]/observation[1]",
+            "/ClinicalDocument[1]/observation[2]",
+        ]
 
     def test_handler_malformed_eicr_with_no_schematron_issues(
         self,
@@ -699,7 +878,7 @@ class TestHandler:
     ):
 
         # Bypass the cache to force us down the reranker path so this test makes sense
-        mocker.patch("text_to_code_lambda.lambda_function.get_cached_result", return_value=None)
+        mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
         mocker.patch(
             "text_to_code_lambda.matching.rerank",

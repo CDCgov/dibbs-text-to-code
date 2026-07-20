@@ -49,6 +49,8 @@ def match_text(
     data_field: DataField,
     opensearch_client: OpenSearch,
     index: str,
+    *,
+    embedding: list[float] | None = None,
 ) -> Match | NoMatch:
     """Map a raw text string to its best LOINC ``Code``.
 
@@ -59,12 +61,13 @@ def match_text(
     :param data_field: The data field that determines the LOINC type filter.
     :param opensearch_client: An OpenSearch client used for the KNN query.
     :param index: The OpenSearch index to query.
+    :param embedding: A precomputed embedding for ``text`` (from a batched
+        encode); computed on the fly when omitted.
     :return: The matching outcome, with or without a matched ``Code``.
     """
-    vector_embedding = embed(text)
-    vector_parameters = query_models.VectorSearchParams(
-        vector=vector_embedding.tolist(), data_field=data_field
-    )
+    if embedding is None:
+        embedding = embed(text).tolist()
+    vector_parameters = query_models.VectorSearchParams(vector=embedding, data_field=data_field)
     query = QueryBuilder().with_vector_search(vector_parameters).build()
 
     opensearch_results = lambda_handler.retrieve_opensearch_results(

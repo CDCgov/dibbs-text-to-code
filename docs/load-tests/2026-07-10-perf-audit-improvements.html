@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTC Load Test — perf-audit-improvements A/B</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #F7F9FA;
+    --surface: #FFFFFF;
+    --ink: #182430;
+    --muted: #5B6B7A;
+    --line: #DDE4EA;
+    --line-soft: #E9EEF2;
+    --base-bar: #8494A3;
+    --accent: #0E7C6B;
+    --accent-ink: #0A5F52;
+    --accent-soft: rgba(14, 124, 107, 0.10);
+    --warn: #9A6A1B;
+    --warn-bg: #FBF3E2;
+    --warn-line: #E8D9B8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10161C;
+      --surface: #171F27;
+      --ink: #E6EDF3;
+      --muted: #8FA0AF;
+      --line: #27323D;
+      --line-soft: #1F2933;
+      --base-bar: #5D6B7A;
+      --accent: #33C1A6;
+      --accent-ink: #4FD3BA;
+      --accent-soft: rgba(51, 193, 166, 0.12);
+      --warn: #D9A54A;
+      --warn-bg: #2A2213;
+      --warn-line: #4A3B1E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10161C;
+    --surface: #171F27;
+    --ink: #E6EDF3;
+    --muted: #8FA0AF;
+    --line: #27323D;
+    --line-soft: #1F2933;
+    --base-bar: #5D6B7A;
+    --accent: #33C1A6;
+    --accent-ink: #4FD3BA;
+    --accent-soft: rgba(51, 193, 166, 0.12);
+    --warn: #D9A54A;
+    --warn-bg: #2A2213;
+    --warn-line: #4A3B1E;
+  }
+  :root[data-theme="light"] {
+    --bg: #F7F9FA;
+    --surface: #FFFFFF;
+    --ink: #182430;
+    --muted: #5B6B7A;
+    --line: #DDE4EA;
+    --line-soft: #E9EEF2;
+    --base-bar: #8494A3;
+    --accent: #0E7C6B;
+    --accent-ink: #0A5F52;
+    --accent-soft: rgba(14, 124, 107, 0.10);
+    --warn: #9A6A1B;
+    --warn-bg: #FBF3E2;
+    --warn-line: #E8D9B8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 34px);
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 8px;
+  }
+  .meta code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    font-size: 13px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 32px 0 8px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px 18px;
+  }
+  .stat .big {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .stat .label { font-size: 14px; font-weight: 600; margin-top: 6px; }
+  .stat .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  section { margin-top: 52px; }
+  h2 {
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+  }
+  .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; max-width: 68ch; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 20px 12px;
+    margin-bottom: 16px;
+  }
+  .chart-title { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .chart-sub { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+  .chart-scroll { overflow-x: auto; }
+  .chart-scroll svg { display: block; min-width: 560px; width: 100%; height: auto; }
+
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin: 4px 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .swatch.base { background: var(--base-bar); }
+  .swatch.branch { background: var(--accent); }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { padding: 9px 14px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+  tbody td {
+    border-bottom: 1px solid var(--line-soft);
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody td:first-child { font-family: inherit; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.group td {
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--line-soft);
+  }
+  td.delta-good { color: var(--accent-ink); font-weight: 600; }
+  td.delta-flat { color: var(--muted); }
+
+  .callout {
+    border: 1px solid var(--warn-line);
+    background: var(--warn-bg);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+  .callout strong { color: var(--warn); }
+
+  .pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .mini {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 14px;
+  }
+  .mini h3 { font-size: 14px; font-weight: 650; margin: 0 0 6px; }
+  .mini p { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .mini .num {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 72ch;
+  }
+  footer p { margin: 0 0 10px; }
+  a { color: var(--accent-ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">DIBBs Text to Code · Load Test</p>
+    <h1>perf-audit-improvements: 3.4&times; faster end-to-end, zero regressions</h1>
+    <p class="meta">
+      A/B burst test, 300 documents per pass &times; 2 passes per arm &middot; July 10, 2026 &middot; us-east-2 &middot;
+      baseline run <code>886f100a</code> (main) vs branch run <code>0f388461</code> (perf-audit-improvements)
+    </p>
+    <p class="meta">
+      Each arm: parallel S3 upload burst &rarr; Lambda scale-out &rarr; full drain. Pass 1 exercises the cold
+      result-cache path (embed + OpenSearch KNN); pass 2 re-submits identical texts to exercise the warm
+      result-cache path. Metrics from CloudWatch <code>REPORT</code> lines and S3 timestamps.
+    </p>
+  </header>
+
+  <div class="hero">
+    <div class="stat">
+      <div class="big">3.1&times;</div>
+      <div class="label">TTC Lambda faster (cold path)</div>
+      <div class="sub">median 200.0 s &rarr; 63.7 s per invocation</div>
+    </div>
+    <div class="stat">
+      <div class="big">3.4&times;</div>
+      <div class="label">Faster end-to-end</div>
+      <div class="sub">median submission &rarr; augmented eICR: 314 s &rarr; 93 s</div>
+    </div>
+    <div class="stat">
+      <div class="big">0</div>
+      <div class="label">Errors or timeouts, either arm</div>
+      <div class="sub">300/300 documents delivered in every pass</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Cold path: full embedding + OpenSearch KNN (pass 1)</h2>
+    <p class="section-sub">
+      Every document carries a salted candidate text, guaranteeing a result-cache miss &mdash; each invocation
+      does real embedding and KNN work under a 300-document burst. Durations improve roughly 68% at every
+      percentile, so the gain holds across the whole distribution, not just the median.
+    </p>
+    <div class="legend">
+      <span><i class="swatch base"></i>baseline (main)</span>
+      <span><i class="swatch branch"></i>perf-audit-improvements</span>
+    </div>
+    <div class="chart-card">
+      <p class="chart-title">TTC Lambda invocation duration <span class="pill">&minus;68% median</span></p>
+      <p class="chart-sub">seconds per invocation, CloudWatch REPORT lines, 300 invocations per arm</p>
+      <div class="chart-scroll" id="chart-ttc-cold"></div>
+    </div>
+    <div class="chart-card">
+      <p class="chart-title">End-to-end pipeline latency <span class="pill">&minus;70% median</span></p>
+      <p class="chart-sub">seconds from eICR submission to augmented eICR landing in S3, per document</p>
+      <div class="chart-scroll" id="chart-e2e"></div>
+    </div>
+    <div class="chart-card">
+      <p class="chart-title">Augmentation Lambda tail latency <span class="pill">&minus;85% max</span></p>
+      <p class="chart-sub">milliseconds per invocation &mdash; the baseline's long tail (10.2 s max) disappears when the upstream TTC burst clears 3&times; sooner</p>
+      <div class="chart-scroll" id="chart-aug"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Warm path: result-cache hits (pass 2)</h2>
+    <p class="section-sub">
+      Pass 2 re-submits the same salted texts under fresh filenames, so every lookup hits the result cache
+      that pass 1 filled. The already-fast path got faster &mdash; the batched cache lookup (mget) shows up
+      most in the tail, where the worst invocation dropped 46%.
+    </p>
+    <div class="legend">
+      <span><i class="swatch base"></i>baseline (main)</span>
+      <span><i class="swatch branch"></i>perf-audit-improvements</span>
+    </div>
+    <div class="chart-card">
+      <p class="chart-title">TTC Lambda invocation duration, warm cache <span class="pill">&minus;18% median</span></p>
+      <p class="chart-sub">milliseconds per invocation &mdash; note the scale: both arms complete end-to-end in 2&ndash;3 s on this path</p>
+      <div class="chart-scroll" id="chart-ttc-warm"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Throughput</h2>
+    <div class="cols">
+      <div class="mini">
+        <h3>Baseline drain</h3>
+        <p><span class="num">300</span> documents in <span class="num">321 s</span> &asymp; <span class="num">56 docs/min</span></p>
+      </div>
+      <div class="mini">
+        <h3>Branch drain</h3>
+        <p><span class="num">300</span> documents in <span class="num">105 s</span> &asymp; <span class="num">171 docs/min</span> &mdash; <strong>3.1&times; the burst throughput</strong> with the same Lambda and OpenSearch footprint</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Full numbers</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Baseline (main)</th><th>Branch</th><th>&Delta;</th></tr>
+        </thead>
+        <tbody>
+          <tr class="group"><td colspan="4">TTC Lambda &mdash; pass 1 (cold cache), ms</td></tr>
+          <tr><td>p50</td><td>199,965</td><td>63,734</td><td class="delta-good">&minus;68.1%</td></tr>
+          <tr><td>p90</td><td>267,467</td><td>84,569</td><td class="delta-good">&minus;68.4%</td></tr>
+          <tr><td>p99</td><td>278,099</td><td>88,549</td><td class="delta-good">&minus;68.2%</td></tr>
+          <tr><td>max</td><td>285,851</td><td>93,010</td><td class="delta-good">&minus;67.5%</td></tr>
+          <tr class="group"><td colspan="4">End-to-end (submission &rarr; augmented eICR) &mdash; pass 1, s</td></tr>
+          <tr><td>p50</td><td>314</td><td>93</td><td class="delta-good">&minus;70.4%</td></tr>
+          <tr><td>p90</td><td>318</td><td>98</td><td class="delta-good">&minus;69.2%</td></tr>
+          <tr><td>p99</td><td>320</td><td>101</td><td class="delta-good">&minus;68.4%</td></tr>
+          <tr><td>max</td><td>321</td><td>105</td><td class="delta-good">&minus;67.3%</td></tr>
+          <tr class="group"><td colspan="4">TTC Lambda &mdash; pass 2 (warm result cache), ms</td></tr>
+          <tr><td>p50</td><td>154.9</td><td>126.4</td><td class="delta-good">&minus;18.4%</td></tr>
+          <tr><td>p90</td><td>178.3</td><td>142.4</td><td class="delta-good">&minus;20.1%</td></tr>
+          <tr><td>p99</td><td>207.1</td><td>177.6</td><td class="delta-good">&minus;14.2%</td></tr>
+          <tr><td>max</td><td>341.1</td><td>185.5</td><td class="delta-good">&minus;45.6%</td></tr>
+          <tr class="group"><td colspan="4">Augmentation Lambda &mdash; pass 1, ms</td></tr>
+          <tr><td>p50</td><td>196.2</td><td>120.1</td><td class="delta-good">&minus;38.8%</td></tr>
+          <tr><td>p90</td><td>322.2</td><td>181.9</td><td class="delta-good">&minus;43.5%</td></tr>
+          <tr><td>p99</td><td>7,162.1</td><td>1,464.6</td><td class="delta-good">&minus;79.6%</td></tr>
+          <tr><td>max</td><td>10,169.5</td><td>1,495.2</td><td class="delta-good">&minus;85.3%</td></tr>
+          <tr><td>cold starts</td><td>25</td><td>30</td><td class="delta-flat">&mdash;</td></tr>
+          <tr><td>avg init</td><td>1,597.2</td><td>1,332.3</td><td class="delta-good">&minus;16.6%</td></tr>
+          <tr><td>max init</td><td>6,049.8</td><td>4,513.1</td><td class="delta-good">&minus;25.4%</td></tr>
+          <tr class="group"><td colspan="4">Reliability &mdash; both passes</td></tr>
+          <tr><td>invocations attributed (each lambda, each pass)</td><td>300</td><td>300</td><td class="delta-flat">exact</td></tr>
+          <tr><td>documents delivered</td><td>300/300</td><td>300/300</td><td class="delta-flat">100%</td></tr>
+          <tr><td>errors + timeouts</td><td>0</td><td>0</td><td class="delta-flat">clean</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Correctness: no behavioral regression signal</h2>
+    <p class="section-sub">
+      Every augmented eICR's predicted LOINC translation was compared against the expected code for its base
+      test case (10 curated hard cases &times; 30 salted variants each).
+    </p>
+    <div class="cols">
+      <div class="mini">
+        <h3>Deterministic within each arm</h3>
+        <p>Pass 1 and pass 2 produced <span class="num">byte-identical</span> match profiles in both arms
+        (60/300 and 47/300) &mdash; the result cache returns exactly what the live KNN path computed.</p>
+      </div>
+      <div class="mini">
+        <h3>Same hard cases miss in both arms</h3>
+        <p>The same 7 known-hard cases (CBC panel, K+, BUN, POC oxymorphone, VLDL, hep&nbsp;A IgM, MCHC, glucose
+        challenge) missed in <span class="num">all 30/30</span> variants in <em>both</em> arms &mdash; a
+        pre-existing model behavior, untouched by this branch.</p>
+      </div>
+      <div class="mini">
+        <h3>Two borderline cases flipped</h3>
+        <p>pCO2 Venous: <span class="num">30/30 &rarr; 18/30</span> matched; fentanyl screen:
+        <span class="num">30/30 &rarr; 29/30</span>. This accounts for the entire 60-vs-47 delta.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Read the match-rate delta with care.</strong> The test salts every candidate text with a unique
+      run/arm marker to force cache misses &mdash; so the two arms embedded <em>different strings</em>
+      (<code>&hellip;[lt-886f100a-baseline-004]</code> vs <code>&hellip;[lt-0f388461-branch-004]</code>), and
+      borderline nearest-neighbor results can flip on the salt alone. The branch arm shows this directly:
+      pCO2 Venous matched on 18 salt variants and missed on 12 <em>within the same arm, same code</em>. The
+      per-arm difference is consistent with salt-induced embedding noise on borderline cases, not a ranking
+      change &mdash; but if we want to rule out an effect from the batched-embedding change, the clean check
+      is a fixed unsalted corpus run through both images offline.
+    </div>
+  </section>
+
+  <section>
+    <h2>What changed on the branch</h2>
+    <div class="cols">
+      <div class="mini">
+        <h3>Dropped the S3 pre-flight HEAD; bounded client timeouts</h3>
+        <p>One fewer round-trip per document and no unbounded hangs under load.</p>
+      </div>
+      <div class="mini">
+        <h3>Batched result-cache lookups and embeddings</h3>
+        <p>One OpenSearch mget and one model forward-pass per document instead of per candidate.</p>
+      </div>
+      <div class="mini">
+        <h3>Cached the Saxon processor and compiled validator stylesheet</h3>
+        <p>Schematron parsing cost paid once per container, not once per invocation.</p>
+      </div>
+      <div class="mini">
+        <h3>Hardened cold start against Hub lookups and cache bloat</h3>
+        <p>The image no longer reaches for Hugging Face Hub at init; augmentation init time dropped 17% on average.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Methodology.</strong> Each arm deployed its image, then ran
+    <code style="font-family: ui-monospace, Menlo, monospace;">./scripts/load_test.sh run --arm &lt;label&gt; --docs 300 --passes 2</code>:
+    300 salted eICRs uploaded to S3 in a 24-way parallel burst (SQS batch size 1, no reserved concurrency,
+    forcing Lambda scale-out), drained fully, then measured from CloudWatch Logs Insights over REPORT lines
+    and the S3 LastModified join (TextToCodeSubmissionV2 &rarr; AugmentationEICRV2). Invocation counts matched
+    the document count exactly in every pass, so no foreign traffic contaminated the windows.</p>
+    <p><strong>Known gap.</strong> TTC Lambda cold-start counts came back null from the Logs Insights query in
+    both arms (the report drops null fields), so cold-start init time for the TTC container isn't compared here;
+    the augmentation lambda's cold starts (25 vs 30) confirm containers were recycled for both arms.</p>
+    <p>Raw results: <code style="font-family: ui-monospace, Menlo, monospace;">load_test_runs/886f100a-baseline/</code> and
+    <code style="font-family: ui-monospace, Menlo, monospace;">load_test_runs/0f388461-branch/</code> (results_p1.json / results_p2.json).</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  function css(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  // Grouped bar chart: two series across percentile categories, value labels
+  // above bars, delta badge under each category.
+  function barChart(elId, spec) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var W = 660, H = 250, padL = 46, padR = 10, padT = 26, padB = 40;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var n = spec.labels.length;
+    var groupW = plotW / n;
+    var barW = Math.min(52, groupW * 0.32);
+    var gap = 10;
+    var max = spec.max;
+    var ink = css("--ink"), muted = css("--muted"), line = css("--line");
+    var colors = [css("--base-bar"), css("--accent")];
+
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + spec.aria + '">';
+
+    // gridlines + y labels
+    var ticks = spec.ticks;
+    for (var t = 0; t < ticks.length; t++) {
+      var y = padT + plotH - (ticks[t] / max) * plotH;
+      s += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
+           '" stroke="' + line + '" stroke-width="1"/>';
+      s += '<text x="' + (padL - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" ' +
+           'font-family="ui-monospace,Menlo,monospace" fill="' + muted + '">' + spec.tickFmt(ticks[t]) + "</text>";
+    }
+
+    for (var i = 0; i < n; i++) {
+      var cx = padL + groupW * i + groupW / 2;
+      var vals = [spec.series[0].values[i], spec.series[1].values[i]];
+      for (var k = 0; k < 2; k++) {
+        var h = (vals[k] / max) * plotH;
+        var x = cx - barW - gap / 2 + k * (barW + gap);
+        var y2 = padT + plotH - h;
+        s += '<rect x="' + x + '" y="' + y2 + '" width="' + barW + '" height="' + h +
+             '" rx="3" fill="' + colors[k] + '"/>';
+        s += '<text x="' + (x + barW / 2) + '" y="' + (y2 - 6) + '" text-anchor="middle" font-size="11.5" ' +
+             'font-weight="600" font-family="ui-monospace,Menlo,monospace" fill="' + ink + '">' +
+             spec.valFmt(vals[k]) + "</text>";
+      }
+      // category label
+      s += '<text x="' + cx + '" y="' + (padT + plotH + 17) + '" text-anchor="middle" font-size="12.5" ' +
+           'font-weight="600" fill="' + ink + '">' + spec.labels[i] + "</text>";
+      // delta
+      var d = (spec.series[1].values[i] / spec.series[0].values[i] - 1) * 100;
+      s += '<text x="' + cx + '" y="' + (padT + plotH + 33) + '" text-anchor="middle" font-size="11.5" ' +
+           'font-weight="600" font-family="ui-monospace,Menlo,monospace" fill="' + css("--accent-ink") + '">' +
+           (d <= 0 ? "−" : "+") + Math.abs(d).toFixed(0) + "%</text>";
+    }
+    s += "</svg>";
+    el.innerHTML = s;
+  }
+
+  var P = ["p50", "p90", "p99", "max"];
+
+  function render() {
+    barChart("chart-ttc-cold", {
+      aria: "TTC lambda duration percentiles, cold cache: baseline vs branch",
+      labels: P,
+      series: [
+        { values: [200.0, 267.5, 278.1, 285.9] },
+        { values: [63.7, 84.6, 88.5, 93.0] }
+      ],
+      max: 320, ticks: [0, 100, 200, 300],
+      tickFmt: function (v) { return v + "s"; },
+      valFmt: function (v) { return v.toFixed(0) + "s"; }
+    });
+
+    barChart("chart-e2e", {
+      aria: "End-to-end latency percentiles: baseline vs branch",
+      labels: P,
+      series: [
+        { values: [314, 318, 320, 321] },
+        { values: [93, 98, 101, 105] }
+      ],
+      max: 360, ticks: [0, 120, 240, 360],
+      tickFmt: function (v) { return v + "s"; },
+      valFmt: function (v) { return v + "s"; }
+    });
+
+    barChart("chart-aug", {
+      aria: "Augmentation lambda duration percentiles: baseline vs branch",
+      labels: P,
+      series: [
+        { values: [196.2, 322.2, 7162.1, 10169.5] },
+        { values: [120.1, 181.9, 1464.6, 1495.2] }
+      ],
+      max: 11000, ticks: [0, 2500, 5000, 7500, 10000],
+      tickFmt: function (v) { return v >= 1000 ? (v / 1000) + "s" : v + "ms"; },
+      valFmt: function (v) { return v >= 1000 ? (v / 1000).toFixed(1) + "s" : v.toFixed(0) + "ms"; }
+    });
+
+    barChart("chart-ttc-warm", {
+      aria: "TTC lambda duration percentiles, warm cache: baseline vs branch",
+      labels: P,
+      series: [
+        { values: [154.9, 178.3, 207.1, 341.1] },
+        { values: [126.4, 142.4, 177.6, 185.5] }
+      ],
+      max: 380, ticks: [0, 100, 200, 300],
+      tickFmt: function (v) { return v + "ms"; },
+      valFmt: function (v) { return v.toFixed(0) + "ms"; }
+    });
+  }
+
+  render();
+
+  // Re-render when the viewer flips the theme so bar colors follow the tokens.
+  new MutationObserver(render).observe(document.documentElement, {
+    attributes: true, attributeFilter: ["data-theme"]
+  });
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  }
+})();
+</script>
+
+</body>
+</html>

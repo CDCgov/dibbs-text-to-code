@@ -23,43 +23,51 @@ def mock_opensearch(request: pytest.FixtureRequest) -> Iterator[MagicMock]:
     candidates: list[str] = getattr(request, "param", ["dummy"])
     candidate_iter = iter(candidates)
 
-    def build_response(*args, **kwargs) -> dict:  # noqa: ANN002, ANN003
-        value = next(candidate_iter)
+    def build_source(value: str) -> dict:
         return {
-            "found": True,
-            "_source": {
-                "cache_key": "test_cache_key",
-                "text": value,
-                "data_field": "Lab Test Name Resulted",
-                "codeid": 0,
-                "loinc_code": {
-                    "code": "82041-5",
-                    "code_system": "2.16.840.1.113883.6.1",
-                    "code_system_name": "LOINC",
-                    "display_name": "Weed Allerg Mix3 IgE Qn",
-                    "original_text": value,
-                },
-                "loinc_name_type": "Long Common Name",
-                "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
-                "loinc_type": "Order",
-                "s3": {
-                    "bucket": "dibbs-ttc",
-                    "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
-                },
-                "search_score": 0.9563,
-                "reranker_score": 0.6789,
-                "opensearch_retrieved_scores": {
-                    "took": 234,
-                    "timed_out": False,
-                    "_shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
-                    "hits": {
-                        "total": {},
-                        "hits": [],
-                    },
-                },
-                "reranker_processed_results": {"results": []},
-                "cached_at": "2026-05-15T18:14:45.020655+00:00",
+            "cache_key": "test_cache_key",
+            "text": value,
+            "data_field": "Lab Test Name Resulted",
+            "codeid": 0,
+            "loinc_code": {
+                "code": "82041-5",
+                "code_system": "2.16.840.1.113883.6.1",
+                "code_system_name": "LOINC",
+                "display_name": "Weed Allerg Mix3 IgE Qn",
+                "original_text": value,
             },
+            "loinc_name_type": "Long Common Name",
+            "description": "Weed Allergen Mix 3 (Mugwort+Goosefoot or Lambs quarters+English plantain+Goldenrod+Nettle) IgE Ab [Measurement] in Serum",
+            "loinc_type": "Order",
+            "s3": {
+                "bucket": "dibbs-ttc",
+                "key": "ingestion/loinc_lab_names_intfloat_e5-large-v2_20251008_00000.jsonl",
+            },
+            "search_score": 0.9563,
+            "reranker_score": 0.6789,
+            "opensearch_retrieved_scores": {
+                "took": 234,
+                "timed_out": False,
+                "_shards": {"total": 1, "successful": 1, "failed": 0, "skipped": 0},
+                "hits": {
+                    "total": {},
+                    "hits": [],
+                },
+            },
+            "reranker_processed_results": {"results": []},
+            "cached_at": "2026-05-15T18:14:45.020655+00:00",
+        }
+
+    def build_response(*args, **kwargs) -> dict:  # noqa: ANN002, ANN003
+        return {"found": True, "_source": build_source(next(candidate_iter))}
+
+    def build_mget_response(*args, **kwargs) -> dict:  # noqa: ANN002, ANN003
+        body = kwargs.get("body") or (args[0] if args else {})
+        return {
+            "docs": [
+                {"_id": doc_id, "found": True, "_source": build_source(next(candidate_iter))}
+                for doc_id in body.get("ids", [])
+            ]
         }
 
     opensearch_client = MagicMock()
@@ -124,6 +132,7 @@ def mock_opensearch(request: pytest.FixtureRequest) -> Iterator[MagicMock]:
     }
 
     opensearch_client.get.side_effect = build_response
+    opensearch_client.mget.side_effect = build_mget_response
     with patch(
         "lambda_handler.create_opensearch_client",
         return_value=opensearch_client,

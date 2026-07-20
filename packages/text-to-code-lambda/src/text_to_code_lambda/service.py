@@ -16,6 +16,7 @@ from aws_lambda_powertools import Logger
 from opensearchpy import OpenSearch
 
 from shared_models import Code, DataField
+from text_to_code.services.embedder import embed_batch
 
 from .matching import NoMatch, match_text
 
@@ -54,6 +55,8 @@ def code_for_text(
     data_field: DataField,
     opensearch_client: OpenSearch,
     index: str = OPENSEARCH_INDEX,
+    *,
+    embedding: list[float] | None = None,
 ) -> Code | None:
     """Map a single raw text string to its best LOINC ``Code``.
 
@@ -64,9 +67,11 @@ def code_for_text(
     :param data_field: The data field that determines the LOINC type filter.
     :param opensearch_client: An OpenSearch client used for the KNN query.
     :param index: The OpenSearch index to query.
+    :param embedding: A precomputed embedding for ``text`` (from a batched encode);
+      computed on the fly when omitted.
     :return: The top-ranked LOINC ``Code``, or ``None`` when there is no match.
     """
-    outcome = match_text(text, data_field, opensearch_client, index)
+    outcome = match_text(text, data_field, opensearch_client, index, embedding=embedding)
 
     if isinstance(outcome, NoMatch):
         if not outcome.opensearch_results.hits.hits:
@@ -108,8 +113,8 @@ def results_for_inputs(
     """Run a batch of inputs through TTC, preserving input order.
 
     Blank/whitespace-only inputs are returned as unmatched without querying.
-    Embedding is currently per-input; it can be batched later if the Testing CSV
-    grows large.
+    All non-blank inputs are embedded in a single batched encode call before
+    the per-input search and rerank.
 
     :param inputs: The raw clinical text strings to standardize.
     :param data_field: The data field that determines the LOINC type filter.
@@ -117,10 +122,15 @@ def results_for_inputs(
     :param index: The OpenSearch index to query.
     :return: One result dict per input, in the same order.
     """
-    results: list[dict] = []
-    for text in inputs:
-        if not text or not text.strip():
-            results.append(_to_result(text, None))
-            continue
-        results.append(_to_result(text, code_for_text(text, data_field, opensearch_client, index)))
+    results: list[dict] = [_to_result(text, None) for text in inputs]
+    pending = [(i, text) for i, text in enumerate(inputs) if text and text.strip()]
+    if not pending:
+        return results
+
+    embeddings = embed_batch([text for _, text in pending])
+    for (i, text), vector in zip(pending, embeddings, strict=True):
+        results[i] = _to_result(
+            text,
+            code_for_text(text, data_field, opensearch_client, index, embedding=vector.tolist()),
+        )
     return results
