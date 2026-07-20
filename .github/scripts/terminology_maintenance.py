@@ -282,8 +282,10 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     """
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
+    logger.info(f"LOINC Version: {loinc_version} - {loinc_version_date}")
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
+    logger.info(f"Current Loinc File Name: {current_loinc_file}")
     if current_loinc_file is None:
         results = load_initial_extract_files()
         logger.info(results)
@@ -291,6 +293,7 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
         # raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
+    logger.info(f"Date from Loinc File Name: {file_date}")
     if file_date <= loinc_version_date:
         current_loinc_file_dict = _get_terminology_extract_file(current_loinc_file)
         loinc_response: TerminologyUpdateResponse = get_loinc_embedding_records(
