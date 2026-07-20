@@ -84,6 +84,7 @@ def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
     s3_client = create_s3_client()
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=TERMINOLOGY_EXTRACT_PREFIX)
     if "Contents" not in response:
+        print("ERR - CURRENT FILE NOT FOUND!")
         logger.error(f"No file with prefix {file_name_prefix} under {TERMINOLOGY_EXTRACT_PREFIX}!")
         return None
 
@@ -91,6 +92,7 @@ def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
     for obj in response["Contents"]:
         key = obj["Key"]
         file_name = key.split("/")[-1]
+        print(f"GET FILE NAME: File Name: {file_name}")
 
         if file_name_prefix in file_name:
             file_names.append(file_name)
@@ -282,10 +284,10 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     """
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
-    logger.info(f"LOINC Version: {loinc_version} - {loinc_version_date}")
+    print(f"LOINC Version: {loinc_version} - {loinc_version_date}")
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
-    logger.info(f"Current Loinc File Name: {current_loinc_file}")
+    print(f"Current Loinc File Name: {current_loinc_file}")
     if current_loinc_file is None:
         results = load_initial_extract_files()
         logger.info(results)
@@ -293,7 +295,7 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
         # raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
-    logger.info(f"Date from Loinc File Name: {file_date}")
+    print(f"Date from Loinc File Name: {file_date}")
     if file_date <= loinc_version_date:
         current_loinc_file_dict = _get_terminology_extract_file(current_loinc_file)
         loinc_response: TerminologyUpdateResponse = get_loinc_embedding_records(
