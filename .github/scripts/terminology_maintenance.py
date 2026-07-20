@@ -157,6 +157,8 @@ def _get_terminology_extract_file(file_name: str) -> dict[str, dict[str, str]]:
         return {}
     object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{file_name}"
     extract_file = get_file_content_from_s3(S3_BUCKET, object_key)
+    if not extract_file:
+        print("NOTHING IN FILE!")
     extract_dict = {}
     reader = csv.DictReader(extract_file, delimiter="|")
     extract_dict = {row["code"]: row for row in reader}
@@ -289,6 +291,7 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     print(f"Current Loinc File Name: {current_loinc_file}")
     if current_loinc_file is None:
+        print("RELOADING THE FILES!  We should NOT be here!")
         results = load_initial_extract_files()
         logger.info(results)
         current_loinc_file = "loinc_lab_names_20260223.csv"
@@ -297,6 +300,7 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
     print(f"Date from Loinc File Name: {file_date}")
     if file_date <= loinc_version_date:
+        print("RUN the UPDATE!")
         current_loinc_file_dict = _get_terminology_extract_file(current_loinc_file)
         loinc_response: TerminologyUpdateResponse = get_loinc_embedding_records(
             loinc_version, loinc_version_date, current_loinc_file_dict, False
