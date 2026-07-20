@@ -10,6 +10,9 @@ run-name: Update Medical Terminology codes and embeddings by @${{github.actor}}
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - brady/591-snoinc-update-to-aws
 
 permissions:
   id-token: write
@@ -17,7 +20,7 @@ permissions:
 
 jobs:
   update_terminologies:
-    name: Terraform
+    name: Update Terminologies
     runs-on: ubuntu-latest
     env:
       # Access to the public LOINC API endpoints.

@@ -7,7 +7,11 @@ from datetime import datetime
 
 import boto3
 from botocore.client import BaseClient
-from data_curation.terminologies.general import TerminologyUpdateResponse, get_date_from_file_name
+from data_curation.terminologies.general import (
+    BASE_FOLDER,
+    TerminologyUpdateResponse,
+    get_date_from_file_name,
+)
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
     LOINC_CS_NAMES,
@@ -249,6 +253,22 @@ def update_loinc() -> TerminologyUpdateResponse:
     return response
 
 
+def load_initial_extract_files() -> list[str]:
+    """Load all initial extract files from our repo into whatever specified S3 bucket.  This should only need to be run one time.
+
+    :returns: String to indicate success or failure
+    """
+    results = []
+    for file in BASE_FOLDER.iterdir():
+        if file.is_file():
+            try:
+                result = upload_csv_extract_file(file.name, file.read_text(encoding="utf-8"))
+                results.append(result)
+            except Exception as err:
+                results.append(err)
+    return results
+
+
 def update_loinc_lab_names() -> TerminologyUpdateResponse:
     """Process to get the latest updates from LOINC for Lab Names and convert all the new loinc codes as well as changes to existing loinc codes into embedding records that can be uploaded into TTC Opensearch ingestion pipeline.
 
@@ -259,7 +279,10 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
     if current_loinc_file is None:
-        raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
+        results = load_initial_extract_files()
+        logger.info(results)
+        current_loinc_file = "loinc_lab_names_20260223.csv"
+        # raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
     if file_date <= loinc_version_date:
