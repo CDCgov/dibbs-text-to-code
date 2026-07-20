@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 
@@ -26,3 +27,20 @@ def embed(text: str) -> Tensor:
         extra={"status": "processing"},
     )
     return _RETRIEVER.encode(text)
+
+
+def embed_batch(texts: list[str]) -> np.ndarray:
+    """Encode a batch of text strings into vector representations.
+
+    A single batched forward pass amortizes far better than repeated
+    single-string calls, so callers with several texts should prefer this
+    over calling :func:`embed` in a loop.
+
+    :param texts: Text strings to embed.
+    :returns: Array of one embedding row per input text, in input order.
+    """
+    logger.info(
+        "Embedding a batch of text strings.",
+        extra={"status": "processing", "batch_size": len(texts)},
+    )
+    return _RETRIEVER.encode(texts)

@@ -66,6 +66,11 @@ class TestGetFileContentFromS3:
             lambda_handler.get_file_content_from_s3(mock_aws_setup.bucket_name, "nonexistent.txt")
         assert str(e.value) == f"S3 object not found: {mock_aws_setup.bucket_name}/nonexistent.txt"
 
+    def test_get_file_content_from_s3_propagates_unexpected_error(self, mock_aws_setup):
+        """A non-404 S3 error must propagate as-is, not be masked as FileNotFoundError."""
+        with pytest.raises(Exception, match="The specified bucket does not exist"):
+            lambda_handler.get_file_content_from_s3("nonexistent-bucket", "test.txt")
+
 
 class TestPutFile:
     def test_put_file(self, mock_aws_setup):

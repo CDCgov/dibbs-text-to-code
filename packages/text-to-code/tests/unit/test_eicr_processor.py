@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import patch
 
@@ -84,17 +85,22 @@ class TestEmptyEicrProcessor:
         failed_sub_xpath = expected_sub_xpaths[0]
         successful_sub_xpath = expected_sub_xpaths[1]
 
-        def get_by_xpath(xpath) -> list[str | etree._Element]:
-            if xpath == BASE_XPATH:
-                return [processor._xml_root]
-            if xpath == f"{BASE_XPATH}/{failed_sub_xpath}":
-                raise etree.XPathError("boom")
-            if xpath == f"{BASE_XPATH}/{successful_sub_xpath}":
-                return ["successful candidate"]
-            return []
+        def sub_xpath_evaluator(sub_xpath: LabXPaths) -> Callable:
+            def evaluate(node: etree._Element) -> list[str | etree._Element]:
+                if sub_xpath == failed_sub_xpath:
+                    raise etree.XPathError("boom")
+                if sub_xpath == successful_sub_xpath:
+                    return ["successful candidate"]
+                return []
+
+            return evaluate
 
         with (
-            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch.object(processor, "_get_by_xpath", return_value=[processor._xml_root]),
+            patch(
+                "text_to_code.services.eicr_processor._sub_xpath_evaluator",
+                side_effect=sub_xpath_evaluator,
+            ),
             patch("text_to_code.services.eicr_processor.logger.exception") as mock_exception,
             patch("text_to_code.services.eicr_processor.logger.warning") as mock_warning,
         ):
@@ -132,15 +138,20 @@ class TestEmptyEicrProcessor:
         expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
         failed_sub_xpath = expected_sub_xpaths[0]
 
-        def get_by_xpath(xpath) -> list[str | etree._Element]:
-            if xpath == BASE_XPATH:
-                return [processor._xml_root]
-            if xpath == f"{BASE_XPATH}/{failed_sub_xpath}":
-                return ["first candidate", processor._xml_root, "second candidate"]
-            return []
+        def sub_xpath_evaluator(sub_xpath: LabXPaths) -> Callable:
+            def evaluate(node: etree._Element) -> list[str | etree._Element]:
+                if sub_xpath == failed_sub_xpath:
+                    return ["first candidate", processor._xml_root, "second candidate"]
+                return []
+
+            return evaluate
 
         with (
-            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch.object(processor, "_get_by_xpath", return_value=[processor._xml_root]),
+            patch(
+                "text_to_code.services.eicr_processor._sub_xpath_evaluator",
+                side_effect=sub_xpath_evaluator,
+            ),
             patch.object(
                 processor,
                 "_extract_text_candidates_from_element",
@@ -186,15 +197,20 @@ class TestEmptyEicrProcessor:
         expected_sub_xpaths = get_config_for_data_field(DataField.LAB_TEST_NAME_RESULTED).xpaths
         empty_sub_xpath = expected_sub_xpaths[0]
 
-        def get_by_xpath(xpath) -> list[str | etree._Element]:
-            if xpath == BASE_XPATH:
-                return [processor._xml_root]
-            if xpath == f"{BASE_XPATH}/{empty_sub_xpath}":
-                return ["   "]
-            return []
+        def sub_xpath_evaluator(sub_xpath: LabXPaths) -> Callable:
+            def evaluate(node: etree._Element) -> list[str | etree._Element]:
+                if sub_xpath == empty_sub_xpath:
+                    return ["   "]
+                return []
+
+            return evaluate
 
         with (
-            patch.object(processor, "_get_by_xpath", side_effect=get_by_xpath),
+            patch.object(processor, "_get_by_xpath", return_value=[processor._xml_root]),
+            patch(
+                "text_to_code.services.eicr_processor._sub_xpath_evaluator",
+                side_effect=sub_xpath_evaluator,
+            ),
             patch("text_to_code.services.eicr_processor.logger.info") as mock_info,
         ):
             result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
@@ -211,6 +227,61 @@ class TestEmptyEicrProcessor:
                 "no_candidate_count": len(expected_sub_xpaths),
             },
         )
+
+    def test_get_text_candidates_extracts_per_node_without_duplicates(self):
+        """A base xpath matching multiple nodes yields each node's candidates exactly once."""
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <component>
+                    <structuredBody>
+                        <component>
+                            <section>
+                                <entry>
+                                    <component>
+                                        <observation>
+                                            <code displayName="First lab name." />
+                                        </observation>
+                                    </component>
+                                </entry>
+                                <entry>
+                                    <component>
+                                        <observation>
+                                            <code displayName="Second lab name." />
+                                        </observation>
+                                    </component>
+                                </entry>
+                            </section>
+                        </component>
+                    </structuredBody>
+                </component>
+            </ClinicalDocument>
+            """
+        )
+
+        result = processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
+
+        assert result == [
+            Candidate(value="First lab name.", xpath=LabXPaths.CODE_DISPLAY_NAME),
+            Candidate(value="Second lab name.", xpath=LabXPaths.CODE_DISPLAY_NAME),
+        ]
+
+    def test_get_text_candidates_skips_non_element_base_nodes(self):
+        """A base xpath selecting attribute nodes yields no candidates instead of crashing.
+
+        Relative sub-xpath evaluation raises TypeError (not XPathError) on lxml
+        smart strings; the old absolute-path evaluation just found no matches.
+        """
+        processor = EicrProcessor(
+            '<ClinicalDocument><observation><code code="12345" displayName="Lab name." />'
+            "</observation></ClinicalDocument>"
+        )
+
+        result = processor.get_text_candidates(
+            "/ClinicalDocument/observation/code/@code", DataField.LAB_TEST_NAME_RESULTED
+        )
+
+        assert result == []
 
     def test_resolve_reference_returns_none_for_empty_reference_value(self):
         processor = EicrProcessor("<ClinicalDocument />")

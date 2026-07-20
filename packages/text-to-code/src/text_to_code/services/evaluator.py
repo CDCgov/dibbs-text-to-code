@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from shared_models import DataField
@@ -125,11 +126,15 @@ def select_relevant_text(candidates: list[Candidate], field_type: DataField) -> 
     return None
 
 
+@functools.cache
 def _get_evaluation_criteria_for_data_field(data_field: DataField) -> BaseEvaluationCriteria:
-    """Retrieve a fresh evaluation criteria instance for the specified DataField.
+    """Retrieve the evaluation criteria instance for the specified DataField.
+
+    The returned instance is a cached frozen model shared across calls —
+    callers must not mutate its list fields.
 
     :param data_field: The data field being evaluated within the TTC module.
-    :returns: A new evaluation criteria instance for the specified DataField.
+    :returns: The evaluation criteria instance for the specified DataField.
     """
     try:
         cls = EVALUATION_REGISTRY[data_field]

@@ -1,7 +1,6 @@
 [project]
 name = "utils"
 version = "0.1.0"
-description = ""
 dependencies = []
 
 [build-system]

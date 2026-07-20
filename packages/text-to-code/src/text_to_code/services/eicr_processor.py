@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from lxml import etree
@@ -9,6 +10,16 @@ from text_to_code.models.eicr import Metadata, TextCandidateExtractionLogContext
 from text_to_code.services.utils import get_config_for_data_field
 
 logger = logging.getLogger(__name__)
+
+
+@functools.cache
+def _sub_xpath_evaluator(sub_xpath: str) -> etree.XPath:
+    """Compile the evaluator for a static sub-xpath config value, once per process.
+
+    :param sub_xpath: The sub-xpath expression to compile.
+    :returns: The compiled XPath evaluator.
+    """
+    return etree.XPath(sub_xpath)
 
 
 class EicrProcessor:
@@ -60,12 +71,22 @@ class EicrProcessor:
             )
             return candidates
 
-        for _ in nodes:
+        for node in nodes:
+            if not isinstance(node, etree._Element):
+                # The base xpath can select attribute or text nodes (lxml smart
+                # strings), which cannot anchor a relative sub-xpath — calling
+                # the evaluator on one raises TypeError, not XPathError. The old
+                # absolute-path evaluation returned no matches here, so count
+                # each sub-xpath as candidate-less and move on.
+                no_candidate_count += len(sub_xpaths)
+                continue
             for sub_xpath in sub_xpaths:
+                # Absolute path kept only for error-log payloads; extraction
+                # evaluates the sub-xpath relative to the matched node.
                 full_xpath = f"{base_xpath}/{sub_xpath}"
 
                 try:
-                    sub_nodes = self._get_by_xpath(full_xpath)
+                    sub_nodes = _sub_xpath_evaluator(sub_xpath)(node)
                 except etree.XPathError:
                     extraction_error_count += 1
                     self._log_text_candidate_extraction_error(
