@@ -22,10 +22,6 @@ jobs:
   update_terminologies:
     name: Update Terminologies
     runs-on: ubuntu-latest
-    env:
-      # Access to the public LOINC API endpoints.
-      LOINC_USER_ID: ${{ secrets.LOINC_USER_ID }}
-      LOINC_PWD: ${{ secrets.LOINC_PWD }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -56,4 +52,7 @@ jobs:
         id: terminology-update
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # Access to the public LOINC API endpoints.
+          LOINC_USERNAME: ${{ secrets.LOINC_USER_ID }}
+          LOINC_PWD: ${{ secrets.LOINC_PWD }}
         run: uv run python .github/scripts/terminology_maintenance.py
