@@ -28,7 +28,7 @@ jobs:
       LOINC_PWD: ${{ secrets.LOINC_PWD }}
     steps:
       - name: Checkout
-        uses: actions/checkout@a3ad15b2bb5afbdf48ba1a610add95aeb26a8060 # v7.0.0
+        uses: actions/checkout@2af686b6be8b264699bc3f0ee97d861c4605c7d5 # v7.0.0
         with:
           fetch-depth: 2
 
