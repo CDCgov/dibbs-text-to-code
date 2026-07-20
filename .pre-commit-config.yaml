@@ -13,14 +13,14 @@ repos:
           - --unsafe
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.22 # Ruff version — keep in sync with the ruff pin in pyproject.toml/uv.lock
+    rev: v0.15.22
     hooks:
       - id: ruff-check # Run the linter
         args: [--fix]
       - id: ruff-format # Run the formatter
 
   - repo: https://github.com/JoC0de/pre-commit-prettier
-    rev: v3.8.1
+    rev: v3.9.5
     hooks:
       - id: prettier
 

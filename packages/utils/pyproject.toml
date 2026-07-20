@@ -1,7 +1,6 @@
 [project]
 name = "utils"
 version = "0.1.0"
-description = "Environment-variable and LOINC text-processing helpers shared across packages"
 dependencies = []
 
 [build-system]

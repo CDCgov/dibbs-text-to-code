@@ -1,7 +1,6 @@
 [project]
 name = "validation"
 version = "0.1.0"
-description = "Schematron-based eICR validation using Saxon/C and SchXSLT"
 readme = "README.md"
 dependencies = ["saxonche>=12.9.0"]
 
