@@ -185,6 +185,43 @@ variable "augmentation_lambda_image_tag" {
   description = "The image tag for the augmentation Lambda container image in ECR"
 }
 
+### Demo Frontend + API Variables
+variable "api_lambda_function_name" {
+  type        = string
+  default     = "ttc-api-lambda"
+  description = "The name of the synchronous demo API lambda function"
+}
+
+variable "api_lambda_memory_size" {
+  type        = number
+  default     = 3008
+  description = "Memory allocation in MB for the demo API lambda. Matches the main TTC lambda since the same retriever/reranker models are loaded at startup."
+}
+
+variable "api_lambda_timeout" {
+  type        = number
+  default     = 120
+  description = "Timeout in seconds for the demo API lambda. CloudFront stops waiting at 60s, but a longer timeout lets a cold-started invocation finish loading models so an immediate retry hits a warm container."
+}
+
+variable "demo_frontend_bucket_name" {
+  type        = string
+  default     = "dibbs-ttc-demo-frontend"
+  description = "The name of the private S3 bucket that stores the static demo frontend files"
+}
+
+variable "demo_auth_username" {
+  type        = string
+  default     = "dibbs"
+  description = "Username for the Basic auth prompt on the demo CloudFront distribution"
+}
+
+variable "demo_auth_password" {
+  type        = string
+  sensitive   = true
+  description = "Password for the Basic auth prompt on the demo CloudFront distribution. No default; set via TF_VAR_demo_auth_password (in CI, from the DEMO_AUTH_PASSWORD GitHub secret)."
+}
+
 ### Debug Access Variables (temporary — revert when done)
 variable "debug_allowed_ips" {
   description = "CIDR blocks permitted to hit the public OpenSearch endpoint with the debug IAM principals. Used only while vpc_options is stripped from aws_opensearch_domain.os."

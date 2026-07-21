@@ -36,6 +36,8 @@ jobs:
       TF_VAR_debug_iam_principals: ${{ secrets.DEBUG_IAM_PRINCIPALS }}
       TF_VAR_slack_team_id: ${{ secrets.SLACK_SKYLIGHT_ID }}
       TF_VAR_slack_channel_id: ${{ secrets.SLACK_TTC_ENG_CHANNEL_ID }}
+      # Basic auth credential for the demo CloudFront distribution (no TF default).
+      TF_VAR_demo_auth_password: ${{ secrets.DEMO_AUTH_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

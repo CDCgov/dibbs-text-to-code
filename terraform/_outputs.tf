@@ -48,3 +48,13 @@ output "augmentation_lambda_function_name" {
   value       = aws_lambda_function.augmentation_lambda.function_name
   description = "The name of the augmentation lambda function"
 }
+
+output "demo_url" {
+  value       = "https://${aws_cloudfront_distribution.demo.domain_name}"
+  description = "The CloudFront URL of the TTC demo (Basic auth required)"
+}
+
+output "api_lambda_function_url" {
+  value       = aws_lambda_function_url.api.function_url
+  description = "Direct Function URL of the demo API lambda (IAM-auth; only invokable through CloudFront)"
+}
