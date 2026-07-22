@@ -82,6 +82,16 @@ resource "aws_lambda_permission" "cloudfront_invoke_api_url" {
   function_url_auth_type = "AWS_IAM"
 }
 
+# Since October 2025, OAC-signed requests are rejected with a 403 unless the
+# CloudFront service principal also holds lambda:InvokeFunction.
+resource "aws_lambda_permission" "cloudfront_invoke_api_function" {
+  statement_id  = "AllowCloudFrontOACInvokeFunction"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api_lambda.function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.demo.arn
+}
+
 #############
 # Frontend S3 Bucket
 #############
@@ -224,8 +234,10 @@ resource "aws_cloudfront_distribution" "demo" {
       https_port             = 443
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
-      # A cold start loads both models (~10-30s); 60s is the maximum wait
-      # CloudFront allows without a quota increase.
+      # A cold start loads both models (>60s even at high memory); 60s is the
+      # maximum wait CloudFront allows without a quota increase, so the first
+      # request may 504 while the container warms — the frontend surfaces a
+      # "try again in ~30 seconds" hint for this case.
       origin_read_timeout      = 60
       origin_keepalive_timeout = 5
     }

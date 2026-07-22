@@ -104,14 +104,14 @@ Environment variables injected at deploy time: `S3_BUCKET`, `AUGMENTED_EICR_PREF
 
 #### Demo API Lambda (`ttc-api-lambda`, `demo.tf`)
 
-Serves the interactive demo (see below). Built from the **same container image** as the main TTC Lambda — `image_config.command` overrides the CMD to `text_to_code_lambda.api_handler.handler`, so both Lambdas roll forward together whenever `ttc_lambda_image_tag` changes. It exposes a Lambda Function URL with `AWS_IAM` auth; only CloudFront can invoke it (via an Origin Access Control and a `lambda:InvokeFunctionUrl` permission scoped to the distribution). Its IAM role has OpenSearch access only — the synchronous API never touches S3.
+Serves the interactive demo (see below). Built from the **same container image** as the main TTC Lambda — `image_config.command` overrides the CMD to `text_to_code_lambda.api_handler.handler`, so both Lambdas roll forward together whenever `ttc_lambda_image_tag` changes. It exposes a Lambda Function URL with `AWS_IAM` auth; only CloudFront can invoke it (via an Origin Access Control plus `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction` permissions scoped to the distribution — since October 2025, OAC requires both actions). Its IAM role has OpenSearch access only — the synchronous API never touches S3.
 
 ### Demo Frontend (`demo.tf`)
 
 A CloudFront distribution serves the static demo page (`frontend/`) and the synchronous API from one origin:
 
 - **Default behavior** → private S3 bucket (`dibbs-ttc-demo-frontend`, Origin Access Control, all public access blocked) holding `index.html`, `app.js`, and `styles.css`, uploaded by Terraform as `aws_s3_object` resources whenever the files change. Caching is disabled (managed `CachingDisabled` policy), so no invalidations are needed.
-- **`/text-to-code` behavior** → the demo API Lambda's Function URL. Because the page and API share an origin, no CORS configuration is involved. The origin read timeout is 60s (CloudFront's max without a quota increase); a cold start loads the ML models (~10-30s), so the first request after idle may still time out and succeed on retry.
+- **`/text-to-code` behavior** → the demo API Lambda's Function URL. Because the page and API share an origin, no CORS configuration is involved. The origin read timeout is 60s (CloudFront's max without a quota increase); a cold start loads the ML models (longer than 60s), so the first request after idle times out at CloudFront while the Lambda finishes warming, and a retry ~30s later hits the warm container.
 - **Basic auth**: a CloudFront Function (`ttc-demo-basic-auth`, viewer-request on both behaviors) requires a username/password before serving anything. The credential comes from `demo_auth_username` / `demo_auth_password` (the password has no default and is supplied in CI via the `DEMO_AUTH_PASSWORD` GitHub Actions secret → `TF_VAR_demo_auth_password`). After validating, the function strips the `Authorization` header so the Lambda OAC can attach its own SigV4 signature.
 
 The demo URL is exported as the `demo_url` output.

@@ -194,14 +194,14 @@ variable "api_lambda_function_name" {
 
 variable "api_lambda_memory_size" {
   type        = number
-  default     = 3008
-  description = "Memory allocation in MB for the demo API lambda. Matches the main TTC lambda since the same retriever/reranker models are loaded at startup."
+  default     = 10240
+  description = "Memory allocation in MB for the demo API lambda. Lambda CPU scales with memory, and at 3008 MB loading the retriever/reranker models takes over 120s; 10240 MB (~6 vCPUs) is needed to finish a cold start in a tolerable window."
 }
 
 variable "api_lambda_timeout" {
   type        = number
-  default     = 120
-  description = "Timeout in seconds for the demo API lambda. CloudFront stops waiting at 60s, but a longer timeout lets a cold-started invocation finish loading models so an immediate retry hits a warm container."
+  default     = 300
+  description = "Timeout in seconds for the demo API lambda. CloudFront stops waiting at 60s, but a longer timeout lets a cold-started invocation finish loading models so an immediate retry hits a warm container. Must comfortably exceed worst-case model load (measured >120s at 3008 MB)."
 }
 
 variable "demo_frontend_bucket_name" {
