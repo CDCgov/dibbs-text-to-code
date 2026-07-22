@@ -93,6 +93,40 @@ resource "aws_lambda_permission" "cloudfront_invoke_api_function" {
 }
 
 #############
+# Scheduled warmer
+#
+# A cold start streams ~2 GB of model weights from the lazily-loaded container
+# image, which takes several minutes — far past CloudFront's 60s origin read
+# timeout, so a cold demo request can never succeed directly. This scheduled
+# invoke runs a real single-input inference every few minutes to keep one
+# execution environment warm (and its OpenSearch connection and model caches
+# hot), so interactive requests respond in seconds.
+#############
+resource "aws_cloudwatch_event_rule" "api_lambda_warmer" {
+  name                = "ttc-api-lambda-warmer"
+  description         = "Keeps the demo API lambda warm so requests fit CloudFront's 60s origin timeout"
+  schedule_expression = "rate(4 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "api_lambda_warmer" {
+  rule = aws_cloudwatch_event_rule.api_lambda_warmer.name
+  arn  = aws_lambda_function.api_lambda.arn
+
+  # Mimics a Function URL POST so the handler runs a genuine inference.
+  input = jsonencode({
+    body = jsonencode({ inputs = ["Glucose measurement"] })
+  })
+}
+
+resource "aws_lambda_permission" "eventbridge_invoke_api_warmer" {
+  statement_id  = "AllowEventBridgeWarmerInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api_lambda.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.api_lambda_warmer.arn
+}
+
+#############
 # Frontend S3 Bucket
 #############
 resource "aws_s3_bucket" "demo_frontend" {
