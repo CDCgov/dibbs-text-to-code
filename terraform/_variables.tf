@@ -204,6 +204,12 @@ variable "api_lambda_timeout" {
   description = "Timeout in seconds for the demo API lambda. CloudFront stops waiting at 60s, but a longer timeout lets a cold-started invocation finish loading models so an immediate retry hits a warm container. Must comfortably exceed worst-case model load (measured >120s at 3008 MB)."
 }
 
+variable "demo_domain_name" {
+  type        = string
+  default     = "ttc.dibbs.tools"
+  description = "Custom domain for the demo CloudFront distribution. DNS for dibbs.tools is managed in Azure DNS (zone dibbs.tools, resource group dibbs-global-demo); the ACM validation CNAME and the alias record live there."
+}
+
 variable "demo_frontend_bucket_name" {
   type        = string
   default     = "dibbs-ttc-demo-frontend"

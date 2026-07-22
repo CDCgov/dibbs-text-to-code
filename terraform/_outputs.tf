@@ -50,8 +50,24 @@ output "augmentation_lambda_function_name" {
 }
 
 output "demo_url" {
+  value       = "https://${var.demo_domain_name}"
+  description = "The URL of the TTC demo (Basic auth required)"
+}
+
+output "demo_cloudfront_url" {
   value       = "https://${aws_cloudfront_distribution.demo.domain_name}"
-  description = "The CloudFront URL of the TTC demo (Basic auth required)"
+  description = "The distribution's default cloudfront.net URL for the TTC demo"
+}
+
+output "demo_cert_validation_records" {
+  value = [
+    for dvo in aws_acm_certificate.demo.domain_validation_options : {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  ]
+  description = "DNS records to create in the dibbs.tools zone (Azure DNS) to validate the demo ACM certificate"
 }
 
 output "api_lambda_function_url" {

@@ -187,6 +187,32 @@ resource "aws_s3_object" "demo_frontend" {
 }
 
 #############
+# Custom domain certificate
+#
+# ttc.dibbs.tools points at the distribution via a CNAME in Azure DNS (zone
+# dibbs.tools, resource group dibbs-global-demo). The ACM validation CNAME must
+# also be created in that zone — see the demo_cert_validation_records output.
+# The validation resource below blocks `terraform apply` until the record
+# exists and ACM issues the certificate.
+#############
+resource "aws_acm_certificate" "demo" {
+  provider          = aws.us_east_1
+  domain_name       = var.demo_domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = { Name = "ttc-demo-cert" }
+}
+
+resource "aws_acm_certificate_validation" "demo" {
+  provider        = aws.us_east_1
+  certificate_arn = aws_acm_certificate.demo.arn
+}
+
+#############
 # CloudFront
 #############
 data "aws_cloudfront_cache_policy" "caching_disabled" {
@@ -251,6 +277,7 @@ resource "aws_cloudfront_distribution" "demo" {
   comment             = "TTC demo frontend and synchronous API"
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
+  aliases             = [var.demo_domain_name]
 
   origin {
     origin_id                = "demo-frontend-s3"
@@ -314,7 +341,9 @@ resource "aws_cloudfront_distribution" "demo" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.demo.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = local.tags
