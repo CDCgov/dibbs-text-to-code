@@ -8,6 +8,33 @@ variable "slack_channel_id" {
   type        = string
 }
 
+variable "gitlab_oidc_provider_arn" {
+  description = "ARN of the GitLab OIDC identity provider configured in the APHL AWS account."
+  type        = string
+}
+
+variable "gitlab_oidc_provider_host" {
+  description = "GitLab OIDC provider hostname without the URL scheme."
+  type        = string
+}
+
+variable "gitlab_oidc_audience" {
+  description = "Audience configured for the GitLab OIDC identity provider."
+  type        = string
+  default     = "sts.amazonaws.com"
+}
+
+variable "gitlab_project_path" {
+  description = "APHL GitLab project path authorized to assume the TTC re-ingestion role."
+  type        = string
+}
+
+variable "gitlab_oidc_protected_refs_only" {
+  description = "Whether the GitLab OIDC provider supports restricting role assumption to protected refs."
+  type        = bool
+  default     = false
+}
+
 locals {
   vpc_name = "${var.project}-${var.owner}-${terraform.workspace}"
   tags = {
@@ -152,6 +179,19 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
     resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
   }
 
+  statement {
+    sid    = "AllowTtcReingestionGitLabRole"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.ttc_reingestion_gitlab_role.arn]
+    }
+    actions = ["es:ESHttpGet"]
+    resources = [
+      "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_count"
+    ]
+  }
+
   dynamic "statement" {
     for_each = length(var.debug_allowed_ips) > 0 && length(var.debug_iam_principals) > 0 ? [1] : []
     content {
@@ -276,6 +316,138 @@ data "aws_iam_policy_document" "lambda_assume_role" {
     }
     actions = ["sts:AssumeRole"]
   }
+}
+
+data "aws_iam_policy_document" "ttc_reingestion_gitlab_assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.gitlab_oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${var.gitlab_oidc_provider_host}:aud"
+      values   = [var.gitlab_oidc_audience]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "${var.gitlab_oidc_provider_host}:sub"
+      values = [
+        "project_path:${var.gitlab_project_path}:ref_type:*:ref:*"
+      ]
+    }
+
+    dynamic "condition" {
+      for_each = var.gitlab_oidc_protected_refs_only ? [1] : []
+
+      content {
+        test     = "StringEquals"
+        variable = "${var.gitlab_oidc_provider_host}:ref_protected"
+        values   = ["true"]
+      }
+    }
+  }
+}
+
+resource "aws_iam_role" "ttc_reingestion_gitlab_role" {
+  name               = "ttc-reingestion-gitlab-ci-role"
+  assume_role_policy = data.aws_iam_policy_document.ttc_reingestion_gitlab_assume_role.json
+  tags               = local.tags
+}
+
+resource "aws_iam_role_policy" "ttc_reingestion_gitlab_policy" {
+  name = "ttc-reingestion-gitlab-ci-inline-policy"
+  role = aws_iam_role.ttc_reingestion_gitlab_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ManageTtcEventSourceMapping"
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateEventSourceMapping",
+          "lambda:GetEventSourceMapping"
+        ]
+        Resource = aws_lambda_event_source_mapping.ttc_input_sqs.arn
+      },
+      {
+        Sid    = "ManageTtcFunctionConcurrency"
+        Effect = "Allow"
+        Action = [
+          "lambda:PutFunctionConcurrency",
+          "lambda:GetFunctionConcurrency",
+          "lambda:DeleteFunctionConcurrency"
+        ]
+        Resource = aws_lambda_function.lambda.arn
+      },
+      {
+        Sid      = "InvokeTtcIndexLambda"
+        Effect   = "Allow"
+        Action   = ["lambda:InvokeFunction"]
+        Resource = aws_lambda_function.index_lambda.arn
+      },
+      {
+        Sid      = "ListReingestionPrefixes"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = "arn:aws:s3:::${var.s3_bucket}"
+        Condition = {
+          StringLike = {
+            "s3:prefix" = [
+              "ingestion/*",
+              "reingestion/*",
+              "ingestion-backup-*/*"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "ManageReingestionObjects"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/ingestion/*",
+          "arn:aws:s3:::${var.s3_bucket}/reingestion/*",
+          "arn:aws:s3:::${var.s3_bucket}/ingestion-backup-*/*"
+        ]
+      },
+      {
+        Sid      = "ReadTtcOpenSearchCount"
+        Effect   = "Allow"
+        Action   = ["es:ESHttpGet"]
+        Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_count"
+      },
+      {
+        Sid      = "ReadTtcQueueAttributes"
+        Effect   = "Allow"
+        Action   = ["sqs:GetQueueAttributes"]
+        Resource = [
+          aws_sqs_queue.ttc_input_queue.arn,
+          aws_sqs_queue.ttc_input_dlq.arn
+        ]
+      },
+      {
+        Sid    = "ManageTtcDlqRedrive"
+        Effect = "Allow"
+        Action = [
+          "sqs:StartMessageMoveTask",
+          "sqs:CancelMessageMoveTask",
+          "sqs:ListMessageMoveTasks"
+        ]
+        Resource = aws_sqs_queue.ttc_input_dlq.arn
+      }
+    ]
+  })
 }
 
 # TTC Lambda Role
@@ -986,4 +1158,9 @@ resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
       }
     ]
   })
+}
+
+output "ttc_reingestion_gitlab_role_arn" {
+  description = "IAM role ARN for the APHL GitLab TTC re-ingestion pipeline."
+  value       = aws_iam_role.ttc_reingestion_gitlab_role.arn
 }
