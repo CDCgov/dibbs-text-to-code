@@ -122,6 +122,18 @@ def test_results_for_inputs_skips_blank_without_querying(mocker):
     code_for_text_mock.assert_called_once()
 
 
+def test_results_for_inputs_returns_when_all_inputs_are_blank(mocker):
+    """If all inputs are blank, the pipeline is never invoked."""
+    embed_batch_mock = mocker.patch.object(service, "embed_batch")
+    code_for_text_mock = mocker.patch.object(service, "code_for_text")
+
+    results = service.results_for_inputs(["", "   "], DataField.LAB_TEST_NAME_ORDERED, MagicMock())
+
+    assert [result["matched"] for result in results] == [False, False]
+    embed_batch_mock.assert_not_called()
+    code_for_text_mock.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [

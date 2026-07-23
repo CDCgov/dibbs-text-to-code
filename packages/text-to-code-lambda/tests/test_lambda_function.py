@@ -835,6 +835,96 @@ class TestHandler:
             "/ClinicalDocument[1]/observation[2]",
         ]
 
+    def test_pipeline_raises_when_selected_candidate_has_no_cache_key(
+        self,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="missing cache key", xpath=LabXPaths.CODE_DISPLAY_NAME)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=[error],
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            return_value=candidate,
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.compute_cache_key",
+            return_value=None,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing cache key for candidate: missing cache key",
+        ):
+            lambda_function._process_record_pipeline(
+                "persistence-id",
+                mock_opensearch,
+                S3_BUCKET,
+            )
+
+    def test_pipeline_raises_when_cache_miss_candidate_has_no_embedding(
+        self,
+        mock_aws_setup,
+        mock_opensearch,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="missing embedding", xpath=LabXPaths.CODE_DISPLAY_NAME)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=[error],
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            return_value=candidate,
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.get_cached_results",
+            return_value={},
+        )
+        mocker.patch.object(
+            lambda_function,
+            "embed_batch",
+            return_value=[mocker.MagicMock(tolist=lambda: None)],
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._record_cache_metric",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing embedding for cache-miss candidate: missing embedding",
+        ):
+            lambda_function._process_record_pipeline(
+                "persistence-id",
+                mock_opensearch,
+                S3_BUCKET,
+            )
+
     def test_handler_malformed_eicr_with_no_schematron_issues(
         self,
         example_sqs_event,
