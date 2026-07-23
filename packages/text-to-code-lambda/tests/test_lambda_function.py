@@ -661,10 +661,12 @@ class TestHandler:
         )
         snapshot.assert_match(ttc_metadata_output, "no_opensearch_hits_none_metadata_output.json")
 
-    def test_pipeline_batches_cache_lookups_and_embeddings_across_errors(
+    def test_handler_batches_cache_lookups_and_embeddings_across_errors(
         self,
+        example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
+        mock_lambda_context,
         mocker,
     ):
         """Multiple errors share one mget and one batched encode covering only the misses."""
@@ -731,11 +733,11 @@ class TestHandler:
         mocker.patch("text_to_code_lambda.lambda_function.rerank", return_value=ranked_results)
         put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
         metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
-        mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+        save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
 
-        ttc_output = lambda_function._process_record_pipeline(
-            "persistence-id", mock_opensearch, S3_BUCKET
-        )
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         # One mget covering both keys, in error order.
         get_cached_results_mock.assert_called_once()
@@ -754,16 +756,20 @@ class TestHandler:
         put_cached_mock.assert_called_once()
         assert put_cached_mock.call_args.kwargs["cache_key"] == miss_key
 
+        ttc_output = save_outputs_mock.call_args.args[2]
+
         # Both errors produced translations, in the original error order.
         assert [c.schematron_error_xpath for c in ttc_output.nonstandard_codes] == [
             "/ClinicalDocument[1]/observation[1]",
             "/ClinicalDocument[1]/observation[2]",
         ]
 
-    def test_pipeline_reuses_resolution_for_duplicate_candidates(
+    def test_handler_reuses_resolution_for_duplicate_candidates(
         self,
+        example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
+        mock_lambda_context,
         mocker,
     ):
         """Errors sharing a candidate embed, search, and cache-write once.
@@ -812,11 +818,11 @@ class TestHandler:
         )
         put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
         metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
-        mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+        save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
 
-        ttc_output = lambda_function._process_record_pipeline(
-            "persistence-id", mock_opensearch, S3_BUCKET
-        )
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert resp == NO_BATCH_ITEM_FAILURES
 
         # The duplicate is embedded, searched, and cache-written exactly once.
         embed_batch_mock.assert_called_once_with(["repeated input"])
@@ -829,16 +835,20 @@ class TestHandler:
             lambda_function.HitValue.hit,
         ]
 
+        ttc_output = save_outputs_mock.call_args.args[2]
+
         # Both errors still produce translations, in the original error order.
         assert [c.schematron_error_xpath for c in ttc_output.nonstandard_codes] == [
             "/ClinicalDocument[1]/observation[1]",
             "/ClinicalDocument[1]/observation[2]",
         ]
 
-    def test_pipeline_raises_when_selected_candidate_has_no_cache_key(
+    def test_handler_returns_passthrough_when_selected_candidate_has_no_cache_key(
         self,
+        example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
+        mock_lambda_context,
         mocker,
     ):
         error = SchematronErrorDetail(
@@ -849,10 +859,6 @@ class TestHandler:
         )
         candidate = Candidate(value="missing cache key", xpath=LabXPaths.CODE_DISPLAY_NAME)
 
-        mocker.patch(
-            "text_to_code_lambda.lambda_function._load_original_eicr",
-            return_value="<ClinicalDocument />",
-        )
         mocker.patch(
             "text_to_code_lambda.lambda_function._load_schematron_data_fields",
             return_value=[error],
@@ -866,20 +872,34 @@ class TestHandler:
             return_value=None,
         )
 
-        with pytest.raises(
-            ValueError,
-            match="Missing cache key for candidate: missing cache key",
-        ):
-            lambda_function._process_record_pipeline(
-                "persistence-id",
-                mock_opensearch,
-                S3_BUCKET,
-            )
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
 
-    def test_pipeline_raises_when_cache_miss_candidate_has_no_embedding(
+        assert resp == _expected_handler_response(
+            failures=[
+                {
+                    "error": "Missing cache key for candidate: missing cache key",
+                    "error_type": "ValueError",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": True,
+                    "sqs_retry": False,
+                }
+            ],
+            successes=[
+                {
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
+        assert mock_opensearch.search.call_count == 0
+
+    def test_handler_returns_passthrough_when_cache_miss_candidate_has_no_embedding(
         self,
+        example_sqs_event,
         mock_aws_setup,
         mock_opensearch,
+        mock_lambda_context,
         mocker,
     ):
         error = SchematronErrorDetail(
@@ -890,10 +910,6 @@ class TestHandler:
         )
         candidate = Candidate(value="missing embedding", xpath=LabXPaths.CODE_DISPLAY_NAME)
 
-        mocker.patch(
-            "text_to_code_lambda.lambda_function._load_original_eicr",
-            return_value="<ClinicalDocument />",
-        )
         mocker.patch(
             "text_to_code_lambda.lambda_function._load_schematron_data_fields",
             return_value=[error],
@@ -915,15 +931,27 @@ class TestHandler:
             "text_to_code_lambda.lambda_function._record_cache_metric",
         )
 
-        with pytest.raises(
-            ValueError,
-            match="Missing embedding for cache-miss candidate: missing embedding",
-        ):
-            lambda_function._process_record_pipeline(
-                "persistence-id",
-                mock_opensearch,
-                S3_BUCKET,
-            )
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert resp == _expected_handler_response(
+            failures=[
+                {
+                    "error": "Missing embedding for cache-miss candidate: missing embedding",
+                    "error_type": "ValueError",
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "passthrough_written": True,
+                    "sqs_retry": False,
+                }
+            ],
+            successes=[
+                {
+                    "message_id": example_sqs_event["Records"][0]["messageId"],
+                    "status": "passthrough_written",
+                }
+            ],
+            status="success_with_passthrough",
+        )
+        assert mock_opensearch.search.call_count == 0
 
     def test_handler_malformed_eicr_with_no_schematron_issues(
         self,
