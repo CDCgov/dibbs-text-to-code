@@ -403,6 +403,16 @@ class _ErrorWork:
     embedding: list[float] | None = None
 
 
+@dataclass
+class _CandidateResolution:
+    """Resolved TTC result for one selected candidate."""
+
+    new_translation: Code | None = None
+    unmatched_message: str | None = None
+    opensearch_retrieved_scores: OpenSearchResult | None = None
+    ranked_results: list[ScoredResult] | None = None
+
+
 def _match_candidate(
     selected_candidate: Candidate,
     embedding: list[float],
@@ -485,7 +495,208 @@ def _match_candidate(
     return new_translation, unmatched_message, opensearch_retrieved_scores, ranked_results
 
 
-def _process_record_pipeline(  # noqa: PLR0912, PLR0915
+def _build_error_work_items(
+    processor: eicr_processor.EicrProcessor,
+    schematron_data_fields: list[SchematronErrorDetail],
+) -> list[_ErrorWork]:
+    """Extract and select a candidate for each Schematron error.
+
+    :param processor: The eICR processor instance.
+    :param schematron_data_fields: The list of Schematron errors to process.
+    :return: A list of _ErrorWork items, one per Schematron error.
+    """
+    # Phase 1: extract and select a candidate per error (CPU only).
+    work_items: list[_ErrorWork] = []
+    for error in schematron_data_fields:
+        text_candidates = processor.get_text_candidates(error.error_context, error.field)
+
+        logger.info(
+            "Evaluating candidates and selecting relevant text for each error in the eICR",
+            status="processing",
+        )
+
+        selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
+        work = _ErrorWork(error=error, selected_candidate=selected_candidate)
+        if selected_candidate:
+            work.cache_key = compute_cache_key(selected_candidate.value, error.field)
+        work_items.append(work)
+
+    return work_items
+
+
+def _load_cached_results(
+    work_items: list[_ErrorWork],
+    opensearch_client: OpenSearch,
+) -> None:
+    """Load all cached results for the selected candidates.
+
+    :param work_items: The list of _ErrorWork items to process.
+    :param opensearch_client: The OpenSearch client.
+    """
+    # Phase 2: before we run the full embedding, searching, and reranking
+    # process, check all candidates against the result cache in one mget.
+    cache_keys = [work.cache_key for work in work_items if work.cache_key is not None]
+    if not cache_keys:
+        return
+
+    cached_results = get_cached_results(opensearch_client, RESULT_CACHE_INDEX, cache_keys)
+    for work in work_items:
+        if work.cache_key is not None:
+            work.cached_result = cached_results.get(work.cache_key)
+
+
+def _embed_cache_misses(work_items: list[_ErrorWork]) -> None:
+    """Embed the first occurrence of each cache-miss candidate.
+
+    :param work_items: The list of _ErrorWork items to process.
+    """
+    # Phase 3: embed the cache-miss candidates in one batched encode call.
+    # Errors that share a cache key share one resolution in phase 4, so
+    # only the first occurrence of each missing key is embedded.
+    cache_misses: list[_ErrorWork] = []
+    miss_texts: list[str] = []
+    miss_keys: set[str] = set()
+    for work in work_items:
+        if work.selected_candidate is None or work.cached_result is not None:
+            continue
+        if work.cache_key is None or work.cache_key in miss_keys:
+            continue
+        miss_keys.add(work.cache_key)
+        cache_misses.append(work)
+        miss_texts.append(work.selected_candidate.value)
+
+    if not cache_misses:
+        return
+
+    logger.info(
+        "Embedding the relevant text strings for each error in the eICR",
+        status="processing",
+    )
+    embeddings = embed_batch(miss_texts)
+    for work, vector in zip(cache_misses, embeddings, strict=True):
+        work.embedding = vector.tolist()
+
+
+def _resolve_work_item(
+    work: _ErrorWork,
+    resolved_misses: dict[str, _CandidateResolution],
+    opensearch_client: OpenSearch,
+) -> _CandidateResolution:
+    """Resolve one error from the cache or through OpenSearch and reranking.
+
+    :param work: The _ErrorWork item to resolve.
+    :param resolved_misses: A dict of cache-miss resolutions, keyed by cache key.
+    :param opensearch_client: The OpenSearch client.
+    :return: The resolved _CandidateResolution for the error.
+    """
+    selected_candidate = work.selected_candidate
+    if selected_candidate is None:
+        return _CandidateResolution(unmatched_message="No candidate found.")
+
+    # We've got a hit--no need to run our usual processes, we'll
+    # just pull out the fields we want to use directly
+    if work.cached_result is not None:
+        logger.info("Cache hit, retrieving cached results", status="processing")
+        _record_cache_metric(HitValue.hit)
+        cached_result = work.cached_result
+        return _CandidateResolution(
+            new_translation=cached_result.loinc_code,
+            opensearch_retrieved_scores=cached_result.opensearch_retrieved_scores,
+            ranked_results=cached_result.reranker_processed_results["results"],
+        )
+
+    # Cache miss, so run everything normally, and then finally store
+    # the prediction in the cache for future use
+    if work.cache_key is None:
+        # Should be unreachable: phase 1 computes a key for every candidate.
+        raise ValueError(f"Missing cache key for candidate: {selected_candidate.value}")
+
+    if work.cache_key in resolved_misses:
+        resolution = resolved_misses[work.cache_key]
+        _record_cache_metric(
+            HitValue.hit if resolution.new_translation is not None else HitValue.miss
+        )
+        return resolution
+
+    _record_cache_metric(HitValue.miss)
+    if work.embedding is None:
+        # Unreachable: phase 3 embeds every cache-miss candidate.
+        raise ValueError(f"Missing embedding for cache-miss candidate: {selected_candidate.value}")
+
+    (
+        new_translation,
+        unmatched_message,
+        opensearch_retrieved_scores,
+        ranked_results,
+    ) = _match_candidate(
+        selected_candidate,
+        work.embedding,
+        work.error.field,
+        work.cache_key,
+        opensearch_client,
+    )
+    resolution = _CandidateResolution(
+        new_translation=new_translation,
+        unmatched_message=unmatched_message,
+        opensearch_retrieved_scores=opensearch_retrieved_scores,
+        ranked_results=ranked_results,
+    )
+    resolved_misses[work.cache_key] = resolution
+    return resolution
+
+
+def _resolve_error_work_items(
+    work_items: list[_ErrorWork],
+    opensearch_client: OpenSearch,
+) -> tuple[list[TTCSchematronIssueDetail], list[NonstandardCodeInstance]]:
+    """Resolve all errors and assemble TTC details in their original order.
+
+    :param work_items: The list of _ErrorWork items to process.
+    :param opensearch_client: The OpenSearch client.
+    :return: A tuple of (list of TTCSchematronIssueDetail, list of NonstandardCodeInstance).
+    """
+    # Phase 4: resolve each error — from the cache when hit, otherwise via
+    # KNN search + rerank — and assemble details in the original error order.
+    # Duplicate candidates reuse the first occurrence's resolution, mirroring
+    # the sequential flow where later duplicates hit the cache entry written
+    # moments earlier — including in the cache metric, which counts a reused
+    # successful match as a hit.
+    resolved_misses: dict[str, _CandidateResolution] = {}
+    issue_details: list[TTCSchematronIssueDetail] = []
+    nonstandard_code_replacements: list[NonstandardCodeInstance] = []
+
+    for work in work_items:
+        error = work.error
+        resolution = _resolve_work_item(work, resolved_misses, opensearch_client)
+
+        if resolution.new_translation is not None:
+            nonstandard_code_replacements.append(
+                NonstandardCodeInstance(
+                    schematron_error_xpath=error.error_context,
+                    field_type=error.field,
+                    new_translation=resolution.new_translation,
+                ),
+            )
+
+        issue_details.append(
+            TTCSchematronIssueDetail(
+                candidate=work.selected_candidate,
+                field_type=error.field,
+                issue_context=error.error_context,
+                issue_id=error.error_id,
+                issue_message=error.error_message,
+                issue_test=error.error_test,
+                unmatched_reason=resolution.unmatched_message,
+                new_translation=resolution.new_translation,
+                opensearch_retrieved_scores=resolution.opensearch_retrieved_scores,
+                reranker_processed_results=resolution.ranked_results,
+            ),
+        )
+
+    return issue_details, nonstandard_code_replacements
+
+
+def _process_record_pipeline(
     persistence_id: str,
     opensearch_client: OpenSearch,
     bucket_name: str,
@@ -514,155 +725,18 @@ def _process_record_pipeline(  # noqa: PLR0912, PLR0915
     processor = eicr_processor.EicrProcessor(original_eicr_content)
 
     schematron_data_fields = _load_schematron_data_fields(persistence_id, bucket_name)
-    ttc_schematron_issues_details = None
+    ttc_schematron_issues_details: list[TTCSchematronIssueDetail] | None = None
     nonstandard_code_replacements: list[NonstandardCodeInstance] = []
+    passthrough_reason: PassthroughReason | None = None
+
     if schematron_data_fields:
-        ttc_schematron_issues_details: list[TTCSchematronIssueDetail] = []
-        passthrough_reason: PassthroughReason | None = None
-
-        # Phase 1: extract and select a candidate per error (CPU only).
-        work_items: list[_ErrorWork] = []
-        for error in schematron_data_fields:
-            text_candidates = processor.get_text_candidates(error.error_context, error.field)
-
-            logger.info(
-                "Evaluating candidates and selecting relevant text for each error in the eICR",
-                status="processing",
-            )
-
-            selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
-            work = _ErrorWork(error=error, selected_candidate=selected_candidate)
-            if selected_candidate:
-                work.cache_key = compute_cache_key(selected_candidate.value, error.field)
-            work_items.append(work)
-
-        # Phase 2: before we run the full embedding, searching, and reranking
-        # process, check all candidates against the result cache in one mget.
-        cache_keys = [work.cache_key for work in work_items if work.cache_key is not None]
-        if cache_keys:
-            cached_results = get_cached_results(opensearch_client, RESULT_CACHE_INDEX, cache_keys)
-            for work in work_items:
-                if work.cache_key is not None:
-                    work.cached_result = cached_results.get(work.cache_key)
-
-        # Phase 3: embed the cache-miss candidates in one batched encode call.
-        # Errors that share a cache key share one resolution in phase 4, so
-        # only the first occurrence of each missing key is embedded.
-        cache_misses: list[_ErrorWork] = []
-        miss_texts: list[str] = []
-        seen_miss_keys: set[str] = set()
-        for work in work_items:
-            if work.selected_candidate is None or work.cached_result is not None:
-                continue
-            if work.cache_key is None or work.cache_key in seen_miss_keys:
-                continue
-            seen_miss_keys.add(work.cache_key)
-            cache_misses.append(work)
-            miss_texts.append(work.selected_candidate.value)
-        if cache_misses:
-            logger.info(
-                "Embedding the relevant text strings for each error in the eICR",
-                status="processing",
-            )
-            embeddings = embed_batch(miss_texts)
-            for work, vector in zip(cache_misses, embeddings, strict=True):
-                work.embedding = vector.tolist()
-
-        # Phase 4: resolve each error — from the cache when hit, otherwise via
-        # KNN search + rerank — and assemble details in the original error order.
-        # Duplicate candidates reuse the first occurrence's resolution, mirroring
-        # the sequential flow where later duplicates hit the cache entry written
-        # moments earlier — including in the cache metric, which counts a reused
-        # successful match as a hit.
-        resolved_misses: dict[
-            str, tuple[Code | None, str | None, OpenSearchResult, list[ScoredResult] | None]
-        ] = {}
-        for work in work_items:
-            error = work.error
-            selected_candidate = work.selected_candidate
-            new_translation = None
-            unmatched_message = None
-            opensearch_retrieved_scores = None
-            ranked_results: list[ScoredResult] | None = None
-
-            if selected_candidate is None:
-                unmatched_message = "No candidate found."
-
-            # We've got a hit--no need to run our usual processes, we'll
-            # just pull out the fields we want to use directly
-            elif work.cached_result is not None:
-                logger.info("Cache hit, retrieving cached results", status="processing")
-                _record_cache_metric(HitValue.hit)
-                cached_result = work.cached_result
-                new_translation = cached_result.loinc_code
-                opensearch_retrieved_scores = cached_result.opensearch_retrieved_scores
-                ranked_results = cached_result.reranker_processed_results["results"]
-
-            # Cache miss, so run everything normally, and then finally store
-            # the prediction in the cache for future use
-            else:
-                if work.cache_key is None:
-                    # Unreachable: phase 1 computes a key for every candidate.
-                    raise ValueError(f"Missing cache key for candidate: {selected_candidate.value}")
-                if work.cache_key in resolved_misses:
-                    (
-                        new_translation,
-                        unmatched_message,
-                        opensearch_retrieved_scores,
-                        ranked_results,
-                    ) = resolved_misses[work.cache_key]
-                    _record_cache_metric(
-                        HitValue.hit if new_translation is not None else HitValue.miss
-                    )
-                else:
-                    _record_cache_metric(HitValue.miss)
-                    if work.embedding is None:
-                        # Unreachable: phase 3 embeds every cache-miss candidate.
-                        raise ValueError(
-                            f"Missing embedding for cache-miss candidate: {selected_candidate.value}"
-                        )
-                    (
-                        new_translation,
-                        unmatched_message,
-                        opensearch_retrieved_scores,
-                        ranked_results,
-                    ) = _match_candidate(
-                        selected_candidate,
-                        work.embedding,
-                        error.field,
-                        work.cache_key,
-                        opensearch_client,
-                    )
-                    resolved_misses[work.cache_key] = (
-                        new_translation,
-                        unmatched_message,
-                        opensearch_retrieved_scores,
-                        ranked_results,
-                    )
-
-            if new_translation is not None:
-                nonstandard_code_replacements.append(
-                    NonstandardCodeInstance(
-                        schematron_error_xpath=error.error_context,
-                        field_type=error.field,
-                        new_translation=new_translation,
-                    ),
-                )
-
-            ttc_schematron_issues_details.append(
-                TTCSchematronIssueDetail(
-                    candidate=selected_candidate,
-                    field_type=error.field,
-                    issue_context=error.error_context,
-                    issue_id=error.error_id,
-                    issue_message=error.error_message,
-                    issue_test=error.error_test,
-                    unmatched_reason=unmatched_message,
-                    new_translation=new_translation,
-                    opensearch_retrieved_scores=opensearch_retrieved_scores,
-                    reranker_processed_results=ranked_results,
-                ),
-            )
+        work_items = _build_error_work_items(processor, schematron_data_fields)
+        _load_cached_results(work_items, opensearch_client)
+        _embed_cache_misses(work_items)
+        (
+            ttc_schematron_issues_details,
+            nonstandard_code_replacements,
+        ) = _resolve_error_work_items(work_items, opensearch_client)
     else:
         passthrough_reason = PassthroughReason.NO_RELEVANT_SCHEMATRON_ERRORS
 
