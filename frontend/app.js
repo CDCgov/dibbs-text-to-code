@@ -22,18 +22,37 @@ function setStep(n) {
 })();
 
 // ── TTC API ──
+// Local dev talks to the FastAPI server from demo.sh; deployed, the page is served by
+// CloudFront and calls the API same-origin (a /text-to-code behavior routes to the lambda).
 // 127.0.0.1 (not "localhost") avoids hitting any IPv6 service that may share port 8080.
-const API_BASE = "http://127.0.0.1:8080";    // local FastAPI dev server (text_to_code_lambda.local_server)
+const IS_LOCAL = ["localhost", "127.0.0.1", ""].includes(location.hostname); // "" = file://
+const API_BASE = IS_LOCAL ? "http://127.0.0.1:8080" : "";
+
+async function sha256Hex(text) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 async function fetchTTC(inputs, dataField) {
-  const resp = await fetch(API_BASE + "/text-to-code", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ inputs, data_field: dataField }),
-  });
+  const body = JSON.stringify({ inputs, data_field: dataField });
+  const headers = { "content-type": "application/json" };
+  if (!IS_LOCAL) {
+    // CloudFront's OAC signs the lambda-origin request but does not compute the POST
+    // payload hash itself; without this header the lambda rejects the request with a 403.
+    headers["x-amz-content-sha256"] = await sha256Hex(body);
+  }
+  const resp = await fetch(API_BASE + "/text-to-code", { method: "POST", headers, body });
   if (!resp.ok) throw new Error("HTTP " + resp.status);
   const data = await resp.json();
   return data.results || [];
+}
+
+function apiErrorMessage(e) {
+  const where = IS_LOCAL ? " at " + API_BASE : "";
+  const coldStartHint = !IS_LOCAL && /50[24]/.test(String(e.message))
+    ? " The service may be starting up — try again in about 30 seconds."
+    : "";
+  return "Could not reach the TTC API" + where + " (" + e.message + ")." + coldStartHint;
 }
 
 // The data_field (DataField enum value) chosen via the radio toggle on each page.
@@ -112,7 +131,7 @@ document.getElementById('demo-run-btn').addEventListener('click', async () => {
       showDemoResult(val, 'No match', '—', '—', 'TTC did not return a confident code for this input.', 'Lab test name');
     }
   } catch (e) {
-    showDemoResult(val, 'Error', '—', '—', 'Could not reach the TTC API at ' + API_BASE + ' (' + e.message + ').', 'Lab test name');
+    showDemoResult(val, 'Error', '—', '—', apiErrorMessage(e), 'Lab test name');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run TTC';
@@ -197,7 +216,7 @@ document.getElementById('run-batch-btn').addEventListener('click', async () => {
     buildValidationTable();
     updateProgress();
   } catch (e) {
-    alert('Could not reach the TTC API at ' + API_BASE + ' (' + e.message + ').');
+    alert(apiErrorMessage(e));
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run TTC on all rows';
