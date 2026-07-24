@@ -185,6 +185,49 @@ variable "augmentation_lambda_image_tag" {
   description = "The image tag for the augmentation Lambda container image in ECR"
 }
 
+### Demo Frontend + API Variables
+variable "api_lambda_function_name" {
+  type        = string
+  default     = "ttc-api-lambda"
+  description = "The name of the synchronous demo API lambda function"
+}
+
+variable "api_lambda_memory_size" {
+  type        = number
+  default     = 10240
+  description = "Memory allocation in MB for the demo API lambda. Lambda CPU scales with memory, and at 3008 MB loading the retriever/reranker models takes over 120s; 10240 MB (~6 vCPUs) is needed to finish a cold start in a tolerable window."
+}
+
+variable "api_lambda_timeout" {
+  type        = number
+  default     = 300
+  description = "Timeout in seconds for the demo API lambda. CloudFront stops waiting at 60s, but a longer timeout lets a cold-started invocation finish loading models so an immediate retry hits a warm container. Must comfortably exceed worst-case model load (measured >120s at 3008 MB)."
+}
+
+variable "demo_domain_name" {
+  type        = string
+  default     = "ttc.dibbs.tools"
+  description = "Custom domain for the demo CloudFront distribution. DNS for dibbs.tools is managed in Azure DNS (zone dibbs.tools, resource group dibbs-global-demo); the ACM validation CNAME and the alias record live there."
+}
+
+variable "demo_frontend_bucket_name" {
+  type        = string
+  default     = "dibbs-ttc-demo-frontend"
+  description = "The name of the private S3 bucket that stores the static demo frontend files"
+}
+
+variable "demo_auth_username" {
+  type        = string
+  default     = "dibbs"
+  description = "Username for the Basic auth prompt on the demo CloudFront distribution"
+}
+
+variable "demo_auth_password" {
+  type        = string
+  sensitive   = true
+  description = "Password for the Basic auth prompt on the demo CloudFront distribution. No default; set via TF_VAR_demo_auth_password (in CI, from the DEMO_AUTH_PASSWORD GitHub secret)."
+}
+
 ### Debug Access Variables (temporary — revert when done)
 variable "debug_allowed_ips" {
   description = "CIDR blocks permitted to hit the public OpenSearch endpoint with the debug IAM principals. Used only while vpc_options is stripped from aws_opensearch_domain.os."
