@@ -495,17 +495,16 @@ def _match_candidate(
     return new_translation, unmatched_message, opensearch_retrieved_scores, ranked_results
 
 
-def _build_error_work_items(
+def _build_schematron_error_work_items(
     processor: eicr_processor.EicrProcessor,
     schematron_data_fields: list[SchematronErrorDetail],
 ) -> list[_ErrorWork]:
-    """Extract and select a candidate for each Schematron error.
+    """Phase 1: extract and select a candidate per error (CPU only).
 
     :param processor: The eICR processor instance.
     :param schematron_data_fields: The list of Schematron errors to process.
     :return: A list of _ErrorWork items, one per Schematron error.
     """
-    # Phase 1: extract and select a candidate per error (CPU only).
     work_items: list[_ErrorWork] = []
     for error in schematron_data_fields:
         text_candidates = processor.get_text_candidates(error.error_context, error.field)
@@ -528,13 +527,13 @@ def _load_cached_results(
     work_items: list[_ErrorWork],
     opensearch_client: OpenSearch,
 ) -> None:
-    """Load all cached results for the selected candidates.
+    """Phase 2: Before the full embedding, searching, and reranking process, check all candidates against the result cache in one mget.
+
+    Load all cached results for the selected candidates.
 
     :param work_items: The list of _ErrorWork items to process.
     :param opensearch_client: The OpenSearch client.
     """
-    # Phase 2: before we run the full embedding, searching, and reranking
-    # process, check all candidates against the result cache in one mget.
     cache_keys = [work.cache_key for work in work_items if work.cache_key is not None]
     if not cache_keys:
         return
@@ -546,13 +545,12 @@ def _load_cached_results(
 
 
 def _embed_cache_misses(work_items: list[_ErrorWork]) -> None:
-    """Embed the first occurrence of each cache-miss candidate.
+    """Phase 3: embed the cache-miss candidates in one batched encode call.
+
+    Errors that share a cache key share one resolution in phase 4, so only the first occurrence of each missing key is embedded.
 
     :param work_items: The list of _ErrorWork items to process.
     """
-    # Phase 3: embed the cache-miss candidates in one batched encode call.
-    # Errors that share a cache key share one resolution in phase 4, so
-    # only the first occurrence of each missing key is embedded.
     cache_misses: list[_ErrorWork] = []
     miss_texts: list[str] = []
     miss_keys: set[str] = set()
@@ -649,18 +647,15 @@ def _resolve_error_work_items(
     work_items: list[_ErrorWork],
     opensearch_client: OpenSearch,
 ) -> tuple[list[TTCSchematronIssueDetail], list[NonstandardCodeInstance]]:
-    """Resolve all errors and assemble TTC details in their original order.
+    """Phase 4: Resolve all errors and assemble TTC details in their original order.
+
+    Resolve each error - from the cache when hit, otherwise via KNN search + rerank — and assemble details in the original error order.
+    Duplicate candidates reuse the first occurrence's resolution, mirroring the sequential flow where later duplicates hit the cache entry written moments earlier — including in the cache metric, which counts a reused successful match as a hit.
 
     :param work_items: The list of _ErrorWork items to process.
     :param opensearch_client: The OpenSearch client.
     :return: A tuple of (list of TTCSchematronIssueDetail, list of NonstandardCodeInstance).
     """
-    # Phase 4: resolve each error — from the cache when hit, otherwise via
-    # KNN search + rerank — and assemble details in the original error order.
-    # Duplicate candidates reuse the first occurrence's resolution, mirroring
-    # the sequential flow where later duplicates hit the cache entry written
-    # moments earlier — including in the cache metric, which counts a reused
-    # successful match as a hit.
     resolved_misses: dict[str, _CandidateResolution] = {}
     issue_details: list[TTCSchematronIssueDetail] = []
     nonstandard_code_replacements: list[NonstandardCodeInstance] = []
@@ -730,7 +725,7 @@ def _process_record_pipeline(
     passthrough_reason: PassthroughReason | None = None
 
     if schematron_data_fields:
-        work_items = _build_error_work_items(processor, schematron_data_fields)
+        work_items = _build_schematron_error_work_items(processor, schematron_data_fields)
         _load_cached_results(work_items, opensearch_client)
         _embed_cache_misses(work_items)
         (
