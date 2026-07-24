@@ -8,31 +8,15 @@ variable "slack_channel_id" {
   type        = string
 }
 
-variable "gitlab_oidc_provider_arn" {
-  description = "ARN of the GitLab OIDC identity provider configured in the APHL AWS account."
-  type        = string
-}
-
-variable "gitlab_oidc_provider_host" {
-  description = "GitLab OIDC provider hostname without the URL scheme."
-  type        = string
-}
-
-variable "gitlab_oidc_audience" {
-  description = "Audience configured for the GitLab OIDC identity provider."
+variable "github_oidc_audience" {
+  description = "Audience configured for the GitHub Actions OIDC identity provider."
   type        = string
   default     = "sts.amazonaws.com"
 }
 
-variable "gitlab_project_path" {
-  description = "APHL GitLab project path authorized to assume the TTC re-ingestion role."
-  type        = string
-}
-
-variable "gitlab_oidc_protected_refs_only" {
-  description = "Whether the GitLab OIDC provider supports restricting role assumption to protected refs."
-  type        = bool
-  default     = false
+variable "github_oidc_subjects" {
+  description = "GitHub Actions OIDC subject claims authorized to assume the TTC re-ingestion role."
+  type        = list(string)
 }
 
 locals {
@@ -180,11 +164,11 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
   }
 
   statement {
-    sid    = "AllowTtcReingestionGitLabRole"
+    sid    = "AllowTtcReingestionCiRole"
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_role.ttc_reingestion_gitlab_role.arn]
+      identifiers = [aws_iam_role.ttc_reingestion_ci_role.arn]
     }
     actions = ["es:ESHttpGet"]
     resources = [
@@ -318,51 +302,43 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-data "aws_iam_policy_document" "ttc_reingestion_gitlab_assume_role" {
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+data "aws_iam_policy_document" "ttc_reingestion_github_assume_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     principals {
       type        = "Federated"
-      identifiers = [var.gitlab_oidc_provider_arn]
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
     }
 
     condition {
       test     = "StringEquals"
-      variable = "${var.gitlab_oidc_provider_host}:aud"
-      values   = [var.gitlab_oidc_audience]
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = [var.github_oidc_audience]
     }
 
     condition {
-      test     = "StringLike"
-      variable = "${var.gitlab_oidc_provider_host}:sub"
-      values = [
-        "project_path:${var.gitlab_project_path}:ref_type:*:ref:*"
-      ]
-    }
-
-    dynamic "condition" {
-      for_each = var.gitlab_oidc_protected_refs_only ? [1] : []
-
-      content {
-        test     = "StringEquals"
-        variable = "${var.gitlab_oidc_provider_host}:ref_protected"
-        values   = ["true"]
-      }
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = var.github_oidc_subjects
     }
   }
 }
 
-resource "aws_iam_role" "ttc_reingestion_gitlab_role" {
-  name               = "ttc-reingestion-gitlab-ci-role"
-  assume_role_policy = data.aws_iam_policy_document.ttc_reingestion_gitlab_assume_role.json
+resource "aws_iam_role" "ttc_reingestion_ci_role" {
+  name               = "ttc-reingestion-ci-role"
+  assume_role_policy = data.aws_iam_policy_document.ttc_reingestion_github_assume_role.json
   tags               = local.tags
 }
 
-resource "aws_iam_role_policy" "ttc_reingestion_gitlab_policy" {
-  name = "ttc-reingestion-gitlab-ci-inline-policy"
-  role = aws_iam_role.ttc_reingestion_gitlab_role.id
+resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
+  name = "ttc-reingestion-ci-inline-policy"
+  role = aws_iam_role.ttc_reingestion_ci_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -428,9 +404,9 @@ resource "aws_iam_role_policy" "ttc_reingestion_gitlab_policy" {
         Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_count"
       },
       {
-        Sid      = "ReadTtcQueueAttributes"
-        Effect   = "Allow"
-        Action   = ["sqs:GetQueueAttributes"]
+        Sid    = "ReadTtcQueueAttributes"
+        Effect = "Allow"
+        Action = ["sqs:GetQueueAttributes"]
         Resource = [
           aws_sqs_queue.ttc_input_queue.arn,
           aws_sqs_queue.ttc_input_dlq.arn
@@ -1160,7 +1136,7 @@ resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
   })
 }
 
-output "ttc_reingestion_gitlab_role_arn" {
-  description = "IAM role ARN for the APHL GitLab TTC re-ingestion pipeline."
-  value       = aws_iam_role.ttc_reingestion_gitlab_role.arn
+output "ttc_reingestion_ci_role_arn" {
+  description = "IAM role ARN for the TTC re-ingestion GitHub Actions workflow."
+  value       = aws_iam_role.ttc_reingestion_ci_role.arn
 }
