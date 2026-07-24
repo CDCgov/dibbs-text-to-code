@@ -26,7 +26,16 @@ provider "aws" {
   }
 }
 
+# CloudFront only accepts ACM certificates issued in us-east-1, regardless of
+# the distribution's origins' region.
 provider "aws" {
   alias  = "us_east_1"
   region = "us-east-1"
+  default_tags {
+    tags = {
+      owner       = "skylight"
+      environment = "demo"
+      project     = "dibbs-text-to-code"
+    }
+  }
 }
