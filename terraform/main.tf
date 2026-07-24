@@ -157,7 +157,7 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_role.ttc_lambda_role.arn, aws_iam_role.index_lambda_role.arn, aws_iam_role.os_ingestion_pipeline_role.arn, aws_iam_role.ttc_api_lambda_role.arn, data.aws_caller_identity.current.arn]
+      identifiers = [aws_iam_role.ttc_lambda_role.arn, aws_iam_role.index_lambda_role.arn, aws_iam_role.os_ingestion_pipeline_role.arn, aws_iam_role.ttc_api_lambda_role.arn, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/github-dibbs-text-to-code"]
     }
     actions   = var.lambda_os_actions
     resources = ["arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/*"]
