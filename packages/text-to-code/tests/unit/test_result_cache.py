@@ -8,7 +8,11 @@ from lambda_handler.models import (
     OpenSearchShards,
 )
 from shared_models import LOINC_NAME, LOINC_OID, Code
-from text_to_code.services.result_cache import get_cached_result, put_new_cached_result
+from text_to_code.services.result_cache import (
+    get_cached_result,
+    get_cached_results,
+    put_new_cached_result,
+)
 
 RESULT_CACHE_INDEX_NAME = "test-result-cache"
 
@@ -134,3 +138,76 @@ class TestResultCacheAPIs:
         )
 
         assert cache_result_created
+
+    def test_get_cached_results_returns_empty_mapping_without_querying(self):
+        mock_opensearch_client = MagicMock()
+
+        cached_results = get_cached_results(
+            mock_opensearch_client,
+            RESULT_CACHE_INDEX_NAME,
+            [],
+        )
+
+        assert cached_results == {}
+        mock_opensearch_client.mget.assert_not_called()
+
+    def test_get_cached_results_returns_hits_and_misses(self):
+        mock_opensearch_client = MagicMock()
+        mock_opensearch_client.mget.return_value = {
+            "docs": [
+                {
+                    "_id": "1357924680",
+                    "found": True,
+                    "_source": {
+                        "cache_key": "1357924680",
+                        "text": "Screening urine fentanyl detection",
+                        "data_field": "Lab Test Name Ordered",
+                        "loinc_code": {
+                            "code": "51459-2",
+                            "code_system": LOINC_OID,
+                            "code_system_name": LOINC_NAME,
+                            "display_name": "fentaNYL [Presence] in Urine by Screen method",
+                            "original_text": "Screening urine fentanyl detection",
+                        },
+                        "search_score": 0.9563,
+                        "reranker_score": 0.6789,
+                        "opensearch_retrieved_scores": {
+                            "took": 234,
+                            "timed_out": False,
+                            "_shards": {
+                                "total": 1,
+                                "successful": 1,
+                                "failed": 0,
+                                "skipped": 0,
+                            },
+                            "hits": {
+                                "total": {},
+                                "hits": [],
+                            },
+                        },
+                        "reranker_processed_results": {"results": []},
+                        "cached_at": "2026-05-15T18:14:45.020655+00:00",
+                    },
+                },
+                {
+                    "_id": "missing-cache-key",
+                    "found": False,
+                },
+            ]
+        }
+
+        cached_results = get_cached_results(
+            mock_opensearch_client,
+            RESULT_CACHE_INDEX_NAME,
+            ["1357924680", "missing-cache-key"],
+        )
+
+        assert cached_results["1357924680"] is not None
+        assert cached_results["1357924680"].cache_key == "1357924680"
+        assert cached_results["1357924680"].text == "Screening urine fentanyl detection"
+        assert cached_results["missing-cache-key"] is None
+        mock_opensearch_client.mget.assert_called_once_with(
+            body={"ids": ["1357924680", "missing-cache-key"]},
+            index=RESULT_CACHE_INDEX_NAME,
+            ignore=404,
+        )
