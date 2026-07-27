@@ -17,6 +17,9 @@ variable "github_oidc_audience" {
 variable "github_oidc_subjects" {
   description = "GitHub Actions OIDC subject claims authorized to assume the TTC re-ingestion role."
   type        = list(string)
+  default = [
+    "repo:CDCgov/dibbs-text-to-code:ref:refs/heads/main"
+  ]
 }
 
 locals {
