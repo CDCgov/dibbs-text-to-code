@@ -399,7 +399,8 @@ class TestEicrWithInlineComments:
 
 class TestBasicEicrProcessor:
     @pytest.fixture(scope="class")
-    def eicr_processor(self) -> EicrProcessor:
+    @classmethod
+    def eicr_processor(cls) -> EicrProcessor:
         eicr_path = EXAMPLE_EICRS_DIRECTORY / "basic_test_eicr.xml"
         with eicr_path.open() as f:
             eicr_output = f.read()
@@ -407,11 +408,13 @@ class TestBasicEicrProcessor:
         return EicrProcessor(eicr_output)
 
     @pytest.fixture(scope="class")
-    def eicr_metadata(self, eicr_processor: EicrProcessor) -> Metadata:
+    @classmethod
+    def eicr_metadata(cls, eicr_processor: EicrProcessor) -> Metadata:
         return eicr_processor.eicr_metadata
 
     @pytest.fixture(scope="class")
-    def candidates(self, eicr_processor: EicrProcessor) -> list[Candidate]:
+    @classmethod
+    def candidates(cls, eicr_processor: EicrProcessor) -> list[Candidate]:
         return eicr_processor.get_text_candidates(BASE_XPATH, DataField.LAB_TEST_NAME_RESULTED)
 
     def test_attribute_candidate(self, candidates: list[Candidate]):
@@ -570,7 +573,8 @@ class TestBasicEicrProcessor:
 
 class TestReferences:
     @pytest.fixture(scope="class")
-    def results(self) -> list[Candidate]:
+    @classmethod
+    def results(cls) -> list[Candidate]:
         eicr_path = EXAMPLE_EICRS_DIRECTORY / "reference_test_eicr.xml"
         with eicr_path.open() as f:
             eicr_output = f.read()
