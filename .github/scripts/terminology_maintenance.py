@@ -153,7 +153,7 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
             max_records.append(emb_rec)
 
             if record_count % record_max == 0 or record_count == len(embedding_records):
-                ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
+                ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')[0]}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
                 try:
                     # TODO: Do we need to transform the json.dumps into some kind of IO
                     # like we do for the full extract file to ensure it writes into S3
@@ -216,7 +216,7 @@ def update_loinc() -> TerminologyUpdateResponse:
     if response.get("result") == "success":
         full_loinc_labnames = extract_full_loinc_lab_names()
         full_labnames_file_name = (
-            f"{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}.csv"
+            f"{response.get('terminology')[0]}_{datetime.now().strftime('%Y%m%d')}.csv"
         )
         upload_response = upload_csv_extract_file(full_labnames_file_name, full_loinc_labnames)
         response["message"] = f"{response['message']}\n{upload_response}"
@@ -251,21 +251,16 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     """
     # get the latest version number and version date of LOINC
     loinc_version, loinc_version_date = get_loinc_current_version_data()
-    print(f"LOINC Version: {loinc_version} - {loinc_version_date}")
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
-    print(f"Current Loinc File Name: {current_loinc_file}")
     if current_loinc_file is None:
-        print("RELOADING THE FILES!  We should NOT be here!")
         results = load_initial_extract_files()
         logger.info(results)
         current_loinc_file = "loinc_lab_names_20260223.csv"
         # raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
-    print(f"Date from Loinc File Name: {file_date}")
     if file_date <= loinc_version_date:
-        print("RUN the UPDATE!")
         current_loinc_file_dict = _get_terminology_extract_file(current_loinc_file)
         loinc_response: TerminologyUpdateResponse = get_loinc_embedding_records(
             loinc_version, loinc_version_date, current_loinc_file_dict, False
