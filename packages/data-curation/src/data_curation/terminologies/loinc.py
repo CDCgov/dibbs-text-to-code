@@ -464,7 +464,7 @@ def get_loinc_embedding_records(
             "long_name": 0,
             "display_name": 0,
             "full_name": 0,
-            "consumer_name": 0,
+            # "consumer_name": 0,
             "loinc_type": 0,
         },
     }
@@ -510,13 +510,13 @@ def get_loinc_embedding_records(
             ):
                 change_log["Changes"]["full_name"] += 1
                 changes.append("full_name")
-            if (
-                update_loinc_record["consumer_name"]
-                and current_loinc_record["consumer_name"].strip()
-                != update_loinc_record["consumer_name"].strip()
-            ):
-                change_log["Changes"]["consumer_name"] += 1
-                changes.append("consumer_name")
+            # if (
+            #     update_loinc_record["consumer_name"]
+            #     and current_loinc_record["consumer_name"].strip()
+            #     != update_loinc_record["consumer_name"].strip()
+            # ):
+            #     change_log["Changes"]["consumer_name"] += 1
+            #     changes.append("consumer_name")
         new_embedding_records = _create_embedding_records(
             loinc_record_max_id, loinc_code, update_loinc_record, changes
         )
@@ -560,8 +560,8 @@ def _create_embedding_records(
     long_name = loinc_row["long_name"].strip()
     display_name = loinc_row["display_name"].strip()
     full_name = loinc_row["full_name"].strip()
-    consumer_name = loinc_row["consumer_name"]
-    consumer_name = consumer_name.strip() if consumer_name is not None else ""
+    # consumer_name = loinc_row["consumer_name"]
+    # consumer_name = consumer_name.strip() if consumer_name is not None else ""
     new_id = "" if "loinc_type" in element_changes else loinc_record_id
 
     loinc_axis_info["loinc_code"] = loinc_code
@@ -632,20 +632,20 @@ def _create_embedding_records(
             loinc_axis=loinc_axis_info,
         )
         emb_records.append(emb_rec)
-    if (
-        "loinc_type" in element_changes
-        or "new_loinc" in element_changes
-        or "consumer_name" in element_changes
-    ) and consumer_name:
-        if new_id:
-            new_id += 1
-        emb_rec = _create_embedding_record(
-            rec_id=new_id,
-            loinc_term=consumer_name,
-            loinc_term_type="consumer_name",
-            loinc_axis=loinc_axis_info,
-        )
-        emb_records.append(emb_rec)
+    # if (
+    #     "loinc_type" in element_changes
+    #     or "new_loinc" in element_changes
+    #     or "consumer_name" in element_changes
+    # ) and consumer_name:
+    #     if new_id:
+    #         new_id += 1
+    #     emb_rec = _create_embedding_record(
+    #         rec_id=new_id,
+    #         loinc_term=consumer_name,
+    #         loinc_term_type="consumer_name",
+    #         loinc_axis=loinc_axis_info,
+    #     )
+    #     emb_records.append(emb_rec)
     return emb_records
 
 

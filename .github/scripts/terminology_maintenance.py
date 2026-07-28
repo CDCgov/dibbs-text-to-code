@@ -15,7 +15,6 @@ from data_curation.terminologies.general import (
 )
 from data_curation.terminologies.loinc import (
     LAB_NAMES,
-    LOINC_CS_NAMES,
     extract_full_loinc_lab_names,
     get_loinc_current_version_data,
     get_loinc_embedding_records,
@@ -112,37 +111,6 @@ def put_file(body: str | bytes, bucket: str, key: str) -> None:
     )
     client.put_object(Body=body, Bucket=bucket, Key=key)
     logger.info(f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='success'")
-
-
-def _get_loinc_consumer_names(loinc_rows: list[dict]) -> list[dict]:
-    """Function that utilizes the consumer_names.csv file in the Terminologies S3 Bucket Folder for TTC to related the consumer name term with each loinc code.
-
-    :param loinc_rows: The list of dictionaries that contain all the LOINC
-        data (codes, terms/names, and axis information) so that this function
-        can add the consumer name data to each record.
-
-    :returns: The updated list of dictionaries of LOINC data records with
-        the newly added consumer name term(s).
-    """
-    cs_names = {}
-    object_key = f"{TERMINOLOGY_EXTRACT_PREFIX}{LOINC_CS_NAMES}"
-    cs_names_file = get_file_content_from_s3(S3_BUCKET, object_key)
-    for cs_raw_row in cs_names_file.splitlines():
-        if cs_raw_row:
-            cs_row = json.loads(cs_raw_row)
-        cs_code = cs_row.get("LoincNumber")
-        cs_name = cs_row.get("ConsumerName")
-        if cs_code and cs_name:
-            cs_names[cs_code] = cs_name
-
-    for row in loinc_rows:
-        loinc_code = row.get("code")
-        cs_name = cs_names.get(loinc_code)
-        if cs_name:
-            row["consumer_name"] = cs_name
-        else:
-            row["consumer_name"] = None
-    return loinc_rows
 
 
 def _get_terminology_extract_file(file_name: str) -> dict[str, dict[str, str]]:
@@ -247,7 +215,6 @@ def update_loinc() -> TerminologyUpdateResponse:
 
     if response.get("result") == "success":
         full_loinc_labnames = extract_full_loinc_lab_names()
-        full_loinc_labnames = _get_loinc_consumer_names(full_loinc_labnames)
         full_labnames_file_name = (
             f"{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}.csv"
         )
@@ -304,7 +271,6 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
             loinc_version, loinc_version_date, current_loinc_file_dict, False
         )
         loinc_records = loinc_response.get("embedding_records")
-        loinc_records = _get_loinc_consumer_names(loinc_records)
         loinc_response["embedding_records"] = loinc_records
     else:
         return set_loinc_response(

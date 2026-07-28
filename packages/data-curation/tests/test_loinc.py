@@ -587,8 +587,7 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "TEST LONG NAME" in descriptions
     assert "TEST DISPLAY" in descriptions
     assert "TEST FULL NAME" in descriptions
-    assert "TEST CONSUMER NAME" in descriptions
-    expected_length = 20
+    expected_length = 16
     assert len(emb_results) == expected_length
     assert "Compared to file" in change_log
     assert "Changes" in change_log
@@ -709,7 +708,6 @@ def test_create_embedding_records_w_updates() -> None:
     loinc_row["long_name"] = "ANOTHER TEST NAME"
     loinc_row["display_name"] = "TEST DISPLAY"
     loinc_row["full_name"] = "TEST FULL NAME"
-    loinc_row["consumer_name"] = "TEST CONSUMER NAME"
     loinc_row["lab_type"] = loinc_axis["loinc_type"]
     loinc_row["property"] = loinc_axis["property"]
     loinc_row["time_aspect"] = loinc_axis["time"]
@@ -774,21 +772,7 @@ def test_create_embedding_records_w_updates() -> None:
         "method_type": loinc_axis["method"],
         "class_type": loinc_axis["class"],
     }
-    record_5 = {
-        "id": "",
-        "description": "TEST CONSUMER NAME",
-        "description_vector": [],
-        "loinc_type": loinc_axis["loinc_type"],
-        "loinc_code": loinc_axis["loinc_code"],
-        "loinc_name_type": "consumer_name",
-        "property": loinc_axis["property"],
-        "time_aspect": loinc_axis["time"],
-        "system": loinc_axis["system"],
-        "scale_type": loinc_axis["scale"],
-        "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"],
-    }
-    expected = [record_1, record_2, record_3, record_4, record_5]
+    expected = [record_1, record_2, record_3, record_4]
     result = loinc._create_embedding_records(loinc_id1, loinc_code, loinc_row, changes)
     assert result == expected
 
