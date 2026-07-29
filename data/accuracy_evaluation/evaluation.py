@@ -47,10 +47,18 @@ def accuracy_evaluation(
             expected_oids = sorted(loinc_to_oids.get(expected_loinc, []) if expected_loinc else [])
 
             returned_conditions = sorted(
-                list(set(oid_to_conditions.get(oid) for oid in returned_oids))
+                {
+                    condition
+                    for oid in returned_oids
+                    if isinstance(condition := oid_to_conditions.get(oid), str)
+                }
             )
             expected_conditions = sorted(
-                list(set(oid_to_conditions.get(oid) for oid in expected_oids))
+                {
+                    condition
+                    for oid in expected_oids
+                    if isinstance(condition := oid_to_conditions.get(oid), str)
+                }
             )
             if returned_loinc is None:
                 status = "no LOINC returned"
