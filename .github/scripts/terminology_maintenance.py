@@ -7,7 +7,6 @@ from datetime import datetime
 
 import boto3
 from botocore.client import BaseClient
-
 from data_curation.terminologies.general import (
     BASE_FOLDER,
     TerminologyUpdateResponse,
@@ -20,6 +19,7 @@ from data_curation.terminologies.loinc import (
     get_loinc_embedding_records,
     set_loinc_response,
 )
+
 from text_to_code.services.embedder import embed
 
 REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -153,7 +153,7 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
             max_records.append(emb_rec)
 
             if record_count % record_max == 0 or record_count == len(embedding_records):
-                ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')[0]}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
+                ingestion_file_name = f"{INGESTION_PREFIX}{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}_{record_count}.jsonl"
                 try:
                     # TODO: Do we need to transform the json.dumps into some kind of IO
                     # like we do for the full extract file to ensure it writes into S3
@@ -216,7 +216,7 @@ def update_loinc() -> TerminologyUpdateResponse:
     if response.get("result") == "success":
         full_loinc_labnames = extract_full_loinc_lab_names()
         full_labnames_file_name = (
-            f"{response.get('terminology')[0]}_{datetime.now().strftime('%Y%m%d')}.csv"
+            f"{response.get('terminology')}_{datetime.now().strftime('%Y%m%d')}.csv"
         )
         upload_response = upload_csv_extract_file(full_labnames_file_name, full_loinc_labnames)
         response["message"] = f"{response['message']}\n{upload_response}"

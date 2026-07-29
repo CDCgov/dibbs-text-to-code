@@ -27,7 +27,7 @@ UMLS_API_KEY = os.environ.get("UMLS_API_KEY")
 class TerminologyUpdateResponse(TypedDict):
     """Defines dictionary for Terminology Update Response."""
 
-    terminology: list[str]
+    terminology: str
     result: str
     message: str
     change_log: dict
@@ -85,8 +85,6 @@ def get_latest_local_extract_file_name(file_name_prefix: str | None) -> str | No
     if file_name_prefix is None:
         return None
 
-    # TODO: This will need to change to pull the file
-    # from the S3 Bucket and return the file name
     files = [f for f in os.listdir(BASE_FOLDER) if f.startswith(file_name_prefix)]
     if file_name_prefix != "" and files:
         latest_file = max(files)
@@ -102,9 +100,6 @@ def load_local_extract_file_to_dict(file_name: str | None) -> dict[str, dict[str
 
     :returns: A dictionary of the data pulled from a csv file.
     """
-    # TODO: This will need to change to pull the file
-    # from the S3 Bucket and load the contents into
-    # a dict
     if not file_name or file_name == "":
         return {}
     file_path = BASE_FOLDER / file_name
@@ -132,9 +127,6 @@ def save_valueset_csv_file(
 
     :returns: Nothing.
     """
-    # TODO: This will need to change to write the csv
-    # file into an S3 bucket
-    # maybe will need a service for all the S3 work?
     if not file_name.strip():
         print("No file name supplied.  Failed to save CSV file!")
         return
@@ -179,9 +171,6 @@ def save_json_file(
 
     :returns: Nothing.
     """
-    # TODO: This will need to change to write the csv
-    # file into an S3 bucket
-    # maybe will need a service for all the S3 work?
     if not file_name.strip() or not directory_path:
         print("No file name & path supplied.  Failed to save JSON File!")
         return
@@ -218,9 +207,6 @@ def save_jsonl_file(file_name: str, contents: list[dict]) -> None:
 
     :returns: Nothing.
     """
-    # TODO: This will need to change to write the csv
-    # file into an S3 bucket
-    # maybe will need a service for all the S3 work?
     full_file_path = BASE_FOLDER / file_name
     try:
         with open(full_file_path, "w") as f:

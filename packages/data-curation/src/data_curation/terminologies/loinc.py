@@ -52,7 +52,7 @@ def set_loinc_response(
     if embedding_records is None:
         embedding_records = []
     loinc_response: TerminologyUpdateResponse = {
-        "terminology": [f"{terminology_set}"],
+        "terminology": terminology_set,
         "result": result,
         "message": message,
         "change_log": change_log,
