@@ -46,7 +46,20 @@ def set_loinc_response(
     change_log: dict | None = None,
     embedding_records: list[dict] | None = None,
 ) -> TerminologyUpdateResponse:
-    """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs."""
+    """Defines dictionary for a LOINC Terminology Update Response based upon result and message inputs.
+
+    :param terminology_set: Which specific value set in a specific terminology
+        that is being updated.  Example("loinc_lab_names", "loinc_lab_orders", ...)
+    :param result: Flag to indicate 'success' or 'error'.
+    :param message: String that contains either error message or success
+        message.  More details about the result.
+    :param change_log: Dict that contains all the changes for the value set
+        for the specific terminology.  The Delta of the changes.
+    :param embedding_records: List of Dicts that are the actual embedding
+        records to load into S3.
+
+    :returns: An updated TerminologyUpdateResponse with the information provided.
+    """
     if change_log is None:
         change_log = {}
     if embedding_records is None:
