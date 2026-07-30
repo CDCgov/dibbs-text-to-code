@@ -377,6 +377,98 @@ class TestEmptyEicrProcessor:
         assert result == ["first second third third"]
 
 
+class TestEicrProcessorPreprocessing:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (".AGE", "AGE"),
+            (":rbc", "rbc"),
+            ("...:::AGE", "AGE"),
+            ("WBC  #", "WBC #"),
+            ("WBC\t\t#", "WBC #"),
+            ("WBC\n\n#", "WBC #"),
+            ("WBC  #\u00a0", "WBC #"),
+            ("  leuks  ", "leuks"),
+            ("=>input<=", "input"),
+            ("=> input <=", "input"),
+            ("=> .AGE <=", "AGE"),
+            ("input.", "input."),
+            ("input:", "input:"),
+            ("WBC >= 10", "WBC >= 10"),
+            (">=input<=", ">=input<="),
+            ("=>input", "=>input"),
+            ("input<=", "input<="),
+            ("input=>value<=other", "input=>value<=other"),
+            ("", ""),
+            ("   ", ""),
+            (".:", ""),
+        ],
+    )
+    def test_preprocess_text_candidate(self, value: str, expected: str):
+        processor = EicrProcessor("<ClinicalDocument />")
+
+        result = processor._preprocess_text_candidate(value)
+
+        assert result == expected
+
+    def test_get_text_candidates_returns_preprocessed_string_candidate(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+        candidates: list[Candidate] = []
+
+        result = processor._append_text_candidates_from_sub_node(
+            candidates=candidates,
+            sub_node="  => .WBC   # <=  ",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+
+        assert result is True
+        assert candidates == [
+            Candidate(
+                value="WBC #",
+                xpath=LabXPaths.CODE_DISPLAY_NAME,
+            )
+        ]
+
+    def test_get_text_candidates_does_not_append_candidate_that_becomes_empty(self):
+        processor = EicrProcessor("<ClinicalDocument />")
+        candidates: list[Candidate] = []
+
+        result = processor._append_text_candidates_from_sub_node(
+            candidates=candidates,
+            sub_node=" .: ",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+
+        assert result is False
+        assert candidates == []
+
+    def test_get_text_candidates_preprocesses_element_candidate(self):
+        processor = EicrProcessor(
+            """
+            <ClinicalDocument>
+                <text>  =&gt; :rbc   result &lt;=  </text>
+            </ClinicalDocument>
+            """
+        )
+        element = processor._xml_root.find(".//text")
+        assert element is not None
+        candidates: list[Candidate] = []
+
+        result = processor._append_text_candidates_from_sub_node(
+            candidates=candidates,
+            sub_node=element,
+            xpath=LabXPaths.OBSERVATION_TEXT,
+        )
+
+        assert result is True
+        assert candidates == [
+            Candidate(
+                value="rbc result",
+                xpath=LabXPaths.OBSERVATION_TEXT,
+            )
+        ]
+
+
 class TestBadEicr:
     def test_bad_eicr(self):
         eicr_path = EXAMPLE_EICRS_DIRECTORY / "bad_test_eicr.xml"
