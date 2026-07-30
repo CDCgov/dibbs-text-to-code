@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from data_curation.terminologies import loinc
+from data_curation.terminologies.general import load_local_extract_file_to_dict
 
 API_RESPONSE_DIRECTORY = Path(__file__).parent / "assets"
 LOINC_LAB_RESPONSE = API_RESPONSE_DIRECTORY / "loinc_lab_response.json"
@@ -77,26 +78,19 @@ def _loinc_row(
 
 def test_extract_full_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
     rows = [_loinc_row()]
-    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
 
-    def mock_get_loinc_lab_names() -> list[dict[str, str]]:
+    def mock_get_loinc_lab_names(
+        version: str = "", include_consumer_names: bool = False
+    ) -> list[dict[str, str]]:
         return rows
 
-    def mock_save_valueset_csv_file(
-        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
-    ) -> None:
-        saved_files.append((filename, contents, append_to_file))
-
     monkeypatch.setattr(loinc, "_get_loinc_lab_names", mock_get_loinc_lab_names)
-    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
 
-    loinc.extract_full_loinc_lab_names()
+    result = loinc.extract_full_loinc_lab_names(include_consumer_names=True)
 
-    assert len(saved_files) == 1
-    assert saved_files[0][0].startswith("loinc_lab_names_")
-    assert saved_files[0][0].endswith(".csv")
-    assert saved_files[0][1] == rows
-    assert saved_files[0][2] is False
+    assert len(result) == 1
+    assert result[0].get("code") == "12345-F"
+    assert result[0].get("class_type") == "TEST CLASS"
 
 
 def test_extract_full_loinc_lab_names_handles_empty_api_results(
@@ -117,7 +111,6 @@ def test_extract_full_loinc_lab_names_handles_empty_api_results(
         "LoincNumber|ConsumerName\n",
         encoding="utf-8",
     )
-    saved_files: list[tuple[str, list[loinc.LoincRow], bool]] = []
 
     def mock_get_with_timeout(
         api_url: str,
@@ -125,72 +118,42 @@ def test_extract_full_loinc_lab_names_handles_empty_api_results(
     ) -> MockResponse:
         return MockResponse(200, payload)
 
-    def mock_save_valueset_csv_file(
-        filename: str, contents: list[loinc.LoincRow], append_to_file: bool = False
-    ) -> None:
-        saved_files.append((filename, contents, append_to_file))
-
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    monkeypatch.setattr(loinc, "LOINC_CS_NAMES", consumer_names_file)
     monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
-    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
 
-    loinc.extract_full_loinc_lab_names()
-
-    assert "NO RESULTS TO PROCESS!" in capsys.readouterr().out
-    assert len(saved_files) == 1
-    assert saved_files[0][0].startswith("loinc_lab_names_")
-    assert saved_files[0][1] == []
-    assert saved_files[0][2] is False
+    with pytest.raises(RuntimeError, match=r"NO RESULTS TO PROCESS!"):
+        loinc.extract_full_loinc_lab_names()
 
 
 def test_extract_full_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
     rows = [_loinc_row()]
-    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
 
-    def mock_get_loinc_lab_orders() -> list[dict[str, str]]:
+    def mock_get_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict[str, str]]:
         return rows
 
-    def mock_save_valueset_csv_file(
-        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
-    ) -> None:
-        saved_files.append((filename, contents, append_to_file))
-
     monkeypatch.setattr(loinc, "_get_loinc_lab_orders", mock_get_loinc_lab_orders)
-    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
 
-    loinc.extract_full_loinc_lab_orders()
+    results = loinc.extract_full_loinc_lab_orders(include_consumer_names=True)
 
-    assert len(saved_files) == 1
-    assert saved_files[0][0].startswith("loinc_lab_orders_")
-    assert saved_files[0][0].endswith(".csv")
-    assert saved_files[0][1] == rows
-    assert saved_files[0][2] is False
+    assert len(results) == 1
+    assert results[0].get("code") == "12345-F"
+    assert results[0].get("consumer_name") == "TEST CONSUMER NAME"
 
 
 def test_extract_full_loinc_lab_results(monkeypatch: pytest.MonkeyPatch) -> None:
     rows = [_loinc_row()]
-    saved_files: list[tuple[str, list[dict[str, str]], bool]] = []
 
-    def mock_get_loinc_lab_results() -> list[dict[str, str]]:
+    def mock_get_loinc_lab_results(include_consumer_names: bool = False) -> list[dict[str, str]]:
         return rows
 
-    def mock_save_valueset_csv_file(
-        filename: str, contents: list[dict[str, str]], append_to_file: bool = False
-    ) -> None:
-        saved_files.append((filename, contents, append_to_file))
-
     monkeypatch.setattr(loinc, "_get_loinc_lab_results", mock_get_loinc_lab_results)
-    monkeypatch.setattr(loinc, "save_valueset_csv_file", mock_save_valueset_csv_file)
 
-    loinc.extract_full_loinc_lab_results()
+    results = loinc.extract_full_loinc_lab_results(include_consumer_names=True)
 
-    assert len(saved_files) == 1
-    assert saved_files[0][0].startswith("loinc_lab_result_")
-    assert saved_files[0][0].endswith(".csv")
-    assert saved_files[0][1] == rows
-    assert saved_files[0][2] is False
+    assert len(results) == 1
+    assert results[0].get("code") == "12345-F"
+    assert results[0].get("consumer_name") == "TEST CONSUMER NAME"
 
 
 def test_get_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -206,9 +169,9 @@ def test_get_loinc_lab_names(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
-    result = loinc._get_loinc_lab_names("2.80")
+    result = loinc._get_loinc_lab_names("2.80", True)
 
     assert result == rows
     assert calls["loinc_vs_type"] == "Lab Names"
@@ -228,9 +191,9 @@ def test_get_loinc_lab_names_without_version(monkeypatch: pytest.MonkeyPatch) ->
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
-    result = loinc._get_loinc_lab_names()
+    result = loinc._get_loinc_lab_names(include_consumer_names=True)
 
     assert result == rows
     assert calls["loinc_vs_type"] == "Lab Names"
@@ -250,7 +213,7 @@ def test_get_loinc_lab_orders(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_orders()
 
@@ -272,7 +235,7 @@ def test_get_loinc_lab_orders_with_version(monkeypatch: pytest.MonkeyPatch) -> N
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_orders("2.80")
 
@@ -294,7 +257,7 @@ def test_get_loinc_lab_results(monkeypatch: pytest.MonkeyPatch) -> None:
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_results()
 
@@ -316,7 +279,7 @@ def test_get_loinc_lab_results_with_version(monkeypatch: pytest.MonkeyPatch) -> 
         return loinc_rows
 
     monkeypatch.setattr(loinc, "_process_loinc_valueset", mock_process_loinc_valueset)
-    monkeypatch.setattr(loinc, "_get_loinc_consumer_names", mock_get_loinc_consumer_names)
+    monkeypatch.setattr(loinc, "_get_loinc_local_consumer_names", mock_get_loinc_consumer_names)
 
     result = loinc._get_loinc_lab_results("2.80")
 
@@ -422,25 +385,25 @@ def test_process_loinc_valueset_returns_none_when_next_page_errors(
         side_effect=responses,
     )
 
-    result = loinc._process_loinc_valueset("https://example.com", "Lab Names")
-
-    assert result == []
+    with pytest.raises(
+        RuntimeError, match=r"ERROR Retrieving LOINC Lab Names CODES: 500: TEST ERROR"
+    ):
+        loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
 
 def test_process_loinc_valueset_returns_none_on_error(
     monkeypatch: pytest.MonkeyPatch, mocker
 ) -> None:
-
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
         "data_curation.terminologies.loinc.get_with_timeout",
         return_value=MockResponse(500, {}, "TEST ERROR"),
     )
-
-    result = loinc._process_loinc_valueset("https://example.com", "Lab Names")
-
-    assert result == []
+    with pytest.raises(
+        RuntimeError, match=r"ERROR Retrieving LOINC Lab Names CODES: 500: TEST ERROR"
+    ):
+        loinc._process_loinc_valueset("https://example.com", "Lab Names")
 
 
 def test_process_loinc_valueset_requires_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -537,7 +500,7 @@ def test_get_loinc_consumer_names(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(loinc, "LOINC_CS_NAMES", consumer_names_file)
 
-    result = loinc._get_loinc_consumer_names(rows)
+    result = loinc._get_loinc_local_consumer_names(rows)
 
     assert result == [
         {"code": "12345-F", "consumer_name": "TEST CONSUMER NAME"},
@@ -571,7 +534,6 @@ def test_get_loinc_current_version_data(monkeypatch: pytest.MonkeyPatch, mocker)
 def test_get_loinc_current_version_data_raises_on_error(
     monkeypatch: pytest.MonkeyPatch, mocker
 ) -> None:
-
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
     mocker.patch(
@@ -594,18 +556,6 @@ def test_get_loinc_current_version_data_requires_credentials(
 
 
 def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
-    current_loinc_dict = {
-        "TYPE-CHANGE": _loinc_row(code="TYPE-CHANGE", lab_type="Order"),
-        "TERM-CHANGE": _loinc_row(
-            code="TERM-CHANGE",
-            short_name="OLD SHORT NAME",
-            long_name="OLD LONG NAME",
-            display_name="OLD DISPLAY",
-            full_name="OLD FULL NAME",
-            consumer_name="OLD CONSUMER NAME",
-        ),
-        "NO-CHANGE": _loinc_row(code="NO-CHANGE"),
-    }
     delta_rows = [
         _loinc_row(code="NEW-CODE"),
         _loinc_row(code="TYPE-CHANGE", lab_type="Both"),
@@ -614,33 +564,33 @@ def test_get_loinc_embedding_records(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
     change_log: dict[str, object] = {}
 
-    def mock_get_loinc_lab_names(new_version: str) -> list[dict[str, str]]:
+    def mock_get_loinc_lab_names(
+        version: str = "", include_consumer_names: bool = False
+    ) -> list[dict[str, str]]:
         return delta_rows
 
-    def mock_write_change_log_file(file_name: str, content: dict) -> None:
-        change_log["file_name"] = file_name
-        change_log["content"] = content
-
     monkeypatch.setattr(loinc, "_get_loinc_lab_names", mock_get_loinc_lab_names)
-    monkeypatch.setattr(loinc, "_write_change_log_file", mock_write_change_log_file)
+
+    loinc_file_contents = load_local_extract_file_to_dict("loinc_lab_names_20260223.csv")
 
     result = loinc.get_loinc_embedding_records(
-        current_loinc_dict,
         "2.80",
         "2026-02-23",
-        "loinc_lab_names_20260223.csv",
+        loinc_file_contents,
     )
-    descriptions = [record.get("description") for record in result]
+    emb_records = result["embedding_records"]
+    descriptions = [record.get("description") for record in emb_records]
+    emb_results = result.get("embedding_records")
+    change_log = result.get("change_log")
 
     assert "TEST SHORT NAME" in descriptions
     assert "TEST LONG NAME" in descriptions
     assert "TEST DISPLAY" in descriptions
     assert "TEST FULL NAME" in descriptions
-    assert "TEST CONSUMER NAME" in descriptions
-    expected_length = 15
-    assert len(result) == expected_length
-    assert "file_name" in change_log
-    assert "content" in change_log
+    expected_length = 16
+    assert len(emb_results) == expected_length
+    assert "Compared to file" in change_log
+    assert "Changes" in change_log
 
 
 def test_create_embedding_record() -> None:
@@ -758,7 +708,6 @@ def test_create_embedding_records_w_updates() -> None:
     loinc_row["long_name"] = "ANOTHER TEST NAME"
     loinc_row["display_name"] = "TEST DISPLAY"
     loinc_row["full_name"] = "TEST FULL NAME"
-    loinc_row["consumer_name"] = "TEST CONSUMER NAME"
     loinc_row["lab_type"] = loinc_axis["loinc_type"]
     loinc_row["property"] = loinc_axis["property"]
     loinc_row["time_aspect"] = loinc_axis["time"]
@@ -823,21 +772,7 @@ def test_create_embedding_records_w_updates() -> None:
         "method_type": loinc_axis["method"],
         "class_type": loinc_axis["class"],
     }
-    record_5 = {
-        "id": "",
-        "description": "TEST CONSUMER NAME",
-        "description_vector": [],
-        "loinc_type": loinc_axis["loinc_type"],
-        "loinc_code": loinc_axis["loinc_code"],
-        "loinc_name_type": "consumer_name",
-        "property": loinc_axis["property"],
-        "time_aspect": loinc_axis["time"],
-        "system": loinc_axis["system"],
-        "scale_type": loinc_axis["scale"],
-        "method_type": loinc_axis["method"],
-        "class_type": loinc_axis["class"],
-    }
-    expected = [record_1, record_2, record_3, record_4, record_5]
+    expected = [record_1, record_2, record_3, record_4]
     result = loinc._create_embedding_records(loinc_id1, loinc_code, loinc_row, changes)
     assert result == expected
 
@@ -856,23 +791,3 @@ def test_create_embedding_records_with_no_consumer_name() -> None:
     )
 
     assert result == []
-
-
-def test_write_change_log_file(monkeypatch: pytest.MonkeyPatch) -> None:
-    saved_files: list[tuple[str, str, dict]] = []
-    content = {"Changes": {"new_loinc": 1}}
-
-    def mock_save_json_file(directory_path: str, filename: str, contents: dict) -> None:
-        saved_files.append((directory_path, filename, contents))
-
-    monkeypatch.setattr(loinc, "save_json_file", mock_save_json_file)
-
-    loinc._write_change_log_file("loinc_lab_names_DELTA_20260604.json", content)
-
-    assert saved_files == [
-        (
-            str(loinc.CHANGE_LOG_DIRECTORY),
-            "loinc_lab_names_DELTA_20260604.json",
-            content,
-        )
-    ]

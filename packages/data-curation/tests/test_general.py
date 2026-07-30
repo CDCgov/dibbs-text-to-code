@@ -22,71 +22,71 @@ def test_clean_text_string_spaces() -> None:
     assert result == text
 
 
-def test_get_date_from_filename_no_date() -> None:
+def test_get_date_from_file_name_no_date() -> None:
     file_name = "my_valuset_extract.csv"
     with pytest.raises(
         ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
     ):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
-def test_get_date_from_filename_no_file() -> None:
+def test_get_date_from_file_name_no_file() -> None:
     file_name = ""
     with pytest.raises(
         ValueError, match=rf"Unable to extract 8 digit date from file name: {file_name}!"
     ):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
-def test_get_date_from_filename_valid_loinc() -> None:
+def test_get_date_from_file_name_valid_loinc() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = general.get_date_from_filename(file_name, "loinc")
+    result = general.get_date_from_file_name(file_name, "loinc")
     assert result == "2026-05-14"
 
 
-def test_get_date_from_filename_valid_other() -> None:
+def test_get_date_from_file_name_valid_other() -> None:
     file_name = "my_extract_file_20260514.csv"
-    result = general.get_date_from_filename(file_name, "")
+    result = general.get_date_from_file_name(file_name, "")
     assert result == "20260514"
 
 
-def test_get_date_from_filename_invalid_date() -> None:
+def test_get_date_from_file_name_invalid_date() -> None:
     file_name = "my_extract_file_20265555.csv"
     with pytest.raises(ValueError, match="unconverted data remains: 55"):
-        general.get_date_from_filename(file_name, "loinc")
+        general.get_date_from_file_name(file_name, "loinc")
 
 
 def test_get_latest_extract_file_name_empty() -> None:
     with pytest.raises(FileNotFoundError):
-        general.get_latest_extract_file_name("")
+        general.get_latest_local_extract_file_name("")
 
 
 def test_get_latest_extract_file_name_none() -> None:
-    result = general.get_latest_extract_file_name(None)
+    result = general.get_latest_local_extract_file_name(None)
     assert result is None
 
 
 def test_get_latest_extract_file_name_valid() -> None:
     prefix = "loinc_lab_names"
-    result = general.get_latest_extract_file_name(prefix)
+    result = general.get_latest_local_extract_file_name(prefix)
     assert result is not None
     assert prefix in result
 
 
 def test_load_extract_file_to_dict_no_file() -> None:
-    result = general.load_extract_file_to_dict("")
+    result = general.load_local_extract_file_to_dict("")
     assert result == {}
 
 
 def test_load_extract_file_to_dict_valid() -> None:
-    result = general.load_extract_file_to_dict("hl7_lab_interp_20260223.csv")
+    result = general.load_local_extract_file_to_dict("hl7_lab_interp_20260223.csv")
     assert result != {}
 
 
-def test_save_valueset_csv_file_no_filename(capsys) -> None:
+def test_save_valueset_csv_file_no_file_name(capsys) -> None:
     general.save_valueset_csv_file(" ", [{"code": "123", "text": "Test"}])
 
-    assert "No filename supplied.  Failed to save CSV file!" in capsys.readouterr().out
+    assert "No file name supplied.  Failed to save CSV file!" in capsys.readouterr().out
 
 
 def test_save_valueset_csv_file_empty_contents(capsys) -> None:
@@ -152,10 +152,10 @@ def test_save_valueset_csv_file_exception(tmp_path, monkeypatch, capsys) -> None
     assert "An error occured: bad open" in capsys.readouterr().out
 
 
-def test_save_json_file_no_filename_or_path(capsys) -> None:
+def test_save_json_file_no_file_name_or_path(capsys) -> None:
     general.save_json_file("", "test.json", {"code": "123"})
 
-    assert "No filename & path supplied.  Failed to save JSON File!" in capsys.readouterr().out
+    assert "No file name & path supplied.  Failed to save JSON File!" in capsys.readouterr().out
 
 
 def test_save_json_file_empty_contents(tmp_path, capsys) -> None:
