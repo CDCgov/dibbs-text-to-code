@@ -26,6 +26,7 @@ REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
 TERMINOLOGY_EXTRACT_PREFIX = os.getenv("TERMINOLOGY_EXTRACT_PREFIX", "Terminologies/")
 INGESTION_PREFIX = os.getenv("INGESTION_PREFIX", "ingestion/")
+LOINC_NAMES_ORIGINAL_EXTRACT = "loinc_lab_names_20260223.csv"
 
 logger = logging.getLogger(__name__)
 _cached_s3_client: BaseClient | None = None
@@ -253,10 +254,13 @@ def update_loinc_lab_names() -> TerminologyUpdateResponse:
     loinc_version, loinc_version_date = get_loinc_current_version_data()
     # find the existing TTC LOINC LabNames file to use for comparison
     current_loinc_file = get_latest_extract_file_name(LAB_NAMES)
+    # if we can't find a 'current' existing loinc_lab_names extract file
+    # in our defined terminologies S3 bucket, then add the original extract
+    # file from our repo
     if current_loinc_file is None:
         results = load_initial_extract_files()
         logger.info(results)
-        current_loinc_file = "loinc_lab_names_20260223.csv"
+        current_loinc_file = LOINC_NAMES_ORIGINAL_EXTRACT
         # raise FileNotFoundError("Unable to locate latest LOINC Lab Names Extract file!")
     # ensure the existing TTC LOINC LabNames file is before the latest LOINC update
     file_date = get_date_from_file_name(current_loinc_file, "loinc")
