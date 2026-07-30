@@ -1,0 +1,27 @@
+name: Test TTC re-ingestion IAM role
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test_ttc_reingestion_role:
+    name: Test TTC re-ingestion role
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        with:
+          role-to-assume: ${{ secrets.TERRAFORM_TTC_REINGESTION_ARN }}
+          role-session-name: ttcReingestionWorkflow
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Confirm assumed role
+        run: |
+          CALLER_ARN="$(aws sts get-caller-identity --query Arn --output text)"
+          echo "$CALLER_ARN"
+          echo "$CALLER_ARN" | grep -q ":assumed-role/ttc-reingestion-ci-role/"
