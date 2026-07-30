@@ -35,8 +35,7 @@ import requests
 from data_curation.terminologies.loinc import (extract_full_loinc_lab_names,
                                                extract_full_loinc_lab_orders,
                                                extract_full_loinc_lab_results,
-                                               process_loincs_for_umls_urls,
-                                               LOINC_PARTS_ABBRV_SYNONYMS)
+                                               process_loincs_for_umls_urls)
 from data_curation.terminologies.snomed import get_umls_snomed_lab_values
 from data_curation.terminologies.hl7 import get_hl7_encounter_act_codes, get_hl7_lab_interp
 from data_curation.terminologies.vsac import get_vsac_cvx_vaccines, get_vsac_rxnorm_medications, get_vsac_snomed_problems
@@ -45,9 +44,12 @@ from data_curation.terminologies.general import (save_json_file,
                                                 clean_text_string,
                                                 TMP_DIRECTORY,
                                                 ENHANCEMENTS_DIRECTORY,
-                                                UMLS_API_KEY)
+                                                UMLS_API_KEY,
+                                                BASE_FOLDER)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+LOINC_PARTS_ABBRV_SYNONYMS = BASE_FOLDER / "loinc_other" / "loinc_parts_abbrv_synonyms.txt"
 
 
 def extract_umls_full_snomed_lab_values():  # noqa: D103
@@ -79,7 +81,7 @@ def get_loinc_umls_related_results():  # noqa: D103
         if umls_loinc_results is not None:
             print(f"LOINC RELATED NAMES URLS ADDED: {len(umls_loinc_results)}")
             save_json_file(
-                directory_path=TMP_DIRECTORY, filename=url_filename, contents=umls_loinc_results
+                directory_path=TMP_DIRECTORY, file_name=url_filename, contents=umls_loinc_results
             )
     else:
         print("LOINC UMLS URL File already exists!  Will use that for processing!")

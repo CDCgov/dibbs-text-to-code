@@ -1,0 +1,55 @@
+name: Terminology Updates
+run-name: Update Medical Terminology codes and embeddings by @${{github.actor}}
+
+# Manually kick of process to run the Terminology updates which
+# will get the latest codes from the various terminologies and
+# create new embeddings for the deltas.  Then the latest full
+# verion of the terminologies codes/text combinations will be
+# stored for further comparison in future terminology releases
+# and updates.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update_terminologies:
+    name: Update Terminologies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        with:
+          role-to-assume: ${{ secrets.TERRAFORM_ROLE_ARN }}
+          role-session-name: githubDeploymentWorkflow
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version-file: pyproject.toml
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+
+      - name: Run UV
+        run: uv sync --all-packages --locked --all-extras --dev
+
+      - name: Terminology Maintenance
+        id: terminology-update
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # Access to the public LOINC API endpoints.
+          LOINC_USERNAME: ${{ secrets.LOINC_USER_ID }}
+          LOINC_PWD: ${{ secrets.LOINC_PWD }}
+        run: uv run python .github/scripts/terminology_maintenance.py
