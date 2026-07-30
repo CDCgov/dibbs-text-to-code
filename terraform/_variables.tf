@@ -94,8 +94,20 @@ variable "s3_bucket" {
 
 variable "ingestion_prefix" {
   type        = string
-  default     = "ingestion"
-  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Files added to this prefix will be ingested into OpenSearch by the ingestion pipeline"
+  default     = "ingestion/"
+  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Files added to this prefix will be ingested into OpenSearch by the ingestion pipeline. The trailing slash keeps the OSIS scan from also matching ingestion_backup_prefix"
+}
+
+variable "reingestion_prefix" {
+  type        = string
+  default     = "reingestion/"
+  description = "Staging prefix for a model-update re-ingestion. New NDJSON embeddings are uploaded here; the re-ingestion pipeline syncs them into ingestion_prefix. Never scanned by OSIS, never auto-expired — the operator clears it after a successful run. See docs/runbooks/reingest-loinc-embeddings.md"
+}
+
+variable "ingestion_backup_prefix" {
+  type        = string
+  default     = "ingestion-backup-"
+  description = "Prefix stem the re-ingestion pipeline copies the outgoing contents of ingestion_prefix to before a swap, suffixed with a UTC timestamp (e.g. ingestion-backup-20260727T142530Z/). Never auto-expired — the operator deletes it after verifying the new embeddings"
 }
 
 variable "index_name" {

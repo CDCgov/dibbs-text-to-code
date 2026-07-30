@@ -33,6 +33,8 @@ Confirm the upload:
 aws s3 ls s3://<bucket>/reingestion/
 ```
 
+`reingestion/` is the only prefix the model build writes to; uploading straight to `ingestion/` would be picked up by the next OSIS scan outside a halt window. The IAM scoping for this upload path is documented under [S3 Data Bucket → Access](../../terraform/README.md#access).
+
 ### 2. Start the GitLab pipeline
 
 In the GitLab UI: **CI/CD → Pipelines → Run pipeline** for the re-ingestion project. Provide variables:
@@ -123,7 +125,7 @@ aws s3 rm s3://<bucket>/ingestion/ --recursive
 aws s3 sync s3://<bucket>/reingestion/ s3://<bucket>/ingestion/
 ```
 
-The S3 ObjectCreated events on `ingestion/*` feed the OSIS SQS-driven source, kicking off ingestion automatically.
+The S3 ObjectCreated events on `ingestion/*` feed the OSIS SQS-driven source, kicking off ingestion automatically. The sync is a copy — `reingestion/` still holds the new embeddings afterwards, and you clear it in the post-checks below. One `ingestion-backup-<ts>/` prefix is created per run; nothing deletes it automatically. See [S3 Data Bucket](../../terraform/README.md#s3-data-bucket-s3tf) for the full prefix layout.
 
 **Watch:** `aws s3 ls s3://<bucket>/ingestion/` shows the new file set; `aws s3 ls s3://<bucket>/ingestion-backup-<ts>/` confirms backup.
 **If this fails:** the backup copy is intact. Re-attempt the sync, or run the manual rollback.
@@ -256,3 +258,16 @@ After the pipeline succeeds:
 - [ ] Spot-check 3–5 augmented eICR documents in `s3://<bucket>/AugmentationEICRV2/` from after the swap; confirm `<translation>` elements look reasonable.
 - [ ] CloudWatch alarms: no firing alarms on TTC error rate, throttles, or OpenSearch domain health.
 - [ ] Delete the `ingestion-backup-<ts>/` prefix once you've confirmed the new embeddings are healthy (recommend keeping for at least 24 h).
+
+```sh
+aws s3 rm s3://<bucket>/ingestion-backup-<ts>/ --recursive
+```
+
+- [ ] Clear the staging prefix — `reingestion/` still holds a copy of the embeddings the pipeline promoted, and nothing expires it automatically. Leave it populated only if you expect to re-run the same build.
+
+```sh
+aws s3 rm s3://<bucket>/reingestion/ --recursive
+```
+
+> [!NOTE]
+> There are no S3 lifecycle rules on this bucket — both cleanups above are manual. A stale `reingestion/` isn't read outside a run, but it makes it ambiguous which build is live, and a later run started before the next upload would silently promote the old files.

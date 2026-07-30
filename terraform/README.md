@@ -7,6 +7,9 @@ This directory contains Terraform configuration for deploying the TTC (Text-to-C
 ```
 S3 Bucket (dibbs-text-to-code)
     │
+    ├── reingestion/ prefix  (staging area for new embeddings)
+    │       │  synced by the re-ingestion pipeline during a model update
+    │       ▼
     ├── ingestion/ prefix
     │       │
     │       └── OpenSearch Ingestion Pipeline (OSIS)
@@ -259,4 +262,5 @@ Before running `terraform apply`:
 
 - OpenSearch error logs should be sent to CloudWatch Logs (noted in `main.tf`)
 - Polling frequency for the OSIS pipeline is set to monthly since LOINC updates infrequently, but can be adjusted as needed
-- The `/ingestion/` prefix in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually
+- The `/ingestion/` and `/reingestion/` prefixes in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually (Terraform declares their names in `_variables.tf` but creates no placeholder objects — see [S3 Data Bucket](#s3-data-bucket-s3tf))
+- Neither `reingestion/` nor `ingestion-backup-<ts>/` has an S3 lifecycle rule; cleanup is a manual operator step. An expiration rule on `ingestion-backup-*` would be a reasonable safety net
