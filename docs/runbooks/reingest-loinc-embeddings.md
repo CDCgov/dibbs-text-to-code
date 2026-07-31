@@ -33,7 +33,7 @@ Confirm the upload:
 aws s3 ls s3://<bucket>/reingestion/
 ```
 
-`reingestion/` is the only prefix the model build writes to; uploading straight to `ingestion/` would be picked up by the next OSIS scan outside a halt window. The IAM scoping for this upload path is documented under [S3 Data Bucket → Access](../../terraform/README.md#access).
+`reingestion/` is the only prefix the model build writes to. Nothing watches it, so the upload is safe to do at any time. Uploading straight to `ingestion/` would instead raise the S3 event that starts an ingest immediately — outside a halt window, and against an index that still holds the old embeddings. The IAM scoping for this upload path is documented under [S3 Data Bucket → Access](../../terraform/README.md#access).
 
 ### 2. Start the GitLab pipeline
 
@@ -151,8 +151,14 @@ Completion criteria (both must hold):
 - OpenSearch console → Indices → `ttc-index` doc count climbing.
 - OSIS pipeline metrics: `aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline` → look for `recordsIn` / `recordsOut`.
 - OSIS audit log group: `/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit`.
+- Trigger queue drain — one message per file synced in step 4, and the pipeline deletes each one only after OpenSearch acknowledges the load:
 
-**If the count stalls below expected:** check OSIS log group for parse errors. Common cause: malformed NDJSON. Fix the file in `reingestion/`, re-run from step 6 (the index is already empty).
+  ```sh
+  aws sqs get-queue-attributes --queue-url <osis-trigger-queue-url> \
+    --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
+  ```
+
+**If the count stalls below expected:** check OSIS log group for parse errors. Common cause: malformed NDJSON. Fix the file in `reingestion/`, re-run from step 6 (the index is already empty). If the trigger queue is empty while the doc count is short, the events were consumed and the failure is in parsing or in the sink; if messages are piling up visible and untouched, the pipeline isn't consuming — check `aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline`. Objects that fail three times land in `ttc-osis-trigger-queue-dlq` and raise the Slack DLQ alarm.
 **If the count exceeds expected:** indicates duplicate ingestion or a manifest mismatch. Pause and investigate before resuming TTC.
 
 ### Step 6 — Resume TTC
@@ -193,12 +199,12 @@ The pipeline:
 
 Use this if step 3, 4, or 5 fails _before_ TTC has been resumed.
 
-```sh
-# 1. Restore the previous embeddings
-aws s3 rm s3://<bucket>/ingestion/ --recursive
-aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
+Clear the indices _before_ restoring the files: writing to `ingestion/` starts an ingest within seconds, and anything loaded ahead of the drop would be wiped by it.
 
-# 2. Recreate both indices (Vector Search and Result Cache) from the backup contents (OSIS will reload them)
+```sh
+# 1. Empty ingestion/ and recreate both indices (Vector Search and Result Cache)
+aws s3 rm s3://<bucket>/ingestion/ --recursive
+
 aws lambda invoke \
   --function-name ttc-index-lambda \
   --payload '{"action":"clear_index"}' \
@@ -210,6 +216,9 @@ aws lambda invoke \
   --payload '{"action":"clear_result_cache"}' \
   --cli-binary-format raw-in-base64-out \
   /tmp/index-out.json
+
+# 2. Restore the previous embeddings — this is what re-triggers OSIS
+aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
 
 # 3. Wait for OSIS to repopulate (poll _count as in step 7)
 

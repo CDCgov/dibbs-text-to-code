@@ -637,7 +637,8 @@ resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
           "Sid" : "AllowS3BucketListing",
           "Effect" : "Allow",
           "Action" : [
-            "s3:ListBucket"
+            "s3:ListBucket",
+            "s3:GetBucketLocation"
           ],
           "Resource" : "arn:aws:s3:::${var.s3_bucket}"
         },
@@ -648,6 +649,20 @@ resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
             "s3:GetObject"
           ],
           "Resource" : "arn:aws:s3:::${var.s3_bucket}/*"
+        },
+        {
+          # The SQS-notification source polls, reads and deletes the trigger
+          # queue's messages itself. ChangeMessageVisibility backs
+          # visibility_duplication_protection on the pipeline source.
+          "Sid" : "AllowOsisTriggerQueueConsumption",
+          "Effect" : "Allow",
+          "Action" : [
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:ChangeMessageVisibility"
+          ],
+          "Resource" : aws_sqs_queue.osis_trigger_queue.arn
         },
         {
           "Sid" : "OpenSearchAccess",
@@ -689,6 +704,98 @@ resource "aws_cloudwatch_log_group" "ttc_ingestion_pipeline_logs" {
   retention_in_days = 14
 }
 
+#############
+# Ingestion Pipeline Trigger Queue (S3 -> EventBridge -> SQS -> OSIS)
+#
+# The pipeline source is event-driven rather than a scheduled scan, so syncing
+# files into ingestion_prefix starts an ingest immediately. Events are routed
+# through EventBridge instead of a direct S3 bucket notification: the bucket
+# already carries an eventbridge-only aws_s3_bucket_notification (s3.tf), a
+# bucket accepts only one notification configuration, and adding queue targets
+# there would put this queue and the existing TTC/augmentation rules in the same
+# resource where a drift on one silently breaks the others.
+#############
+
+resource "aws_sqs_queue" "osis_trigger_dlq" {
+  name                      = "${var.osis_trigger_queue_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "osis_trigger_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.osis_trigger_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the OSIS trigger DLQ: an ingestion/ object failed to load into OpenSearch three times."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
+
+  dimensions = {
+    QueueName = aws_sqs_queue.osis_trigger_dlq.name
+  }
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "osis_trigger_queue" {
+  name                       = var.osis_trigger_queue_name
+  visibility_timeout_seconds = var.osis_trigger_visibility_timeout
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.osis_trigger_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "osis_trigger_queue_policy" {
+  queue_url = aws_sqs_queue.osis_trigger_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.osis_trigger_queue.arn
+      }
+    ]
+  })
+}
+
+resource "aws_cloudwatch_event_rule" "osis_ingestion_s3_trigger" {
+  name        = "${var.ingestion_pipeline_name}-s3-trigger"
+  description = "Trigger the OpenSearch ingestion pipeline when embeddings are written to the ingestion prefix in S3"
+
+  # ingestion_prefix carries a trailing slash, so neither reingestion/ nor
+  # ingestion-backup-<ts>/ matches this rule.
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = { name = [var.s3_bucket] }
+      object = { key = [{ prefix = var.ingestion_prefix }] }
+    }
+  })
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "osis_trigger_sqs_target" {
+  rule      = aws_cloudwatch_event_rule.osis_ingestion_s3_trigger.name
+  target_id = "${var.ingestion_pipeline_name}-sqs"
+  arn       = aws_sqs_queue.osis_trigger_queue.arn
+}
+
 
 resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
   pipeline_name = var.ingestion_pipeline_name
@@ -716,15 +823,19 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
       source:
         s3:
           acknowledgments: true
-          scan:
-            buckets:
-              - bucket:
-                  name: ${var.s3_bucket}
-                  filter:
-                    include_prefix:
-                      - ${var.ingestion_prefix}
-            scheduling:
-              interval: PT720H
+          notification_type: sqs
+          notification_source: eventbridge
+          sqs:
+            queue_url: ${aws_sqs_queue.osis_trigger_queue.url}
+            visibility_timeout: PT${var.osis_trigger_visibility_timeout}S
+            # Keeps a long-running object from being redelivered and ingested
+            # twice; documents carry no explicit _id, so a duplicate read is a
+            # duplicate document. Read one message at a time: duplication
+            # protection is unreliable on large objects when a full batch of 10
+            # is claimed at once (data-prepper#4812), and workers is 1 anyway,
+            # so a larger batch would buy no parallelism.
+            visibility_duplication_protection: true
+            maximum_messages: '1'
           aws:
             region: ${var.region}
             sts_role_arn: ${aws_iam_role.os_ingestion_pipeline_role.arn}
@@ -751,9 +862,14 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
       
   EOT
 
+  # OSIS validates the pipeline role's access when the pipeline is created, so
+  # the role's inline policy and the queue's send policy must be in place first;
+  # neither is reachable from the configuration body's interpolations.
   depends_on = [
     aws_lambda_invocation.index_bootstrap,
-    aws_lambda_invocation.result_cache_index_bootstrap
+    aws_lambda_invocation.result_cache_index_bootstrap,
+    aws_iam_role_policy.os_ingestion_pipeline_policy,
+    aws_sqs_queue_policy.osis_trigger_queue_policy
   ]
 }
 

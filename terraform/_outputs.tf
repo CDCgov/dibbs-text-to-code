@@ -49,6 +49,11 @@ output "augmentation_lambda_function_name" {
   description = "The name of the augmentation lambda function"
 }
 
+output "osis_trigger_queue_url" {
+  value       = aws_sqs_queue.osis_trigger_queue.url
+  description = "URL of the SQS queue the OpenSearch ingestion pipeline polls for S3 ObjectCreated events on the ingestion prefix"
+}
+
 output "demo_url" {
   value       = "https://${var.demo_domain_name}"
   description = "The URL of the TTC demo (Basic auth required)"
