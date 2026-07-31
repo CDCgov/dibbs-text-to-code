@@ -21,6 +21,11 @@ To use the environment, you need to attach it to your compute instance one time,
 1. Upload `dibbs_env.yml` to your notebook folder within Azure ML Studio.
 2. In Azure ML Studio, open a notebook and start the compute instance attached to your notebook.
 3. Once the compute instance is running, click on the 3 dots to the right of your compute instance selection and choose "Open terminal" from the dropdown.
+
+   Note: If you have a previous version of `DIBBs Env` active in your environment,
+   you need to remove it by running `conda env remove --name dibbs_env` and ensure you
+   have uploaded the newest version of `dibbs_env.yml` before proceeding.
+
 4. Once in the terminal, create the conda environment by running `conda env create -f dibbs_env.yml`
 5. Activate the environment by running `conda activate dibbs_env`
 6. Register the environment as a Jupyter kernel by running `python -m ipykernel install --user --name dibbs_env --display-name "DIBBs Env"`

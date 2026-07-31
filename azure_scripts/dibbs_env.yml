@@ -4,6 +4,11 @@ dependencies:
   - pip
   - pip:
       - numpy
-      - torch
+      - torch==2.10
       - sentence-transformers
       - ipykernel # required for attaching the environment to Azure ML compute
+      - azure-keyvault-secrets
+      - azure-identity
+      - azure-ai-ml
+      - azureml-fsspec
+      - setuptools<80 # required until Azure updates python version in their ML SDK to 3.12
