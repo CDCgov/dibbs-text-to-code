@@ -59,7 +59,6 @@ class TestQueryBuilder:
         expected_query = {
             "size": size,
             "_source": {
-                "excludes": ["description_vector"],
                 "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
             },
             "query": {
@@ -98,7 +97,6 @@ class TestQueryBuilder:
         expected_query = {
             "size": 10,
             "_source": {
-                "excludes": ["description_vector"],
                 "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
             },
             "query": {
@@ -135,7 +133,6 @@ class TestQueryBuilder:
         expected_query = {
             "size": 10,
             "_source": {
-                "excludes": ["description_vector"],
                 "includes": ["id", "loinc_code", "loinc_name_type", "description", "loinc_type"],
             },
             "query": {
