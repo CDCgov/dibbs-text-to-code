@@ -89,13 +89,13 @@ variable "ingestion_pipeline_name" {
 variable "osis_trigger_queue_name" {
   type        = string
   default     = "ttc-osis-trigger-queue"
-  description = "The SQS queue OSIS polls for S3 ObjectCreated events on ingestion_prefix. Events reach it via S3 -> EventBridge -> SQS, the same path the TTC and augmentation Lambdas use"
+  description = "The SQS queue OSIS polls for S3 ObjectCreated events on ingestion_prefix, delivered via EventBridge"
 }
 
 variable "osis_trigger_visibility_timeout" {
   type        = number
   default     = 600
-  description = "Visibility timeout in seconds for osis_trigger_queue_name, and the matching visibility_timeout on the pipeline's SQS source. 10 minutes per the SPIKE's 5-10 minute guidance: a message stays invisible for the whole time OSIS spends reading an NDJSON object and waiting for the sink acknowledgment, so a value below the per-object ingest time would redeliver the object and duplicate documents. See docs/spikes/502-reingestion-pause.md"
+  description = "Visibility timeout in seconds for osis_trigger_queue_name, mirrored onto the pipeline source. Must outlast one object's read-and-index time, since acknowledgments defer the message delete until OpenSearch confirms the write. 10 minutes, per the SPIKE's 5-10 minute guidance"
 }
 
 variable "s3_bucket" {
@@ -107,7 +107,7 @@ variable "s3_bucket" {
 variable "ingestion_prefix" {
   type        = string
   default     = "ingestion/"
-  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Creating a file under this prefix raises an S3 ObjectCreated event that EventBridge routes to osis_trigger_queue_name, and the ingestion pipeline loads the file into OpenSearch. The trailing slash keeps the EventBridge prefix match from also matching reingestion_prefix or ingestion_backup_prefix"
+  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Creating a file here raises the S3 event that triggers ingestion into OpenSearch. The trailing slash keeps the EventBridge prefix match from also matching reingestion_prefix or ingestion_backup_prefix"
 }
 
 variable "reingestion_prefix" {

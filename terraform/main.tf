@@ -651,9 +651,7 @@ resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
           "Resource" : "arn:aws:s3:::${var.s3_bucket}/*"
         },
         {
-          # The SQS-notification source polls, reads and deletes the trigger
-          # queue's messages itself. ChangeMessageVisibility backs
-          # visibility_duplication_protection on the pipeline source.
+          # ChangeMessageVisibility backs visibility_duplication_protection.
           "Sid" : "AllowOsisTriggerQueueConsumption",
           "Effect" : "Allow",
           "Action" : [
@@ -707,13 +705,8 @@ resource "aws_cloudwatch_log_group" "ttc_ingestion_pipeline_logs" {
 #############
 # Ingestion Pipeline Trigger Queue (S3 -> EventBridge -> SQS -> OSIS)
 #
-# The pipeline source is event-driven rather than a scheduled scan, so syncing
-# files into ingestion_prefix starts an ingest immediately. Events are routed
-# through EventBridge instead of a direct S3 bucket notification: the bucket
-# already carries an eventbridge-only aws_s3_bucket_notification (s3.tf), a
-# bucket accepts only one notification configuration, and adding queue targets
-# there would put this queue and the existing TTC/augmentation rules in the same
-# resource where a drift on one silently breaks the others.
+# EventBridge rather than a direct bucket notification: s3.tf already spends the
+# bucket's one allowed notification configuration on eventbridge = true.
 #############
 
 resource "aws_sqs_queue" "osis_trigger_dlq" {
@@ -724,7 +717,7 @@ resource "aws_sqs_queue" "osis_trigger_dlq" {
 
 resource "aws_cloudwatch_metric_alarm" "osis_trigger_dlq_visible_messages" {
   alarm_name          = "${aws_sqs_queue.osis_trigger_dlq.name}-visible-messages"
-  alarm_description   = "Visible messages are present in the OSIS trigger DLQ: an ingestion/ object failed to load into OpenSearch three times."
+  alarm_description   = "Visible messages are present in the OSIS trigger DLQ."
   namespace           = "AWS/SQS"
   metric_name         = "ApproximateNumberOfMessagesVisible"
   statistic           = "Maximum"
@@ -776,8 +769,7 @@ resource "aws_cloudwatch_event_rule" "osis_ingestion_s3_trigger" {
   name        = "${var.ingestion_pipeline_name}-s3-trigger"
   description = "Trigger the OpenSearch ingestion pipeline when embeddings are written to the ingestion prefix in S3"
 
-  # ingestion_prefix carries a trailing slash, so neither reingestion/ nor
-  # ingestion-backup-<ts>/ matches this rule.
+  # The trailing slash on ingestion_prefix excludes reingestion/ and ingestion-backup-*/.
   event_pattern = jsonencode({
     source      = ["aws.s3"]
     detail-type = ["Object Created"]
@@ -828,12 +820,8 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
           sqs:
             queue_url: ${aws_sqs_queue.osis_trigger_queue.url}
             visibility_timeout: PT${var.osis_trigger_visibility_timeout}S
-            # Keeps a long-running object from being redelivered and ingested
-            # twice; documents carry no explicit _id, so a duplicate read is a
-            # duplicate document. Read one message at a time: duplication
-            # protection is unreliable on large objects when a full batch of 10
-            # is claimed at once (data-prepper#4812), and workers is 1 anyway,
-            # so a larger batch would buy no parallelism.
+            # Documents carry no explicit _id, so a redelivered object duplicates
+            # every document in it. Batch of 1 sidesteps data-prepper#4812.
             visibility_duplication_protection: true
             maximum_messages: '1'
           aws:
@@ -862,9 +850,8 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
       
   EOT
 
-  # OSIS validates the pipeline role's access when the pipeline is created, so
-  # the role's inline policy and the queue's send policy must be in place first;
-  # neither is reachable from the configuration body's interpolations.
+  # OSIS validates the pipeline role's access at create time, and neither policy
+  # is reachable through the configuration body's interpolations.
   depends_on = [
     aws_lambda_invocation.index_bootstrap,
     aws_lambda_invocation.result_cache_index_bootstrap,

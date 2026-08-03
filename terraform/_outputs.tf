@@ -51,7 +51,7 @@ output "augmentation_lambda_function_name" {
 
 output "osis_trigger_queue_url" {
   value       = aws_sqs_queue.osis_trigger_queue.url
-  description = "URL of the SQS queue the OpenSearch ingestion pipeline polls for S3 ObjectCreated events on the ingestion prefix"
+  description = "URL of the SQS queue the OpenSearch ingestion pipeline polls for ingestion-prefix object events"
 }
 
 output "demo_url" {
