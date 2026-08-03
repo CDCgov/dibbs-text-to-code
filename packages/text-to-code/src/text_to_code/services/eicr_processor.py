@@ -174,7 +174,7 @@ class EicrProcessor:
         if value.startswith("<=") and value.endswith("=>"):
             value = value[2:-2].strip()
 
-        return value.lstrip(".:")
+        return value.lstrip(".:").strip()
 
     def _log_text_candidate_extraction_error(
         self,

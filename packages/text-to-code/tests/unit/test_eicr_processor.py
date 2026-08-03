@@ -382,6 +382,7 @@ class TestEicrProcessorPreprocessing:
         ("value", "expected"),
         [
             (".AGE", "AGE"),
+            (".     AGE", "AGE"),
             (":rbc", "rbc"),
             ("...:::AGE", "AGE"),
             ("WBC  #", "WBC #"),
