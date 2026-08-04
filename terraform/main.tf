@@ -597,6 +597,12 @@ resource "aws_lambda_function" "lambda" {
     }
   }
 
+  reserved_concurrent_executions = -1
+
+  lifecycle {
+    ignore_changes = [reserved_concurrent_executions]
+  }
+
   tags = { Name = var.lambda_function_name }
 }
 
@@ -1235,6 +1241,11 @@ resource "aws_lambda_event_source_mapping" "ttc_input_sqs" {
   function_name           = aws_lambda_function.lambda.arn
   batch_size              = 1
   function_response_types = ["ReportBatchItemFailures"]
+  enabled                 = true
+
+  lifecycle {
+    ignore_changes = [enabled]
+  }
 }
 
 resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
