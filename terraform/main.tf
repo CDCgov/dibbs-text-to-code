@@ -760,6 +760,11 @@ resource "aws_sqs_queue_policy" "osis_trigger_queue_policy" {
         Principal = { Service = "events.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.osis_trigger_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.osis_ingestion_s3_trigger.arn
+          }
+        }
       }
     ]
   })
@@ -1063,6 +1068,11 @@ resource "aws_sqs_queue_policy" "augmentation_queue_policy" {
         Principal = { Service = "events.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.augmentation_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.augmentation_s3_trigger.arn
+          }
+        }
       }
     ]
   })
@@ -1180,6 +1190,11 @@ resource "aws_sqs_queue_policy" "ttc_input_queue_policy" {
         Principal = { Service = "events.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.ttc_input_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.ttc_input_s3_trigger.arn
+          }
+        }
       }
     ]
   })
