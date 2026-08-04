@@ -153,7 +153,7 @@ Completion criteria (both must hold):
 - OSIS audit log group: `/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit`.
 - Trigger queue draining (one message per file synced in step 4): `aws sqs get-queue-attributes --queue-url <osis-trigger-queue-url> --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible`.
 
-**If the count stalls below expected:** check OSIS log group for parse errors. Common cause: malformed NDJSON. Fix the file in `reingestion/`, re-run from step 6 (the index is already empty). Messages piling up untouched on the trigger queue mean the pipeline isn't consuming at all — check `aws osis get-pipeline`. Objects that fail three times land in `ttc-osis-trigger-queue-dlq` and raise the Slack DLQ alarm.
+**If the count stalls below expected:** check OSIS log group for parse errors; messages piling up untouched on the trigger queue instead mean the pipeline isn't consuming at all — check `aws osis get-pipeline`. Objects that fail three times land in `ttc-osis-trigger-queue-dlq` and raise the Slack DLQ alarm. To retry: fix the file in `reingestion/`, let the trigger queue empty so no in-flight retry lands in the fresh index, then re-run from step 3 — the index holds a partial load and has to be dropped again.
 **If the count exceeds expected:** indicates duplicate ingestion or a manifest mismatch. Pause and investigate before resuming TTC.
 
 ### Step 6 — Resume TTC
@@ -215,9 +215,9 @@ aws lambda invoke \
 # 2. Restore the previous embeddings
 aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
 
-# 3. Wait for OSIS to repopulate (poll _count as in step 7)
+# 3. Wait for OSIS to repopulate
 
-# 4. Resume TTC (same as step 8)
+# 4. Resume TTC
 aws lambda update-event-source-mapping --uuid <esm-uuid> --enabled
 aws lambda put-function-concurrency \
   --function-name ttc-lambda \
@@ -232,7 +232,7 @@ aws lambda put-function-concurrency \
 | Step 2      | Halt is in place; nothing destructive yet. Wait for the stuck Lambda to finish, then re-run pipeline.                      |
 | Step 3      | Index drop failed. Rollback (above) is a no-op (index hasn't been emptied) — just resume TTC manually and re-run pipeline. |
 | Step 4      | Sync partially complete. Run manual rollback to restore from `ingestion-backup-<ts>/`, then re-run pipeline.               |
-| Step 5      | OSIS not catching up. Investigate first; rollback is the same as step 6.                                                   |
+| Step 5      | OSIS not catching up. Investigate first; rollback is the same as for step 4.                                               |
 | Step 6      | **TTC is stuck halted.** Run the two AWS CLI commands manually and page on-call.                                           |
 | Step 7      | Smoke test failed but TTC is running. Investigate logs; do not auto-rollback.                                              |
 
