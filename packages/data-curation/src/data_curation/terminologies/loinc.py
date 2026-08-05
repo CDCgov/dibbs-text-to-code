@@ -89,29 +89,41 @@ def extract_full_loinc_lab_names(include_consumer_names: bool = False) -> list[d
     return all_loinc_rows
 
 
-def extract_full_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
+def extract_full_loinc_lab_orders(
+    include_consumer_names: bool = False, version: str = ""
+) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both')  and organizes them into a list of dictionaries.
 
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
+    :param version: Text string of the version number you want to
+        use to filter LOINC codes for.
 
     :returns: A list of dictionaries containing all the latest LOINC
         lab order records including codes, terms, and axis information.
     """
-    loinc_order_rows = _get_loinc_lab_orders(include_consumer_names=include_consumer_names)
+    loinc_order_rows = _get_loinc_lab_orders(
+        version=version, include_consumer_names=include_consumer_names
+    )
     return loinc_order_rows
 
 
-def extract_full_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
+def extract_full_loinc_lab_results(
+    include_consumer_names: bool = False, version: str = ""
+) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a list of dictionaries.
 
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
+    :param version: Text string of the version number you want to
+        use to filter LOINC codes for.
 
     :returns: A list of dictionaries containing all the latest LOINC
         lab result records including codes, terms, and axis information.
     """
-    loinc_result_rows = _get_loinc_lab_results(include_consumer_names=include_consumer_names)
+    loinc_result_rows = _get_loinc_lab_results(
+        version=version, include_consumer_names=include_consumer_names
+    )
     return loinc_result_rows
 
 
@@ -594,7 +606,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "short_name" in element_changes
     ) and short_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -608,7 +620,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "long_name" in element_changes
     ) and long_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -622,7 +634,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "display_name" in element_changes
     ) and display_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -636,7 +648,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "full_name" in element_changes
     ) and full_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
