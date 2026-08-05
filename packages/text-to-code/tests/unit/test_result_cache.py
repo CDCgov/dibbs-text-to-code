@@ -126,15 +126,15 @@ class TestResultCacheAPIs:
         )
 
         cache_result_created = put_new_cached_result(
-            mock_opensearch_client,
-            RESULT_CACHE_INDEX_NAME,
-            "blood urea nitrogen (BUN)",
-            "Lab Test Name Resulted",
-            standard_loinc_code,
-            0.97771,
-            0.8624,
-            opensearch_retrieved_scores,
-            [],
+            opensearch_client=mock_opensearch_client,
+            index=RESULT_CACHE_INDEX_NAME,
+            candidate_input="blood urea nitrogen (BUN)",
+            data_field="Lab Test Name Resulted",
+            loinc_code=standard_loinc_code,
+            search_score=0.97771,
+            reranker_score=0.8624,
+            opensearch_retrieved_scores=opensearch_retrieved_scores,
+            reranker_processed_results=[],
         )
 
         assert cache_result_created
