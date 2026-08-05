@@ -132,7 +132,7 @@ known-first-party = [
   "D102",    # undocumented-public-method
   "D103",    # undocumented-public-function
   "PLR0913", # too many arguments
-  "PLR0917", # too many positional arguments - pytest injects fixtures by name
+  "PLR0917", # too many positional arguments
   "S101",    # assert,
   "T201",    # print
 ]
