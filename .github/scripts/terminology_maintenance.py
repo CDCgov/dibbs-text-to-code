@@ -5,8 +5,6 @@ import logging
 import os
 from datetime import datetime
 
-import boto3
-from botocore.client import BaseClient
 from data_curation.terminologies.general import (
     BASE_FOLDER,
     TerminologyUpdateResponse,
@@ -20,6 +18,7 @@ from data_curation.terminologies.loinc import (
     set_loinc_response,
 )
 
+from lambda_handler.lambda_handler import create_s3_client, get_file_content_from_s3, put_file
 from text_to_code.services.embedder import embed
 
 REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -29,47 +28,6 @@ INGESTION_PREFIX = os.getenv("INGESTION_PREFIX", "ingestion/")
 LOINC_NAMES_ORIGINAL_EXTRACT = "loinc_lab_names_20260223.csv"
 
 logger = logging.getLogger(__name__)
-_cached_s3_client: BaseClient | None = None
-
-
-def create_s3_client() -> BaseClient:
-    """Creates an S3 client.
-
-    :return: S3 client
-    """
-    global _cached_s3_client  # noqa: PLW0603
-
-    if _cached_s3_client is None:
-        # endpoint_url = os.getenv("S3_ENDPOINT_URL")
-        region_name = REGION
-        _cached_s3_client = boto3.client(
-            "s3",
-            # endpoint_url=endpoint_url,
-            region_name=region_name,
-        )
-        logger.info("Created S3 client: status=success")
-
-    return _cached_s3_client
-
-
-def get_file_content_from_s3(bucket_name: str, object_key: str) -> str:
-    """Extracts the file content from an S3 bucket.
-
-    :param bucket_name: The name of the S3 bucket.
-    :param object_key: The key of the S3 object.
-
-    :return: The content of the file as a string.
-    """
-    client = create_s3_client()
-
-    logger.info(
-        f"Retrieving file content from S3,\nbucket_name={bucket_name},\ns3_key={object_key},\nstatus='processing'"
-    )
-    response = client.get_object(Bucket=bucket_name, Key=object_key)
-    logger.info(
-        f"Retrieving file content from S3,\nbucket_name={bucket_name},\ns3_key={object_key},\nstatus='success'"
-    )
-    return response["Body"].read().decode("utf-8")
 
 
 def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
@@ -97,21 +55,6 @@ def get_latest_extract_file_name(file_name_prefix: str) -> str | None:
         if file_name_prefix in file_name:
             file_names.append(file_name)
     return max(file_names) if file_names else None
-
-
-def put_file(body: str | bytes, bucket: str, key: str) -> None:
-    """Uploads a file object to a S3 bucket.
-
-    :param body: The file object to upload.
-    :param bucket_name: The name of the S3 bucket to upload to.
-    :param object_key: The key to assign to the uploaded object in S3.
-    """
-    client = create_s3_client()
-    logger.info(
-        f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='processing'"
-    )
-    client.put_object(Body=body, Bucket=bucket, Key=key)
-    logger.info(f"Uploading file to S3,\n bucket_name={bucket},\ns3_key={key},\nstatus='success'")
 
 
 def _get_terminology_extract_file(file_name: str) -> dict[str, dict[str, str]]:
