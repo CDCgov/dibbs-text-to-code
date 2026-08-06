@@ -21,7 +21,6 @@ from data_curation.terminologies.loinc import (
 from lambda_handler.lambda_handler import create_s3_client, get_file_content_from_s3, put_file
 from text_to_code.services.embedder import embed
 
-REGION = AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET = os.getenv("S3_BUCKET", "dibbs-text-to-code")
 TERMINOLOGY_EXTRACT_PREFIX = os.getenv("TERMINOLOGY_EXTRACT_PREFIX", "Terminologies/")
 INGESTION_PREFIX = os.getenv("INGESTION_PREFIX", "ingestion/")
