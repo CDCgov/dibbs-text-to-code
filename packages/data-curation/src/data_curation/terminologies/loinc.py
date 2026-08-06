@@ -142,26 +142,16 @@ def _get_loinc_lab_names(version: str = "", include_consumer_names: bool = False
     return all_loinc_rows
 
 
-def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = False) -> list[dict]:
-    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
+def _get_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
+    """Process to get all of the LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
 
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab order records
         including codes, terms, and axis information.
     """
-    # if version is supplied we grab the delta
-    # and filter based upon version changes
-    # otherwise grab all Orders
-    if version != "":
-        api_url = (
-            LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_ORDER_QUERY
-        )
-    else:
-        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
+    api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -172,26 +162,16 @@ def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = Fals
     return loinc_order_rows
 
 
-def _get_loinc_lab_results(version: str = "", include_consumer_names: bool = False) -> list[dict]:
-    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
+def _get_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
+    """Process to get all of the LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
 
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab result records
         including codes, terms, and axis information.
     """
-    # if version is supplied we grab the delta
-    # and filter based upon version changes
-    # otherwise grab all Observations
-    if version != "":
-        api_url = (
-            LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_RESULT_QUERY
-        )
-    else:
-        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_RESULT_QUERY}"
+    api_url = LOINC_BASE_URL + f"query={LOINC_LAB_RESULT_QUERY}"
     loinc_vs_type = "Lab Results"
     loinc_result_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -594,7 +574,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "short_name" in element_changes
     ) and short_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -608,7 +588,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "long_name" in element_changes
     ) and long_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -622,7 +602,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "display_name" in element_changes
     ) and display_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
@@ -636,7 +616,7 @@ def _create_embedding_records(
         or "new_loinc" in element_changes
         or "full_name" in element_changes
     ) and full_name:
-        if new_id:
+        if new_id != "":
             new_id += 1
         emb_rec = _create_embedding_record(
             rec_id=new_id,
