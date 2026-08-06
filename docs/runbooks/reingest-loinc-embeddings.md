@@ -33,7 +33,7 @@ Confirm the upload:
 aws s3 ls s3://<bucket>/reingestion/
 ```
 
-`reingestion/` is the only prefix the model build writes to; uploading straight to `ingestion/` would be picked up by the next OSIS scan outside a halt window. The IAM scoping for this upload path is documented under [S3 Data Bucket → Access](../../terraform/README.md#access).
+`reingestion/` is the only prefix the model build writes to, and nothing watches it; uploading straight to `ingestion/` would start an ingest on the spot, outside a halt window. The IAM scoping for this upload path is documented under [S3 Data Bucket → Access](../../terraform/README.md#access).
 
 ### 2. Start the GitLab pipeline
 
@@ -151,8 +151,9 @@ Completion criteria (both must hold):
 - OpenSearch console → Indices → `ttc-index` doc count climbing.
 - OSIS pipeline metrics: `aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline` → look for `recordsIn` / `recordsOut`.
 - OSIS audit log group: `/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit`.
+- Trigger queue draining (one message per file synced in step 4): `aws sqs get-queue-attributes --queue-url <osis-trigger-queue-url> --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible`.
 
-**If the count stalls below expected:** check OSIS log group for parse errors. Common cause: malformed NDJSON. Fix the file in `reingestion/`, re-run from step 6 (the index is already empty).
+**If the count stalls below expected:** check OSIS log group for parse errors; messages piling up untouched on the trigger queue instead mean the pipeline isn't consuming at all — check `aws osis get-pipeline`. Objects that fail three times land in `ttc-osis-trigger-queue-dlq` and raise the Slack DLQ alarm. To retry: fix the file in `reingestion/`, let the trigger queue empty so no in-flight retry lands in the fresh index, then re-run from step 3 — the index holds a partial load and has to be dropped again.
 **If the count exceeds expected:** indicates duplicate ingestion or a manifest mismatch. Pause and investigate before resuming TTC.
 
 ### Step 6 — Resume TTC
@@ -193,12 +194,12 @@ The pipeline:
 
 Use this if step 3, 4, or 5 fails _before_ TTC has been resumed.
 
-```sh
-# 1. Restore the previous embeddings
-aws s3 rm s3://<bucket>/ingestion/ --recursive
-aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
+Clear the indices _before_ restoring the files — the restore is what re-triggers OSIS, so a drop after it would wipe what just loaded.
 
-# 2. Recreate both indices (Vector Search and Result Cache) from the backup contents (OSIS will reload them)
+```sh
+# 1. Empty ingestion/ and recreate both indices (Vector Search and Result Cache)
+aws s3 rm s3://<bucket>/ingestion/ --recursive
+
 aws lambda invoke \
   --function-name ttc-index-lambda \
   --payload '{"action":"clear_index"}' \
@@ -211,9 +212,12 @@ aws lambda invoke \
   --cli-binary-format raw-in-base64-out \
   /tmp/index-out.json
 
-# 3. Wait for OSIS to repopulate (poll _count as in step 7)
+# 2. Restore the previous embeddings
+aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
 
-# 4. Resume TTC (same as step 8)
+# 3. Wait for OSIS to repopulate
+
+# 4. Resume TTC
 aws lambda update-event-source-mapping --uuid <esm-uuid> --enabled
 aws lambda put-function-concurrency \
   --function-name ttc-lambda \
@@ -228,7 +232,7 @@ aws lambda put-function-concurrency \
 | Step 2      | Halt is in place; nothing destructive yet. Wait for the stuck Lambda to finish, then re-run pipeline.                      |
 | Step 3      | Index drop failed. Rollback (above) is a no-op (index hasn't been emptied) — just resume TTC manually and re-run pipeline. |
 | Step 4      | Sync partially complete. Run manual rollback to restore from `ingestion-backup-<ts>/`, then re-run pipeline.               |
-| Step 5      | OSIS not catching up. Investigate first; rollback is the same as step 6.                                                   |
+| Step 5      | OSIS not catching up. Investigate first; rollback is the same as for step 4.                                               |
 | Step 6      | **TTC is stuck halted.** Run the two AWS CLI commands manually and page on-call.                                           |
 | Step 7      | Smoke test failed but TTC is running. Investigate logs; do not auto-rollback.                                              |
 
