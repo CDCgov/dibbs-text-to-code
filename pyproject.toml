@@ -1,6 +1,6 @@
 [project]
 name = "dibbs-text-to-code-root"
-version = "0.2.5"
+version = "0.3.0"
 description = ""
 authors = [
   { name = "Brady Fausett", email = "bradyfausett@skylight.digital" },
@@ -23,7 +23,7 @@ dev = [
   "pytest>=9.0.3",
   "requests>=2.34.2",
   "ruff>=0.15.19",
-  "ty>=0.0.64",
+  "ty>=0.0.65",
 ]
 
 [tool.coverage.run]

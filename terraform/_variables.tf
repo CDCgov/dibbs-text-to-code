@@ -86,6 +86,18 @@ variable "ingestion_pipeline_name" {
   default = "ttc-ingestion-pipeline"
 }
 
+variable "osis_trigger_queue_name" {
+  type        = string
+  default     = "ttc-osis-trigger-queue"
+  description = "The SQS queue OSIS polls for S3 ObjectCreated events on ingestion_prefix, delivered via EventBridge"
+}
+
+variable "osis_trigger_visibility_timeout" {
+  type        = number
+  default     = 600
+  description = "Visibility timeout in seconds for osis_trigger_queue_name, mirrored onto the pipeline source. Must outlast one object's read-and-index time, since acknowledgments defer the message delete until OpenSearch confirms the write. 10 minutes, per the SPIKE's 5-10 minute guidance"
+}
+
 variable "s3_bucket" {
   type        = string
   default     = "dibbs-text-to-code"
@@ -95,7 +107,7 @@ variable "s3_bucket" {
 variable "ingestion_prefix" {
   type        = string
   default     = "ingestion/"
-  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Files added to this prefix will be ingested into OpenSearch by the ingestion pipeline. The trailing slash keeps the OSIS scan from also matching ingestion_backup_prefix"
+  description = "The prefix for the ingestion pipeline 'folder' in the s3 bucket. Creating a file here raises the S3 event that triggers ingestion into OpenSearch. The trailing slash keeps the EventBridge prefix match from also matching reingestion_prefix or ingestion_backup_prefix"
 }
 
 variable "reingestion_prefix" {

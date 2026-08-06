@@ -108,7 +108,7 @@ class EicrProcessor:
                             sub_node=sub_node,
                             xpath=sub_xpath,
                         )
-                    except (etree.XPathError, AttributeError, SyntaxError, ValueError):
+                    except etree.XPathError, AttributeError, SyntaxError, ValueError:
                         extraction_error_count += 1
                         self._log_text_candidate_extraction_error(
                             log_context=log_context,
@@ -142,15 +142,39 @@ class EicrProcessor:
         candidate_count = len(candidates)
 
         if isinstance(sub_node, str):
-            text: str = sub_node.strip()
+            text: str = self._preprocess_text_candidate(sub_node)
             if text:
                 candidates.append(Candidate(value=text, xpath=xpath))
         else:
             texts = self._extract_text_candidates_from_element(sub_node)
             for text in texts:
-                candidates.append(Candidate(value=text, xpath=xpath))
+                processed_text = self._preprocess_text_candidate(text)
+                if processed_text:
+                    candidates.append(Candidate(value=processed_text, xpath=xpath))
 
         return len(candidates) > candidate_count
+
+    def _preprocess_text_candidate(self, value: str) -> str:
+        """Preprocess a text candidate value.
+
+        :param value: The text candidate value to preprocess.
+
+        Current preprocessing steps:
+        1. Replace multiple whitespace characters with a single space and strip leading/trailing whitespace.
+        2. Remove leading and trailing 'arrows' if present ('=> ... <=' or '<= ... =>').
+        3. Remove leading periods and colons.
+
+        :returns: The preprocessed text candidate value.
+        """
+        value = " ".join(value.split())
+
+        if value.startswith("=>") and value.endswith("<="):
+            value = value[2:-2].strip()
+
+        if value.startswith("<=") and value.endswith("=>"):
+            value = value[2:-2].strip()
+
+        return value.lstrip(".:").strip()
 
     def _log_text_candidate_extraction_error(
         self,
@@ -222,7 +246,11 @@ class EicrProcessor:
             )
 
     def resolve_reference(self, reference_value: str | None) -> str | None:
-        """Get the text of the first node with an ID attribute that matches the reference."""
+        """Get the text of the first node with an ID attribute that matches the reference.
+
+        :param reference_value: The reference value to resolve.
+        :returns: The text of the referenced node, or None if not found.
+        """
         reference_value = reference_value.strip() if reference_value else ""
         if not reference_value:
             return None
