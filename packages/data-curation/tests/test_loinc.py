@@ -233,32 +233,6 @@ def test_extract_full_loinc_lab_orders(
     assert calls == [loinc.LOINC_BASE_URL + f"query={loinc.LOINC_LAB_ORDER_QUERY}"]
 
 
-def test_extract_full_loinc_lab_orders_with_version(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls: list[str] = []
-    payload = _loinc_payload([_loinc_result(lab_type="Order")])
-
-    def mock_get_with_timeout(
-        api_url: str,
-        auth: tuple[str, str] | None = None,
-    ) -> MockResponse:
-        calls.append(api_url)
-        return MockResponse(200, payload)
-
-    monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
-    monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
-
-    result = loinc.extract_full_loinc_lab_orders(version="2.80")
-
-    assert len(result) == 1
-    assert result[0]["lab_type"] == "Order"
-    assert calls == [
-        loinc.LOINC_BASE_URL + f"query=versionlastchanged:2.80+AND+{loinc.LOINC_LAB_ORDER_QUERY}"
-    ]
-
-
 def test_extract_full_loinc_lab_results(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -290,32 +264,6 @@ def test_extract_full_loinc_lab_results(
     assert results[0].get("consumer_name") == "TEST CONSUMER NAME"
     assert results[0].get("lab_type") == "Observation"
     assert calls == [loinc.LOINC_BASE_URL + f"query={loinc.LOINC_LAB_RESULT_QUERY}"]
-
-
-def test_extract_full_loinc_lab_results_with_version(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls: list[str] = []
-    payload = _loinc_payload([_loinc_result(lab_type="Observation")])
-
-    def mock_get_with_timeout(
-        api_url: str,
-        auth: tuple[str, str] | None = None,
-    ) -> MockResponse:
-        calls.append(api_url)
-        return MockResponse(200, payload)
-
-    monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
-    monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
-
-    result = loinc.extract_full_loinc_lab_results(version="2.80")
-
-    assert len(result) == 1
-    assert result[0]["lab_type"] == "Observation"
-    assert calls == [
-        loinc.LOINC_BASE_URL + f"query=versionlastchanged:2.80+AND+{loinc.LOINC_LAB_RESULT_QUERY}"
-    ]
 
 
 def test_extract_full_loinc_lab_names_uses_expected_url(
@@ -586,18 +534,21 @@ def test_extract_full_loinc_lab_names_adds_available_consumer_names(
     assert result[1]["consumer_name"] is None
 
 
-def test_get_loinc_current_version_data(monkeypatch: pytest.MonkeyPatch, mocker) -> None:
+def test_get_loinc_current_version_data(monkeypatch: pytest.MonkeyPatch) -> None:
     payload: dict[str, object] = {
         "releaseDate": "2026-01-02T00:00:00",
         "version": "2.80",
     }
 
+    def mock_get_with_timeout(
+        api_url: str,
+        auth: tuple[str, str] | None = None,
+    ) -> MockResponse:
+        return MockResponse(200, payload, json.dumps(payload))
+
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    mocker.patch(
-        "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=MockResponse(200, payload, json.dumps(payload)),
-    )
+    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
 
     result = loinc.get_loinc_current_version_data()
 
@@ -605,14 +556,17 @@ def test_get_loinc_current_version_data(monkeypatch: pytest.MonkeyPatch, mocker)
 
 
 def test_get_loinc_current_version_data_raises_on_error(
-    monkeypatch: pytest.MonkeyPatch, mocker
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    def mock_get_with_timeout(
+        api_url: str,
+        auth: tuple[str, str] | None = None,
+    ) -> MockResponse:
+        return MockResponse(500, {}, "TEST ERROR")
+
     monkeypatch.setattr(loinc, "LOINC_USERNAME", "username")
     monkeypatch.setattr(loinc, "LOINC_PWD", "password")
-    mocker.patch(
-        "data_curation.terminologies.loinc.get_with_timeout",
-        return_value=MockResponse(500, {}, "TEST ERROR"),
-    )
+    monkeypatch.setattr(loinc, "get_with_timeout", mock_get_with_timeout)
 
     with pytest.raises(RuntimeError):
         loinc.get_loinc_current_version_data()

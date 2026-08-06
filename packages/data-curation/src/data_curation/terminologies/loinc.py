@@ -89,41 +89,29 @@ def extract_full_loinc_lab_names(include_consumer_names: bool = False) -> list[d
     return all_loinc_rows
 
 
-def extract_full_loinc_lab_orders(
-    include_consumer_names: bool = False, version: str = ""
-) -> list[dict]:
+def extract_full_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Order' or 'Both')  and organizes them into a list of dictionaries.
 
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
 
     :returns: A list of dictionaries containing all the latest LOINC
         lab order records including codes, terms, and axis information.
     """
-    loinc_order_rows = _get_loinc_lab_orders(
-        version=version, include_consumer_names=include_consumer_names
-    )
+    loinc_order_rows = _get_loinc_lab_orders(include_consumer_names=include_consumer_names)
     return loinc_order_rows
 
 
-def extract_full_loinc_lab_results(
-    include_consumer_names: bool = False, version: str = ""
-) -> list[dict]:
+def extract_full_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
     """Function that extracts all the latest LOINC Orders (only types of 'Observations' or 'Both') and organizes them into a list of dictionaries.
 
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
 
     :returns: A list of dictionaries containing all the latest LOINC
         lab result records including codes, terms, and axis information.
     """
-    loinc_result_rows = _get_loinc_lab_results(
-        version=version, include_consumer_names=include_consumer_names
-    )
+    loinc_result_rows = _get_loinc_lab_results(include_consumer_names=include_consumer_names)
     return loinc_result_rows
 
 
@@ -154,26 +142,16 @@ def _get_loinc_lab_names(version: str = "", include_consumer_names: bool = False
     return all_loinc_rows
 
 
-def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = False) -> list[dict]:
-    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
+def _get_loinc_lab_orders(include_consumer_names: bool = False) -> list[dict]:
+    """Process to get all of the LOINC Codes and terms via the LOINC API for all lab 'Orders' that are categorized as 'Orders', or 'Both'.
 
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab order records
         including codes, terms, and axis information.
     """
-    # if version is supplied we grab the delta
-    # and filter based upon version changes
-    # otherwise grab all Orders
-    if version != "":
-        api_url = (
-            LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_ORDER_QUERY
-        )
-    else:
-        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
+    api_url = LOINC_BASE_URL + f"query={LOINC_LAB_ORDER_QUERY}"
     loinc_vs_type = "Lab Orders"
     loinc_order_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
@@ -184,26 +162,16 @@ def _get_loinc_lab_orders(version: str = "", include_consumer_names: bool = Fals
     return loinc_order_rows
 
 
-def _get_loinc_lab_results(version: str = "", include_consumer_names: bool = False) -> list[dict]:
-    """Process to get all of the, or version specific, LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
+def _get_loinc_lab_results(include_consumer_names: bool = False) -> list[dict]:
+    """Process to get all of the LOINC Codes and terms via the LOINC API for all lab 'Observations' (Lab Results) that are categorized as 'Observations', or 'Both'.
 
-    :param version: Text string of the version number you want to
-        use to filter LOINC codes for.
     :param include_consumer_names: Boolean flag to add consumer_names
         during this step of data processing.
 
     :returns: A list of dictionaries containing LOINC lab result records
         including codes, terms, and axis information.
     """
-    # if version is supplied we grab the delta
-    # and filter based upon version changes
-    # otherwise grab all Observations
-    if version != "":
-        api_url = (
-            LOINC_BASE_URL + f"query=versionlastchanged:{version}+AND+" + LOINC_LAB_RESULT_QUERY
-        )
-    else:
-        api_url = LOINC_BASE_URL + f"query={LOINC_LAB_RESULT_QUERY}"
+    api_url = LOINC_BASE_URL + f"query={LOINC_LAB_RESULT_QUERY}"
     loinc_vs_type = "Lab Results"
     loinc_result_rows = _process_loinc_valueset(api_url, loinc_vs_type)
 
