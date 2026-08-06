@@ -11,9 +11,10 @@ S3 Bucket (dibbs-text-to-code)
     │       │  synced by the re-ingestion pipeline during a model update
     │       ▼
     ├── ingestion/ prefix
+    │       │  ObjectCreated → EventBridge → ttc-osis-trigger-queue (SQS)
     │       │
     │       └── OpenSearch Ingestion Pipeline (OSIS)
-    │               │  polls monthly, reads NDJSON
+    │               │  polls the queue, reads NDJSON
     │               ▼
     │       OpenSearch Domain (ttc-os-domain)
     │               ▲
@@ -64,7 +65,7 @@ Each Lambda function has its own IAM role scoped to least-privilege S3 permissio
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
   - Inline S3 policy — `s3:PutObject` on `AugmentationEICRV2/` and `AugmentationMetadataV2/` prefixes (no OpenSearch access needed)
-- **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetObject` on the data bucket and full OpenSearch HTTP access on the domain.
+- **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetBucketLocation`/`GetObject` on the data bucket, consume access (receive/delete/visibility) on the pipeline's trigger queue, and full OpenSearch HTTP access on the domain.
 
 ### Lambda Functions (`main.tf`, `lambda/`)
 
@@ -188,13 +189,25 @@ fields @timestamp, service, function_name, function_request_id, persistence_id, 
 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
 
-- Polls `s3://dibbs-text-to-code/ingestion/` monthly for new NDJSON files
+- Ingests **on S3 event**, not on a schedule: writing an object under `s3://dibbs-text-to-code/ingestion/` starts a load within seconds
 - Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
 - Runs within the VPC using the same private subnets as Lambda
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
 
 The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index and the Result Cache Index exist before any data is loaded (wiping and refilling the Result Cache index as well as the normal Index for vector embeddings ensures that previously computed hashes do not survive either LOINC updates or model updates).
+
+#### Event-driven source
+
+The S3 source runs in `notification_type: sqs` mode against **`ttc-osis-trigger-queue`** (`aws_sqs_queue.osis_trigger_queue`), replacing the 30-day scheduled scan it used before. Writing to `ingestion/` is now itself the trigger, which is what makes the [re-ingestion runbook](../docs/runbooks/reingest-loinc-embeddings.md) work.
+
+Events reach the queue through **EventBridge** (`aws_cloudwatch_event_rule.osis_ingestion_s3_trigger`) rather than a direct bucket notification: `s3.tf` already spends the bucket's one allowed notification configuration on `eventbridge = true`, and this matches how `ttc-lambda-queue` and `ttc-augmentation-lambda-queue` are wired. Hence `notification_source: eventbridge` on the source — those messages differ in shape from raw S3 notifications.
+
+- **10-minute visibility timeout** (`osis_trigger_visibility_timeout`), on both the queue and the source. With `acknowledgments: true` a message is deleted only once OpenSearch confirms the write, so it has to outlast one object's full read-and-index time.
+- **`visibility_duplication_protection: true`, `maximum_messages: 1`.** Documents carry no explicit `_id`, so a redelivered object duplicates every document in it. Batch size 1 sidesteps [data-prepper#4812](https://github.com/opensearch-project/data-prepper/issues/4812) and costs nothing at `workers: 1`.
+- **`ttc-osis-trigger-queue-dlq`** takes events that fail three times, alarming to the same Slack channel as the Lambda DLQs.
+
+Only objects created **after** the pipeline starts polling are ingested — files already sitting in `ingestion/` are not (see [Prerequisites](#prerequisites)). The Terminology Updates workflow also writes here, so its deltas now land within minutes instead of waiting for the next scan.
 
 Third-party deployers should ensure the following:
 
@@ -214,7 +227,7 @@ Terraform manages dependency ordering automatically, but conceptually the sequen
 4. OpenSearch domain and VPC endpoint created
 5. Lambda IAM roles created (one per Lambda function)
 6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index and the Result Cache index in OpenSearch.
-7. Ingestion pipeline deployed — begins polling S3 for NDJSON embeddings to load
+7. Ingestion trigger queue, DLQ and EventBridge rule created; ingestion pipeline deployed — begins polling the queue
 8. Main TTC Lambda deployed with container image from ECR — loads model at cold start, ready to serve KNN queries
 9. Augmentation Lambda deployed with container image from ECR — ready to process augmentation requests
 
@@ -253,7 +266,13 @@ terraform/
 Before running `terraform apply`:
 
 1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table.
-2. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/`. The OSIS pipeline will ingest these into OpenSearch.
+2. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/` **after** the OSIS pipeline exists — the upload is the ingest trigger. Files that predate the pipeline need a self-copy to raise fresh `ObjectCreated` events:
+
+   ```sh
+   aws s3 cp s3://dibbs-text-to-code/ingestion/ s3://dibbs-text-to-code/ingestion/ \
+     --recursive --metadata-directive REPLACE
+   ```
+
 3. **Docker**: CI/CD builds all container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda, `Dockerfile.augmentation` for augmentation lambda) automatically. For local development, Docker must be available to build the images.
 
 > **Note:** The SentenceTransformer model and heavy Python dependencies (sentence-transformers, torch) are baked into the Lambda container image at build time via the Dockerfile. The Dockerfile installs the real `text-to-code-lambda` package and all its workspace dependencies.
@@ -261,6 +280,5 @@ Before running `terraform apply`:
 ## Known TODOs
 
 - OpenSearch error logs should be sent to CloudWatch Logs (noted in `main.tf`)
-- Polling frequency for the OSIS pipeline is set to monthly since LOINC updates infrequently, but can be adjusted as needed
 - The `/ingestion/` and `/reingestion/` prefixes in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually (Terraform declares their names in `_variables.tf` but creates no placeholder objects — see [S3 Data Bucket](#s3-data-bucket-s3tf))
 - Neither `reingestion/` nor `ingestion-backup-<ts>/` has an S3 lifecycle rule; cleanup is a manual operator step. An expiration rule on `ingestion-backup-*` would be a reasonable safety net
