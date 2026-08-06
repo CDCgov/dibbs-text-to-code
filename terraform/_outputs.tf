@@ -1,4 +1,3 @@
-
 output "opensearch_endpoint" {
   value       = aws_opensearch_domain.os.endpoint
   description = "The OpenSearch endpoint URL"
@@ -78,4 +77,29 @@ output "demo_cert_validation_records" {
 output "api_lambda_function_url" {
   value       = aws_lambda_function_url.api.function_url
   description = "Direct Function URL of the demo API lambda (IAM-auth; only invokable through CloudFront)"
+}
+
+output "ttc_reingestion_ci_role_arn" {
+  description = "IAM role ARN for the TTC re-ingestion GitHub Actions workflow."
+  value       = aws_iam_role.ttc_reingestion_ci_role.arn
+}
+
+output "ttc_input_event_source_mapping_uuid" {
+  value       = aws_lambda_event_source_mapping.ttc_input_sqs.uuid
+  description = "UUID of the TTC Lambda SQS event source mapping"
+}
+
+output "ttc_input_queue_url" {
+  value       = aws_sqs_queue.ttc_input_queue.url
+  description = "URL of the TTC Lambda input queue"
+}
+
+output "ttc_input_dlq_url" {
+  value       = aws_sqs_queue.ttc_input_dlq.url
+  description = "URL of the TTC Lambda dead-letter queue"
+}
+
+output "dlq_alarm_notifications_topic_arn" {
+  value       = aws_sns_topic.dlq_alarm_notifications.arn
+  description = "SNS topic ARN used for critical TTC re-ingestion notifications"
 }
