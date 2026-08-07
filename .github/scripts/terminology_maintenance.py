@@ -102,7 +102,12 @@ def upload_jsonl_files(response: TerminologyUpdateResponse) -> TerminologyUpdate
                     # like we do for the full extract file to ensure it writes into S3
                     # properly??
                     jsonl_string = "\n".join(json.dumps(rec) for rec in max_records) + "\n"
-                    put_file(body=jsonl_string, bucket=S3_BUCKET, key=ingestion_file_name)
+                    binary_stream = io.BytesIO(jsonl_string.encode("utf-8"))
+                    put_file(
+                        file_obj=binary_stream,
+                        bucket_name=S3_BUCKET,
+                        object_key=ingestion_file_name,
+                    )
                     max_records = []
                     response["message"] = (
                         f"{response['message']}\nFile {ingestion_file_name} successfully added to Opensearch Ingestion Pipeline!"
@@ -135,11 +140,12 @@ def upload_csv_extract_file(file_name: str, contents: list[dict]) -> str:
     writer = csv.DictWriter(csv_buffer, fieldnames=headers, delimiter="|")
     writer.writeheader()
     writer.writerows(contents)
+    binary_stream = io.BytesIO(csv_buffer.getvalue().encode("utf-8"))
     try:
         put_file(
-            body=csv_buffer.getvalue(),
-            bucket=S3_BUCKET,
-            key=object_key,
+            file_obj=binary_stream,
+            bucket_name=S3_BUCKET,
+            object_key=object_key,
         )
         return f"Full Extract File {file_name} successfully added to S3 Bucket!"
     except Exception as error:
