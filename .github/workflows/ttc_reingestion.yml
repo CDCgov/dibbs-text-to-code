@@ -1,4 +1,4 @@
-name: TTC re-ingestion
+name: TTC reingestion
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   ttc_reingestion:
-    name: TTC re-ingestion
+    name: TTC reingestion
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -62,7 +62,7 @@ jobs:
           echo "$CALLER_ARN"
           echo "$CALLER_ARN" | grep -q ":assumed-role/ttc-reingestion-ci-role/"
 
-      - name: Run TTC re-ingestion
+      - name: Run TTC reingestion
         shell: bash
         run: |
           bash scripts/ttc-reingestion-embeddings.sh \
