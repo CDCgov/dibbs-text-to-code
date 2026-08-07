@@ -149,8 +149,7 @@ Lambda handlers inject runtime context:
 
 ```python
 @logger.inject_lambda_context
-def handler(event, context):
-    ...
+def handler(event, context): ...
 ```
 
 Use `trigger_s3_key` for the incoming event object and `s3_key` for individual S3 read/write operations:
