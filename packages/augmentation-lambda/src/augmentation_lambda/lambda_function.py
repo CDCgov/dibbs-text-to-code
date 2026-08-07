@@ -293,6 +293,7 @@ def _build_augmentation_output(
 
 
 def _build_original_eicr_output(  # noqa: PLR0913
+    *,
     persistence_id: str,
     original_eicr_id: CdaInstanceIdentifier,
     original_eicr: str,

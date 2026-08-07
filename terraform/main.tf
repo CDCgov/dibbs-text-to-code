@@ -643,7 +643,8 @@ resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
           "Sid" : "AllowS3BucketListing",
           "Effect" : "Allow",
           "Action" : [
-            "s3:ListBucket"
+            "s3:ListBucket",
+            "s3:GetBucketLocation"
           ],
           "Resource" : "arn:aws:s3:::${var.s3_bucket}"
         },
@@ -654,6 +655,18 @@ resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
             "s3:GetObject"
           ],
           "Resource" : "arn:aws:s3:::${var.s3_bucket}/*"
+        },
+        {
+          # ChangeMessageVisibility backs visibility_duplication_protection.
+          "Sid" : "AllowOsisTriggerQueueConsumption",
+          "Effect" : "Allow",
+          "Action" : [
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:ChangeMessageVisibility"
+          ],
+          "Resource" : aws_sqs_queue.osis_trigger_queue.arn
         },
         {
           "Sid" : "OpenSearchAccess",
@@ -695,6 +708,97 @@ resource "aws_cloudwatch_log_group" "ttc_ingestion_pipeline_logs" {
   retention_in_days = 14
 }
 
+#############
+# Ingestion Pipeline Trigger Queue (S3 -> EventBridge -> SQS -> OSIS)
+#
+# EventBridge rather than a direct bucket notification: s3.tf already spends the
+# bucket's one allowed notification configuration on eventbridge = true.
+#############
+
+resource "aws_sqs_queue" "osis_trigger_dlq" {
+  name                      = "${var.osis_trigger_queue_name}-dlq"
+  message_retention_seconds = 1209600
+  tags                      = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "osis_trigger_dlq_visible_messages" {
+  alarm_name          = "${aws_sqs_queue.osis_trigger_dlq.name}-visible-messages"
+  alarm_description   = "Visible messages are present in the OSIS trigger DLQ."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = true
+  alarm_actions       = [aws_sns_topic.dlq_alarm_notifications.arn]
+
+  dimensions = {
+    QueueName = aws_sqs_queue.osis_trigger_dlq.name
+  }
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue" "osis_trigger_queue" {
+  name                       = var.osis_trigger_queue_name
+  visibility_timeout_seconds = var.osis_trigger_visibility_timeout
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.osis_trigger_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = local.tags
+}
+
+resource "aws_sqs_queue_policy" "osis_trigger_queue_policy" {
+  queue_url = aws_sqs_queue.osis_trigger_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.osis_trigger_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.osis_ingestion_s3_trigger.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_cloudwatch_event_rule" "osis_ingestion_s3_trigger" {
+  name        = "${var.ingestion_pipeline_name}-s3-trigger"
+  description = "Trigger the OpenSearch ingestion pipeline when embeddings are written to the ingestion prefix in S3"
+
+  # The trailing slash on ingestion_prefix excludes reingestion/ and ingestion-backup-*/.
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = { name = [var.s3_bucket] }
+      object = { key = [{ prefix = var.ingestion_prefix }] }
+    }
+  })
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_event_target" "osis_trigger_sqs_target" {
+  rule      = aws_cloudwatch_event_rule.osis_ingestion_s3_trigger.name
+  target_id = "${var.ingestion_pipeline_name}-sqs"
+  arn       = aws_sqs_queue.osis_trigger_queue.arn
+}
+
 
 resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
   pipeline_name = var.ingestion_pipeline_name
@@ -722,15 +826,15 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
       source:
         s3:
           acknowledgments: true
-          scan:
-            buckets:
-              - bucket:
-                  name: ${var.s3_bucket}
-                  filter:
-                    include_prefix:
-                      - ${var.ingestion_prefix}
-            scheduling:
-              interval: PT720H
+          notification_type: sqs
+          notification_source: eventbridge
+          sqs:
+            queue_url: ${aws_sqs_queue.osis_trigger_queue.url}
+            visibility_timeout: PT${var.osis_trigger_visibility_timeout}S
+            # Documents carry no explicit _id, so a redelivered object duplicates
+            # every document in it. Batch of 1 sidesteps data-prepper#4812.
+            visibility_duplication_protection: true
+            maximum_messages: '1'
           aws:
             region: ${var.region}
             sts_role_arn: ${aws_iam_role.os_ingestion_pipeline_role.arn}
@@ -757,9 +861,13 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
       
   EOT
 
+  # OSIS validates the pipeline role's access at create time, and neither policy
+  # is reachable through the configuration body's interpolations.
   depends_on = [
     aws_lambda_invocation.index_bootstrap,
-    aws_lambda_invocation.result_cache_index_bootstrap
+    aws_lambda_invocation.result_cache_index_bootstrap,
+    aws_iam_role_policy.os_ingestion_pipeline_policy,
+    aws_sqs_queue_policy.osis_trigger_queue_policy
   ]
 }
 
@@ -966,6 +1074,11 @@ resource "aws_sqs_queue_policy" "augmentation_queue_policy" {
         Principal = { Service = "events.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.augmentation_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.augmentation_s3_trigger.arn
+          }
+        }
       }
     ]
   })
@@ -1083,6 +1196,11 @@ resource "aws_sqs_queue_policy" "ttc_input_queue_policy" {
         Principal = { Service = "events.amazonaws.com" }
         Action    = "sqs:SendMessage"
         Resource  = aws_sqs_queue.ttc_input_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_cloudwatch_event_rule.ttc_input_s3_trigger.arn
+          }
+        }
       }
     ]
   })

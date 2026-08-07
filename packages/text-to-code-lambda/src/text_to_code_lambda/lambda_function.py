@@ -476,15 +476,15 @@ def _match_candidate(
             # Make sure we save the results of a successful standardization
             # into the results cache for future use
             put_new_cached_result(
-                opensearch_client,
-                RESULT_CACHE_INDEX,
-                selected_candidate.value,
-                data_field,
-                new_translation,
-                top_result.score,
-                ranked_results[0]["score"],
-                opensearch_retrieved_scores,
-                ranked_results,
+                opensearch_client=opensearch_client,
+                index=RESULT_CACHE_INDEX,
+                candidate_input=selected_candidate.value,
+                data_field=data_field,
+                loinc_code=new_translation,
+                search_score=top_result.score,
+                reranker_score=ranked_results[0]["score"],
+                opensearch_retrieved_scores=opensearch_retrieved_scores,
+                reranker_processed_results=ranked_results,
                 cache_key=cache_key,
             )
         else:
