@@ -123,6 +123,7 @@ def get_cached_results(
 
 
 def put_new_cached_result(  # noqa: PLR0913
+    *,
     opensearch_client: OpenSearch,
     index: str,
     candidate_input: str,
