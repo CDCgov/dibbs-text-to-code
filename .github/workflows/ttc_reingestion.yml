@@ -1,0 +1,70 @@
+name: TTC reingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_count:
+        description: Expected OpenSearch document count from the embeddings manifest
+        required: true
+        type: number
+      stability_polls:
+        description: Consecutive stable OpenSearch count polls required
+        required: false
+        default: 3
+        type: number
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ttc-reingestion
+  cancel-in-progress: false
+
+jobs:
+  ttc_reingestion:
+    name: TTC reingestion
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TTC_LAMBDA_FUNCTION_NAME: ttc-lambda
+      TTC_INDEX_LAMBDA_FUNCTION_NAME: ttc-index-lambda
+      TTC_EVENT_SOURCE_MAPPING_UUID: ${{ vars.TTC_EVENT_SOURCE_MAPPING_UUID }}
+      TTC_INPUT_QUEUE_URL: ${{ vars.TTC_INPUT_QUEUE_URL }}
+      TTC_INPUT_DLQ_URL: ${{ vars.TTC_INPUT_DLQ_URL }}
+      TTC_S3_BUCKET: dibbs-text-to-code
+      TTC_INGESTION_PREFIX: ingestion/
+      TTC_REINGESTION_PREFIX: reingestion/
+      TTC_INGESTION_BACKUP_PREFIX: ingestion-backup-
+      TTC_OPENSEARCH_ENDPOINT: ${{ vars.TTC_OPENSEARCH_ENDPOINT }}
+      TTC_OPENSEARCH_INDEX: ttc-index
+      TTC_ALERT_TOPIC_ARN: ${{ vars.TTC_ALERT_TOPIC_ARN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        with:
+          role-to-assume: ${{ secrets.TERRAFORM_TTC_REINGESTION_ARN }}
+          role-session-name: ttcReingestionWorkflow
+          role-duration-seconds: 7200
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Confirm assumed role
+        run: |
+          CALLER_ARN="$(aws sts get-caller-identity --query Arn --output text)"
+          echo "$CALLER_ARN"
+          echo "$CALLER_ARN" | grep -q ":assumed-role/ttc-reingestion-ci-role/"
+
+      - name: Run TTC reingestion
+        shell: bash
+        run: |
+          bash scripts/ttc-reingestion-embeddings.sh \
+            --expected-count "${{ inputs.expected_count }}" \
+            --stability-polls "${{ inputs.stability_polls }}"

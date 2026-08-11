@@ -179,6 +179,19 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
     ]
   }
 
+  statement {
+    sid    = "AllowTtcReingestionSmokeQuery"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.ttc_reingestion_ci_role.arn]
+    }
+    actions = ["es:ESHttpPost"]
+    resources = [
+      "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_search"
+    ]
+  }
+
   dynamic "statement" {
     for_each = length(var.debug_allowed_ips) > 0 && length(var.debug_iam_principals) > 0 ? [1] : []
     content {
@@ -334,9 +347,10 @@ data "aws_iam_policy_document" "ttc_reingestion_github_assume_role" {
 }
 
 resource "aws_iam_role" "ttc_reingestion_ci_role" {
-  name               = "ttc-reingestion-ci-role"
-  assume_role_policy = data.aws_iam_policy_document.ttc_reingestion_github_assume_role.json
-  tags               = local.tags
+  name                 = "ttc-reingestion-ci-role"
+  assume_role_policy   = data.aws_iam_policy_document.ttc_reingestion_github_assume_role.json
+  max_session_duration = 7200
+  tags                 = local.tags
 }
 
 resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
@@ -407,6 +421,12 @@ resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
         Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_count"
       },
       {
+        Sid      = "RunTtcOpenSearchSmokeQuery"
+        Effect   = "Allow"
+        Action   = ["es:ESHttpPost"]
+        Resource = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearch_domain_name}/${var.index_name}/_search"
+      },
+      {
         Sid    = "ReadTtcQueueAttributes"
         Effect = "Allow"
         Action = ["sqs:GetQueueAttributes"]
@@ -424,6 +444,12 @@ resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
           "sqs:ListMessageMoveTasks"
         ]
         Resource = aws_sqs_queue.ttc_input_dlq.arn
+      },
+      {
+        Sid      = "PublishTtcReingestionCriticalAlert"
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.dlq_alarm_notifications.arn
       }
     ]
   })
@@ -1268,7 +1294,3 @@ resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
   })
 }
 
-output "ttc_reingestion_ci_role_arn" {
-  description = "IAM role ARN for the TTC re-ingestion GitHub Actions workflow."
-  value       = aws_iam_role.ttc_reingestion_ci_role.arn
-}
