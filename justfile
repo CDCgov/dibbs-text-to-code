@@ -12,6 +12,10 @@ alias b := bootstrap
 [doc('Testing commands')]
 mod test './.justscripts/just/test.just'
 
+[group('sub-command')]
+[doc('Terraform commands')]
+mod terraform './.justscripts/just/terraform.just'
+
 [doc("Initialize the development environment")]
 bootstrap:
     uv sync --all-packages
