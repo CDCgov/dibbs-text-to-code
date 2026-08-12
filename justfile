@@ -12,10 +12,6 @@ alias b := bootstrap
 [doc('Testing commands')]
 mod test './.justscripts/just/test.just'
 
-[group('sub-command')]
-[doc('Terraform commands')]
-mod terraform './.justscripts/just/terraform.just'
-
 [doc("Initialize the development environment")]
 bootstrap:
     uv sync --all-packages
@@ -32,3 +28,37 @@ ty:
 [doc("Run Ruff check")]
 ruff:
     uv run ruff check
+
+[doc("Run Terraform commands")]
+[working-directory("terraform")]
+[positional-arguments]
+terraform COMMAND *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    command="$1"
+    shift
+
+    if [[ "$command" == "plan" || "$command" == "apply" ]]; then
+        get_image_tag() {
+            local image_uri
+
+            image_uri="$(aws lambda get-function \
+              --function-name "$1" \
+              --query 'Code.ImageUri' \
+              --output text)"
+
+            echo "${image_uri##*:}"
+        }
+
+        TTC_IMAGE_TAG="$(get_image_tag ttc-lambda)"
+        INDEX_IMAGE_TAG="$(get_image_tag ttc-index-lambda)"
+        AUGMENTATION_IMAGE_TAG="$(get_image_tag ttc-augmentation-lambda)"
+
+        terraform "$command" "$@" \
+          -var="ttc_lambda_image_tag=${TTC_IMAGE_TAG}" \
+          -var="index_lambda_image_tag=${INDEX_IMAGE_TAG}" \
+          -var="augmentation_lambda_image_tag=${AUGMENTATION_IMAGE_TAG}"
+    else
+        terraform "$command" "$@"
+    fi
