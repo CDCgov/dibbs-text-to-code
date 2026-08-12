@@ -4,7 +4,7 @@ version = "0.1.0"
 readme = "README.md"
 dependencies = [
   "aws-lambda-powertools>=2.0.0",
-  "boto3>=1.40.60",
+  "boto3>=1.43.67",
   "opensearch-py>=2.0.0",
   "requests-aws4auth>=1.3.2",
 ]
