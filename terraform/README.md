@@ -314,7 +314,7 @@ terraform/
 
 Before running `terraform apply`:
 
-1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table
+1. **Bootstrap**: Run `terraform apply` in `bootstrap/` first to create the S3 state bucket and DynamoDB lock table.
 2. **Embedding files**: Upload NDJSON embedding files to `s3://dibbs-text-to-code/ingestion/` **after** the OSIS pipeline exists — the upload is the ingest trigger. Files that predate the pipeline need a self-copy to raise fresh `ObjectCreated` events:
 
    ```sh
@@ -328,4 +328,5 @@ Before running `terraform apply`:
 
 ## Known TODOs
 
-- The `/ingestion/` and `/reingestion/` prefixes in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually (Terraform declares their names in `_variables.tf` but creates no placeholder objects — see [S3 Data Bucket](#s3-data-bucket-s3tf))- Neither `reingestion/` nor `ingestion-backup-<ts>/` has an S3 lifecycle rule; cleanup is a manual operator step. An expiration rule on `ingestion-backup-*` would be a reasonable safety net.
+- The `/ingestion/` and `/reingestion/` prefixes in the `dibbs-text-to-code` S3 bucket should be created as part of Terraform rather than manually (Terraform declares their names in `_variables.tf` but creates no placeholder objects — see [S3 Data Bucket](#s3-data-bucket-s3tf))
+- Neither `reingestion/` nor `ingestion-backup-<ts>/` has an S3 lifecycle rule; cleanup is a manual operator step. An expiration rule on `ingestion-backup-*` would be a reasonable safety net.
