@@ -30,7 +30,8 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 
 - **VPC** (`module.vpc`): A private-only VPC (`10.0.0.0/16`) with three private subnets across three availability zones (`us-east-2a/b/c`). No NAT gateway or internet gateway is created by the VPC module.
 - **S3 VPC Endpoint** (`aws_vpc_endpoint.s3_endpoint`): Gateway endpoint attached to the private route tables for S3 access without requiring a NAT gateway.
-- **Lambda Security Group** (`aws_security_group.lambda_sg`): Defines unrestricted outbound traffic and no inbound rules.- **OpenSearch Security Group** (`aws_security_group.opensearch_sg`): Defines inbound HTTPS (port 443) from the Lambda security group and unrestricted outbound traffic.
+- **Lambda Security Group** (`aws_security_group.lambda_sg`): Defines unrestricted outbound traffic and no inbound rules.
+- **OpenSearch Security Group** (`aws_security_group.opensearch_sg`): Defines inbound HTTPS (port 443) from the Lambda security group and unrestricted outbound traffic.
 
 ### OpenSearch (`main.tf`)
 
