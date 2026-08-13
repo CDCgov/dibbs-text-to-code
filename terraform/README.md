@@ -60,7 +60,8 @@ Each Lambda function and ingestion workflow has its own IAM role scoped to the A
   - Inline OpenSearch policy — grants OpenSearch HTTP actions (`ESHttpGet/Post/Put/Delete/Head/Patch/Options`)
 - **Index Lambda IAM Role** (`aws_iam_role.index_lambda_role`): Attached policies:
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
-  - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes- Inline OpenSearch policy — grants OpenSearch HTTP actions (no S3 access needed)
+  - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
+  - Inline OpenSearch policy — grants OpenSearch HTTP actions (no S3 access needed)
 - **Augmentation Lambda IAM Role** (`aws_iam_role.augmentation_lambda_role`): Attached policies:- `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
   - Inline S3 policy — `s3:PutObject` on `AugmentationEICRV2/` and `AugmentationMetadataV2/` prefixes (no OpenSearch access needed)
@@ -84,7 +85,11 @@ Deployed as a **container image** from ECR (`package_type = "Image"`). The Docke
 
 At runtime, the Lambda runs the real `text_to_code_lambda.lambda_function.handler`, which:
 
-1. Loads the retriever and reranker models from their configured paths during initialization (cold start)2. Parses eICR XML documents from S3 to extract text candidates3. Evaluates and selects the best candidate for each data field4. Generates embeddings and executes KNN queries against OpenSearch5. Returns standardized code mappings (LOINC/SNOMED)
+1. Loads the retriever and reranker models from their configured paths during initialization (cold start)
+2. Parses eICR XML documents from S3 to extract text candidates
+3. Evaluates and selects the best candidate for each data field
+4. Generates embeddings and executes KNN queries against OpenSearch
+5. Returns standardized code mappings (LOINC/SNOMED)
 
 Environment variables injected at deploy time: `OPENSEARCH_ENDPOINT_URL`, `OPENSEARCH_INDEX`, `REGION`, `S3_BUCKET`, `RETRIEVER_MODEL_PATH`, `RERANKER_MODEL_PATH`, `SCHEMATRON_ERROR_PREFIX`, `TTC_INPUT_PREFIX`, `TTC_OUTPUT_PREFIX`, `TTC_METADATA_PREFIX`.
 
@@ -197,7 +202,8 @@ fields @timestamp, service, function_name, function_request_id, persistence_id, 
 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
 
-- Ingests **on S3 event**, not on a schedule: writing an object under `s3://dibbs-text-to-code/ingestion/` starts a load within seconds- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
+- Ingests **on S3 event**, not on a schedule: writing an object under `s3://dibbs-text-to-code/ingestion/` starts a load within seconds
+- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
 - Uses its dedicated IAM role to read S3/SQS input and write documents to OpenSearch
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
