@@ -62,7 +62,8 @@ Each Lambda function and ingestion workflow has its own IAM role scoped to the A
   - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
   - Inline OpenSearch policy — grants OpenSearch HTTP actions (no S3 access needed)
-- **Augmentation Lambda IAM Role** (`aws_iam_role.augmentation_lambda_role`): Attached policies:- `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
+- **Augmentation Lambda IAM Role** (`aws_iam_role.augmentation_lambda_role`): Attached policies:
+  - `AWSLambdaVPCAccessExecutionRole` — allows ENI creation for VPC placement
   - `AWSLambdaBasicExecutionRole` — allows CloudWatch Logs writes
   - Inline S3 policy — `s3:PutObject` on `AugmentationEICRV2/` and `AugmentationMetadataV2/` prefixes (no OpenSearch access needed)
 - **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetBucketLocation`/`GetObject` on the data bucket, consume access (receive/delete/visibility) on the pipeline's trigger queue, and full OpenSearch HTTP access on the domain.
