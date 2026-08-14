@@ -76,6 +76,9 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
 
     logger.info("Received event", record_count=len(event["Records"]), status="processing")
 
+    if any(record.body for record in event.records):
+        _validate_opensearch_index(opensearch_client)
+
     batch_item_failures: list[dict[str, str]] = []
     failures: list[dict[str, object]] = []
     successes: list[dict[str, str]] = []
@@ -792,3 +795,29 @@ def _save_outputs(
         ttc_metadata,
         bucket_name,
     )
+
+
+def _validate_opensearch_index(opensearch_client: OpenSearch) -> None:
+    """Validate that the TTC OpenSearch index exists and contains documents.
+
+    :param opensearch_client: The OpenSearch client.
+    """
+    if not opensearch_client.indices.exists(index=OPENSEARCH_INDEX):
+        logger.error(
+            "TTC OpenSearch index unavailable",
+            index_name=OPENSEARCH_INDEX,
+            index_status="missing",
+            status="error",
+        )
+        raise RuntimeError(f"TTC OpenSearch index unavailable: {OPENSEARCH_INDEX} does not exist")
+
+    document_count = int(opensearch_client.count(index=OPENSEARCH_INDEX)["count"])
+    if document_count == 0:
+        logger.error(
+            "TTC OpenSearch index unavailable",
+            index_name=OPENSEARCH_INDEX,
+            index_status="empty",
+            document_count=document_count,
+            status="error",
+        )
+        raise RuntimeError(f"TTC OpenSearch index unavailable: {OPENSEARCH_INDEX} is empty")

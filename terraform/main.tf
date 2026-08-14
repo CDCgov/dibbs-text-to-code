@@ -1211,6 +1211,17 @@ resource "aws_sqs_queue" "ttc_input_queue" {
   tags = local.tags
 }
 
+resource "aws_sqs_queue_redrive_allow_policy" "ttc_input_dlq" {
+  queue_url = aws_sqs_queue.ttc_input_dlq.id
+
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue"
+    sourceQueueArns = [
+      aws_sqs_queue.ttc_input_queue.arn
+    ]
+  })
+}
+
 resource "aws_sqs_queue_policy" "ttc_input_queue_policy" {
   queue_url = aws_sqs_queue.ttc_input_queue.id
 

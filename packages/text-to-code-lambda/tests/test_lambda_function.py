@@ -608,6 +608,8 @@ class TestHandler:
         snapshot,
     ):
         """Test handler records unmatched errors when a selected candidate has no OpenSearch hits."""
+        mock_opensearch.indices.exists.return_value = True
+        mock_opensearch.count.return_value = {"count": 1}
         selected_candidate = Candidate(
             value="weed allergen mix 3", xpath=LabXPaths.CODE_DISPLAY_NAME
         )
@@ -957,6 +959,7 @@ class TestHandler:
         self,
         example_sqs_event,
         mock_aws_setup_malformed_eicr_no_relevant_schematron,
+        mock_opensearch,
         mock_lambda_context,
         snapshot,
     ):
@@ -1023,3 +1026,62 @@ class TestHandler:
         snapshot.assert_match(
             ttc_metadata_output, "reranker_returns_empty_ttc_metadata_output.json"
         )
+
+    def test_handler_raises_when_opensearch_index_is_missing(
+        self,
+        example_sqs_event,
+        mock_opensearch,
+        mocker,
+        mock_lambda_context,
+    ):
+        """Test handler raises when the OpenSearch index does not exist."""
+        mock_opensearch.indices.exists.return_value = False
+        process_record_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.process_record",
+        )
+        passthrough_output_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._write_ttc_exception_passthrough_output",
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match=f"TTC OpenSearch index unavailable: {lambda_function.OPENSEARCH_INDEX} does not exist",
+        ):
+            lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        mock_opensearch.indices.exists.assert_called_once_with(
+            index=lambda_function.OPENSEARCH_INDEX
+        )
+        mock_opensearch.count.assert_not_called()
+        process_record_mock.assert_not_called()
+        passthrough_output_mock.assert_not_called()
+
+    def test_handler_raises_when_opensearch_index_is_empty(
+        self,
+        example_sqs_event,
+        mock_opensearch,
+        mocker,
+        mock_lambda_context,
+    ):
+        """Test handler raises when the OpenSearch index contains no documents."""
+        mock_opensearch.indices.exists.return_value = True
+        mock_opensearch.count.return_value = {"count": 0}
+        process_record_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.process_record",
+        )
+        passthrough_output_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._write_ttc_exception_passthrough_output",
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match=f"TTC OpenSearch index unavailable: {lambda_function.OPENSEARCH_INDEX} is empty",
+        ):
+            lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        mock_opensearch.indices.exists.assert_called_once_with(
+            index=lambda_function.OPENSEARCH_INDEX
+        )
+        mock_opensearch.count.assert_called_once_with(index=lambda_function.OPENSEARCH_INDEX)
+        process_record_mock.assert_not_called()
+        passthrough_output_mock.assert_not_called()
