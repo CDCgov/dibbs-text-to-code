@@ -28,7 +28,7 @@ from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, prune, rerank
+from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
 from text_to_code.services.result_cache import get_cached_results, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
@@ -461,10 +461,7 @@ def _match_candidate(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         retrieve_scores = [hit.score for hit in results_list]
 
-        # Prune the retrieved results to only those within the adaptive margin of the top score
-        pruned_results = prune(retrieve_scores, retrieved_loinc_names)
-
-        ranked_results = rerank(selected_candidate.value, pruned_results)
+        ranked_results = rerank(selected_candidate.value, retrieve_scores, retrieved_loinc_names)
 
         if ranked_results:
             top_result = next(

@@ -21,27 +21,34 @@ class ScoredResult(TypedDict):
     score: float
 
 
-def rerank(nonstandard_in: str, hits: list[str]) -> list[ScoredResult]:
+def rerank(
+    nonstandard_in: str,
+    scores: list[float],
+    hits: list[str],
+) -> list[ScoredResult]:
     """Re-sorts hits by cross-encoder score values.
 
-    Given a list of text strings returned from OpenSearch, score and sort
-    the search hits using the Text-to-Code system's default Reranker model.
+    Given a list of text strings returned from OpenSearch, prune the results
+    using the adaptive margin, then score and sort the remaining search hits
+    using the Text-to-Code system's default Reranker model.
     The model will generate a cross-encoding score value measuring each
     search result's information similarity to the original nonstandard input.
 
     :param nonstandard_in: The original narrative free-text input to TTC.
+    :param scores: The list of OpenSearch result scores, already sorted in descending order.
     :param hits: The list of OpenSearch results, in text string form.
     :returns: A list of dictionaries representing the newly cross-encoder
       scored search results, sorted in descending order of score.
     """
-    ranks = _RERANKER.rank(nonstandard_in, hits)
+    pruned_hits = _prune(scores, hits)
+    ranks = _RERANKER.rank(nonstandard_in, pruned_hits)
     sorted_ranks: list[ScoredResult] = [
-        {"code_string": hits[r["corpus_id"]], "score": r["score"]} for r in ranks
+        {"code_string": pruned_hits[r["corpus_id"]], "score": r["score"]} for r in ranks
     ]
     return sorted_ranks
 
 
-def within_margin(scores: list[float], margin: float) -> int:
+def _within_margin(scores: list[float], margin: float) -> int:
     """Determines how many candidates are within a margin of the top score.
 
     :param scores: Retriever scores sorted in descending order.
@@ -56,7 +63,7 @@ def within_margin(scores: list[float], margin: float) -> int:
     return sum(top - score <= margin for score in scores[1:])
 
 
-def create_margin_fn(
+def _create_margin_fn(
     low_score: float = LOW_SCORE,
     high_score: float = HIGH_SCORE,
     max_margin: float = MAX_MARGIN,
@@ -94,15 +101,7 @@ def create_margin_fn(
     return margin
 
 
-margin_fn = create_margin_fn(
-    low_score=LOW_SCORE,
-    high_score=HIGH_SCORE,
-    max_margin=MAX_MARGIN,
-    min_margin=MIN_MARGIN,
-)
-
-
-def prune(scores: list[float], texts: list[str]) -> list[str]:
+def _prune(scores: list[float], texts: list[str]) -> list[str]:
     """Removes any results not within the given margin of the top score.
 
     :param scores: The list of search result scores, already sorted in descending order.
@@ -114,7 +113,14 @@ def prune(scores: list[float], texts: list[str]) -> list[str]:
 
     top_score = scores[0]
 
+    margin_fn = _create_margin_fn(
+        low_score=LOW_SCORE,
+        high_score=HIGH_SCORE,
+        max_margin=MAX_MARGIN,
+        min_margin=MIN_MARGIN,
+    )
+
     adaptive_margin = margin_fn(top_score)
-    num_within_margin = within_margin(scores, adaptive_margin)
+    num_within_margin = _within_margin(scores, adaptive_margin)
     pruned_results = texts[: num_within_margin + 1]  # add 1 to include the top score
     return pruned_results
