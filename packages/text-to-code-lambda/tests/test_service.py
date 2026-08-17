@@ -6,14 +6,20 @@ import pytest
 from lambda_handler.models import OpenSearchHits, OpenSearchResult, OpenSearchShards
 from lambda_handler.models.opensearch import OpenSearchHit, OpenSearchHitSource
 from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
+from text_to_code.models.registry import LOW_SCORE, MAX_MARGIN
 from text_to_code_lambda import service
 
 
-def _hit(loinc_code: str, description: str, loinc_type: str = "Order") -> OpenSearchHit:
+def _hit(
+    loinc_code: str,
+    description: str,
+    loinc_type: str = "Order",
+    score: float = 0.9,
+) -> OpenSearchHit:
     return OpenSearchHit(
         _index="ttc-index",
         _id=loinc_code,
-        _score=0.9,
+        _score=score,
         _source=OpenSearchHitSource(
             id=0,
             loinc_code=loinc_code,
@@ -70,6 +76,52 @@ def test_code_for_text_returns_top_reranked_code(mocker):
     assert code.code_system == LOINC_OID
     assert code.code_system_name == LOINC_NAME
     assert code.original_text == "glucose"
+
+
+def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
+    hits = [
+        _hit("1111-1", "Top candidate", score=LOW_SCORE),
+        _hit(
+            "2222-2",
+            "Within margin candidate",
+            score=LOW_SCORE - (MAX_MARGIN / 2),
+        ),
+        _hit(
+            "3333-3",
+            "Outside margin candidate",
+            score=LOW_SCORE - (MAX_MARGIN * 2),
+        ),
+    ]
+    mocker.patch.object(
+        service.lambda_handler,
+        "retrieve_opensearch_results",
+        return_value=_result(hits),
+    )
+
+    reranker_model_mock = mocker.patch(
+        "text_to_code.services.reranker._RERANKER.rank",
+        return_value=[
+            {"corpus_id": 1, "score": 0.9},
+            {"corpus_id": 0, "score": 0.8},
+        ],
+    )
+
+    code = service.code_for_text(
+        "glucose",
+        DataField.LAB_TEST_NAME_ORDERED,
+        MagicMock(),
+    )
+
+    reranker_model_mock.assert_called_once_with(
+        "glucose",
+        [
+            "Top candidate",
+            "Within margin candidate",
+        ],
+    )
+    assert code is not None
+    assert code.code == "2222-2"
+    assert code.display_name == "Within margin candidate"
 
 
 def test_code_for_text_returns_none_when_no_hits(mocker):
