@@ -15,6 +15,7 @@ from lambda_handler.models import (
 )
 from shared_models import Code, DataField
 from text_to_code.models import Candidate, LabXPaths, OpenSearchResultCacheSource
+from text_to_code.models.registry import LOW_SCORE, MAX_MARGIN
 from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services.reranker import ScoredResult
 from text_to_code.services.utils import compute_cache_key
@@ -120,6 +121,96 @@ class TestHandler:
             f"{TTC_METADATA_PREFIX}{mock_aws_setup.persistence_id.removesuffix('.xml')}.json"
         )
         snapshot.assert_match(ttc_metadata_output, "handler_success_ttc_metadata_output.json")
+
+    def test_match_candidate_prunes_results_outside_adaptive_margin(
+        self,
+        mock_opensearch,
+        mocker,
+    ):
+        selected_candidate = Candidate(
+            value="weed allergen mix 3",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+
+        opensearch_retrieved_scores = OpenSearchResult(
+            took=1,
+            timed_out=False,
+            _shards=OpenSearchShards(total=3, successful=1, skipped=0, failed=0),
+            hits=OpenSearchHits(
+                total={"value": 3},
+                hits=[
+                    OpenSearchHit(
+                        _id="top-result",
+                        _index="ttc_index",
+                        _score=LOW_SCORE,
+                        _source=OpenSearchHitSource(
+                            description="Top Result",
+                            id=0,
+                            loinc_code="11111-1",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        _id="within-margin",
+                        _index="ttc_index",
+                        _score=LOW_SCORE - (MAX_MARGIN / 2),
+                        _source=OpenSearchHitSource(
+                            description="Within Margin Result",
+                            id=1,
+                            loinc_code="22222-2",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        _id="outside-margin",
+                        _index="ttc_index",
+                        _score=LOW_SCORE - (MAX_MARGIN * 2),
+                        _source=OpenSearchHitSource(
+                            description="Outside Margin Result",
+                            id=2,
+                            loinc_code="33333-3",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                ],
+            ),
+        )
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.lambda_handler.retrieve_opensearch_results",
+            return_value=opensearch_retrieved_scores,
+        )
+
+        reranker_model_mock = mocker.patch(
+            "text_to_code.services.reranker._RERANKER.rank",
+            return_value=[
+                {"corpus_id": 0, "score": 0.9},
+                {"corpus_id": 1, "score": 0.8},
+            ],
+        )
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.put_new_cached_result",
+        )
+
+        lambda_function._match_candidate(
+            selected_candidate=selected_candidate,
+            embedding=[0.1, 0.2],
+            data_field=DataField.LAB_TEST_NAME_ORDERED,
+            cache_key="cache-key",
+            opensearch_client=mock_opensearch,
+        )
+
+        reranker_model_mock.assert_called_once_with(
+            "weed allergen mix 3",
+            [
+                "Top Result",
+                "Within Margin Result",
+            ],
+        )
 
     def test_handler_success_using_result_cache(
         self,
