@@ -454,11 +454,14 @@ def _match_candidate(
 
     # The OpenSearch results object has a couple levels of nesting,
     # but all we care about for reranking is extracting the actual
-    # text strings of the ANN LOINC codes
+    # text strings of the ANN LOINC codes and the cosine similarity scores.
     results_list = opensearch_retrieved_scores.hits.hits
+
     if results_list:
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        ranked_results = rerank(selected_candidate.value, retrieved_loinc_names)
+        retrieve_scores = [hit.score for hit in results_list]
+
+        ranked_results = rerank(selected_candidate.value, retrieve_scores, retrieved_loinc_names)
 
         if ranked_results:
             top_result = next(
