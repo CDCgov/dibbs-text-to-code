@@ -26,6 +26,13 @@ dev = [
   "ty>=0.0.65",
 ]
 
+# CPU-only torch wheels for Linux (see [tool.uv.sources] in packages/text-to-code).
+# `explicit = true` keeps every other package resolving from PyPI.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.coverage.run]
 source = ["packages"]
 omit = ["*/__pycache__/*", "*/archived/*", "*/test_*.py", "*/tests/*"]

@@ -2,7 +2,10 @@
 name = "augmentation"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["lxml>=4.9.2", "pydantic>=2.12.3"]
+dependencies = ["lxml>=4.9.2", "pydantic>=2.12.3", "shared-models"]
+
+[tool.uv.sources]
+shared-models = { workspace = true }
 
 
 [dependency-groups]

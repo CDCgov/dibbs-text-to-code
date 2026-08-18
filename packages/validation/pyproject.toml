@@ -2,7 +2,10 @@
 name = "validation"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["saxonche>=12.9.0"]
+dependencies = ["saxonche>=12.9.0", "shared-models"]
+
+[tool.uv.sources]
+shared-models = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

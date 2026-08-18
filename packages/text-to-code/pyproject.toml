@@ -3,11 +3,20 @@ name = "text-to-code"
 version = "0.1.0"
 readme = "README.md"
 dependencies = [
+  "lambda-handler",
   "lxml>=6.0.2",
   "pydantic>=2.12.5",
-  "sentence-transformers>=5.3.0,<5.4.0", # sentence-tranformers introduces a breaking change at 5.4.0 that we would want to more carefully evaluate before upgrading to it
+  "sentence-transformers>=5.3.0,<5.4.0", # sentence-transformers introduces a breaking change at 5.4.0 that we would want to more carefully evaluate before upgrading to it
+  "shared-models",
   "torch",
 ]
+
+[tool.uv.sources]
+lambda-handler = { workspace = true }
+shared-models = { workspace = true }
+# Linux consumers (CI runners and the Lambda images) get CPU-only wheels;
+# resolving torch from PyPI there drags in the multi-GB nvidia-* CUDA stack.
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
 [dependency-groups]
 dev = ["types-lxml>=2026.2.16"]

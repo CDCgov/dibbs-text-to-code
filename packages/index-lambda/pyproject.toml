@@ -10,6 +10,7 @@ dependencies = [
   "lambda-handler",
   "opensearch-py",
   "requests-aws4auth>=1.3.2",
+  "utils",
 ]
 
 [dependency-groups]
@@ -24,3 +25,4 @@ packages = ["src/index_lambda"]
 
 [tool.uv.sources]
 lambda-handler = { workspace = true }
+utils = { workspace = true }

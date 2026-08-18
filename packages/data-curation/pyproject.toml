@@ -8,11 +8,12 @@ dependencies = [
   "requests",
   "spacy",
   "spacy-lookups-data",
+  "utils",
 ]
 
 [tool.uv.sources]
 en_core_web_sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz" }
-text-to-code = { workspace = true }
+utils = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
