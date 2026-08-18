@@ -4,10 +4,9 @@ run-name: Update Medical Terminology codes and embeddings by @${{github.actor}}
 # Manually kick of process to run the Terminology updates which
 # will get the latest codes from the various terminologies and
 # create new embeddings for the deltas.  Then the latest full
-# verion of the terminologies codes/text combinations will be
+# version of the terminologies codes/text combinations will be
 # stored for further comparison in future terminology releases
 # and updates.
-
 on:
   workflow_dispatch:
 
