@@ -9,11 +9,9 @@ dependencies = [
   "opensearch-py>=2.0.0",
   "pydantic>=2.12.5",
   "requests-aws4auth>=1.3.2",
+  "shared-models",
   "utils",
 ]
-
-[tool.uv.sources]
-utils = { workspace = true }
 
 [dependency-groups]
 dev = ["moto"]
@@ -24,3 +22,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lambda_handler"]
+
+[tool.uv.sources]
+shared-models = { workspace = true }
+utils = { workspace = true }
