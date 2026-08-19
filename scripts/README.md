@@ -123,7 +123,7 @@ Depedencies and installation instructions for those dependencies are exactly the
 
 An A/B load test for the deployed pipeline, built to prove that a change does (or does not) move performance — something `batch_aws_test.sh` cannot show, because it runs serially against a single warm Lambda container.
 
-For one *arm* (a deployed image version), the script:
+For one _arm_ (a deployed image version), the script:
 
 1. Templates a corpus of a few hundred eICRs from the test-cases JSON. Each document's candidate text is **salted** with a unique run/arm/index marker (e.g. `K+, Whole Blood [lt-3f9a2c1b-baseline-042]`). The TTC result cache keys on a hash of the candidate text, so salting guarantees every document misses the cache and takes the full embedding + OpenSearch KNN path — no OpenSearch access is needed to reset state between runs or arms.
 2. Generates the paired Schematron reports locally in a single Saxon process (reports are validated once per base case and reused when their content is document-independent).
@@ -134,7 +134,7 @@ For one *arm* (a deployed image version), the script:
    - **Correctness**: every augmented eICR's predicted LOINC translation vs. the expected code.
 5. Writes a `results_<pass>.json` per pass and prints a summary.
 
-With `--passes 2`, the second pass re-submits the *same salted texts* under fresh filenames/UUIDs — pass 1 measures the cold-cache (full KNN) path, pass 2 the warm result-cache path.
+With `--passes 2`, the second pass re-submits the _same salted texts_ under fresh filenames/UUIDs — pass 1 measures the cold-cache (full KNN) path, pass 2 the warm result-cache path.
 
 ### A/B protocol
 
@@ -156,6 +156,29 @@ Each redeploy recycles all Lambda containers, so both arms get a fair cold-start
 Flags: `--docs` (default 300, max 900), `--passes` (default 1), `--concurrency` (parallel uploads, default 24), `--cases`, `--bucket` (default `dibbs-text-to-code`), `--out-dir` (default `load_test_runs/`, gitignored), `--drain-timeout` (default 1800s).
 
 Dependencies: only `aws` (CLI v2), `uv`, and `bash` — no `gum`/`jq`/`unbuffer`. Helper logic lives in `load_test_corpus.py` (corpus + Schematron reports) and `load_test_report.py` (Logs Insights metrics, S3 latency join, correctness check, and the `compare` table).
+
+## `ttc-reingestion-embeddings.sh`
+
+Script for replacing the LOINC embeddings. It is invoked by the TTC reingestion GitHub Actions workflow (`workflow_dispatch` in `.github/workflows/ttc_reingestion.yml`) under the `ttc-reingestion-ci-role`, and is not meant to be run locally. The operator procedure, watchpoints, and recovery table can be found in [`docs/runbooks/reingest-loinc-embeddings.md`](../docs/runbooks/reingest-loinc-embeddings.md).
+
+The script:
+
+1. Halts TTC (reserved concurrency → 0, event source mapping disabled) and waits for in-flight SQS messages to drain (cap 20 min).
+2. Drops and recreates both OpenSearch indices via `ttc-index-lambda` (`clear_index`, then `clear_result_cache`).
+3. Backs up `ingestion/` to `ingestion-backup-<ts>/`, empties it, and syncs `reingestion/` in — those S3 writes are what trigger OSIS ingestion.
+4. Polls the OpenSearch `_count` (cap 30 min) until the count has been stable for `--stability-polls` consecutive polls **and** is ≥ `--expected-count`; a count above expected fails the run.
+5. Resumes TTC, restoring the original concurrency setting. If the resume fails, it publishes to `TTC_ALERT_TOPIC_ARN` — TTC is left halted and needs the runbook's manual resume.
+6. Smoke tests: a fixed KNN query returns ≥ 1 hit, the input-queue backlog is draining, and DLQ depth is unchanged from the pre-run baseline.
+
+Failures exit non-zero without rolling anything back; recover using the runbook's recovery table. Deleting the `ingestion-backup-<ts>/` prefix and clearing `reingestion/` are manual post-checks.
+
+### Usage
+
+```sh
+./scripts/ttc-reingestion-embeddings.sh --expected-count <N> [--stability-polls <N>]
+```
+
+Requires `aws` (CLI v2), `curl` ≥ 7.75 (for `--aws-sigv4`), `jq`, and the `TTC_*` / `AWS_REGION` environment variables exported by the workflow (see the `env:` block in `.github/workflows/ttc_reingestion.yml`).
 
 ## Test Cases File Information
 
