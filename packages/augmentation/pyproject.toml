@@ -2,8 +2,7 @@
 name = "augmentation"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["lxml>=4.9.2", "pydantic>=2.12.3"]
-
+dependencies = ["lxml>=4.9.2", "pydantic>=2.12.3", "shared-models"]
 
 [dependency-groups]
 dev = [
@@ -20,3 +19,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/augmentation"]
+
+[tool.uv.sources]
+shared-models = { workspace = true }

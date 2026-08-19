@@ -2,7 +2,14 @@
 name = "augmentation-lambda"
 version = "0.1.0"
 readme = "README.md"
-dependencies = ["aws-lambda-powertools>=2.0.0", "structlog>=26.1.0"]
+dependencies = [
+  "augmentation",
+  "aws-lambda-powertools>=2.0.0",
+  "lambda-handler",
+  "shared-models",
+  "structlog>=26.1.0",
+  "validation",
+]
 
 [dependency-groups]
 dev = ["aws-lambda-typing>=2.20.0", "boto3>=1.43.67", "moto"]
@@ -15,4 +22,7 @@ build-backend = "hatchling.build"
 packages = ["src/augmentation_lambda"]
 
 [tool.uv.sources]
+augmentation = { workspace = true }
 lambda-handler = { workspace = true }
+shared-models = { workspace = true }
+validation = { workspace = true }
