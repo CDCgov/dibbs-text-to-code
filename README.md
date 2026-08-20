@@ -164,7 +164,7 @@ following command:
 git commit --no-verify
 ```
 
-### Unit tests
+### Unit Tests
 
 The unit tests require access to a private Hugging Face model. To run them locally, create a [Hugging Face access token](https://huggingface.co/settings/tokens) with `read` permissions and export it in your shell config (e.g., `~/.zshrc` or `~/.bashrc`):
 
