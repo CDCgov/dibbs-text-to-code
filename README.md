@@ -224,7 +224,7 @@ To type check a specific file, use the following command:
 just ty path/to/file.py
 ```
 
-### Terraform commands
+### Terraform Commands
 
 To run Terraform commands, use the following format:
 
