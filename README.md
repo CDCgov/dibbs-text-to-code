@@ -28,7 +28,7 @@ DIBBs Text to Code (TTC) is a CDC public health tool that maps nonstandard clini
 
 Public health reporting relies on eICR documents that often contain free-text lab names and results that vary across labs and EHR systems. TTC bridges that gap by finding the best-fit standardized code for each piece of clinical text and writing it back into the document.
 
-### How It Works
+## How It Works
 
 TTC has two sequential workflows:
 
