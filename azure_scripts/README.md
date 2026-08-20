@@ -33,7 +33,7 @@ To use the environment, you need to attach it to your compute instance one time,
 
 ## Notebooks
 
-### emmbedding
+### embedding
 
 This was the original notebook that took the various LOINC terms (Short Name, Long Common Name, and Display Name) and generate embeddings for them.
 
