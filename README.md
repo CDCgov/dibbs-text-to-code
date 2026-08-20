@@ -32,7 +32,7 @@ Public health reporting relies on eICR documents that often contain free-text la
 
 TTC has two sequential workflows:
 
-## **1. Text-to-Code (TTC)**
+### 1. Text-to-Code (TTC)
 
 Given an eICR XML document and a corresponding [Schematron](https://www.schematron.com/) validation report identifying relevant errors, TTC:
 
