@@ -243,13 +243,13 @@ just terraform init
 To run linting checks, use the following command:
 
 ```sh
-ruff check
+just ruff
 ```
 
 To lint a specific file, use the following command:
 
 ```sh
-ruff check path/to/file.py
+just ruff path/to/file.py
 ```
 
 ### Formatting
