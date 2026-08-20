@@ -43,7 +43,7 @@ Given an eICR XML document and a corresponding [Schematron](https://www.schematr
 5. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
 6. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
 
-## **2. Augmentation**
+### 2. Augmentation
 
 Given TTC results, the augmenter:
 
