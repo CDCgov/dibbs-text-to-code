@@ -55,7 +55,7 @@ While running this notebook, it was discovered that there were some `codes` in t
 
 ### split-embeddings
 
-To make the embedding files, that were already created and tested, more digestable and useable within AWS (Opensearch) we created this notebook to split out the embedding files into smaller chunks and store them into LJSON files. These are stored within the `embeddings/refined/split` folder in our Azure Blob Storage.
+To make the embedding files, that were already created and tested, more digestible and useable within AWS (Opensearch) we created this notebook to split out the embedding files into smaller chunks and store them into LJSON files. These are stored within the `embeddings/refined/split` folder in our Azure Blob Storage.
 
 Only a number of embedding files were chunked up, as they were determined to be of better quality.
 
