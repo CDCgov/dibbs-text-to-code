@@ -3,7 +3,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [dibbs_env.yml](#dibbs_env.yml)
+- [dibbs_env.yml](#dibbs_envyml)
 - [Notebooks](#notebooks)
 
 ## Overview
