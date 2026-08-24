@@ -4,10 +4,9 @@ run-name: Update Medical Terminology codes and embeddings by @${{github.actor}}
 # Manually kick of process to run the Terminology updates which
 # will get the latest codes from the various terminologies and
 # create new embeddings for the deltas.  Then the latest full
-# verion of the terminologies codes/text combinations will be
+# version of the terminologies codes/text combinations will be
 # stored for further comparison in future terminology releases
 # and updates.
-
 on:
   workflow_dispatch:
 
@@ -38,7 +37,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install UV
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
 

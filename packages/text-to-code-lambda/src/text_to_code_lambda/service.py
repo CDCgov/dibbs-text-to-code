@@ -89,7 +89,8 @@ def code_for_text(
         logger.info("OpenSearch returned no hits", status="no_match")
         return None
 
-    ranked_results = rerank(text, [hit.source.description for hit in hits])
+    retrieve_scores = [float(hit.score) for hit in hits]
+    ranked_results = rerank(text, retrieve_scores, [hit.source.description for hit in hits])
     if not ranked_results:
         logger.info("Reranker returned no results", status="no_match")
         return None
