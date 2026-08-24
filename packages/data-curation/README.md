@@ -18,6 +18,9 @@
     - [Dependencies](#dependencies)
     - [Command Line](#command-line)
     - [Direct Relma DB Queries](#direct-relma-db-queries)
+- [Terminology Update](#terminology-update)
+  - [Description & Details](#description-and-details)
+  - [Instructions](#instructions-1)
 
 ## Overview
 
