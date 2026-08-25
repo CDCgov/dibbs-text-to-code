@@ -16,7 +16,7 @@ The Lambda also runs in a private-only VPC with no NAT/IGW (S3 access via VPC en
 
 - **CVSS 3.0:** 7.8 (AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H) — local, user-interaction-required
 - **Vulnerable code path:** `transformers/models/x_clip/convert_x_clip_original_pytorch_to_hf.py` — a one-time conversion script that calls `torch.load` on an X-CLIP checkpoint path supplied by the caller.
-- **No-execution-path argument:** TTC does not import, invoke, or expose this conversion script. TTC does not use the X-CLIP model class at all; its only models are the NCHS retriever (`ttc-retriever-v1.0`) and reranker (`ttc-reranker-mvp`), both loaded via `sentence-transformers` from `safetensors` files baked into the image at build time.
+- **No-execution-path argument:** TTC does not import, invoke, or expose this conversion script. TTC does not use the X-CLIP model class at all; its only models are the NCHS retriever (`ttc-retriever-v1.0`) and reranker (`ttc-reranker-v1.0`), both loaded via `sentence-transformers` from `safetensors` files baked into the image at build time.
 - **Upstream status:** Originally disclosed via ZDI-CAN-28308. NVD lists 5.0.0-rc0 explicitly; no patched version has been released as of 2026-05-21. No public Hugging Face security advisory or merged PR addresses this CVE yet.
 - **Reference:** https://nvd.nist.gov/vuln/detail/CVE-2025-14929
 
