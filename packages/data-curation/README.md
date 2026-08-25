@@ -7,7 +7,7 @@
 - [Deprecated Scripts](#deprecated-scripts)
 - [Data Files](#data-files)
   - [LOINC](#loinc)
-  - [LOINC Part Synonyms & Abbreviations](#loinc-part-synonyms-&-abbreviations)
+  - [LOINC Part Synonyms & Abbreviations](#loinc-part-synonyms--abbreviations)
   - [LOINC Part Descriptions](#loinc-part-descriptions)
   - [LOINC UMLS Related Names](#loinc-umls-related-names)
   - [SNOMED](#snomed)
