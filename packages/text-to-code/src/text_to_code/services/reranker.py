@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 from sentence_transformers import CrossEncoder
@@ -21,6 +22,19 @@ class ScoredResult(TypedDict):
     score: float
 
 
+class RankResult(TypedDict):
+    """The search result with its score and corpus id.
+
+    This is the result returned by the Reranker model, and helps with typing
+    because the type specified by SentenceTransformers' .rank() method is too
+    permissive for our type checker.
+    """
+
+    corpus_id: int
+    score: float
+    text: str
+
+
 def rerank(
     nonstandard_in: str,
     scores: list[float],
@@ -41,7 +55,10 @@ def rerank(
       scored search results, sorted in descending order of score.
     """
     pruned_hits = _prune(scores, hits)
-    ranks = _RERANKER.rank(nonstandard_in, pruned_hits)
+    ranks = cast(
+        list[RankResult],
+        _RERANKER.rank(nonstandard_in, pruned_hits),
+    )
     sorted_ranks: list[ScoredResult] = [
         {"code_string": pruned_hits[r["corpus_id"]], "score": r["score"]} for r in ranks
     ]
