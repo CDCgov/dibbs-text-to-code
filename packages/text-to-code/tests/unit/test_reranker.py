@@ -1,8 +1,5 @@
 from text_to_code.models.registry import HIGH_SCORE, LOW_SCORE, MAX_MARGIN
-from text_to_code.services.reranker import (
-    ScoredResult,
-    rerank,
-)
+from text_to_code.services.reranker import ScoredResult, rerank
 
 
 class TestReranker:
@@ -20,7 +17,7 @@ class TestReranker:
             {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
         ]
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.99}
+            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.251}
         ]
 
     def test_reranker_multiple_hits(self) -> None:
@@ -34,22 +31,22 @@ class TestReranker:
         scores = [HIGH_SCORE] * len(search_hits)
         ranks = rerank(nonstandard_in, scores, search_hits)
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
+            {"code_string": r["code_string"], "score": round(float(r["score"]), 7)} for r in ranks
         ]
         assert ranks == [
             {
                 "code_string": "Albumin/Creatinine [Ratio] in Urine",
-                "score": 0.467,
+                "score": 0.0002988,
             },
             {
                 "code_string": "Albumin/Creatinine [Ratio] in 24 hour Urine",
-                "score": 0.271,
+                "score": 0.0002573,
             },
             {
                 "code_string": "Albumin/Creatinine (U) [Mass ratio]",
-                "score": 0.204,
+                "score": 0.000254,
             },
-            {"code_string": "Albumin/Creatinine (U) [Molar ratio]", "score": 0.201},
+            {"code_string": "Albumin/Creatinine (U) [Molar ratio]", "score": 0.0002394},
         ]
 
     def test_reranker_prunes_hits_outside_margin(self) -> None:
@@ -65,9 +62,9 @@ class TestReranker:
 
         ranks = rerank(nonstandard_in, scores, search_hits)
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
+            {"code_string": r["code_string"], "score": round(float(r["score"]), 7)} for r in ranks
         ]
 
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.99}
+            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.25105}
         ]

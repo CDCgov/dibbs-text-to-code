@@ -15,7 +15,7 @@ TTC_RETRIEVER: str = os.getenv("RETRIEVER_MODEL_PATH") or "NCHS/ttc-retriever-v1
 
 # Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
 # found by the approximate neighbor search
-TTC_RERANKER: str = os.getenv("RERANKER_MODEL_PATH") or "NCHS/ttc-reranker-mvp"
+TTC_RERANKER: str = os.getenv("RERANKER_MODEL_PATH") or "NCHS/ttc-reranker-v1.0"
 
 
 # The threshold for automatically accepting a top retriever result without sending to the reranker.
