@@ -18,6 +18,9 @@
     - [Dependencies](#dependencies)
     - [Command Line](#command-line)
     - [Direct Relma DB Queries](#direct-relma-db-queries)
+- [Terminology Update](#terminology-update)
+  - [Description & Details](#description-and-details)
+  - [Instructions](#instructions-1)
 
 ## Overview
 
@@ -567,3 +570,40 @@ There are a handful of CLI commands you can use to generate the extract files. H
   - This will save the query results in the [data folder](../../data/snoinc_extracts/loinc_other/)
 
 ---
+
+## Terminology Update
+
+### Description and Details
+
+![SNOINC UPDATE](./assets/SNOINC_UPDATE_PROCESS.jpg)
+
+The current update process follows this flow:
+
+- GitHub Workflow: **terminology_update.yml** (DIBBS-TEXT-TO-CODE/.github/workflows) - Manually kicked off
+  - Sets up credentials for interacting with AWS
+  - Other setup - Checks out code, python, uv
+  - Executes terminology_maintenance.py script
+- Python Script: **terminology_maintenance.py (main)** (DIBBS-TEXT-TO-CODE/.github/scripts)
+  - main - parameter to know which terminology to update; defaults to 'all'
+    - **Only LOINC (Lab Names) has been implemented, but the code is ready to be leveraged for other terminology sets**
+  - Depends on:
+    - data_curation.terminologies.general - general terminology functionality and structures
+    - data_curation.terminologies.loinc - functionality to make calls to LOINC APIs and process results - includes ability to get LOINC API Credentials from key vault
+    - lambda_handler - leverages functionality to read and write to S3 Buckets in AWS environment
+    - services.embedder - uses existing embedder to generate vectors for the new/updated terminology codes/descriptions to be loaded into Opensearch
+  - Get terminology set's latest version number and date - via API
+  - Determine if latest extract file for terminology set in question is older than that latest version - stop if there is nothing to update or change based upon the version date and latest extract file date
+  - Pull only the delta of codes/descriptions for latest version of the terminology set
+  - Compare delta, of latest version of terminology set, against latest extract file and find new codes/descriptions and updates to descriptions for various codes
+  - Create embedding records for each change for the teminology set
+  - Log delta updates in S3 bucket
+  - Upload embedding records to Opensearch
+  - Pull all codes/descriptions for the latest version for terminology set and store as extract file in S3 Bucket
+  - Log all steps and errors along the way
+
+### Instructions
+
+- Manually run via Github actions: https://github.com/CDCgov/dibbs-text-to-code/actions/workflows/terminology_update.yml
+  ![github workflow](./assets/terminology_update_workflow.jpg)
+
+- Eventually convert into GitLab Workflow and schedule to run on a monthly basis
