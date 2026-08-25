@@ -29,6 +29,7 @@
   "processed_at": "2026-02-13T20:27:00Z",
   "ttc_schematron_issues": [
     {
+      "auto_mapped": false,
       "candidate": {
         "system": null,
         "value": "COVID-19 Spike IgG Interpretation",

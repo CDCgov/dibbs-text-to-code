@@ -26,6 +26,7 @@ from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
+from text_to_code.services.auto_mapping import convert_known_code, get_auto_mapping
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
@@ -401,6 +402,8 @@ class _ErrorWork:
 
     error: SchematronErrorDetail
     selected_candidate: Candidate | None
+    query_text: str | None = None
+    auto_mapped: bool = False
     cache_key: str | None = None
     cached_result: OpenSearchResultCacheSource | None = None
     embedding: list[float] | None = None
@@ -439,6 +442,7 @@ def _match_candidate(
     new_translation = None
     unmatched_message = None
     ranked_results: list[ScoredResult] | None = None
+    query_text = convert_known_code(selected_candidate.value)
 
     vector_parameters = query_models.VectorSearchParams(vector=embedding, data_field=data_field)
 
@@ -461,7 +465,7 @@ def _match_candidate(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         retrieve_scores = [hit.score for hit in results_list]
 
-        ranked_results = rerank(selected_candidate.value, retrieve_scores, retrieved_loinc_names)
+        ranked_results = rerank(query_text, retrieve_scores, retrieved_loinc_names)
 
         if ranked_results:
             top_result = next(
@@ -484,7 +488,7 @@ def _match_candidate(
             put_new_cached_result(
                 opensearch_client=opensearch_client,
                 index=RESULT_CACHE_INDEX,
-                candidate_input=selected_candidate.value,
+                candidate_input=query_text,
                 data_field=data_field,
                 loinc_code=new_translation,
                 search_score=top_result.score,
@@ -512,6 +516,8 @@ def _build_schematron_error_work_items(
     :return: A list of _ErrorWork items, one per Schematron error.
     """
     work_items: list[_ErrorWork] = []
+    known_ins_to_codes = get_auto_mapping()
+
     for error in schematron_data_fields:
         text_candidates = processor.get_text_candidates(error.error_context, error.field)
 
@@ -523,7 +529,9 @@ def _build_schematron_error_work_items(
         selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
         work = _ErrorWork(error=error, selected_candidate=selected_candidate)
         if selected_candidate:
-            work.cache_key = compute_cache_key(selected_candidate.value, error.field)
+            work.auto_mapped = selected_candidate.value in known_ins_to_codes
+            work.query_text = convert_known_code(selected_candidate.value)
+            work.cache_key = compute_cache_key(work.query_text, error.field)
         work_items.append(work)
 
     return work_items
@@ -565,9 +573,11 @@ def _embed_cache_misses(work_items: list[_ErrorWork]) -> None:
             continue
         if work.cache_key is None or work.cache_key in miss_keys:
             continue
+        if work.query_text is None:
+            raise ValueError(f"Missing query text for candidate: {work.selected_candidate.value}")
         miss_keys.add(work.cache_key)
         cache_misses.append(work)
-        miss_texts.append(work.selected_candidate.value)
+        miss_texts.append(work.query_text)
 
     if not cache_misses:
         return
@@ -603,8 +613,15 @@ def _resolve_work_item(
         logger.info("Cache hit, retrieving cached results", status="processing")
         _record_cache_metric(HitValue.hit)
         cached_result = work.cached_result
+        cached_translation = Code(
+            code=cached_result.loinc_code.code,
+            code_system=cached_result.loinc_code.code_system,
+            code_system_name=cached_result.loinc_code.code_system_name,
+            display_name=cached_result.loinc_code.display_name,
+            original_text=selected_candidate.value,
+        )
         return _CandidateResolution(
-            new_translation=cached_result.loinc_code,
+            new_translation=cached_translation,
             opensearch_retrieved_scores=cached_result.opensearch_retrieved_scores,
             ranked_results=cached_result.reranker_processed_results["results"],
         )
@@ -620,12 +637,30 @@ def _resolve_work_item(
         _record_cache_metric(
             HitValue.hit if resolution.new_translation is not None else HitValue.miss
         )
-        return resolution
+
+        if resolution.new_translation is None:
+            return resolution
+
+        new_translation = Code(
+            code=resolution.new_translation.code,
+            code_system=resolution.new_translation.code_system,
+            code_system_name=resolution.new_translation.code_system_name,
+            display_name=resolution.new_translation.display_name,
+            original_text=selected_candidate.value,
+        )
+        return _CandidateResolution(
+            new_translation=new_translation,
+            unmatched_message=resolution.unmatched_message,
+            opensearch_retrieved_scores=resolution.opensearch_retrieved_scores,
+            ranked_results=resolution.ranked_results,
+        )
 
     _record_cache_metric(HitValue.miss)
     if work.embedding is None:
         # Unreachable: phase 3 embeds every cache-miss candidate.
         raise ValueError(f"Missing embedding for cache-miss candidate: {selected_candidate.value}")
+    if work.query_text is None:
+        raise ValueError(f"Missing query text for candidate: {selected_candidate.value}")
 
     (
         new_translation,
@@ -691,6 +726,7 @@ def _resolve_error_work_items(
                 new_translation=resolution.new_translation,
                 opensearch_retrieved_scores=resolution.opensearch_retrieved_scores,
                 reranker_processed_results=resolution.ranked_results,
+                auto_mapped=work.auto_mapped,
             ),
         )
 

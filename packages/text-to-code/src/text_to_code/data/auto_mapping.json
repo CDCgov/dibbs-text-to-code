@@ -1,0 +1,1242 @@
+{
+  "Age": ["AGE", "age"],
+  "MCHC Auto (RBC) [Entitic Mass/Vol]": ["MCHC.", "MCHC", "Mchc"],
+  "MCHC [Entitic Mass/volume] in Red Blood Cells by Automated count": [
+    "Mean corpuscular hemoglobin concentration (MCHC) determination",
+    "mean corpuscular HGB conc",
+    "Mean Corpuscular HGB Conc"
+  ],
+  "RBC # Bld Auto": ["RBCs", "RBCS", "RBC", "RBC's", "Rbc", "RBC."],
+  "Erythrocytes [#/volume] in Blood by Automated count": [
+    "RED BLOOD CELL COUNT",
+    "red blood count",
+    "red blood cell count",
+    "Red blood cell count",
+    "RED BLOOD COUNT",
+    "Red Blood Cell Count"
+  ],
+  "MCV RBC Auto": ["MCV.", "Mcv", "MCV"],
+  "MCV [Entitic mean volume] in Red Blood Cells by Automated count": [
+    "Mean Corpuscular Volume",
+    "mean corpuscular volume"
+  ],
+  "MCH RBC Qn Auto": ["Mch", "MCH", "MCH."],
+  "MCH [Entitic mass] by Automated count": [
+    "Mean corpuscular hemoglobin (MCH) determination",
+    "mean corpuscular hemoglobin",
+    "Mean CorpuscularHemoglobin"
+  ],
+  "PMV Bld Auto": ["_MPV", "MpV", "MVP", "Mpv", "MPV."],
+  "Platelet [Entitic mean volume] in Blood by Automated count": [
+    "mean platelet volume",
+    "Mean Platelet Volume",
+    "Mean platelet volume"
+  ],
+  "WBC # Bld Auto": [
+    "WBCs",
+    "wbc",
+    "WBC",
+    "WBC.",
+    "WBC's",
+    "Wbc",
+    "WBCS",
+    "WBC'S"
+  ],
+  "Leukocytes [#/volume] in Blood by Automated count": [
+    "leukocytes",
+    "LEUKOCYTES",
+    "Leukocytes",
+    "LEUKOCYTE",
+    "Leukocyte",
+    "leukocyte",
+    "Leukocytes.",
+    "WHITE BLOOD COUNT",
+    "white blood count"
+  ],
+  "Erythrocyte DistWidth Bld Auto": ["RDW", "RDWS", "RdW", "RDW."],
+  "Erythrocyte [DistWidth] in Blood by Automated count": [
+    "red cell distribution width",
+    "Red Cell DistributionWidth"
+  ],
+  "RDW RBC Auto": [
+    "RDW-sd",
+    "RDWSD",
+    "rdwsd",
+    "RDW SD",
+    "RdW-SD",
+    "RDW-SD",
+    "rdw-sd"
+  ],
+  "Erythrocyte Auto (Bld) [DistWidth]": [
+    "RDWCV",
+    "RDW-CV,%",
+    "RDW CV",
+    "rdw-cv%",
+    "rdwcv",
+    "RDW-CV",
+    "rdw-cv",
+    "RdW-CV",
+    "RDW-CV, %",
+    "RDW_CVV"
+  ],
+  "Manual differential performed Bld Ql": [
+    "MANUAL DIFF?",
+    "MANUAL DIFF",
+    "manual diff",
+    "MANUAL DIFF.?",
+    "Manual Diff"
+  ],
+  "BUN Bld-mCnc": ["Bun", "BUN", "BUN.", "*BUN"],
+  "Urea nitrogen [Mass/volume] in Blood": [
+    "blood urea nitrogen",
+    "Blood urea nitrogen (BUN) measurement",
+    "Blood Urea Nitrogen"
+  ],
+  "RBC morph Bld": [
+    "Rbc Morph",
+    "RBCMORPH",
+    "RBC morph",
+    "RBC MORPH*",
+    "RBC MORPH",
+    "RBC Morph"
+  ],
+  "RBC morphology finding Nom (Bld)": ["RBC SMEAR"],
+  "Bacteria identified in Blood by Culture": [
+    "blood culture",
+    "BLOOD CULTURE",
+    "Blood Culture",
+    "Blood culture",
+    "=>BLOOD CULTURE<=",
+    "Blood culture and sensitivity"
+  ],
+  "Bacteria Bld Cult": ["BACTERIA", "bacteria", "Bacteria"],
+  "Hgb Bld-mCnc": ["HGB.", "HGB"],
+  "Hemoglobin [Mass/volume] in Blood": [
+    "Hemoglobin",
+    "HEMOGLOBIN",
+    "HEMOGLOBIN.",
+    "hemoglobin"
+  ],
+  "Hgb S Bld Ql Soly": ["HGB S", "hgb s", "HGB-S"],
+  "Hemoglobin S Solubility test Ql (Bld)": ["hemoglobin S"],
+  "Bacteria identified in Urine by Culture": [
+    "urine culture, routine",
+    "URINE CULTURE, ROUTINE",
+    "URINE CULTURE",
+    "Culture, urine",
+    "URINE CULTURE?",
+    "Culture Urine",
+    "Urine Culture",
+    "CULTURE - URINE",
+    "Culture, Urine",
+    "CULTURE URINE",
+    "Urine culture",
+    "urine culture",
+    "culture,urine",
+    "Urine culture routine"
+  ],
+  "Glucose [Mass/Volume] in Blood": [
+    "Whole Blood Glucose",
+    "Glucose, Whole Blood",
+    "POC GLUCOSE",
+    "POC Glucose",
+    "POCT Glucose"
+  ],
+  "Glucose (Bld) [Mass/Vol]": [
+    "GLUCOSE POC",
+    "glucose POC",
+    "Glucose, POC",
+    "GLUCOSE, POC",
+    "Glucose POC",
+    "Glucose,POC",
+    "Glucose,Poc",
+    "Glucose (POC)"
+  ],
+  "CO2 [Moles/Vol]": ["CO2", "CO2.", "*CO2", "*co2"],
+  "Hct VFr Bld Auto": ["HCT", "HCT.", "Hct"],
+  "Glucose [Mass/Vol]": [
+    "GLUCOSE",
+    "GLU",
+    "*GLU",
+    "glucose",
+    "*glu",
+    "Glu",
+    "glu",
+    "Glucose",
+    "GLUCOSE."
+  ],
+  "BUN/Creat Bld": ["BUN/creat", "BUN/CREAT"],
+  "Basophils NFr Bld Auto": [
+    "%BASO",
+    "baso%",
+    "%baso",
+    "% BASO",
+    "Baso %",
+    "BASO%.",
+    "%BASO.",
+    "%BASOS",
+    "baso %",
+    "BASO %",
+    "% Baso",
+    "BASO%"
+  ],
+  "Anion gap in Serum or Plasma by calculation": [
+    "*agap",
+    "agap",
+    "AGAP",
+    "A GAP",
+    "*AGAP",
+    "Serum anion gap measurement"
+  ],
+  "Albumin [Mass/Vol]": ["ALBUMIN", "albumin", "Albumin", "ALBUMIN."],
+  "Protein [Mass/Vol]": [
+    "Total Protein",
+    "TOTAL PROTEIN.",
+    "PROTEIN TOTAL",
+    "protein total",
+    "total protein",
+    "protein, total",
+    "*TP",
+    "TOTAL PROTEIN",
+    "Total protein",
+    "TP"
+  ],
+  "Prot SerPl-mCnc": ["PROTEIN", "*PROTEIN", "protein", "Protein", "*protein"],
+  "Lymphocytes NFr Bld Auto": [
+    "% Lymphs",
+    "lymph %",
+    "% LYMPH",
+    "%LYMPH",
+    "LYMPH%",
+    "LY %",
+    "lymph%",
+    "%LYMPH.",
+    "LYMPH %",
+    "%lymph",
+    "ly %",
+    "% lymph",
+    "ly%",
+    "%LYMPHS",
+    "Lymph %",
+    "LY%"
+  ],
+  "Lymphocytes/Leukocytes in Blood by Automated count": [
+    "Lymphocyte (%)",
+    "Lymphocytes (%)",
+    "Lymphocytes %",
+    "lymphocytes %",
+    "Lymphocyte %",
+    "lymphocyte %"
+  ],
+  "Monocytes NFr Bld Auto": [
+    "%MONOS",
+    "%MONO.",
+    "MO%.",
+    "MONO %",
+    "MONO%.",
+    "% MONO",
+    "% Monos",
+    "%MONO",
+    "MONO%",
+    "mono %",
+    "Mono %",
+    "mono%",
+    "%mono",
+    "% mono",
+    "MO%"
+  ],
+  "Monocytes/Leukocytes in Blood by Automated count": [
+    "monocyte %",
+    "Monocyte (%)",
+    "monocytes%",
+    "MONOCYTES%",
+    "monocytes %",
+    "Monocytes %"
+  ],
+  "Chloride [Moles/Vol]": [
+    "chloride",
+    "CHLORIDE.",
+    "CHLORIDE",
+    "Chloride",
+    "chlorides"
+  ],
+  "Chloride SerPl-sCnc": ["*CL", "CL", "Cl-", "cL-", "*cL", "cL", "CL-"],
+  "Globulin Calc (S) [Mass/Vol]": [
+    "globulin",
+    "Globulin",
+    "GLOBULIN",
+    "GLOBULIN."
+  ],
+  "Calcium [Mass/Vol]": ["calcium", "CALCIUM.", "CALCIUM", "Calcium"],
+  "Eosinophil NFr Bld Auto": [
+    "EO%",
+    "% EOS",
+    "%EOS",
+    "eos %",
+    "% Eos",
+    "EO %",
+    "%EOS.",
+    "%EO",
+    "eo%",
+    "%eos",
+    "eo %",
+    "eos%",
+    "EOS %",
+    "EOS%"
+  ],
+  "Performing lab name": ["PERFORMING LAB", "performing lab"],
+  "eGFRcr SerPlBld CKD-EPI 2021": [
+    "eGFR.",
+    "eGFR..",
+    "e-GFR",
+    "EGFR",
+    "eGFR*",
+    "gfr",
+    "GFR.",
+    "GFR",
+    "egfr",
+    "GFR-",
+    "eGFR",
+    "e GFR",
+    "eGFR.*",
+    "eGFR S",
+    "GFR+",
+    "*eGFR"
+  ],
+  "Basophils # Bld Auto": [
+    "BASOS",
+    "ba#",
+    "#baso",
+    "BASO #",
+    "BA#",
+    "#BASO.",
+    "#ba",
+    "baso",
+    "BASO#",
+    "baso#",
+    "# Baso",
+    "#BA",
+    "basos",
+    "Basos",
+    "BASO",
+    "BASO*",
+    "baso #",
+    "#BASO"
+  ],
+  "Basophils [#/volume] in Blood by Automated count": [
+    "basophils",
+    "ABSOLUTE BASOPHILS",
+    "absolute basophils",
+    "Absolute Basophils",
+    "Absolute Basophil",
+    "Basophil",
+    "absolute basophil",
+    "BASOPHILS",
+    "BASOPHIL",
+    "ABSOLUTE BASOPHIL",
+    "basophil",
+    "Basophils"
+  ],
+  "AST SerPl-cCnc": [
+    "SGOT(AST)",
+    "SGOT (AST)",
+    "SGOT-AST",
+    "SGOT/AST.",
+    "AST",
+    "*AST",
+    "SGOT/AST",
+    "AST."
+  ],
+  "Aspartate aminotransferase [Enzymatic activity/volume] in Serum or Plasma": [
+    "AST SGOT",
+    "AST (SGOT)",
+    "AST/SGOT",
+    "AST(SGOT)",
+    "AST / SGOT"
+  ],
+  "Monocytes # Bld Auto": [
+    "#MONO.",
+    "# Monos",
+    "#mono",
+    "MO#.",
+    "#MONOS",
+    "MO#",
+    "#MONO"
+  ],
+  "Monocytes [#/volume] in Blood by Automated count": [
+    "ABSOLUTE MONOCYTE",
+    "MONO*",
+    "MONOS",
+    "monocyte",
+    "Mono #",
+    "Absolute Monocytes",
+    "monos.",
+    "mono #",
+    "absolute monocytes",
+    "ABSOLUTE MONOCYTES",
+    "Monocyte",
+    "MONOCYTES",
+    "monocytes",
+    "MONOCYTE",
+    "MONO#",
+    "monos",
+    "MONO #",
+    "absolute monocyte",
+    "Monocytes",
+    "MONO#.",
+    "MONO",
+    "mono#",
+    "Absolute Monocyte",
+    "mono"
+  ],
+  "Albumin/Globulin [Mass ratio]": [
+    "A/G ratio",
+    "A/G",
+    "A/G Ratio",
+    "albumin globulin ratio",
+    "Albumin / Globulin Ratio",
+    "A/G RATIO",
+    "Ag ratio",
+    "A/G RATIO.",
+    "AG RATIO",
+    "albumin/globulin ratioo",
+    "AGRATIO",
+    "ALBUMIN GLOBULIN RATIO",
+    "*A/G",
+    "Ag",
+    "Albumin/Globulin Ratio",
+    "AG"
+  ],
+  "Lymphocytes # Bld Auto": [
+    "#LYMPH",
+    "lymph#",
+    "# Lymphs",
+    "lymph #",
+    "#LYMPH.",
+    "LYMPH #",
+    "#lymph",
+    "LYMPH#"
+  ],
+  "Eosinophil # Bld Auto": [
+    "# Eos",
+    "#EO",
+    "eo#",
+    "eo#.",
+    "#EOS",
+    "#eos",
+    "#EOS.",
+    "eo #",
+    "EO#"
+  ],
+  "Eosinophils [#/volume] in Blood by Automated count": [
+    "EOSINOPHIL",
+    "Eos",
+    "EOS*",
+    "eosinophil",
+    "EO",
+    "eos.",
+    "EOSINOPHILS",
+    "Eosinophils",
+    "eos",
+    "Eosinophil",
+    "eo",
+    "EOS",
+    "eosinophils"
+  ],
+  "Creatinine [Mass/Vol]": [
+    "Creatinine",
+    "CREATININE-S",
+    "CREATININE",
+    "creatinine",
+    "CREATININE.",
+    "creatinine,S"
+  ],
+  "Neutrophils NFr Bld Auto": ["%neut", "%NEUT.", "%NEUT"],
+  "Neutrophils # Bld Auto": [
+    "NEUT #",
+    "NEUT#",
+    "# neut",
+    "Neut #",
+    "#neut",
+    "#NEUT.",
+    "neut #",
+    "neut#",
+    "# NEUT",
+    "#NEUT"
+  ],
+  "Bilirubin.total [Mass/volume] in Serum or Plasma": [
+    "BILIRUBIN, TOTAL",
+    "Bilirubin total",
+    "Total Bilirubin",
+    "total bilirubin",
+    "bilirubin total",
+    "Bilirubin,Total",
+    "Bilirubin, total",
+    "bilirubintotal",
+    "Bilirubin Total",
+    "Bilirubin, Total",
+    "total bili",
+    "Bilirubin (total)",
+    "TOTAL BILI",
+    "total  bilirubin",
+    "TOTAL BILIRUBIN",
+    "bilirubin - total",
+    "bilirubin,total",
+    "TOTAL BILI.",
+    "BILIRUBIN TOTAL",
+    "Total Bili",
+    "bilirubin, total"
+  ],
+  "Bilirub SerPl-mCnc": ["Bilirubin", "bilirubin", "BILIRUBIN"],
+  "ALT [Catalytic activity/Vol]": [
+    "ALT",
+    "ALTV",
+    "*ALT",
+    "ALT.",
+    "ALT-V",
+    "altv",
+    "ALT(V)"
+  ],
+  "Alanine aminotransferase [Enzymatic activity/volume] in Serum or Plasma": [
+    "SGPT(ALT)",
+    "SGPT (ALT)",
+    "SGPT-ALT",
+    "SGPT/ALT"
+  ],
+  "ALT SerPl-cCnc": [
+    "ALT SGPT",
+    "ALTSGPT",
+    "ALT/SGPT",
+    "altsgpt",
+    "ALT / SGPT",
+    "ALT (SGPT)",
+    "ALT(SGPT)"
+  ],
+  "Osmolality [Osmolality]": [
+    "Osmolality",
+    "osmolality",
+    "OSMOLALITY",
+    "OSMOLALITY."
+  ],
+  "Sodium [Moles/Vol]": [
+    "Sodium",
+    "SODIUM",
+    "SODIUM.",
+    "*Na",
+    "Na",
+    "Na+",
+    "sodium"
+  ],
+  "Potassium [Moles/Vol]": [
+    "K",
+    "Potassium",
+    "POTASSIUM",
+    "POTASSIUM.",
+    "K+",
+    "*K",
+    "potassium"
+  ],
+  "Hematocrit Auto (Bld) [Volume fraction]": [
+    "HEMATOCRIT.",
+    "hematocrit",
+    "Hematocrit",
+    "HEMATOCRIT"
+  ],
+  "Platelet # Bld Auto": ["PLT", "plt", "PLt", "plt.", "PLTS", "plts"],
+  "Clarity (U)": ["Clarity", "*clarity", "*CLARITY", "CLARITY", "clarity"],
+  "ALP [Catalytic activity/Vol]": [
+    "alkaline phos",
+    "Alkaline Phos",
+    "ALKALINE PHOS",
+    "ALKALINE PHOS."
+  ],
+  "Alkaline phosphatase [Enzymatic activity/volume] in Serum or Plasma": [
+    "Alkaline phosphatase measurement",
+    "ALP",
+    "ALKPHOS",
+    "alkphos",
+    "Alkaline phosphatase",
+    "alk phos",
+    "ALKALINE PHOSPHATASE",
+    "Alk Phos",
+    "alkaline phosphatase",
+    "Alkaline Phosphatase",
+    "ALK PHOS"
+  ],
+  "Color (U)": ["COLOR..", "color", "COLOR", "COLOR.", "Color"],
+  "Color of Urine": [
+    "URINE COLOR",
+    "urine color",
+    "Urine Color",
+    "Assessment of urine color"
+  ],
+  "Note": ["note", "NOTES", "Note", "Notes"],
+  "TSH Qn": ["TSH", "TSH.", "TSH-", "*TSH"],
+  "Nitrite Ur Ql Strip": [
+    "nitrite",
+    "NITRITES",
+    "nitrites",
+    "Nitrite.",
+    "Nitrite",
+    "Nitrites",
+    "NITRITE"
+  ],
+  "Platelets [#/volume] in Blood by Automated count": [
+    "platelet count",
+    "Platelet",
+    "Platelet count",
+    "Platelet Count",
+    "PLATELETS",
+    "platelets",
+    "Platelets",
+    "PLATELETS.",
+    "platelet",
+    "PLATELET COUNT",
+    "PLATELET",
+    "PLATELETS*"
+  ],
+  "Neuts Band NFr Bld Manual": [
+    "band",
+    "BANDS",
+    "Bands",
+    "Band",
+    "bands",
+    "BAND",
+    "BAND*"
+  ],
+  "Urobilinogen Ur-mCnc": [
+    "urobilinogen",
+    "Urobilinogen",
+    "UROBILINOGEN",
+    "Urobilinogens",
+    "URobilinogen"
+  ],
+  "GFR Creatinine-based formula (MDRD)/1.73 sq M among black population (S/P/Bld) [Vol rate/Area]": [
+    "eGFR - AA",
+    "eGFR-aa",
+    "EGFRAA",
+    "*EGFRAA",
+    "*egfraa",
+    "AFR AMER GFR",
+    "eGFR aa",
+    "eGFR AA",
+    "egfraa",
+    "EGFR AA"
+  ],
+  "GFR Creatinine-based formula (MDRD)/1.73 sq M among non black population (S/P/Bld) [Vol rate/Area]": [
+    "NON-AA GFR",
+    "NON AA GFR"
+  ],
+  "Hematocrit [Volume Fraction] of Blood by Impedance": [
+    "Hematocrit, Whole Blood",
+    "hematocrit POC",
+    "POC HEMATOCRIT",
+    "POC Hematocrit"
+  ],
+  "Hct VFr Bld Imped": ["POC hct", "POC HCT", "HCT, Whole Blood"],
+  "CO2 (Bld) [Moles/Vol]": ["POC co2", "POC CO2"],
+  "Carbon dioxide, total [Moles/volume] in Blood": ["CO2 Whole Blood"],
+  "Chloride [Moles/volume] in Blood": [
+    "POC chloride",
+    "POC CHLORIDE",
+    "Chloride, Whole Blood",
+    "POC Chloride",
+    "Chloride Whole Blood"
+  ],
+  "Creatinine [Mass/volume] in Blood": [
+    "POC CREATININE",
+    "POC Creatinine",
+    "POC creatinine"
+  ],
+  "Triglyceride [Mass/volume] in Blood": [
+    "POC triglyceride",
+    "POC TRIGLYCERIDE",
+    "POC Triglyceride"
+  ],
+  "Specific gravity of Urine": [
+    "Urine Specific Gravity",
+    "URINE SPECIFIC GRAVITY",
+    "specific gravity",
+    "Specific Gravity",
+    "Spec Gravity",
+    "urine specific gravity",
+    "Spec.Gravity",
+    "SPEC GRAVITY",
+    "spec gravity",
+    "SPECIFIC GRAVITY"
+  ],
+  "nRBC # Bld Auto": [
+    "NRBC's",
+    "NRBC #",
+    "nRBC#",
+    "N RBC",
+    "nRBC",
+    "NRBC#",
+    "NRBC",
+    "NRBCs"
+  ],
+  "Nucleated erythrocytes/Leukocytes [Ratio] in Blood by Automated count": [
+    "# NRBC",
+    "%NRBC",
+    "% NRBC",
+    "#NRBCs",
+    "#NRBC",
+    "#nRBC"
+  ],
+  "CBC Pnl Bld Auto": ["CBC", "CBC (+)"],
+  "Glucose Glucometer (BldC) [Mass/Vol]": ["GLUCOMETER"],
+  "Glucose BldC Glucomtr-mCnc": [
+    "Glucose, Bedside",
+    "GLUCOSE BEDSIDE",
+    "GLUCOSE, BEDSIDE"
+  ],
+  "Glucose [Mass/volume] in Capillary blood": [
+    "Cap Glucose",
+    "Capillary-glucose",
+    "Glucose-Capillary",
+    "glucose, cap"
+  ],
+  "Myelocytes # Bld Manual": [
+    "MYELOCYTE",
+    "Myelocyte",
+    "Myelocytes",
+    "myelocytes",
+    "MYELOCYTES",
+    "myelocyte"
+  ],
+  "Metamyelocytes # Bld": [
+    "Metamyelocyte",
+    "metamyelocyte",
+    "METAMYELOCYTES",
+    "metamyelocytes",
+    "METAMYELOCYTE",
+    "Metamyelocytes"
+  ],
+  "Promyelocytes [#/volume] in Blood by Manual count": [
+    "Promyelocyte",
+    "PROMYELOCYTES",
+    "Promyelocytes",
+    "promyelocyte",
+    "PROMYELOCYTE"
+  ],
+  "WBC corrected for nucl RBC Auto (Bld) [#/Vol]": [
+    "WBC corrected for nucleated RBC"
+  ],
+  "Magnesium [Moles/Vol]": ["magnesium", "MAGNESIUM", "Magnesium"],
+  "P wave Atrium by EKG": ["Atrial rate", "ATRIAL RATE", "Atrial Rate"],
+  "Heart rate": ["VENTRICULAR RATE", "Ventricular Rate", "Ventricular rate"],
+  "Leukocytes [#/volume] in Blood by Estimate": [
+    "Leuk Est",
+    "leuk est",
+    "LEUK EST"
+  ],
+  "Variant Lymphs Bld Ql Auto": [
+    "ATYPLYMPHS",
+    "Atyp lymphs",
+    "ATYP LYMPH",
+    "ATYP LYMPHS"
+  ],
+  "Blasts (Bld) [#/Vol]": ["BLAST", "BLASTS", "Blasts", "blast", "Blast"],
+  "Buprenorphine Ur Ql": [
+    "BUPRENORPHINE",
+    "buprenorphine",
+    "BUPRENORPHIHNES",
+    "Buprenorphine"
+  ],
+  "Opiates Ur Ql": ["OPIATE", "opiates", "Opiates", "opiate", "OPIATES"],
+  "TIBC SerPl-mCnc": ["T.I.B.C", "TIBC"],
+  "pH of Urine": ["urine pH", "Urine pH", "URINE PH"],
+  "Urea nitrogen/Creatinine [Mass Ratio] in Blood": [
+    "BUN/CREATININE RATIO",
+    "BUN/creatinine ratio",
+    "BUN/Creatinine Ratio",
+    "BUN creatinine ratio"
+  ],
+  "nRBC Bld Auto-Rto": ["NRBC %", "nRBC, %", "NRBC%", "nRBC%"],
+  "Prothrombin time (PT)": [
+    "PT/PTT",
+    "PT PTT",
+    "protime",
+    "PRO-TIME",
+    "pro time",
+    "Protime",
+    "PROTIME",
+    "PTT"
+  ],
+  "Coagulation PT (PPP) [Time]": ["PT Order", "PT ORDER"],
+  "QRS duration": [
+    "QRSD interval",
+    "QRSD INTERVAL",
+    "QRS DURATION",
+    "QRS duration",
+    "QRSD Interval",
+    "QRS Duration",
+    "QRSd Interval"
+  ],
+  "Magnesium [Mass/Vol]": ["Magnesium measurement"],
+  "Diagnosis": ["diagnosis"],
+  "Dx": ["Diagnosis"],
+  "Amphetamines Ur Ql": ["AMPHETAMINES", "Amphetamines", "amphetamines"],
+  "Amphetamine Screen Ql (U)": ["amphetamine", "Amphetamine", "AMPHETAMINE"],
+  "Leukocyte esterase [Presence] in Urine by Test strip": [
+    "leukocyte esterase",
+    "LEUKOCYTE ESTERASE",
+    "Leukocyte esterase",
+    "Leukocyte Esterase"
+  ],
+  "PCP Ur Ql": ["PCP", "pcp"],
+  "MDW Bld Auto": ["MDW"],
+  "Pathologist review of Blood tests": [
+    "SLIDE REVIEW",
+    "slide review",
+    "Slide Review",
+    "slide review?"
+  ],
+  "Cholesterol.total/Cholesterol in HDL [Mass Ratio] in Serum or Plasma": [
+    "chol HDL ratio",
+    "Chol/HDL Ratio",
+    "CHOL/HDL RATIO",
+    "chol/HDL ratio"
+  ],
+  "Benzodiaz Ur Ql": ["BENZO", "Benzos", "BENZOS", "benzo"],
+  "ABO group [Type] in Blood from Blood product unit": ["UNIT ABO", "Unit ABO"],
+  "Lipase [Catalytic activity/Vol]": ["LIPASE", "lipase", "Lipase"],
+  "fentaNYL Ur Ql": [
+    "FENTANYL",
+    "Fentanyl",
+    "fentanyl",
+    "fentanyl, qualitative, urine",
+    "fentanyl, urine, qualitative"
+  ],
+  "fentaNYL [Presence] in Urine": ["FENTANYL, URINE", "fentanyl urine"],
+  "fentaNYL [Presence] in Urine by Screen method": [
+    "fentanyl scrn (urine)",
+    "fentanyl, screen, urine",
+    "Fentanyl Screen, Urine"
+  ],
+  "Specimen expiration date of Blood": [
+    "Blood Expiration Date",
+    "BLOOD EXPIRATION DATE"
+  ],
+  "Benzoylecgonine Ql (U)": ["cocaine", "Cocaine", "COCAINE"],
+  "Benzoylecgonine [Presence] in Urine": [
+    "cocaine metabolite",
+    "COCAINE METABOLITE"
+  ],
+  "Hepatitis B virus surface Ag [Presence] in Serum or Plasma by Immunoassay": [
+    "HEPATITIS B SURFACEANTIGEN",
+    "Hepatitis, B Surface Antigen",
+    "hepatitis B surface antigen",
+    "Hepatitis B Surface Antigen",
+    "HEPATITIS B SURFACE ANTIGEN"
+  ],
+  "HBV surface Ag Confirm Ql": [
+    "Hep B Surf Ag (REFL)",
+    "hep b surf ag screen",
+    "Hep B Surface Ag reflex",
+    "hep b surf antigen scrn",
+    "Hep B Surface Antigen (Reflex)"
+  ],
+  "Reagin Ab [Presence] in Serum by RPR": ["RPR", "RPR (*)"],
+  "Ferritin [Mass/volume] in Serum or Plasma": [
+    "FERRITIN",
+    "Ferritin",
+    "ferritin"
+  ],
+  "Folate [Mass/Vol]": ["folate", "Folate"],
+  "Folate [Mass/volume] in Serum or Plasma": ["Folate, Serum", "Folic Acid"],
+  "12 lead EKG panel": ["EKG", "=>EKG<="],
+  "12 lead EKG Pnl": ["Cardiac Panel", "CARDIAC PANEL"],
+  "HCG Ur Ql": ["POC HCG", "hcg urine", "hCG, Urine"],
+  "HYDROcodone [Mass/volume] in Urine": [
+    "hydrocodone in urine",
+    "Hydrocodone, Urine"
+  ],
+  "HYDROmorphone [Mass/volume] in Urine": [
+    "hydromorphone urine",
+    "Hydromorphone (Urine)"
+  ],
+  "Ketones Test strip Ql (U)": [
+    "Ketones Urine POC",
+    "POC Ketone Urine",
+    "POC Urine Ketones"
+  ],
+  "Ketones [Mass/volume] in Urine": ["Urine Ketones", "Ketones in Urine"],
+  "Cholesterol [Mass/Vol]": ["CHOLESTEROL", "cholesterol", "Cholesterol"],
+  "Lactate [Moles/Vol]": [
+    "Lactic Acid",
+    "LACTIC ACID",
+    "lactic acid",
+    "LACTIC ACID S"
+  ],
+  "Fasting status - Reported": [
+    "Fasting?",
+    "fasting?",
+    "Fasting",
+    "FASTING?",
+    "FASTING"
+  ],
+  "Cholesterol in HDL [Mass/Vol]": [
+    "HDL",
+    "HDL-cholesterol",
+    "HDL cholesterol",
+    "HDL CHOLESTEROL",
+    "hdl"
+  ],
+  "P-R Interval": ["PR interval", "PR Interval", "P-R INTERVAL"],
+  "Urea nitrogen [Mass/volume] in Serum or Plasma": [
+    "BUNa",
+    "Plasma blood urea nitrogen measurement",
+    "Plasma BUN",
+    "Plasma blood urea nitrogen"
+  ],
+  "Calcium [Mass/volume] in Serum or Plasma": [
+    "plasma calcium measurement",
+    "Ca",
+    "Calcium measurement",
+    "Plasma Calcium",
+    "Ca++",
+    "*Ca",
+    "CA",
+    "*CA"
+  ],
+  "Chloride [Moles/volume] in Serum or Plasma": [
+    "Plasma Chloride measurement",
+    "Plasma Chloride"
+  ],
+  "Bld Prod Typ BPU": ["Unit Blood Type", "UNIT BLOOD TYPE"],
+  "CBC W Auto Diff Bld": [
+    "CBC (w/ auto diff)",
+    "CBC W/ AUTO DIFF",
+    "CBC W/AUTO DIFF",
+    "CBC WITH DIFF",
+    "**CBC W/AUTO DIFF"
+  ],
+  "Hyaline casts [#/area] in Urine sediment by Microscopy low power field": [
+    "HYALINE CAST",
+    "hyaline casts",
+    "Hyaline Casts",
+    "hyaline cast"
+  ],
+  "XR Chest Single view": ["XR CHEST SINGLE VIEW"],
+  "Calcium corrected for albumin [Mass/Vol]": [
+    "Corrected Calcium",
+    "corrected calcium",
+    "CORRECTED CALCIUM"
+  ],
+  "Mucus [Presence] in Urine sediment by Light microscopy": ["MUCUS", "Mucus"],
+  "Mucous Threads UrnS Ql Micro ": ["mucous", "MUCOUS", "Mucous"],
+  "Procalcitonin [Mass/Vol]": [
+    "Procalcitonin",
+    "PROCALCITONIN",
+    "pro calcitonin"
+  ],
+  "BNP SerPl-mCnc": ["BNP"],
+  "Anisocytosis Bld Ql Smear": ["aniso", "Aniso", "ANISO"],
+  "Troponin I SerPl-mCnc": [
+    "TROPONIN I",
+    "troponin I",
+    "TROPONIN-I",
+    "Troponin I"
+  ],
+  "aPTT in Platelet poor plasma by Coagulation assay": ["aPTT", "APTT"],
+  "Benzodiazepines Ql (U)": [
+    "BENZODIAZEPINE",
+    "benzodiazepines",
+    "benzodiazepine",
+    "Benzodiazepine",
+    "BENZODIAZEPINES"
+  ],
+  "Benzodiazepines [Presence] in Urine by Screen method": [
+    "benzodiazepines, urine screen",
+    "BENZODIAZEPINES SCRN",
+    "Benzodiazepine screen"
+  ],
+  "Diet [Type]": ["regular diet", "Regular Diet"],
+  "Clarity of Urine": ["URINE CLARITY", "urine clarity"],
+  "QRS axis": ["qrs axis", "QRS AXIS"],
+  "Immature granulocytes [#/volume] in Blood": [
+    "Granulocytes, Immature",
+    "Absolute Immature Granulocytes",
+    "Immature Grans (Absolute)",
+    "absolute immature granulocytes",
+    "Immature Grans (Abs)",
+    "Absolute Immature Granulocyte",
+    "Granulocytes, Immature (Absolute)",
+    "Grans, Immature"
+  ],
+  "Immature granulocytes [Presence] in Blood by Automated count": [
+    "IMMATURE GRANULOCYTE",
+    "immature granulocyte",
+    "Immature Granulocyte",
+    "IMMATURE GRANULOCYTES",
+    "immature granulocytes",
+    "Immature Granulocytes"
+  ],
+  "Creatinine [Mass/volume] in Urine": [
+    "Urine Creatinine",
+    "urine creatinine",
+    "URINE CREATININE"
+  ],
+  "Urate [Mass/Vol]": ["URICACID", "Uric Acid", "uric acid", "URIC ACID"],
+  "LDLc/HDLc SerPl": ["LDL/HDL", "ldlhdl", "LDL / HDL"],
+  "Creatine kinase [Enzymatic activity/volume] in Serum or Plasma": ["CPK"],
+  "Trigl SerPl-mCnc": ["*trig", "TRIG", "trig"],
+  "Triglyceride [Mass/Vol]": [
+    "Triglyceride",
+    "triglycerides",
+    "TRIGLYCERIDE",
+    "triglyceride",
+    "Triglycerides",
+    "TRIGLYCERIDES",
+    "TRIGLYCERIDES."
+  ],
+  "EKG impression": ["ECG Interp"],
+  "Eosinophils [#/volume] in Blood": [
+    "absolute eosinophils",
+    "absolute eosinophil",
+    "Absolute Eosinophils",
+    "ABSOLUTE EOSINOPHILS",
+    "ABSOLUTE EOSINOPHIL"
+  ],
+  "Sodium [Moles/volume] in Serum or Plasma": [
+    "NA",
+    "*Na",
+    "Na",
+    "NAS",
+    "Na+",
+    "*NA",
+    "NA+"
+  ],
+  "Epithelial cells [Presence] in Urine sediment by Light microscopy": [
+    "EPITHELIAL",
+    "EPITHELIALS",
+    "epithelial",
+    "Epithelials",
+    "Epithelial"
+  ],
+  "R wave axis": ["R-Axis", "R Axis", "R axis", "R AXIS"],
+  "Platelets [Morphology] in Blood": [
+    "plt morph",
+    "pltmorph",
+    "Plt Morph",
+    "PLT MORPH"
+  ],
+  "Epithelial cells.squamous LM Ql (Urine sed)": [
+    "Squamous epi",
+    "Squamous EPI",
+    "SQUAMOUS EPI"
+  ],
+  "Cannabinoids Ur Ql Scn": ["THC"],
+  "Service comment": [
+    "comment(s)",
+    "Comment",
+    "Comments",
+    "comments",
+    "COMMENT",
+    "comment",
+    "COMMENTS",
+    "**Comment**",
+    "COMMENT(S)"
+  ],
+  "Hepatitis C virus Ab [Presence] in Serum": [
+    "hepatitis C antibody.",
+    "Hepatitis, C Antibody",
+    "HEPATITIS C ANTIBODY",
+    "Hepatitis C Antibody",
+    "hepatitis C antibody"
+  ],
+  "Cholesterol in VLDL [Mass/Vol]": ["VLDL", "V LDL", "VLDL."],
+  "Q-T interval corrected": [
+    "QTC INTERVAL",
+    "QTC interval",
+    "QTc Interval",
+    "QTC Interval"
+  ],
+  "INR in Platelet poor plasma by Coagulation assay": ["INR"],
+  "User ID.hospital assigned Abstractor": ["User Id"],
+  "Methadone [Mass/volume] in Urine": [
+    "Methadone, Urine",
+    "methadone",
+    "METHADoNE",
+    "methadone (u)",
+    "methadone (urine)",
+    "METHADONE",
+    "Methadone",
+    "Methadone Urine"
+  ],
+  "Methadone Screen Ql (U)": [
+    "methadone scn (U)",
+    "Screen, Methadone",
+    "Methadone, Qual (U)",
+    "methadone qualitative urine",
+    "Methadone Screen, Urine",
+    "Methadone Screen"
+  ],
+  "Magnesium [Mass/volume] in Serum or Plasma": [
+    "Plasma magnesium measurement"
+  ],
+  "Lymphocytes [#/volume] in Blood by Automated count": [
+    "LYMPHOCYTES",
+    "lymph",
+    "LYMPHS",
+    "Lymphs",
+    "LYMPH",
+    "ABSOLUTE LYMPHOCYTES",
+    "lymphs",
+    "lymphocyte",
+    "absolute lymphocytes",
+    "Absolute Lymphocytes",
+    "ABSOLUTE LYMPHOCYTE",
+    "Lymph",
+    "LYMPH*"
+  ],
+  "Urea nitrogen/Creatinine [Mass Ratio] in Serum or Plasma": [
+    "BUN/CREA",
+    "BUN-crea",
+    "BUN/crea",
+    "buncrea"
+  ],
+  "oxyCODONE Screen Ql (U)": ["OXYCODONE", "Oxycodone", "oxycodone"],
+  "Phosphate [Mass/volume] in Serum or Plasma": [
+    "PHOSPHORUS SERUM",
+    "Phosphorus, serum"
+  ],
+  "Renal Epi Cells UrnS Ql Micro": ["RENAL EPI", "Renal EPI"],
+  "Appearance (U)": ["appearance", "Appearance", "APPEARANCE"],
+  "Transitional cells [#/area] in Urine sediment by Microscopy high power field": [
+    "Trans. Epi.",
+    "TRANS EPI",
+    "Trans EPI"
+  ],
+  "Bacteria identified in Sputum by Respiratory culture": [
+    "Sputum culture",
+    "SPUTUM CULTURE?",
+    "Sputum Culture",
+    "SPUTUM CULTURE"
+  ],
+  "C reactive protein [Mass/volume] in Serum or Plasma": ["CRP*", "CRP"],
+  "Iron [Mass/volume] in Serum or Plasma": ["IRON.", "iron", "IRON", "Iron"],
+  "Trichomonas vaginalis rRNA [Presence] in Specimen by NAA with probe detection": [
+    "Trichomonas vaginalis nucleic acid detection by transcription mediated amplification"
+  ],
+  "Creat SerPl-mCnc": ["creat", "*creat", "CREAT"],
+  "Creatinine [Mass/volume] in Serum or Plasma": [
+    "creat, plasma",
+    "serum creat"
+  ],
+  "Blood product type": ["PRODUCT BLOOD TYPE", "Product Blood Type"],
+  "Glomerular filtration rate [Volume Rate/Area] in Serum, Plasma or Blood by Creatinine-based formula (MDRD)/1.73 sq M among black population": [
+    "eGFRaAA",
+    "GFRaAA"
+  ],
+  "Glomerular filtration rate [Volume Rate/Area] in Serum or Plasma by Creatinine-based formula (MDRD)/1.73 sq M": [
+    "eGFRa",
+    "egfra",
+    "GFRa"
+  ],
+  "Glucose [Mass/volume] in Serum or Plasma": ["GLUCOSEa"],
+  "Oxygen saturation in Venous blood": [
+    "Venous blood oxygen saturation measurement"
+  ],
+  "Type of Nasogastric tube": ["Gastric NGT"],
+  "Verified patient position": ["REP/VERIFIED"],
+  "Specimen source identified": ["SPEC SOURCE", "Spec Source"],
+  "Q-T interval": [
+    "QT-Interval",
+    "QT interval",
+    "Q-T  INTERVAL",
+    "Q-T interval",
+    "QT Interval",
+    "Q-T INTERVAL",
+    "Q-T Interval",
+    "QT INTERVAL"
+  ],
+  "Neutrophils [#/volume] in Blood by Automated count": [
+    "NEUTROPHIL",
+    "Absolute Neutrophil",
+    "absolute neutrophil",
+    "ABSOLUTE NEUTROPHILS",
+    "absolute neutrophils",
+    "Neutrophils",
+    "ABSOLUTE NEUTROPHIL",
+    "neutrophil",
+    "Neutrophil",
+    "neutrophils",
+    "Absolute Neutrophils",
+    "NEUTROPHILS"
+  ],
+  "Cholesterol in HDL [Mass/volume] in Serum or Plasma": [
+    "HDL",
+    "HDL.",
+    "*HDL"
+  ],
+  "Platelets [#/volume] in Blood by Estimate": [
+    "PLTEST",
+    "PLT EST",
+    "PLT Est",
+    "plt est",
+    "pltest"
+  ],
+  "Urinalysis complete panel - Urine": ["+URINALYSIS", "URINALYSIS"],
+  "Microscopic observation [Identifier] in Bronchial specimen by Gram stain": [
+    "Respiratory culture w Gram stain"
+  ],
+  "P wave axis": ["P-Axis", "P AXIS", "P Axis", "P axis"],
+  "Glucose tolerance [Interpretation] in Serum or Plasma": [
+    "POC Gluc Interpretative Data"
+  ],
+  "Glucose mean value [Mass/volume] in Blood Estimated from glycated hemoglobin": [
+    "Estimated average blood glucose determination based on hemoglobin A1c"
+  ],
+  "General comment": [
+    "Additional Comment",
+    "ADDITIONAL COMMENTS",
+    "additional comments"
+  ],
+  "Variant lymphocytes [#/volume] in Blood by Manual count": [
+    "VAR LYMPHS",
+    "VAR LYMPH"
+  ],
+  "T wave axis": [
+    "T-Wave Axis",
+    "T-Axis",
+    "T Axis",
+    "T AXIS",
+    "T Wave Axis",
+    "T wave Axis",
+    "T axis",
+    "T WAVE AXIS",
+    "T wave axis"
+  ],
+  "pH total acid of Gastric fluid": ["POC Gastric pH"],
+  "Performing laboratory name": ["Performing Location"],
+  "Cobalamin (Vitamin B12) [Mass/Vol]": [
+    "vitamin B12",
+    "Vitamin B12",
+    "VITAMIN B12",
+    "VITAMIN B 12",
+    "vitamin B-12",
+    "VITAMIN B-12",
+    "VITAMIN B12.",
+    "Vitamin B 12"
+  ],
+  "FIO2": ["FIO2", "fIO2", "FiO2", "FI O2"],
+  "Albumin [Mass/volume] in Serum or Plasma": [
+    "Albumin, Serum",
+    "albumin, serum",
+    "albumin serum",
+    "*ALB",
+    "Albumin, serum",
+    "*alb",
+    "ALB",
+    "alb"
+  ],
+  "Neutrophils/Leukocytes in Blood by Automated count": [
+    "NEUT %",
+    "NEUT%",
+    "neut%",
+    "Neut %",
+    "neut %"
+  ]
+}
