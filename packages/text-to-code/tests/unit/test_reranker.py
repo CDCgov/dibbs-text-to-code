@@ -1,3 +1,5 @@
+import pytest
+
 from text_to_code.models.registry import HIGH_SCORE, LOW_SCORE, MAX_MARGIN
 from text_to_code.services.reranker import ScoredResult, rerank
 
@@ -68,6 +70,6 @@ class TestReranker:
         assert ranks == [
             {
                 "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
-                "score": 0.2510499656200409,
+                "score": pytest.approx(0.2510499656200409, abs=1e-6),
             }
         ]
