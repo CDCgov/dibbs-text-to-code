@@ -39,7 +39,7 @@ Given an eICR XML document and a corresponding [Schematron](https://www.schematr
 1. Reads the Schematron report to identify which sections of the eICR contain errors that need standardized codes
 2. Parses the XML and extracts text candidates for each configured data field (e.g., lab test names) using XPath expressions
 3. Selects the best candidate text using priority-based evaluation criteria (e.g., prefers LOINC-sourced text over free text)
-4. Embeds the selected text as a vector using [`NCHS/ttc-retriever-mvp`](https://huggingface.co/NCHS/ttc-retriever-mvp) — a SentenceTransformer model fine-tuned from [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2)
+4. Embeds the selected text as a vector using [`NCHS/ttc-retriever-v1.0`](https://huggingface.co/NCHS/ttc-retriever-v1.0) — a SentenceTransformer model fine-tuned from [`intfloat/e5-large-v2`](https://huggingface.co/intfloat/e5-large-v2)
 5. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
 6. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
 

@@ -16,7 +16,7 @@ The Lambda also runs in a private-only VPC with no NAT/IGW (S3 access via VPC en
 
 - **CVSS 3.0:** 7.8 (AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H) — local, user-interaction-required
 - **Vulnerable code path:** `transformers/models/x_clip/convert_x_clip_original_pytorch_to_hf.py` — a one-time conversion script that calls `torch.load` on an X-CLIP checkpoint path supplied by the caller.
-- **No-execution-path argument:** TTC does not import, invoke, or expose this conversion script. TTC does not use the X-CLIP model class at all; its only models are the NCHS retriever (`ttc-retriever-mvp`) and reranker (`ttc-reranker-mvp`), both loaded via `sentence-transformers` from `safetensors` files baked into the image at build time.
+- **No-execution-path argument:** TTC does not import, invoke, or expose this conversion script. TTC does not use the X-CLIP model class at all; its only models are the NCHS retriever (`ttc-retriever-v1.0`) and reranker (`ttc-reranker-mvp`), both loaded via `sentence-transformers` from `safetensors` files baked into the image at build time.
 - **Upstream status:** Originally disclosed via ZDI-CAN-28308. NVD lists 5.0.0-rc0 explicitly; no patched version has been released as of 2026-05-21. No public Hugging Face security advisory or merged PR addresses this CVE yet.
 - **Reference:** https://nvd.nist.gov/vuln/detail/CVE-2025-14929
 
@@ -34,8 +34,8 @@ The Lambda also runs in a private-only VPC with no NAT/IGW (S3 access via VPC en
 - **Vulnerable code path:** `joblib.numpy_pickle.NumpyArrayWrapper.read_array` — calls `pickle.load` on cached array data.
 - **No-execution-path argument:** TTC does not call `joblib.load` on any external input. `joblib` enters the dependency graph only as a transitive of `scikit-learn` / `sentence-transformers` internals (inter-process communication during model loading); no `joblib` cache file is read from S3, SQS, or other untrusted sources.
 - **Upstream status:** **Confirmed false positive by joblib maintainers.** Disputed on MITRE.
-  - Maintainer Thomas Moreau ([joblib#1588](https://github.com/joblib/joblib/issues/1588)): *"The CVE is indeed a false positive as it is only due to our use of pickle for inter process communication. While it is unsafe to use it for sharing content between untrusted parties, it is not used for that in joblib."*
-  - Maintainer Gaël Varoquaux: *"It's not a vulnerability, not any more than running Python files is, or importing Python modules."*
+  - Maintainer Thomas Moreau ([joblib#1588](https://github.com/joblib/joblib/issues/1588)): _"The CVE is indeed a false positive as it is only due to our use of pickle for inter process communication. While it is unsafe to use it for sharing content between untrusted parties, it is not used for that in joblib."_
+  - Maintainer Gaël Varoquaux: _"It's not a vulnerability, not any more than running Python files is, or importing Python modules."_
   - The issue is intentionally left open as a tracking issue for the MITRE disposition: [joblib#1588](https://github.com/joblib/joblib/issues/1588), [joblib#1690](https://github.com/joblib/joblib/issues/1690).
 - **Reference:** https://nvd.nist.gov/vuln/detail/CVE-2024-34997
 
