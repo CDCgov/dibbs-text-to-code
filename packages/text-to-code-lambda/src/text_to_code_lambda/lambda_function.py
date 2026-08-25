@@ -516,7 +516,7 @@ def _build_schematron_error_work_items(
     :return: A list of _ErrorWork items, one per Schematron error.
     """
     work_items: list[_ErrorWork] = []
-    known_ins_to_codes = get_auto_mapping()
+    known_inputs_to_codes = get_auto_mapping()
 
     for error in schematron_data_fields:
         text_candidates = processor.get_text_candidates(error.error_context, error.field)
@@ -529,7 +529,7 @@ def _build_schematron_error_work_items(
         selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
         work = _ErrorWork(error=error, selected_candidate=selected_candidate)
         if selected_candidate:
-            work.auto_mapped = selected_candidate.value in known_ins_to_codes
+            work.auto_mapped = selected_candidate.value in known_inputs_to_codes
             work.query_text = convert_known_code(selected_candidate.value)
             work.cache_key = compute_cache_key(work.query_text, error.field)
         work_items.append(work)
