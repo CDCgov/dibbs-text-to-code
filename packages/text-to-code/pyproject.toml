@@ -6,7 +6,7 @@ dependencies = [
   "lambda-handler",
   "lxml>=6.0.2",
   "pydantic>=2.12.5",
-  "sentence-transformers=6.0.0",
+  "sentence-transformers>=6.0.0",
   "shared-models",
   "torch",
 ]

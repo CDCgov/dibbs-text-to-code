@@ -1986,7 +1986,7 @@ requires-dist = [
     { name = "lambda-handler", editable = "packages/lambda-handler" },
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "pydantic", specifier = ">=2.12.5" },
-    { name = "sentence-transformers", specifier = ">=5.6.1" },
+    { name = "sentence-transformers", specifier = ">=6.0.0" },
     { name = "shared-models", editable = "packages/shared-models" },
     { name = "torch" },
 ]
