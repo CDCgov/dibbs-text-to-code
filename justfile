@@ -22,12 +22,12 @@ sync:
     uv sync --all-packages
 
 [doc("Run type checking")]
-ty:
-    uv run ty check
+ty *ARGS:
+    uv run ty check {{ARGS}}
 
 [doc("Run Ruff check")]
-ruff:
-    uv run ruff check
+ruff *ARGS:
+    uv run ruff check {{ARGS}}
 
 [doc("Run Terraform commands")]
 [working-directory("terraform")]
