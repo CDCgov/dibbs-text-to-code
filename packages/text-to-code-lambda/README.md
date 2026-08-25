@@ -44,11 +44,18 @@ POST /text-to-code
 ```
 
 ```json
-{ "results": [
-  { "input": "Glucose measurement", "matched": true, "code": "110283-9",
-    "code_system": "2.16.840.1.113883.6.1", "code_system_name": "LOINC",
-    "display_name": "Glucose [Measurement]" }
-] }
+{
+  "results": [
+    {
+      "input": "Glucose measurement",
+      "matched": true,
+      "code": "110283-9",
+      "code_system": "2.16.840.1.113883.6.1",
+      "code_system_name": "LOINC",
+      "display_name": "Glucose [Measurement]"
+    }
+  ]
+}
 ```
 
 `data_field` defaults to `Lab Test Name Ordered`; pass `Lab Test Name Resulted`
@@ -98,6 +105,7 @@ For each SQS record, the Lambda:
 - Loads the original eICR from S3.
 - Extracts eICR metadata.
 - Evaluates free-text candidates from the eICR.
+- Determines if the selected candidate can be auto-mapped using known input-to-code mappings.
 - Selects the most relevant candidate text for each schematron error.
 - Embeds the selected text.
 - Queries OpenSearch using vector search.
