@@ -62,9 +62,12 @@ class TestReranker:
 
         ranks = rerank(nonstandard_in, scores, search_hits)
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 7)} for r in ranks
+            {"code_string": r["code_string"], "score": r["score"]} for r in ranks
         ]
 
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.25105}
+            {
+                "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+                "score": 0.2510499656200409,
+            }
         ]
