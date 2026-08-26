@@ -38,6 +38,12 @@ metrics = Metrics()
 
 _METRIC_NAME = "result_cache_value_status"
 
+# Parameters governing the behavior of search-score heuristics, such as
+# auto-acceptance or "high-threshold" ranking.
+HIGH_RANK_THRESHOLD = 0.92
+MINIMUM_HITS_TO_HIGH_RANK = 2
+LEADER_MARGIN = 1.005
+
 
 # Initialize the logger
 logger = Logger(service="ttc")
@@ -458,19 +464,59 @@ def _match_candidate(
     results_list = opensearch_retrieved_scores.hits.hits
 
     if results_list:
+        high_rank_results = [hit for hit in results_list if hit.score >= HIGH_RANK_THRESHOLD]
         retrieved_loinc_names = [hit.source.description for hit in results_list]
-        retrieve_scores = [hit.score for hit in results_list]
+        retriever_scores = [hit.score for hit in results_list]
 
-        ranked_results = rerank(selected_candidate.value, retrieve_scores, retrieved_loinc_names)
+        use_reranker_result = True
+        prune_before_ranking = True
+
+        # Case 1: We have a leading perfect score in the OpenSearch hits, which
+        # means the top candidate is a verbatim LOINC code string (either directly
+        # entered, or found via auto-map). In either case, no need to rerank.
+        # Ignore the ruff rule here because explicitly spelling out these cases
+        # improves logic readability.
+        if retriever_scores[0] >= 1.0:  # noqa: SIM114
+            use_reranker_result = False
+            top_result = results_list[0]
+
+        # Case 2: The highest scoring search result exceeds the "leader margin,"
+        # meaning the sum of its similarity score _plus_ the margin by which it
+        # exceeds the second highest scoring result is greater than the threshold
+        # required for auto-classification. As above, we will just use the result.
+        elif 2.0 * retriever_scores[0] - retriever_scores[1] >= LEADER_MARGIN:
+            use_reranker_result = False
+            top_result = results_list[0]
+
+        # Case 3: We have enough candidates with high retriever scores to perform
+        # high-threshold reranking, which performs reranking only on those
+        # candidates who pass the "high-rank" threshold. Note that in this case,
+        # we do not perform additional margin-based pruning.
+        elif len(high_rank_results) >= MINIMUM_HITS_TO_HIGH_RANK:
+            retrieved_loinc_names = [hit.source.description for hit in high_rank_results]
+            retriever_scores = [hit.score for hit in high_rank_results]
+            prune_before_ranking = False
+
+        # Case 4 (Default): In the absence of a perfect match, a leader candidate,
+        # or high-rank thresholding, we'll perform normal reranking using
+        # adaptive margin pruning.
+        ranked_results = rerank(
+            selected_candidate.value,
+            retriever_scores,
+            retrieved_loinc_names,
+            use_pruning=prune_before_ranking,
+        )
 
         if ranked_results:
-            top_result = next(
-                (
-                    x
-                    for x in results_list
-                    if x.source.description == ranked_results[0]["code_string"]
-                ),
-            )
+            if use_reranker_result:
+                top_result = next(
+                    (
+                        x
+                        for x in results_list
+                        if x.source.description == ranked_results[0]["code_string"]
+                    ),
+                )
+
             new_translation = Code(
                 code=top_result.source.loinc_code,
                 code_system=LOINC_OID,

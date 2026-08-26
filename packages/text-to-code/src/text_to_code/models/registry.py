@@ -25,7 +25,7 @@ AUTO_ACCEPT_THRESHOLD: float = float(os.getenv("AUTO_ACCEPT_THRESHOLD") or 0.95)
 # APHL and measuring the distribution of scores. The mininum and maxmium margins represent
 # the 10th and 95th percentiles of the distribution of margins.
 # The minimum margin for determining how many candidates are within a margin of the top score.
-MIN_MARGIN: float = float(os.getenv("MIN_MARGIN") or 0.009)
+MIN_MARGIN: float = float(os.getenv("MIN_MARGIN") or 0.01)
 # The maximum margin for determining how many candidates are within a margin of the top score.
 MAX_MARGIN: float = float(os.getenv("MAX_MARGIN") or 0.1)
 # The low score for interpolating the margin..

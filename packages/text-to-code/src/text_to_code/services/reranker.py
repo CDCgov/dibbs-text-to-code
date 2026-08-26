@@ -10,6 +10,8 @@ from text_to_code.services.utils import get_model_info
 _RERANKER = CrossEncoder(TTC_RERANKER)
 RERANKER_MODEL_INFO = get_model_info(TTC_RERANKER)
 
+MINIMUM_RESULTS_TO_RERANK = 2
+
 
 class ScoredResult(TypedDict):
     """The search result with its score."""
@@ -25,6 +27,7 @@ def rerank(
     nonstandard_in: str,
     scores: list[float],
     hits: list[str],
+    use_pruning: bool = True,
 ) -> list[ScoredResult]:
     """Re-sorts hits by cross-encoder score values.
 
@@ -40,7 +43,9 @@ def rerank(
     :returns: A list of dictionaries representing the newly cross-encoder
       scored search results, sorted in descending order of score.
     """
-    pruned_hits = _prune(scores, hits)
+    pruned_hits = hits
+    if use_pruning:
+        pruned_hits = _prune(scores, hits)
     ranks = _RERANKER.rank(nonstandard_in, pruned_hits)
     sorted_ranks: list[ScoredResult] = [
         {"code_string": pruned_hits[r["corpus_id"]], "score": r["score"]} for r in ranks
@@ -122,5 +127,6 @@ def _prune(scores: list[float], texts: list[str]) -> list[str]:
 
     adaptive_margin = margin_fn(top_score)
     num_within_margin = _within_margin(scores, adaptive_margin)
+    num_within_margin = max(num_within_margin, MINIMUM_RESULTS_TO_RERANK)
     pruned_results = texts[: num_within_margin + 1]  # add 1 to include the top score
     return pruned_results
