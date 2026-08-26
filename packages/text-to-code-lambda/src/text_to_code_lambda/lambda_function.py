@@ -408,6 +408,12 @@ class _ErrorWork:
     cached_result: OpenSearchResultCacheSource | None = None
     embedding: list[float] | None = None
 
+    def with_original_text(self, code: Code) -> Code:
+        selected_candidate = self.selected_candidate
+        if selected_candidate is None:
+            raise ValueError("Missing selected candidate.")
+        return code.model_copy(update={"original_text": selected_candidate.value})
+
 
 @dataclass
 class _CandidateResolution:
@@ -613,13 +619,7 @@ def _resolve_work_item(
         logger.info("Cache hit, retrieving cached results", status="processing")
         _record_cache_metric(HitValue.hit)
         cached_result = work.cached_result
-        cached_translation = Code(
-            code=cached_result.loinc_code.code,
-            code_system=cached_result.loinc_code.code_system,
-            code_system_name=cached_result.loinc_code.code_system_name,
-            display_name=cached_result.loinc_code.display_name,
-            original_text=selected_candidate.value,
-        )
+        cached_translation = work.with_original_text(cached_result.loinc_code)
         return _CandidateResolution(
             new_translation=cached_translation,
             opensearch_retrieved_scores=cached_result.opensearch_retrieved_scores,
@@ -641,13 +641,7 @@ def _resolve_work_item(
         if resolution.new_translation is None:
             return resolution
 
-        new_translation = Code(
-            code=resolution.new_translation.code,
-            code_system=resolution.new_translation.code_system,
-            code_system_name=resolution.new_translation.code_system_name,
-            display_name=resolution.new_translation.display_name,
-            original_text=selected_candidate.value,
-        )
+        new_translation = work.with_original_text(resolution.new_translation)
         return _CandidateResolution(
             new_translation=new_translation,
             unmatched_message=resolution.unmatched_message,

@@ -1107,6 +1107,31 @@ class TestHandler:
         ):
             lambda_function._embed_cache_misses([work])
 
+    def test_error_work_with_original_text_raises_when_candidate_is_missing(self):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=None,
+        )
+        code = Code(
+            code="82041-5",
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name="Weed Allerg Mix3 IgE Qn",
+            original_text="cached input",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"Missing selected candidate.",
+        ):
+            work.with_original_text(code)
+
     def test_resolve_work_item_reuses_unmatched_duplicate_resolution(
         self,
         mock_opensearch,
