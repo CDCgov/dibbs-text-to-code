@@ -7,3 +7,10 @@ e2e
 docs
 terraform
 **/__pycache__
+azure_scripts
+coverage.xml
+data
+dev_scripts
+frontend
+load_test_runs
+scripts
