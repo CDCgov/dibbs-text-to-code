@@ -358,7 +358,7 @@ def self_pair_block(metrics: dict) -> str:
 
 METHODOLOGY = """
 <p>For each of the five environments we re-embedded the same ~500 LOINC display-name strings with
-the production retriever (<code>NCHS/ttc-retriever-mvp</code>, SentenceTransformer, 1024-dim) on
+the production retriever (<code>NCHS/ttc-retriever-v1.0</code>, SentenceTransformer, 1024-dim) on
 raw text with no extra L2 normalization, matching the production <code>embedder.embed()</code> path.
 Pairwise metrics use the intersection of descriptions present in all 5 environments.</p>
 <ul>
