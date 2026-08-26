@@ -1,8 +1,7 @@
+import pytest
+
 from text_to_code.models.registry import HIGH_SCORE, LOW_SCORE, MAX_MARGIN
-from text_to_code.services.reranker import (
-    ScoredResult,
-    rerank,
-)
+from text_to_code.services.reranker import ScoredResult, rerank
 
 
 class TestReranker:
@@ -17,10 +16,13 @@ class TestReranker:
             ["Influenza virus A and B and SARS-CoV-2 (COVID-19)"],
         )
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
+            {"code_string": r["code_string"], "score": r["score"]} for r in ranks
         ]
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.99}
+            {
+                "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+                "score": pytest.approx(0.2510499656200409, abs=1e-6),
+            }
         ]
 
     def test_reranker_multiple_hits(self) -> None:
@@ -34,22 +36,25 @@ class TestReranker:
         scores = [HIGH_SCORE] * len(search_hits)
         ranks = rerank(nonstandard_in, scores, search_hits)
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
+            {"code_string": r["code_string"], "score": r["score"]} for r in ranks
         ]
         assert ranks == [
             {
                 "code_string": "Albumin/Creatinine [Ratio] in Urine",
-                "score": 0.467,
+                "score": pytest.approx(0.00029876516782678664, abs=1e-6),
             },
             {
                 "code_string": "Albumin/Creatinine [Ratio] in 24 hour Urine",
-                "score": 0.271,
+                "score": pytest.approx(0.00025727905449457467, abs=1e-6),
             },
             {
                 "code_string": "Albumin/Creatinine (U) [Mass ratio]",
-                "score": 0.204,
+                "score": pytest.approx(0.00025398150319233537, abs=1e-6),
             },
-            {"code_string": "Albumin/Creatinine (U) [Molar ratio]", "score": 0.201},
+            {
+                "code_string": "Albumin/Creatinine (U) [Molar ratio]",
+                "score": pytest.approx(0.00023938287631608546, abs=1e-6),
+            },
         ]
 
     def test_reranker_prunes_hits_outside_margin(self) -> None:
@@ -65,9 +70,12 @@ class TestReranker:
 
         ranks = rerank(nonstandard_in, scores, search_hits)
         ranks: list[ScoredResult] = [
-            {"code_string": r["code_string"], "score": round(float(r["score"]), 3)} for r in ranks
+            {"code_string": r["code_string"], "score": r["score"]} for r in ranks
         ]
 
         assert ranks == [
-            {"code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)", "score": 0.99}
+            {
+                "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+                "score": pytest.approx(0.2510499656200409, abs=1e-6),
+            }
         ]

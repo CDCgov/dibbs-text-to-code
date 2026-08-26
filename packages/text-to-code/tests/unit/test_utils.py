@@ -36,8 +36,8 @@ class TestGetModelInfo:
         expected_info = ModelInfo(
             id=TTC_RETRIEVER,
             author="NCHS",
-            created_at=datetime.fromisoformat("2026-03-30 13:52:42+00:00"),
-            last_modified=datetime.fromisoformat("2026-03-30 14:12:37+00:00"),
+            created_at=datetime.fromisoformat("2026-08-24 19:11:43+00:00"),
+            last_modified=datetime.fromisoformat("2026-08-24 19:53:48+00:00"),
         )
         info = get_model_info(TTC_RETRIEVER)
         assert info == expected_info

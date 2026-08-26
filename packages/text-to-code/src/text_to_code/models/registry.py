@@ -11,11 +11,17 @@ EICR_REGISTRY: dict[DataField, type[BaseLabField]] = {
 
 # Text-to-Code Retrieval model, used for searching approximate neighborhoods
 # to find semantically similar candidates
-TTC_RETRIEVER: str = os.getenv("RETRIEVER_MODEL_PATH") or "NCHS/ttc-retriever-mvp"
+RETRIEVER_MODEL_VERSION: str = os.getenv("RETRIEVER_MODEL_VERSION") or "1.0"
+TTC_RETRIEVER: str = (
+    os.getenv("RETRIEVER_MODEL_PATH") or f"NCHS/ttc-retriever-v{RETRIEVER_MODEL_VERSION}"
+)
 
 # Text-to-Code Reranker model, used for re-scoring and re-sorting the hits
 # found by the approximate neighbor search
-TTC_RERANKER: str = os.getenv("RERANKER_MODEL_PATH") or "NCHS/ttc-reranker-mvp"
+RERANKER_MODEL_VERSION: str = os.getenv("RERANKER_MODEL_VERSION") or "1.0"
+TTC_RERANKER: str = (
+    os.getenv("RERANKER_MODEL_PATH") or f"NCHS/ttc-reranker-v{RERANKER_MODEL_VERSION}"
+)
 
 
 # The threshold for automatically accepting a top retriever result without sending to the reranker.
