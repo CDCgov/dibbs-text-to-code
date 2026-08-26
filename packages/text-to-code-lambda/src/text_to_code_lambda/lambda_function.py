@@ -450,6 +450,13 @@ def _match_candidate(
     ranked_results: list[ScoredResult] | None = None
     query_text = convert_known_code(selected_candidate.value)
 
+    if selected_candidate.value != query_text:
+        logger.info(
+            "Auto-mapped candidate value",
+            original_value=selected_candidate.value,
+            mapped_value=query_text,
+        )
+
     vector_parameters = query_models.VectorSearchParams(vector=embedding, data_field=data_field)
 
     logger.info(
