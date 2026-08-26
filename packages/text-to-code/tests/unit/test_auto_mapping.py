@@ -1,25 +1,20 @@
-from text_to_code.services.auto_mapping import convert_known_code, get_auto_mapping
+from text_to_code.services.auto_mapping import convert_known_code
+from text_to_code.services.auto_mapping_dict import AUTO_MAPPING
 
 
 class TestGetAutoMapping:
     def test_loads_auto_mapping(self) -> None:
-        auto_mapping: dict[str, str] = get_auto_mapping()
+        auto_mapping: dict[str, str] = AUTO_MAPPING
 
         assert auto_mapping["HGB"] == "Hgb Bld-mCnc"
         assert auto_mapping["HGB."] == "Hgb Bld-mCnc"
         assert auto_mapping["POC Glucose"] == "Glucose [Mass/Volume] in Blood"
 
     def test_contains_identity_mapping(self) -> None:
-        auto_mapping: dict[str, str] = get_auto_mapping()
+        auto_mapping: dict[str, str] = AUTO_MAPPING
 
         assert "FIO2" in auto_mapping
         assert auto_mapping["FIO2"] == "FIO2"
-
-    def test_returns_cached_mapping(self) -> None:
-        first_mapping: dict[str, str] = get_auto_mapping()
-        second_mapping: dict[str, str] = get_auto_mapping()
-
-        assert first_mapping is second_mapping
 
 
 class TestConvertKnownCode:
