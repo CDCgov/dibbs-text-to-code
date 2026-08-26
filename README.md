@@ -28,11 +28,11 @@ DIBBs Text to Code (TTC) is a CDC public health tool that maps nonstandard clini
 
 Public health reporting relies on eICR documents that often contain free-text lab names and results that vary across labs and EHR systems. TTC bridges that gap by finding the best-fit standardized code for each piece of clinical text and writing it back into the document.
 
-### How It Works
+## How It Works
 
 TTC has two sequential workflows:
 
-**1. Text-to-Code (TTC)**
+### 1. Text-to-Code (TTC)
 
 Given an eICR XML document and a corresponding [Schematron](https://www.schematron.com/) validation report identifying relevant errors, TTC:
 
@@ -43,7 +43,7 @@ Given an eICR XML document and a corresponding [Schematron](https://www.schematr
 5. Queries an [OpenSearch](https://opensearch.org/) KNN index to find the nearest-neighbor standardized codes
 6. Returns ranked `TTCAugmentation` objects containing the matched code, display name, and source location in the document
 
-**2. Augmentation**
+### 2. Augmentation
 
 Given TTC results, the augmenter:
 
@@ -72,7 +72,7 @@ This is a **uv workspace** (Python). All Python packages live under `packages/`.
 
 ### Architecture Diagram
 
-```
+```text
               ┌─────────────────────────────────────────────────────┐
               │                   AWS Infrastructure                │
               │                                                     │
@@ -151,16 +151,17 @@ docker compose down
 
 ## Quality Assurance
 
-**NOTE:** By default, pre-commit hooks are installed to run linting and formatting
-checks on each commit. These hooks will attempt to automatically fix any issues
-encountered. To force a commit without running the pre-commit hooks, use the
-following command:
+> [!NOTE] 
+> By default, pre-commit hooks are installed to run linting and formatting
+> checks on each commit. These hooks will attempt to automatically fix any issues
+> encountered. To force a commit without running the pre-commit hooks, use the
+> following command:
 
 ```sh
 git commit --no-verify
 ```
 
-### Unit tests
+### Unit Tests
 
 The unit tests require access to a private Hugging Face model. To run them locally, create a [Hugging Face access token](https://huggingface.co/settings/tokens) with `read` permissions and export it in your shell config (e.g., `~/.zshrc` or `~/.bashrc`):
 
@@ -192,7 +193,7 @@ To check coverage for a specific package or test suite:
 just test coverage packages/augmentation-lambda
 ```
 
-### e2e Tests:
+### e2e Tests
 
 To run e2e tests, use the following command:
 
@@ -202,7 +203,7 @@ just test e2e
 
 e2e test use [boto3](https://github.com/boto/boto3) to mock the various AWS systems we use: S3, SQS, and Lambdas. However, it currently does not simulate EventBridge invoking the Lambdas and passing them the SQS event, instead SQS event is manually built and passed to the lambda handler function.
 
-## Validation test:
+### Validation Test
 
 To ensure the latest schematron updates are being used when running `packages/validation` locally, use the following command:
 
@@ -215,13 +216,27 @@ just test validation
 To run type checks, use the following command:
 
 ```sh
-ty check
+just ty
 ```
 
 To type check a specific file, use the following command:
 
 ```sh
-ty check path/to/file.py
+just ty path/to/file.py
+```
+
+### Terraform Commands
+
+To run Terraform commands, use the following format:
+
+```sh
+just terraform <command> [options]
+```
+
+For example, to initialize the Terraform configuration:
+
+```sh
+just terraform init
 ```
 
 ### Linting
@@ -229,13 +244,13 @@ ty check path/to/file.py
 To run linting checks, use the following command:
 
 ```sh
-ruff check
+just ruff
 ```
 
 To lint a specific file, use the following command:
 
 ```sh
-ruff check path/to/file.py
+just ruff path/to/file.py
 ```
 
 ### Formatting
@@ -288,7 +303,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the Apache Software License for more details.
 
 You should have received a copy of the Apache Software License along with this
-program. If not, see http://www.apache.org/licenses/LICENSE-2.0.html
+program. If not, see the [Apache Software License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 The source code forked from other open source projects will inherit its license.
 
