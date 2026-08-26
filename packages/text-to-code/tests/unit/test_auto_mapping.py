@@ -2,7 +2,7 @@ from text_to_code.services.auto_mapping import convert_known_code, get_auto_mapp
 
 
 class TestGetAutoMapping:
-    def test_inverts_auto_mapping(self) -> None:
+    def test_loads_auto_mapping(self) -> None:
         auto_mapping: dict[str, str] = get_auto_mapping()
 
         assert auto_mapping["HGB"] == "Hgb Bld-mCnc"

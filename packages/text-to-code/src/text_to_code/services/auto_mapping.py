@@ -5,19 +5,14 @@ from pathlib import Path
 
 @functools.cache
 def get_auto_mapping() -> dict[str, str]:
-    """Load and invert the auto-mapping dictionary.
+    """Load the auto-mapping dictionary.
 
-    :returns: A mapping of nonstandard input strings to standardized values.
+    :returns: A mapping of normalized nonstandard input strings to standardized values.
     """
     mapping_path = Path(__file__).resolve().parent.parent / "data" / "auto_mapping.json"
 
     with mapping_path.open(encoding="utf-8") as mapping_file:
-        code_to_inputs: dict[str, list[str]] = json.load(mapping_file)
-
-    inputs_to_codes: dict[str, str] = {}
-    for code, inputs in code_to_inputs.items():
-        for i in inputs:
-            inputs_to_codes[i] = code
+        inputs_to_codes: dict[str, str] = json.load(mapping_file)
 
     return inputs_to_codes
 
