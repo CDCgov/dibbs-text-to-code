@@ -26,13 +26,15 @@ RUN pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
 # Download retriever at build time (private repo, needs token). The cache
 # cleanup must happen in the same RUN: snapshot_download duplicates blobs into
 # /root/.cache, and a separate RUN would freeze them into this layer.
+ARG RETRIEVER_MODEL_VERSION=1.0
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
-  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-v1.0', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
+  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-retriever-v${RETRIEVER_MODEL_VERSION}', local_dir='/opt/retriever_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
   && rm -rf /root/.cache/huggingface
 
 # Download reranker at build time (private repo, needs token)
+ARG RERANKER_MODEL_VERSION=1.0
 RUN --mount=type=secret,id=huggingface_token,env=HF_TOKEN \
-  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-reranker-v1.0', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
+  python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='NCHS/ttc-reranker-v${RERANKER_MODEL_VERSION}', local_dir='/opt/reranker_model', ignore_patterns=['*.git*', '*.md', 'onnx/*', 'openvino/*', 'pytorch_model.bin', 'tf_model.h5', 'flax_model.msgpack', 'model.onnx'])" \
   && rm -rf /root/.cache/huggingface
 
 # Workspace packages (change frequently) come after the heavy layers.
