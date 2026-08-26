@@ -1132,6 +1132,95 @@ class TestHandler:
         ):
             work.with_original_text(code)
 
+    def test_match_candidate_raises_when_selected_candidate_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=None,
+            query_text="weed allergen mix 3",
+            cache_key="cache-key",
+            embedding=[0.1, 0.2],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"Missing selected candidate\.",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
+    def test_match_candidate_raises_when_embedding_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(
+            value="weed allergen mix 3",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text="weed allergen mix 3",
+            cache_key="cache-key",
+            embedding=None,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing embedding for cache-miss candidate: weed allergen mix 3",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
+    def test_match_candidate_raises_when_query_text_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(
+            value="weed allergen mix 3",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text=None,
+            cache_key="cache-key",
+            embedding=[0.1, 0.2],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing query text for candidate: weed allergen mix 3",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
     def test_resolve_work_item_reuses_unmatched_duplicate_resolution(
         self,
         mock_opensearch,

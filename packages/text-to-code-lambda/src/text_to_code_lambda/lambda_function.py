@@ -16,7 +16,6 @@ from shared_models import (
     LOINC_NAME,
     LOINC_OID,
     Code,
-    DataField,
     NonstandardCodeInstance,
     PassthroughReason,
     TTCAugmenterInput,
@@ -427,10 +426,7 @@ class _CandidateResolution:
 
 
 def _match_candidate(
-    selected_candidate: Candidate,
-    embedding: list[float],
-    data_field: DataField,
-    cache_key: str | None,
+    work: _ErrorWork,
     opensearch_client: OpenSearch,
 ) -> tuple[Code | None, str | None, OpenSearchResult, list[ScoredResult] | None]:
     """Match a cache-miss candidate against OpenSearch and rerank the hits.
@@ -438,27 +434,27 @@ def _match_candidate(
     Runs the KNN query with the candidate's precomputed embedding, reranks the
     hits, and writes a successful match back to the result cache.
 
-    :param selected_candidate: The candidate selected for the schematron error.
-    :param embedding: The candidate's precomputed embedding vector.
-    :param data_field: The data field associated with the error.
-    :param cache_key: The precomputed result-cache key for the candidate.
+    :param work: The _ErrorWork item containing the candidate and precomputed search values.
     :param opensearch_client: The OpenSearch client.
     :return: A ``(new_translation, unmatched_message, opensearch_retrieved_scores,
       ranked_results)`` tuple; ``new_translation`` is None when no match was made.
     """
+    selected_candidate = work.selected_candidate
+    if selected_candidate is None:
+        raise ValueError("Missing selected candidate.")
+    if work.embedding is None:
+        raise ValueError(f"Missing embedding for cache-miss candidate: {selected_candidate.value}")
+    if work.query_text is None:
+        raise ValueError(f"Missing query text for candidate: {selected_candidate.value}")
+
     new_translation = None
     unmatched_message = None
     ranked_results: list[ScoredResult] | None = None
-    query_text = convert_known_code(selected_candidate.value)
 
-    if selected_candidate.value != query_text:
-        logger.info(
-            "Auto-mapped candidate value",
-            original_value=selected_candidate.value,
-            mapped_value=query_text,
-        )
-
-    vector_parameters = query_models.VectorSearchParams(vector=embedding, data_field=data_field)
+    vector_parameters = query_models.VectorSearchParams(
+        vector=work.embedding,
+        data_field=work.error.field,
+    )
 
     logger.info(
         "Querying OpenSearch with the relevant text strings and retrieving code suggestions",
@@ -479,7 +475,7 @@ def _match_candidate(
         retrieved_loinc_names = [hit.source.description for hit in results_list]
         retrieve_scores = [hit.score for hit in results_list]
 
-        ranked_results = rerank(query_text, retrieve_scores, retrieved_loinc_names)
+        ranked_results = rerank(work.query_text, retrieve_scores, retrieved_loinc_names)
 
         if ranked_results:
             top_result = next(
@@ -502,14 +498,14 @@ def _match_candidate(
             put_new_cached_result(
                 opensearch_client=opensearch_client,
                 index=RESULT_CACHE_INDEX,
-                candidate_input=query_text,
-                data_field=data_field,
+                candidate_input=work.query_text,
+                data_field=work.error.field,
                 loinc_code=new_translation,
                 search_score=top_result.score,
                 reranker_score=ranked_results[0]["score"],
                 opensearch_retrieved_scores=opensearch_retrieved_scores,
                 reranker_processed_results=ranked_results,
-                cache_key=cache_key,
+                cache_key=work.cache_key,
             )
         else:
             unmatched_message = "Reranker did not return any results."
@@ -544,6 +540,14 @@ def _build_schematron_error_work_items(
         if selected_candidate:
             work.auto_mapped = selected_candidate.value in AUTO_MAPPING
             work.query_text = convert_known_code(selected_candidate.value)
+
+            if selected_candidate.value != work.query_text:
+                logger.info(
+                    "Auto-mapped candidate value",
+                    original_value=selected_candidate.value,
+                    mapped_value=work.query_text,
+                )
+
             work.cache_key = compute_cache_key(work.query_text, error.field)
         work_items.append(work)
 
@@ -669,10 +673,7 @@ def _resolve_work_item(
         opensearch_retrieved_scores,
         ranked_results,
     ) = _match_candidate(
-        selected_candidate,
-        work.embedding,
-        work.error.field,
-        work.cache_key,
+        work,
         opensearch_client,
     )
     resolution = _CandidateResolution(
