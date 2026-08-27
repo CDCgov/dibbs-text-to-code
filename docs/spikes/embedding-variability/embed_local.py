@@ -18,7 +18,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-MODEL_ID = "NCHS/ttc-retriever-mvp"
+MODEL_ID = "NCHS/ttc-retriever-v1.0"
 
 
 def main() -> int:
