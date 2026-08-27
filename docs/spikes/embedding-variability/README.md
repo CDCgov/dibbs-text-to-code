@@ -1,18 +1,18 @@
 # Embedding Variability Spike
 
-Quantifies how much the `NCHS/ttc-retriever-mvp` retriever's 1024-dim output drifts across
+Quantifies how much the `NCHS/ttc-retriever-v1.0` retriever's 1024-dim output drifts across
 five compute environments for a fixed subset of ~500 LOINC display-name strings, and whether
 that drift is large enough to change the LOINC code returned by the prod KNN search.
 
 The five environments under test:
 
-| Env key      | Source                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------ |
-| `azure_gpu`  | Already in the prod OpenSearch index (`description_vector` field). Reference baseline.     |
-| `azure_cpu`  | Pre-generated at `~/Downloads/cpu_vector_test.json`. The KEYS define the working subset.   |
-| `mac_cpu`    | Re-embed locally with `SentenceTransformer(..., device="cpu")` on this Mac.                |
-| `mac_mps`    | Re-embed locally with `device="mps"` (Apple Metal).                                        |
-| `aws_lambda` | Re-embed inside the production `Dockerfile.ttc` image (x86_64, CPU torch, baked model).    |
+| Env key      | Source                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `azure_gpu`  | Already in the prod OpenSearch index (`description_vector` field). Reference baseline.   |
+| `azure_cpu`  | Pre-generated at `~/Downloads/cpu_vector_test.json`. The KEYS define the working subset. |
+| `mac_cpu`    | Re-embed locally with `SentenceTransformer(..., device="cpu")` on this Mac.              |
+| `mac_mps`    | Re-embed locally with `device="mps"` (Apple Metal).                                      |
+| `aws_lambda` | Re-embed inside the production `Dockerfile.ttc` image (x86_64, CPU torch, baked model).  |
 
 The end product is `outputs/report.html` — a single self-contained Plotly page organized
 around the four questions below, with pairwise cosine / L2 distributions, an outlier table,
@@ -40,14 +40,14 @@ numbers still mean the same thing on CPU or GPU.
 **Q2 — Do those differences change the retriever's (OpenSearch) results?** No, in every way that
 matters. Across all 5 environments and 500 strings:
 
-| Signal | Result |
-| --- | --- |
-| Top-1 retrieved LOINC agreement | **100%** on every environment pair |
-| Top-10 candidate-set overlap (Jaccard) | 99.86% – 100% |
-| Top-10 exact-order agreement | 99.2% – 99.8% |
-| Per-candidate score delta vs `azure_gpu` (matched by doc id) | mean ~`1.3e-07`, max ~`2.3e-06` |
+| Signal                                                       | Result                             |
+| ------------------------------------------------------------ | ---------------------------------- |
+| Top-1 retrieved LOINC agreement                              | **100%** on every environment pair |
+| Top-10 candidate-set overlap (Jaccard)                       | 99.86% – 100%                      |
+| Top-10 exact-order agreement                                 | 99.2% – 99.8%                      |
+| Per-candidate score delta vs `azure_gpu` (matched by doc id) | mean ~`1.3e-07`, max ~`2.3e-06`    |
 
-Crucially, OpenSearch KNN is an *approximate* (HNSW) search: re-querying the **identical**
+Crucially, OpenSearch KNN is an _approximate_ (HNSW) search: re-querying the **identical**
 `azure_gpu` vectors a second time already yields top-1 100% / set 99.975% / order 99.8% — so the
 deep-rank (4–10) reshuffles the review anticipated do occur, but at a rate **indistinguishable
 from the search engine's own re-query noise**, and never disturb the top-1. The one description
