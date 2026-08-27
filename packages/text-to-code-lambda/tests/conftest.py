@@ -210,7 +210,7 @@ def mock_opensearch() -> Iterator[MagicMock]:
                 {
                     "_index": "ttc_index",
                     "_id": "rbLli5wBhppl0u9qtwLN",
-                    "_score": 0.95,
+                    "_score": 0.91,
                     "_source": {
                         "id": 0,
                         "loinc_code": "109224-6",
