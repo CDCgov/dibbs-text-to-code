@@ -546,11 +546,11 @@ class TestCandidateMatching:
                 total={"value": 4},
                 hits=[
                     OpenSearchHit(
-                        _id="top-result",
+                        _id="perfect-match",
                         _index="ttc_index",
                         _score=1.0,
                         _source=OpenSearchHitSource(
-                            description="Perfect Match",
+                            description="Nucleated erythrocytes/Leukocytes [Ratio] in Blood by Automated count",
                             id=0,
                             loinc_code="11111-1",
                             loinc_name_type="Long Common Name",
@@ -622,6 +622,7 @@ class TestCandidateMatching:
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
         )
+        assert new_translation is not None
         assert new_translation.display_name == selected_candidate.value
 
     def test_leader_margin_heuristic(self, mock_opensearch, mocker):
@@ -717,6 +718,7 @@ class TestCandidateMatching:
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
         )
+        assert new_translation is not None
         assert (
             new_translation.display_name
             == "Nucleated erythrocytes/Leukocytes [Ratio] in Blood by Automated count"
@@ -811,6 +813,7 @@ class TestCandidateMatching:
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
         )
+        assert new_translation is not None
         assert (
             new_translation.display_name
             == "Nucleated erythrocytes/Leukocytes [Ratio] in Blood by Automated count"
