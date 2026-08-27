@@ -4,10 +4,13 @@ from .model_info import ModelInfo, TTCModelInfo
 from .query import DataFieldTypeMapping, VectorSearchParams
 from .registry import (
     EICR_REGISTRY,
+    HIGH_RANK_THRESHOLD,
     HIGH_SCORE,
+    LEADER_MARGIN,
     LOW_SCORE,
     MAX_MARGIN,
     MIN_MARGIN,
+    MINIMUM_HITS_TO_HIGH_RANK,
     TTC_RERANKER,
     TTC_RETRIEVER,
 )
@@ -23,9 +26,12 @@ from .schematron import (
 
 __all__ = [
     "EICR_REGISTRY",
+    "HIGH_RANK_THRESHOLD",
     "HIGH_SCORE",
+    "LEADER_MARGIN",
     "LOW_SCORE",
     "MAX_MARGIN",
+    "MINIMUM_HITS_TO_HIGH_RANK",
     "MIN_MARGIN",
     "TTC_RERANKER",
     "TTC_RETRIEVER",

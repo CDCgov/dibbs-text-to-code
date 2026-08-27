@@ -24,6 +24,11 @@ from shared_models import (
 from text_to_code.models import Candidate, OpenSearchResultCacheSource
 from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
+from text_to_code.models.registry import (
+    HIGH_RANK_THRESHOLD,
+    LEADER_MARGIN,
+    MINIMUM_HITS_TO_HIGH_RANK,
+)
 from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
@@ -37,12 +42,6 @@ from .models.metadata import Metadata, TTCSchematronIssueDetail
 metrics = Metrics()
 
 _METRIC_NAME = "result_cache_value_status"
-
-# Parameters governing the behavior of search-score heuristics, such as
-# auto-acceptance or "high-threshold" ranking.
-HIGH_RANK_THRESHOLD = 0.92
-MINIMUM_HITS_TO_HIGH_RANK = 2
-LEADER_MARGIN = 1.005
 
 
 # Initialize the logger

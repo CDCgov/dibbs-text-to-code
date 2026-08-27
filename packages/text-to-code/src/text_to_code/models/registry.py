@@ -27,6 +27,18 @@ TTC_RERANKER: str = (
 # The threshold for automatically accepting a top retriever result without sending to the reranker.
 AUTO_ACCEPT_THRESHOLD: float = float(os.getenv("AUTO_ACCEPT_THRESHOLD") or 0.95)
 
+# The threshold of combined cosine similarity plus margin above the next-best score, beyond
+# which we will automatically accept the retriever's leading candidate.
+LEADER_MARGIN: float = float(os.getenv("LEADER_MARGIN") or 1.005)
+
+# The threshold which, if a sufficient number of retriever candidates exceed in scoring, we
+# will perform a pre-thresholded re-ranking consisting of all candidates with scores above
+# this value and bypassing adaptive margin pruning.
+HIGH_RANK_THRESHOLD: float = float(os.getenv("HIGH_RANK_THRESHOLD") or 0.92)
+# The number of OpenSearch candidates whose scores must exceed the high rank threshold in order
+# to perform pre-thresholded reranking.
+MINIMUM_HITS_TO_HIGH_RANK: int = int(os.getenv("MINIMUM_HITS_TO_HIGH_RANK") or 2)
+
 # These numbers were determined empirically by testing the 650k production results from
 # APHL and measuring the distribution of scores. The mininum and maxmium margins represent
 # the 10th and 95th percentiles of the distribution of margins.
