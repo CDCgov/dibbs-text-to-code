@@ -83,11 +83,16 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
         _hit("1111-1", "Top candidate", score=LOW_SCORE),
         _hit(
             "2222-2",
-            "Within margin candidate",
+            "Within margin candidate 1",
             score=LOW_SCORE - (MAX_MARGIN / 2),
         ),
         _hit(
             "3333-3",
+            "Within margin candidate 2",
+            score=LOW_SCORE - (MAX_MARGIN / 2),
+        ),
+        _hit(
+            "4444-4",
             "Outside margin candidate",
             score=LOW_SCORE - (MAX_MARGIN * 2),
         ),
@@ -103,6 +108,7 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
         return_value=[
             {"corpus_id": 1, "score": 0.9},
             {"corpus_id": 0, "score": 0.8},
+            {"corpus_id": 2, "score": 0.7},
         ],
     )
 
@@ -114,14 +120,11 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
 
     reranker_model_mock.assert_called_once_with(
         "glucose",
-        [
-            "Top candidate",
-            "Within margin candidate",
-        ],
+        ["Top candidate", "Within margin candidate 1", "Within margin candidate 2"],
     )
     assert code is not None
     assert code.code == "2222-2"
-    assert code.display_name == "Within margin candidate"
+    assert code.display_name == "Within margin candidate 1"
 
 
 def test_code_for_text_returns_none_when_no_hits(mocker):
