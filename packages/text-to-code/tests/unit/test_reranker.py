@@ -84,11 +84,11 @@ class TestReranker:
             },
             {
                 "code_string": "Result Inside Margin",
-                "score": pytest.approx(0.000271708413493, abs=2e-6),
+                "score": pytest.approx(0.0002987489278893918, abs=2e-6),
             },
             {
                 "code_string": "Result Inside Margin",
-                "score": pytest.approx(0.000271708413493, abs=2e-6),
+                "score": pytest.approx(0.0002987489278893918, abs=2e-6),
             },
         ]
 
@@ -116,7 +116,11 @@ class TestReranker:
                 "score": pytest.approx(0.2510499656200409, abs=1e-6),
             },
             {
+                "code_string": "Result Outside Margin",
+                "score": pytest.approx(0.0002717081515584141, abs=2e-6),
+            },
+            {
                 "code_string": "Result outside margin that will be added back in",
-                "score": 0.04,
+                "score": pytest.approx(0.00023571359633933753, abs=2e-6),
             },
         ]

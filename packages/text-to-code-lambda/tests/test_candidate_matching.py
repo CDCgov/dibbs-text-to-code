@@ -160,7 +160,7 @@ class TestCandidateMatching:
                     OpenSearchHit(
                         _id="outside-margin",
                         _index="ttc_index",
-                        _score=HIGH_SCORE - (MIN_MARGIN * 2),
+                        _score=HIGH_SCORE - (MIN_MARGIN * 5),
                         _source=OpenSearchHitSource(
                             description="Outside Margin Result",
                             id=3,
@@ -224,9 +224,9 @@ class TestCandidateMatching:
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
             timed_out=False,
-            _shards=OpenSearchShards(total=3, successful=1, skipped=0, failed=0),
+            _shards=OpenSearchShards(total=4, successful=1, skipped=0, failed=0),
             hits=OpenSearchHits(
-                total={"value": 3},
+                total={"value": 4},
                 hits=[
                     OpenSearchHit(
                         _id="top-result",
@@ -328,9 +328,9 @@ class TestCandidateMatching:
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
             timed_out=False,
-            _shards=OpenSearchShards(total=3, successful=1, skipped=0, failed=0),
+            _shards=OpenSearchShards(total=4, successful=1, skipped=0, failed=0),
             hits=OpenSearchHits(
-                total={"value": 3},
+                total={"value": 4},
                 hits=[
                     OpenSearchHit(
                         _id="top-result",
