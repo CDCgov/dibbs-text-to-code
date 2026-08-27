@@ -61,10 +61,47 @@ class TestReranker:
         nonstandard_in = "Influenza virus A and B and SARS-CoV-2 (COVID-19)"
         scores = [
             LOW_SCORE,
+            LOW_SCORE - (MAX_MARGIN / 3.0),
+            LOW_SCORE - (MAX_MARGIN / 2.0),
             LOW_SCORE - (MAX_MARGIN * 2),
         ]
         search_hits = [
             "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+            "Result Inside Margin",
+            "Result Inside Margin",
+            "Result Outside Margin",
+        ]
+
+        ranks = rerank(nonstandard_in, scores, search_hits)
+        ranks: list[ScoredResult] = [
+            {"code_string": r["code_string"], "score": r["score"]} for r in ranks
+        ]
+
+        assert ranks == [
+            {
+                "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+                "score": pytest.approx(0.2510499656200409, abs=2e-6),
+            },
+            {
+                "code_string": "Result Inside Margin",
+                "score": pytest.approx(0.000271708413493, abs=2e-6),
+            },
+            {
+                "code_string": "Result Inside Margin",
+                "score": pytest.approx(0.000271708413493, abs=2e-6),
+            },
+        ]
+
+    def test_reranker_adds_hit_if_margin_prunes_too_many(self) -> None:
+        nonstandard_in = "Influenza virus A and B and SARS-CoV-2 (COVID-19)"
+        scores = [
+            LOW_SCORE,
+            LOW_SCORE - (MAX_MARGIN * 2),
+            LOW_SCORE - (MAX_MARGIN * 3),
+        ]
+        search_hits = [
+            "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
+            "Result outside margin that will be added back in",
             "Result Outside Margin",
         ]
 
@@ -77,5 +114,9 @@ class TestReranker:
             {
                 "code_string": "Influenza virus A and B and SARS-CoV-2 (COVID-19)",
                 "score": pytest.approx(0.2510499656200409, abs=1e-6),
-            }
+            },
+            {
+                "code_string": "Result outside margin that will be added back in",
+                "score": 0.04,
+            },
         ]

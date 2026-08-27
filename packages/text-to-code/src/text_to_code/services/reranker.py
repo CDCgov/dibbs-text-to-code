@@ -11,7 +11,7 @@ from text_to_code.services.utils import get_model_info
 _RERANKER = CrossEncoder(TTC_RERANKER)
 RERANKER_MODEL_INFO = get_model_info(TTC_RERANKER)
 
-MINIMUM_RESULTS_TO_RERANK = 2
+MINIMUM_HITS_WITHIN_MARGIN = 2
 
 
 class ScoredResult(TypedDict):
@@ -144,6 +144,6 @@ def _prune(scores: list[float], texts: list[str]) -> list[str]:
 
     adaptive_margin = margin_fn(top_score)
     num_within_margin = _within_margin(scores, adaptive_margin)
-    num_within_margin = max(num_within_margin, MINIMUM_RESULTS_TO_RERANK)
+    num_within_margin = max(num_within_margin, MINIMUM_HITS_WITHIN_MARGIN)
     pruned_results = texts[: num_within_margin + 1]  # add 1 to include the top score
     return pruned_results

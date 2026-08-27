@@ -44,7 +44,7 @@ class TestCandidateMatching:
                     OpenSearchHit(
                         _id="within-margin",
                         _index="ttc_index",
-                        _score=LOW_SCORE - (MAX_MARGIN / 2),
+                        _score=LOW_SCORE - (MAX_MARGIN / 2.0),
                         _source=OpenSearchHitSource(
                             description="Within Margin Result",
                             id=1,
@@ -79,6 +79,7 @@ class TestCandidateMatching:
             return_value=[
                 {"corpus_id": 0, "score": 0.9},
                 {"corpus_id": 1, "score": 0.8},
+                {"corpus_id": 2, "score": 0.7},
             ],
         )
 
@@ -88,7 +89,7 @@ class TestCandidateMatching:
 
         lambda_function._match_candidate(
             selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
+            embedding=[0.1, 0.2, 0.3],
             data_field=DataField.LAB_TEST_NAME_ORDERED,
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
@@ -99,6 +100,7 @@ class TestCandidateMatching:
             [
                 "Top Result",
                 "Within Margin Result",
+                "Outside Margin Result",
             ],
         )
 
@@ -115,9 +117,9 @@ class TestCandidateMatching:
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
             timed_out=False,
-            _shards=OpenSearchShards(total=3, successful=1, skipped=0, failed=0),
+            _shards=OpenSearchShards(total=4, successful=1, skipped=0, failed=0),
             hits=OpenSearchHits(
-                total={"value": 3},
+                total={"value": 4},
                 hits=[
                     OpenSearchHit(
                         _id="top-result",
@@ -132,13 +134,25 @@ class TestCandidateMatching:
                         ),
                     ),
                     OpenSearchHit(
-                        _id="within-margin",
+                        _id="within-margin-1",
                         _index="ttc_index",
-                        _score=HIGH_SCORE - (MIN_MARGIN / 2),
+                        _score=HIGH_SCORE - (MIN_MARGIN / 3.0),
                         _source=OpenSearchHitSource(
-                            description="Within Margin Result",
+                            description="Within Margin Result 1",
                             id=1,
                             loinc_code="22222-2",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        _id="within-margin-2",
+                        _index="ttc_index",
+                        _score=HIGH_SCORE - (MIN_MARGIN / 2.0),
+                        _source=OpenSearchHitSource(
+                            description="Within Margin Result 2",
+                            id=2,
+                            loinc_code="33333-3",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -149,8 +163,8 @@ class TestCandidateMatching:
                         _score=HIGH_SCORE - (MIN_MARGIN * 2),
                         _source=OpenSearchHitSource(
                             description="Outside Margin Result",
-                            id=2,
-                            loinc_code="33333-3",
+                            id=3,
+                            loinc_code="44444-4",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -169,6 +183,7 @@ class TestCandidateMatching:
             return_value=[
                 {"corpus_id": 0, "score": 0.9},
                 {"corpus_id": 1, "score": 0.8},
+                {"corpus_id": 2, "score": 0.7},
             ],
         )
 
@@ -178,7 +193,7 @@ class TestCandidateMatching:
 
         lambda_function._match_candidate(
             selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
+            embedding=[0.1, 0.2, 0.3],
             data_field=DataField.LAB_TEST_NAME_ORDERED,
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
@@ -188,7 +203,8 @@ class TestCandidateMatching:
             "weed allergen mix 3",
             [
                 "Top Result",
-                "Within Margin Result",
+                "Within Margin Result 1",
+                "Within Margin Result 2",
             ],
         )
 
@@ -225,13 +241,25 @@ class TestCandidateMatching:
                         ),
                     ),
                     OpenSearchHit(
-                        _id="within-margin",
+                        _id="within-margin-1",
+                        _index="ttc_index",
+                        _score=top_score - (adaptive_margin / 3),
+                        _source=OpenSearchHitSource(
+                            description="Within Margin Result 1",
+                            id=1,
+                            loinc_code="22222-2",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
+                        _id="within-margin-2",
                         _index="ttc_index",
                         _score=top_score - (adaptive_margin / 2),
                         _source=OpenSearchHitSource(
-                            description="Within Margin Result",
-                            id=1,
-                            loinc_code="22222-2",
+                            description="Within Margin Result 2",
+                            id=2,
+                            loinc_code="33333-3",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -242,8 +270,8 @@ class TestCandidateMatching:
                         _score=top_score - (adaptive_margin * 2),
                         _source=OpenSearchHitSource(
                             description="Outside Margin Result",
-                            id=2,
-                            loinc_code="33333-3",
+                            id=3,
+                            loinc_code="44444-4",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -262,6 +290,7 @@ class TestCandidateMatching:
             return_value=[
                 {"corpus_id": 0, "score": 0.9},
                 {"corpus_id": 1, "score": 0.8},
+                {"corpus_id": 2, "score": 0.7},
             ],
         )
 
@@ -271,7 +300,7 @@ class TestCandidateMatching:
 
         lambda_function._match_candidate(
             selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
+            embedding=[0.1, 0.2, 0.3],
             data_field=DataField.LAB_TEST_NAME_ORDERED,
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
@@ -281,7 +310,8 @@ class TestCandidateMatching:
             "weed allergen mix 3",
             [
                 "Top Result",
-                "Within Margin Result",
+                "Within Margin Result 1",
+                "Within Margin Result 2",
             ],
         )
 
@@ -315,13 +345,25 @@ class TestCandidateMatching:
                         ),
                     ),
                     OpenSearchHit(
+                        _id="within-margin-result",
+                        _index="ttc_index",
+                        _score=LOW_SCORE - (MAX_MARGIN / 2),
+                        _source=OpenSearchHitSource(
+                            description="Within Margin Result",
+                            id=1,
+                            loinc_code="22222-2",
+                            loinc_name_type="Long Common Name",
+                            loinc_type="Order",
+                        ),
+                    ),
+                    OpenSearchHit(
                         _id="boundary-result",
                         _index="ttc_index",
                         _score=LOW_SCORE - MAX_MARGIN,
                         _source=OpenSearchHitSource(
                             description="Boundary Result",
-                            id=1,
-                            loinc_code="22222-2",
+                            id=2,
+                            loinc_code="33333-3",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -332,8 +374,8 @@ class TestCandidateMatching:
                         _score=LOW_SCORE - MAX_MARGIN - 0.001,
                         _source=OpenSearchHitSource(
                             description="Outside Margin Result",
-                            id=2,
-                            loinc_code="33333-3",
+                            id=3,
+                            loinc_code="44444-4",
                             loinc_name_type="Long Common Name",
                             loinc_type="Order",
                         ),
@@ -352,6 +394,7 @@ class TestCandidateMatching:
             return_value=[
                 {"corpus_id": 0, "score": 0.9},
                 {"corpus_id": 1, "score": 0.8},
+                {"corpus_id": 2, "score": 0.7},
             ],
         )
 
@@ -361,7 +404,7 @@ class TestCandidateMatching:
 
         lambda_function._match_candidate(
             selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
+            embedding=[0.1, 0.2, 0.3],
             data_field=DataField.LAB_TEST_NAME_ORDERED,
             cache_key="cache-key",
             opensearch_client=mock_opensearch,
@@ -371,6 +414,7 @@ class TestCandidateMatching:
             "weed allergen mix 3",
             [
                 "Top Result",
+                "Within Margin Result",
                 "Boundary Result",
             ],
         )
