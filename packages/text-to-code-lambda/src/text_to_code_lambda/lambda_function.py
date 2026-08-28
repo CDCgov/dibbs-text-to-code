@@ -539,9 +539,9 @@ def _build_schematron_error_work_items(
         if selected_candidate:
             work.query_text = convert_known_code(selected_candidate.value)
             work.auto_mapped_value = (
-                work.query_text if selected_candidate.value != work.query_text else None
+                work.query_text if work.query_text != selected_candidate.value else None
             )
-            if selected_candidate.value != work.query_text:
+            if work.auto_mapped_value:
                 logger.info(
                     "Auto-mapped candidate value",
                     original_value=selected_candidate.value,
