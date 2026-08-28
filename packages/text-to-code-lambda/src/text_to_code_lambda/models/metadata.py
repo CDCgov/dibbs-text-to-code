@@ -26,7 +26,7 @@ class TTCSchematronIssueDetail(FrozenBaseModel):
     opensearch_retrieved_scores: OpenSearchResult | None
     reranker_processed_results: list[ScoredResult] | None
     unmatched_reason: str | None
-    auto_mapped: bool = False
+    auto_mapped_value: str | None = None
 
 
 class Metadata(FrozenBaseModel):

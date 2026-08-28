@@ -26,7 +26,6 @@ from text_to_code.models.model_info import TTCModelInfo
 from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.auto_mapping import convert_known_code
-from text_to_code.services.auto_mapping_dict import AUTO_MAPPING
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
@@ -403,7 +402,7 @@ class _ErrorWork:
     error: SchematronErrorDetail
     selected_candidate: Candidate | None
     query_text: str | None = None
-    auto_mapped: bool = False
+    auto_mapped_value: str | None = None
     cache_key: str | None = None
     cached_result: OpenSearchResultCacheSource | None = None
     embedding: list[float] | None = None
@@ -538,9 +537,10 @@ def _build_schematron_error_work_items(
         selected_candidate = evaluator.select_relevant_text(text_candidates, error.field)
         work = _ErrorWork(error=error, selected_candidate=selected_candidate)
         if selected_candidate:
-            work.auto_mapped = selected_candidate.value in AUTO_MAPPING
             work.query_text = convert_known_code(selected_candidate.value)
-
+            work.auto_mapped_value = (
+                work.query_text if selected_candidate.value != work.query_text else None
+            )
             if selected_candidate.value != work.query_text:
                 logger.info(
                     "Auto-mapped candidate value",
@@ -728,7 +728,7 @@ def _resolve_error_work_items(
                 new_translation=resolution.new_translation,
                 opensearch_retrieved_scores=resolution.opensearch_retrieved_scores,
                 reranker_processed_results=resolution.ranked_results,
-                auto_mapped=work.auto_mapped,
+                auto_mapped_value=work.auto_mapped_value,
             ),
         )
 

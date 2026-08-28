@@ -29,7 +29,7 @@
   "processed_at": "2026-02-13T20:27:00Z",
   "ttc_schematron_issues": [
     {
-      "auto_mapped": false,
+      "auto_mapped_value": null,
       "candidate": {
         "system": null,
         "value": "A custom code in display name.",

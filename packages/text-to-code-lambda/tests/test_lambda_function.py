@@ -1363,9 +1363,9 @@ class TestAutoMapping:
         assert ttc_output.nonstandard_codes[0].new_translation.original_text == "HGB"
         assert ttc_metadata.ttc_schematron_issues is not None
         assert ttc_metadata.ttc_schematron_issues[0].candidate == candidate
-        assert ttc_metadata.ttc_schematron_issues[0].auto_mapped is True
+        assert ttc_metadata.ttc_schematron_issues[0].auto_mapped_value == mapped_value
 
-    def test_build_work_item_marks_identity_mapping_as_auto_mapped(
+    def test_build_work_item_identity_mapping_does_not_set_auto_mapped_value(
         self,
         mocker,
     ):
@@ -1392,7 +1392,7 @@ class TestAutoMapping:
         assert len(work_items) == 1
         assert work_items[0].selected_candidate == candidate
         assert work_items[0].query_text == "FIO2"
-        assert work_items[0].auto_mapped is True
+        assert work_items[0].auto_mapped_value is None
         assert work_items[0].cache_key == compute_cache_key(
             "FIO2",
             DataField.LAB_TEST_NAME_ORDERED,
@@ -1428,7 +1428,7 @@ class TestAutoMapping:
         assert len(work_items) == 1
         assert work_items[0].selected_candidate == candidate
         assert work_items[0].query_text == "completely unknown lab value"
-        assert work_items[0].auto_mapped is False
+        assert work_items[0].auto_mapped_value is None
         assert work_items[0].cache_key == compute_cache_key(
             "completely unknown lab value",
             DataField.LAB_TEST_NAME_ORDERED,
@@ -1465,7 +1465,7 @@ class TestAutoMapping:
             error=error,
             selected_candidate=candidate,
             query_text="Hgb Bld-mCnc",
-            auto_mapped=True,
+            auto_mapped_value="Hgb Bld-mCnc",
             cache_key=compute_cache_key(
                 "Hgb Bld-mCnc",
                 DataField.LAB_TEST_NAME_ORDERED,
