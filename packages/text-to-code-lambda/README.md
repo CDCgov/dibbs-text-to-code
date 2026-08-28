@@ -105,8 +105,8 @@ For each SQS record, the Lambda:
 - Loads the original eICR from S3.
 - Extracts eICR metadata.
 - Evaluates free-text candidates from the eICR.
-- Determines if the selected candidate can be auto-mapped using known input-to-code mappings.
 - Selects the most relevant candidate text for each schematron error.
+- Determines if the selected candidate can be auto-mapped using known input-to-code mappings.
 - Embeds the selected text.
 - Queries OpenSearch using vector search.
 - Reranks OpenSearch results.
