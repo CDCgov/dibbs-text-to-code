@@ -28,7 +28,11 @@ from text_to_code.services import eicr_processor, evaluator, schematron_processo
 from text_to_code.services.auto_mapping import convert_known_code
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
+from text_to_code.services.reranker import (
+    RERANKER_MODEL_INFO,
+    ScoredResult,
+    select_opensearch_candidate,
+)
 from text_to_code.services.result_cache import get_cached_results, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
@@ -471,19 +475,9 @@ def _match_candidate(
     results_list = opensearch_retrieved_scores.hits.hits
 
     if results_list:
-        retrieved_loinc_names = [hit.source.description for hit in results_list]
-        retrieve_scores = [hit.score for hit in results_list]
+        top_result, ranked_results = select_opensearch_candidate(work.query_text, results_list)
 
-        ranked_results = rerank(work.query_text, retrieve_scores, retrieved_loinc_names)
-
-        if ranked_results:
-            top_result = next(
-                (
-                    x
-                    for x in results_list
-                    if x.source.description == ranked_results[0]["code_string"]
-                ),
-            )
+        if top_result:
             new_translation = Code(
                 code=top_result.source.loinc_code,
                 code_system=LOINC_OID,
@@ -501,7 +495,7 @@ def _match_candidate(
                 data_field=work.error.field,
                 loinc_code=new_translation,
                 search_score=top_result.score,
-                reranker_score=ranked_results[0]["score"],
+                reranker_score=top_result.score,
                 opensearch_retrieved_scores=opensearch_retrieved_scores,
                 reranker_processed_results=ranked_results,
                 cache_key=work.cache_key,

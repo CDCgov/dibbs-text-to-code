@@ -61,11 +61,14 @@ def test_code_for_text_returns_top_reranked_code(mocker):
     # Reranker promotes the second candidate above OpenSearch's first hit.
     mocker.patch.object(
         service,
-        "rerank",
-        return_value=[
-            {"code_string": "Second candidate", "score": 0.9},
-            {"code_string": "First candidate", "score": 0.4},
-        ],
+        "select_opensearch_candidate",
+        return_value=(
+            hits[1],
+            [
+                {"code_string": "Second candidate", "score": 0.9},
+                {"code_string": "First candidate", "score": 0.4},
+            ],
+        ),
     )
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
@@ -83,11 +86,16 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
         _hit("1111-1", "Top candidate", score=LOW_SCORE),
         _hit(
             "2222-2",
-            "Within margin candidate",
+            "Within margin candidate 1",
             score=LOW_SCORE - (MAX_MARGIN / 2),
         ),
         _hit(
             "3333-3",
+            "Within margin candidate 2",
+            score=LOW_SCORE - (MAX_MARGIN / 2),
+        ),
+        _hit(
+            "4444-4",
             "Outside margin candidate",
             score=LOW_SCORE - (MAX_MARGIN * 2),
         ),
@@ -103,6 +111,7 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
         return_value=[
             {"corpus_id": 1, "score": 0.9},
             {"corpus_id": 0, "score": 0.8},
+            {"corpus_id": 2, "score": 0.7},
         ],
     )
 
@@ -114,14 +123,11 @@ def test_code_for_text_prunes_results_outside_adaptive_margin(mocker):
 
     reranker_model_mock.assert_called_once_with(
         "glucose",
-        [
-            "Top candidate",
-            "Within margin candidate",
-        ],
+        ["Top candidate", "Within margin candidate 1", "Within margin candidate 2"],
     )
     assert code is not None
     assert code.code == "2222-2"
-    assert code.display_name == "Within margin candidate"
+    assert code.display_name == "Within margin candidate 1"
 
 
 def test_code_for_text_returns_none_when_no_hits(mocker):
@@ -129,12 +135,12 @@ def test_code_for_text_returns_none_when_no_hits(mocker):
     mocker.patch.object(
         service.lambda_handler, "retrieve_opensearch_results", return_value=_result([])
     )
-    rerank_mock = mocker.patch.object(service, "rerank")
+    select_candidate_mock = mocker.patch.object(service, "select_opensearch_candidate")
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 
     assert code is None
-    rerank_mock.assert_not_called()
+    select_candidate_mock.assert_not_called()
 
 
 def test_code_for_text_returns_none_when_rerank_empty(mocker):
@@ -144,7 +150,7 @@ def test_code_for_text_returns_none_when_rerank_empty(mocker):
         "retrieve_opensearch_results",
         return_value=_result([_hit("1111-1", "Only candidate")]),
     )
-    mocker.patch.object(service, "rerank", return_value=[])
+    mocker.patch.object(service, "select_opensearch_candidate", return_value=(None, []))
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 

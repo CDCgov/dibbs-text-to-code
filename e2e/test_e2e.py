@@ -13,6 +13,7 @@ from pytest_snapshot.plugin import Snapshot
 
 from augmentation.models import Metadata as AugmentationMetadata
 from augmentation_lambda.lambda_function import handler as augmentation_lambda
+from lambda_handler.models import OpenSearchHit, OpenSearchHitSource
 from shared_models import PassthroughReason, TTCAugmenterInput
 from text_to_code.services.reranker import ScoredResult
 from text_to_code_lambda import lambda_function
@@ -329,7 +330,19 @@ def _assert_augmented_eicr_retains_original_content(
     )
 
 
-def _mock_ttc_rerank(mocker) -> None:
+def _mock_ttc_select_opensearch_candidate(mocker) -> None:
+    selected_result: OpenSearchHit = OpenSearchHit(
+        _index="ttc_index",
+        _id="rbLli5wBhppl0u9qtwLN",
+        _score=0.88,
+        _source=OpenSearchHitSource(
+            id=1,
+            loinc_code="82041-5",
+            loinc_name_type="Short Name",
+            description="Weed Allerg Mix3 IgE Qn",
+            loinc_type="Order",
+        ),
+    )
     ranked_results: list[ScoredResult] = [
         {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
         {
@@ -344,8 +357,8 @@ def _mock_ttc_rerank(mocker) -> None:
 
     mocker.patch.object(
         lambda_function,
-        "rerank",
-        return_value=ranked_results,
+        "select_opensearch_candidate",
+        return_value=(selected_result, ranked_results),
     )
 
 
@@ -536,7 +549,7 @@ class TestEndToEndSimulated:
         mock_lambda_context,
         mocker,
     ):
-        _mock_ttc_rerank(mocker)
+        _mock_ttc_select_opensearch_candidate(mocker)
 
         self._run_eicr_pipeline(
             aws,
@@ -662,7 +675,7 @@ class TestNamespacePreservation:
         mock_lambda_context,
         mocker,
     ):
-        _mock_ttc_rerank(mocker)
+        _mock_ttc_select_opensearch_candidate(mocker)
 
         with open(NAMESPACE_PRESERVATION_SCHEMATRON_PATH, "rb") as schematron_file:
             aws["s3"].upload_fileobj(
