@@ -1085,3 +1085,404 @@ class TestHandler:
         mock_opensearch.count.assert_called_once_with(index=lambda_function.OPENSEARCH_INDEX)
         process_record_mock.assert_not_called()
         passthrough_output_mock.assert_not_called()
+
+    def test_embed_cache_misses_raises_when_candidate_has_no_query_text(self):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="missing query text", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text=None,
+            cache_key="cache-key",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing query text for candidate: missing query text",
+        ):
+            lambda_function._embed_cache_misses([work])
+
+    def test_error_work_with_original_text_raises_when_candidate_is_missing(self):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=None,
+        )
+        code = Code(
+            code="82041-5",
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name="Weed Allerg Mix3 IgE Qn",
+            original_text="cached input",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"Missing selected candidate.",
+        ):
+            work.with_original_text(code)
+
+    def test_match_candidate_raises_when_selected_candidate_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=None,
+            query_text="weed allergen mix 3",
+            cache_key="cache-key",
+            embedding=[0.1, 0.2],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"Missing selected candidate\.",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
+    def test_match_candidate_raises_when_embedding_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(
+            value="weed allergen mix 3",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text="weed allergen mix 3",
+            cache_key="cache-key",
+            embedding=None,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing embedding for cache-miss candidate: weed allergen mix 3",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
+    def test_match_candidate_raises_when_query_text_is_missing(
+        self,
+        mock_opensearch,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(
+            value="weed allergen mix 3",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text=None,
+            cache_key="cache-key",
+            embedding=[0.1, 0.2],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing query text for candidate: weed allergen mix 3",
+        ):
+            lambda_function._match_candidate(
+                work=work,
+                opensearch_client=mock_opensearch,
+            )
+
+    def test_resolve_work_item_reuses_unmatched_duplicate_resolution(
+        self,
+        mock_opensearch,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="repeated unmatched input", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text="repeated unmatched input",
+            cache_key="cache-key",
+        )
+        resolution = lambda_function._CandidateResolution(
+            unmatched_message="Opensearch query returned no hits.",
+        )
+        resolved_misses = {"cache-key": resolution}
+
+        metric_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._record_cache_metric",
+        )
+
+        result = lambda_function._resolve_work_item(
+            work,
+            resolved_misses,
+            mock_opensearch,
+        )
+
+        assert result is resolution
+        metric_mock.assert_called_once_with(lambda_function.HitValue.miss)
+        assert mock_opensearch.search.call_count == 0
+
+    def test_resolve_work_item_raises_when_candidate_has_no_query_text(
+        self,
+        mock_opensearch,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="missing query text", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text=None,
+            cache_key="cache-key",
+            embedding=[0.1, 0.2],
+        )
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._record_cache_metric",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Missing query text for candidate: missing query text",
+        ):
+            lambda_function._resolve_work_item(
+                work,
+                {},
+                mock_opensearch,
+            )
+
+        assert mock_opensearch.search.call_count == 0
+
+
+@pytest.mark.time_machine(datetime(2026, 1, 1, 1, 1, 0, 0, tzinfo=UTC), tick=False)
+class TestAutoMapping:
+    def test_handler_uses_auto_mapped_value_for_cache_embedding_reranking_and_cache_write(
+        self,
+        example_sqs_event,
+        mock_opensearch,
+        mock_lambda_context,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="HGB", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        mapped_value = "Hgb Bld-mCnc"
+        mapped_cache_key = compute_cache_key(mapped_value, DataField.LAB_TEST_NAME_ORDERED)
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_original_eicr",
+            return_value="<ClinicalDocument />",
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function._load_schematron_data_fields",
+            return_value=[error],
+        )
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            return_value=candidate,
+        )
+
+        get_cached_results_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.get_cached_results",
+            return_value={mapped_cache_key: None},
+        )
+
+        embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
+        embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
+
+        ranked_results: list[ScoredResult] = [
+            {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
+        ]
+        rerank_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function.rerank",
+            return_value=ranked_results,
+        )
+        put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
+        save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        assert resp == NO_BATCH_ITEM_FAILURES
+        get_cached_results_mock.assert_called_once()
+        assert get_cached_results_mock.call_args.args[2] == [mapped_cache_key]
+        embed_batch_mock.assert_called_once_with([mapped_value])
+        rerank_mock.assert_called_once()
+        assert rerank_mock.call_args.args[0] == mapped_value
+        put_cached_mock.assert_called_once()
+        assert put_cached_mock.call_args.kwargs["candidate_input"] == mapped_value
+        assert put_cached_mock.call_args.kwargs["cache_key"] == mapped_cache_key
+
+        ttc_output = save_outputs_mock.call_args.args[2]
+        ttc_metadata = save_outputs_mock.call_args.args[3]
+
+        assert ttc_output.nonstandard_codes[0].new_translation.original_text == "HGB"
+        assert ttc_metadata.ttc_schematron_issues is not None
+        assert ttc_metadata.ttc_schematron_issues[0].candidate == candidate
+        assert ttc_metadata.ttc_schematron_issues[0].auto_mapped_value == mapped_value
+
+    def test_build_work_item_identity_mapping_does_not_set_auto_mapped_value(
+        self,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="FIO2", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        processor = mocker.MagicMock()
+        processor.get_text_candidates.return_value = [candidate]
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            return_value=candidate,
+        )
+
+        work_items = lambda_function._build_schematron_error_work_items(
+            processor,
+            [error],
+        )
+
+        assert len(work_items) == 1
+        assert work_items[0].selected_candidate == candidate
+        assert work_items[0].query_text == "FIO2"
+        assert work_items[0].auto_mapped_value is None
+        assert work_items[0].cache_key == compute_cache_key(
+            "FIO2",
+            DataField.LAB_TEST_NAME_ORDERED,
+        )
+
+    def test_build_work_item_marks_unknown_input_as_not_auto_mapped(
+        self,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(
+            value="completely unknown lab value",
+            xpath=LabXPaths.CODE_DISPLAY_NAME,
+        )
+        processor = mocker.MagicMock()
+        processor.get_text_candidates.return_value = [candidate]
+
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.evaluator.select_relevant_text",
+            return_value=candidate,
+        )
+
+        work_items = lambda_function._build_schematron_error_work_items(
+            processor,
+            [error],
+        )
+
+        assert len(work_items) == 1
+        assert work_items[0].selected_candidate == candidate
+        assert work_items[0].query_text == "completely unknown lab value"
+        assert work_items[0].auto_mapped_value is None
+        assert work_items[0].cache_key == compute_cache_key(
+            "completely unknown lab value",
+            DataField.LAB_TEST_NAME_ORDERED,
+        )
+
+    def test_cached_auto_mapped_result_preserves_current_original_input(
+        self,
+        mock_opensearch,
+        mocker,
+    ):
+        error = SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error-one",
+            error_message="first error",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        )
+        candidate = Candidate(value="HGB", xpath=LabXPaths.CODE_DISPLAY_NAME)
+        cached_source = mocker.MagicMock()
+        cached_source.loinc_code = Code(
+            code="82041-5",
+            code_system="2.16.840.1.113883.6.1",
+            code_system_name="LOINC",
+            display_name="Weed Allerg Mix3 IgE Qn",
+            original_text="HGB.",
+        )
+        cached_source.reranker_processed_results = {"results": []}
+        cached_source.opensearch_retrieved_scores = OpenSearchResult(
+            took=1,
+            timed_out=False,
+            _shards=OpenSearchShards(total=1, successful=1, skipped=0, failed=0),
+            hits=OpenSearchHits(total={}, hits=[]),
+        )
+        work = lambda_function._ErrorWork(
+            error=error,
+            selected_candidate=candidate,
+            query_text="Hgb Bld-mCnc",
+            auto_mapped_value="Hgb Bld-mCnc",
+            cache_key=compute_cache_key(
+                "Hgb Bld-mCnc",
+                DataField.LAB_TEST_NAME_ORDERED,
+            ),
+            cached_result=cached_source,
+        )
+
+        metric_mock = mocker.patch(
+            "text_to_code_lambda.lambda_function._record_cache_metric",
+        )
+
+        resolution = lambda_function._resolve_work_item(
+            work,
+            {},
+            mock_opensearch,
+        )
+
+        assert resolution.new_translation is not None
+        assert resolution.new_translation.original_text == "HGB"
+        metric_mock.assert_called_once_with(lambda_function.HitValue.hit)

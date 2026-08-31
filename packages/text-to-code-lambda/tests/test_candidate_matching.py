@@ -15,7 +15,25 @@ from text_to_code.models.registry import (
     MAX_MARGIN,
     MIN_MARGIN,
 )
+from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code_lambda import lambda_function
+
+
+def _build_error_work(
+    selected_candidate: Candidate,
+) -> lambda_function._ErrorWork:
+    return lambda_function._ErrorWork(
+        error=SchematronErrorDetail(
+            field=DataField.LAB_TEST_NAME_ORDERED,
+            error="error",
+            error_message="error message",
+            error_context="/ClinicalDocument[1]/observation[1]",
+        ),
+        selected_candidate=selected_candidate,
+        query_text=selected_candidate.value,
+        cache_key="cache-key",
+        embedding=[0.1, 0.2],
+    )
 
 
 class TestCandidateMatching:
@@ -28,6 +46,7 @@ class TestCandidateMatching:
             value="weed allergen mix 3",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -95,10 +114,7 @@ class TestCandidateMatching:
         )
 
         lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
 
@@ -120,6 +136,7 @@ class TestCandidateMatching:
             value="weed allergen mix 3",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -199,10 +216,7 @@ class TestCandidateMatching:
         )
 
         lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
 
@@ -224,6 +238,7 @@ class TestCandidateMatching:
             value="weed allergen mix 3",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         top_score = (LOW_SCORE + HIGH_SCORE) / 2
         adaptive_margin = (MAX_MARGIN + MIN_MARGIN) / 2
@@ -306,10 +321,7 @@ class TestCandidateMatching:
         )
 
         lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
 
@@ -331,6 +343,7 @@ class TestCandidateMatching:
             value="weed allergen mix 3",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -410,10 +423,7 @@ class TestCandidateMatching:
         )
 
         lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
 
@@ -435,6 +445,7 @@ class TestCandidateMatching:
             value="weed allergen mix 3",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -506,10 +517,7 @@ class TestCandidateMatching:
             retrieved_scores,
             ranked_results,
         ) = lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
 

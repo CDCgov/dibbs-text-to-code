@@ -29,6 +29,7 @@
   "processed_at": "2026-01-01T01:01:00Z",
   "ttc_schematron_issues": [
     {
+      "auto_mapped_value": null,
       "candidate": null,
       "field_type": "Lab Test Name Ordered",
       "issue_context": "/ClinicalDocument/component[1]/structuredBody[1]/component[1]/section[1]/entry[1]/observation[1]",
