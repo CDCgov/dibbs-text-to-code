@@ -205,7 +205,7 @@ fields @timestamp, service, function_name, function_request_id, persistence_id, 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
 
 - Ingests **on S3 event**, not on a schedule: writing an object under `s3://dibbs-text-to-code/ingestion/` starts a load within seconds
-- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index under a deterministic `_id` (`loinc_code|loinc_name_type` — LOINC allows one name of each type per code), so re-processing an object overwrites rather than duplicates
+- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index under a deterministic `_id` (`loinc_code|loinc_name_type`, unique because LOINC allows one name of each type per code), so re-processing an object overwrites rather than duplicates
 - Uses its dedicated IAM role to read S3/SQS input and write documents to OpenSearch
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
