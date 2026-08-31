@@ -94,6 +94,18 @@ class TestHandler:
         # means every cache key misses.
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
+        selected_result: OpenSearchHit = OpenSearchHit(
+            _index="ttc_index",
+            _id="rbLli5wBhppl0u9qtwLN",
+            _score=0.88,
+            _source=OpenSearchHitSource(
+                id=1,
+                loinc_code="82041-5",
+                loinc_name_type="Short Name",
+                description="Weed Allerg Mix3 IgE Qn",
+                loinc_type="Order",
+            ),
+        )
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
             {
@@ -106,8 +118,8 @@ class TestHandler:
             },
         ]
         mocker.patch(
-            "text_to_code_lambda.lambda_function.select_opensearch_candidate.rerank",
-            return_value=ranked_results,
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(selected_result, ranked_results),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
