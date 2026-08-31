@@ -61,11 +61,14 @@ def test_code_for_text_returns_top_reranked_code(mocker):
     # Reranker promotes the second candidate above OpenSearch's first hit.
     mocker.patch.object(
         service,
-        "rerank",
-        return_value=[
-            {"code_string": "Second candidate", "score": 0.9},
-            {"code_string": "First candidate", "score": 0.4},
-        ],
+        "select_opensearch_candidate",
+        return_value=(
+            hits[1],
+            [
+                {"code_string": "Second candidate", "score": 0.9},
+                {"code_string": "First candidate", "score": 0.4},
+            ],
+        ),
     )
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
@@ -132,12 +135,12 @@ def test_code_for_text_returns_none_when_no_hits(mocker):
     mocker.patch.object(
         service.lambda_handler, "retrieve_opensearch_results", return_value=_result([])
     )
-    rerank_mock = mocker.patch.object(service, "rerank")
+    select_candidate_mock = mocker.patch.object(service, "select_opensearch_candidate")
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 
     assert code is None
-    rerank_mock.assert_not_called()
+    select_candidate_mock.assert_not_called()
 
 
 def test_code_for_text_returns_none_when_rerank_empty(mocker):
@@ -147,7 +150,7 @@ def test_code_for_text_returns_none_when_rerank_empty(mocker):
         "retrieve_opensearch_results",
         return_value=_result([_hit("1111-1", "Only candidate")]),
     )
-    mocker.patch.object(service, "rerank", return_value=[])
+    mocker.patch.object(service, "select_opensearch_candidate", return_value=(None, []))
 
     code = service.code_for_text("glucose", DataField.LAB_TEST_NAME_ORDERED, MagicMock())
 
