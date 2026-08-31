@@ -475,12 +475,9 @@ def _match_candidate(
     results_list = opensearch_retrieved_scores.hits.hits
 
     if results_list:
-        top_result, ranked_results = select_opensearch_candidate(
-            work.query_text, results_list
-        )
+        top_result, ranked_results = select_opensearch_candidate(work.query_text, results_list)
 
-
-        if ranked_results:
+        if top_result:
             new_translation = Code(
                 code=top_result.source.loinc_code,
                 code_system=LOINC_OID,

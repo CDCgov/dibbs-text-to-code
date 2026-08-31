@@ -545,6 +545,7 @@ class TestCandidateMatching:
             value="Nucleated erythrocytes/Leukocytes [Ratio] in Blood by Automated count",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -624,10 +625,7 @@ class TestCandidateMatching:
         )
 
         new_translation, _, _, _ = lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
         assert new_translation is not None
@@ -638,6 +636,7 @@ class TestCandidateMatching:
             value="NRBC Count",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         top_score = 0.98
         runner_up_score = 2 * top_score - LEADER_MARGIN - 0.001
@@ -720,10 +719,7 @@ class TestCandidateMatching:
         )
 
         new_translation, _, _, _ = lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2, 0.3],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
         assert new_translation is not None
@@ -737,6 +733,7 @@ class TestCandidateMatching:
             value="NRBC Count",
             xpath=LabXPaths.CODE_DISPLAY_NAME,
         )
+        work = _build_error_work(selected_candidate)
 
         opensearch_retrieved_scores = OpenSearchResult(
             took=1,
@@ -815,10 +812,7 @@ class TestCandidateMatching:
         )
 
         new_translation, _, _, _ = lambda_function._match_candidate(
-            selected_candidate=selected_candidate,
-            embedding=[0.1, 0.2],
-            data_field=DataField.LAB_TEST_NAME_ORDERED,
-            cache_key="cache-key",
+            work=work,
             opensearch_client=mock_opensearch,
         )
         assert new_translation is not None
