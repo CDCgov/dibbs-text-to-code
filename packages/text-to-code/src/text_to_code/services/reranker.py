@@ -5,7 +5,7 @@ import numpy as np
 from sentence_transformers import CrossEncoder
 from typing_extensions import TypedDict
 
-from lambda_handler.opensearch import OpenSearchHit
+from lambda_handler.models.opensearch import OpenSearchHit
 from text_to_code.models.registry import (
     HIGH_RANK_THRESHOLD,
     HIGH_SCORE,
