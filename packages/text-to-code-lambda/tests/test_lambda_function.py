@@ -106,7 +106,7 @@ class TestHandler:
             },
         ]
         mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate.rerank",
             return_value=ranked_results,
         )
 
