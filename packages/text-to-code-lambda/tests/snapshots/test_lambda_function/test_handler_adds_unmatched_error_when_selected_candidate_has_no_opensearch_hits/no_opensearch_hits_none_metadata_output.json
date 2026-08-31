@@ -29,6 +29,7 @@
   "processed_at": "2026-01-01T01:01:00Z",
   "ttc_schematron_issues": [
     {
+      "auto_mapped_value": null,
       "candidate": {
         "system": null,
         "value": "weed allergen mix 3",
