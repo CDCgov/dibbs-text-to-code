@@ -405,7 +405,9 @@ resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
+          "s3:GetObjectTagging",
           "s3:PutObject",
+          "s3:PutObjectTagging",
           "s3:DeleteObject"
         ]
         Resource = [
