@@ -91,7 +91,7 @@ def code_for_text(
 
     top_result, ranked_results = select_opensearch_candidate(text, hits)
 
-    if not ranked_results:
+    if not top_result or not ranked_results:
         logger.info("Reranker returned no results", status="no_match")
         return None
 
