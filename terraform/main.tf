@@ -859,8 +859,9 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
           sqs:
             queue_url: ${aws_sqs_queue.osis_trigger_queue.url}
             visibility_timeout: PT${var.osis_trigger_visibility_timeout}S
-            # Documents carry no explicit _id, so a redelivered object duplicates
-            # every document in it. Batch of 1 sidesteps data-prepper#4812.
+            # The sink's deterministic document_id makes redelivered objects
+            # idempotent; these settings still avoid the wasted re-reads.
+            # Batch of 1 sidesteps data-prepper#4812.
             visibility_duplication_protection: true
             maximum_messages: '1'
           aws:
@@ -884,6 +885,11 @@ resource "aws_osis_pipeline" "ttc_ingestion_pipeline" {
               sts_role_arn: ${aws_iam_role.os_ingestion_pipeline_role.arn}
             index_type: custom
             index: ${var.index_name}
+            # LOINC allows one name of each type per code, so this key is unique
+            # per document and stable across builds. A retried bulk or redelivered
+            # object overwrites the same _ids instead of duplicating documents
+            # (the default index action is an idempotent upsert).
+            document_id: '$${/loinc_code}|$${/loinc_name_type}'
             bulk_size: '5'
             flush_timeout: '300'
       

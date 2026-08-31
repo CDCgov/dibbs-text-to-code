@@ -144,7 +144,7 @@ curl -s -X GET "https://<opensearch-endpoint>/<index>/_count" \
 Completion criteria (both must hold):
 
 - Count is stable across `STABILITY_POLLS` consecutive polls (default 3 → 90 s).
-- Count ≥ `EXPECTED_DOC_COUNT`.
+- Count equals `EXPECTED_DOC_COUNT` exactly. The OSIS sink assigns each document a deterministic `_id` (`loinc_code|loinc_name_type`), so bulk retries and SQS redeliveries overwrite in place instead of duplicating.
 
 **Watch:**
 
@@ -154,7 +154,7 @@ Completion criteria (both must hold):
 - Trigger queue draining (one message per file synced in step 4): `aws sqs get-queue-attributes --queue-url <osis-trigger-queue-url> --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible`.
 
 **If the count stalls below expected:** check OSIS log group for parse errors; messages piling up untouched on the trigger queue instead mean the pipeline isn't consuming at all — check `aws osis get-pipeline`. Objects that fail three times land in `ttc-osis-trigger-queue-dlq` and raise the Slack DLQ alarm. To retry: fix the file in `reingestion/`, let the trigger queue empty so no in-flight retry lands in the fresh index, then re-run from step 3 — the index holds a partial load and has to be dropped again.
-**If the count exceeds expected:** indicates duplicate ingestion or a manifest mismatch. Pause and investigate before resuming TTC.
+**If the count exceeds expected:** the manifest count is wrong, or the staged files repeat a `(loinc_code, loinc_name_type)` pair with differing content — duplicates from retries are ruled out by the deterministic `_id`. Pause and investigate before resuming TTC.
 
 ### Step 6 — Resume TTC
 
