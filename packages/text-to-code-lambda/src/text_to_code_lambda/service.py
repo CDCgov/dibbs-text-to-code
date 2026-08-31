@@ -20,7 +20,7 @@ from shared_models import LOINC_NAME, LOINC_OID, Code, DataField
 from text_to_code.models import query as query_models
 from text_to_code.services.embedder import embed, embed_batch
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import rerank
+from text_to_code.services.reranker import select_opensearch_candidate
 
 logger = Logger(service="ttc-api", child=True)
 
@@ -89,15 +89,12 @@ def code_for_text(
         logger.info("OpenSearch returned no hits", status="no_match")
         return None
 
-    retrieve_scores = [float(hit.score) for hit in hits]
-    ranked_results = rerank(text, retrieve_scores, [hit.source.description for hit in hits])
+    top_result, ranked_results = select_opensearch_candidate(text, hits)
+
     if not ranked_results:
         logger.info("Reranker returned no results", status="no_match")
         return None
 
-    top_result = next(
-        hit for hit in hits if hit.source.description == ranked_results[0]["code_string"]
-    )
     return Code(
         code=top_result.source.loinc_code,
         code_system=LOINC_OID,

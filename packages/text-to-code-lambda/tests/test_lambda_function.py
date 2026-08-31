@@ -1043,7 +1043,7 @@ class TestHandler:
 
         mocker.patch(
             "text_to_code_lambda.lambda_function.select_opensearch_candidate",
-            return_value=(None, None),
+            return_value=(None, []),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
