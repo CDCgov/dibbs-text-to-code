@@ -24,16 +24,15 @@ from shared_models import (
 from text_to_code.models import Candidate, OpenSearchResultCacheSource
 from text_to_code.models import query as query_models
 from text_to_code.models.model_info import TTCModelInfo
-from text_to_code.models.registry import (
-    HIGH_RANK_THRESHOLD,
-    LEADER_MARGIN,
-    MINIMUM_HITS_TO_HIGH_RANK,
-)
 from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
 from text_to_code.services.query import QueryBuilder
-from text_to_code.services.reranker import RERANKER_MODEL_INFO, ScoredResult, rerank
+from text_to_code.services.reranker import (
+    RERANKER_MODEL_INFO,
+    ScoredResult,
+    select_opensearch_candidate,
+)
 from text_to_code.services.result_cache import get_cached_results, put_new_cached_result
 from text_to_code.services.utils import compute_cache_key
 
@@ -463,59 +462,11 @@ def _match_candidate(
     results_list = opensearch_retrieved_scores.hits.hits
 
     if results_list:
-        high_rank_results = [hit for hit in results_list if hit.score >= HIGH_RANK_THRESHOLD]
-        retrieved_loinc_names = [hit.source.description for hit in results_list]
-        retriever_scores = [hit.score for hit in results_list]
-
-        use_reranker_result = True
-        prune_before_ranking = True
-
-        # Case 1: We have a leading perfect score in the OpenSearch hits, which
-        # means the top candidate is a verbatim LOINC code string (either directly
-        # entered, or found via auto-map). In either case, no need to rerank.
-        # Ignore the ruff rule here because explicitly spelling out these cases
-        # improves logic readability.
-        if retriever_scores[0] >= 1.0:  # noqa: SIM114
-            use_reranker_result = False
-            top_result = results_list[0]
-
-        # Case 2: The highest scoring search result exceeds the "leader margin,"
-        # meaning the sum of its similarity score _plus_ the margin by which it
-        # exceeds the second highest scoring result is greater than the threshold
-        # required for auto-classification. As above, we will just use the result.
-        elif 2.0 * retriever_scores[0] - retriever_scores[1] >= LEADER_MARGIN:
-            use_reranker_result = False
-            top_result = results_list[0]
-
-        # Case 3: We have enough candidates with high retriever scores to perform
-        # high-threshold reranking, which performs reranking only on those
-        # candidates who pass the "high-rank" threshold. Note that in this case,
-        # we do not perform additional margin-based pruning.
-        elif len(high_rank_results) >= MINIMUM_HITS_TO_HIGH_RANK:
-            retrieved_loinc_names = [hit.source.description for hit in high_rank_results]
-            retriever_scores = [hit.score for hit in high_rank_results]
-            prune_before_ranking = False
-
-        # Case 4 (Default): In the absence of a perfect match, a leader candidate,
-        # or high-rank thresholding, we'll perform normal reranking using
-        # adaptive margin pruning.
-        ranked_results = rerank(
-            selected_candidate.value,
-            retriever_scores,
-            retrieved_loinc_names,
-            use_pruning=prune_before_ranking,
+        top_result, ranked_results = select_opensearch_candidate(
+            selected_candidate.value, results_list
         )
 
         if ranked_results:
-            if use_reranker_result:
-                top_result = next(
-                    (
-                        x
-                        for x in results_list
-                        if x.source.description == ranked_results[0]["code_string"]
-                    ),
-                )
-
             new_translation = Code(
                 code=top_result.source.loinc_code,
                 code_system=LOINC_OID,
@@ -533,7 +484,7 @@ def _match_candidate(
                 data_field=data_field,
                 loinc_code=new_translation,
                 search_score=top_result.score,
-                reranker_score=ranked_results[0]["score"],
+                reranker_score=top_result.score,
                 opensearch_retrieved_scores=opensearch_retrieved_scores,
                 reranker_processed_results=ranked_results,
                 cache_key=cache_key,

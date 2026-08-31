@@ -11,6 +11,7 @@ from .registry import (
     MAX_MARGIN,
     MIN_MARGIN,
     MINIMUM_HITS_TO_HIGH_RANK,
+    MINIMUM_HITS_WITHIN_MARGIN,
     TTC_RERANKER,
     TTC_RETRIEVER,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "LOW_SCORE",
     "MAX_MARGIN",
     "MINIMUM_HITS_TO_HIGH_RANK",
+    "MINIMUM_HITS_WITHIN_MARGIN",
     "MIN_MARGIN",
     "TTC_RERANKER",
     "TTC_RETRIEVER",

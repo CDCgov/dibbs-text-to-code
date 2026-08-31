@@ -50,3 +50,11 @@ MAX_MARGIN: float = float(os.getenv("MAX_MARGIN") or 0.1)
 LOW_SCORE: float = float(os.getenv("LOW_SCORE") or 0.7)
 # The high score for interpolating the margin.
 HIGH_SCORE: float = float(os.getenv("HIGH_SCORE") or 0.95)
+
+# The minimum number of search results to send to the reranker, if we can satisfy the condition.
+# In some cases, adaptive margin pruning (governed by the parameters above) can reduce
+# the number of eligible OpenSearch candidates to 1, which is just the top score. We determined
+# experimentally that reranker performance strongly improves when the reranker has at least one
+# other search result to compare against, even if a poor result. This parameter represents
+# a correction factor to add back in results if we prune too many.
+MINIMUM_HITS_WITHIN_MARGIN = 2

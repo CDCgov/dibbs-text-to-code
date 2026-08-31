@@ -605,8 +605,8 @@ class TestCandidateMatching:
         mocker.patch(
             "text_to_code.services.reranker._RERANKER.rank",
             return_value=[
-                {"corpus_id": 0, "score": 0.9},
-                {"corpus_id": 1, "score": 0.8},
+                {"corpus_id": 1, "score": 0.9},
+                {"corpus_id": 0, "score": 0.8},
                 {"corpus_id": 2, "score": 0.7},
             ],
         )
