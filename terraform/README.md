@@ -205,7 +205,7 @@ fields @timestamp, service, function_name, function_request_id, persistence_id, 
 An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_ingestion_pipeline`) that:
 
 - Ingests **on S3 event**, not on a schedule: writing an object under `s3://dibbs-text-to-code/ingestion/` starts a load within seconds
-- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index
+- Parses each line as a document and bulk-writes it into the `ttc-index` OpenSearch index under a deterministic `_id` (`loinc_code|loinc_name_type`, unique because LOINC allows one name of each type per code), so re-processing an object overwrites rather than duplicates
 - Uses its dedicated IAM role to read S3/SQS input and write documents to OpenSearch
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
@@ -219,7 +219,7 @@ The S3 source runs in `notification_type: sqs` mode against **`ttc-osis-trigger-
 Events reach the queue through **EventBridge** (`aws_cloudwatch_event_rule.osis_ingestion_s3_trigger`) rather than a direct bucket notification: `s3.tf` already spends the bucket's one allowed notification configuration on `eventbridge = true`, and this matches how `ttc-lambda-queue` and `ttc-augmentation-lambda-queue` are wired. Hence `notification_source: eventbridge` on the source — those messages differ in shape from raw S3 notifications.
 
 - **10-minute visibility timeout** (`osis_trigger_visibility_timeout`), on both the queue and the source. With `acknowledgments: true` a message is deleted only once OpenSearch confirms the write, so it has to outlast one object's full read-and-index time.
-- **`visibility_duplication_protection: true`, `maximum_messages: 1`.** Documents carry no explicit `_id`, so a redelivered object duplicates every document in it. Batch size 1 sidesteps [data-prepper#4812](https://github.com/opensearch-project/data-prepper/issues/4812) and costs nothing at `workers: 1`.
+- **`visibility_duplication_protection: true`, `maximum_messages: 1`.** The deterministic `_id` makes a redelivered object idempotent, but these settings still avoid the wasted re-read. Batch size 1 sidesteps [data-prepper#4812](https://github.com/opensearch-project/data-prepper/issues/4812) and costs nothing at `workers: 1`.
 - **`ttc-osis-trigger-queue-dlq`** takes events that fail three times, alarming to the same Slack channel as the Lambda DLQs.
 
 Only objects created **after** the pipeline starts polling are ingested — files already sitting in `ingestion/` are not (see [Prerequisites](#prerequisites)). The Terminology Updates workflow also writes here, so its deltas now land within minutes instead of waiting for the next scan.
