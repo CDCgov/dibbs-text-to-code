@@ -166,7 +166,7 @@ The script:
 1. Halts TTC (reserved concurrency → 0, event source mapping disabled) and waits for in-flight SQS messages to drain (cap 20 min).
 2. Drops and recreates both OpenSearch indices via `ttc-index-lambda` (`clear_index`, then `clear_result_cache`).
 3. Backs up `ingestion/` to `ingestion-backup-<ts>/`, empties it, and syncs `reingestion/` in — those S3 writes are what trigger OSIS ingestion.
-4. Polls the OpenSearch `_count` (cap 30 min) until the count has been stable for `--stability-polls` consecutive polls **and** is ≥ `--expected-count`; a count above expected fails the run.
+4. Polls the OpenSearch `_count` (cap 30 min) until the count has been stable for `--stability-polls` consecutive polls **and** equals `--expected-count`; a count above expected fails the run. The OSIS sink writes each document under a deterministic `_id` (`loinc_code|loinc_name_type`), so retries and redeliveries overwrite rather than duplicate and the count must land exactly.
 5. Resumes TTC, restoring the original concurrency setting. If the resume fails, it publishes to `TTC_ALERT_TOPIC_ARN` — TTC is left halted and needs the runbook's manual resume.
 6. Smoke tests: a fixed KNN query returns ≥ 1 hit, the input-queue backlog is draining, and DLQ depth is unchanged from the pre-run baseline.
 

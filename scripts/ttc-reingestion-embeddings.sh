@@ -209,7 +209,7 @@ while :; do
     if RESPONSE="$(os_request GET "/${TTC_OPENSEARCH_INDEX}/_count")" \
             && COUNT="$(jq -er '.count' <<<"$RESPONSE")"; then
         (( COUNT <= EXPECTED_COUNT )) \
-            || die "document count $COUNT exceeds expected $EXPECTED_COUNT — duplicate ingestion or manifest mismatch. TTC stays halted; investigate before resuming (runbook step 5)."
+            || die "document count $COUNT exceeds expected $EXPECTED_COUNT — manifest mismatch, or the sink's document_id key is not unique across the staged files. TTC stays halted; investigate before resuming (runbook step 5)."
         if (( COUNT == PREVIOUS_COUNT )); then
             STABLE=$(( STABLE + 1 ))
         else
@@ -217,7 +217,9 @@ while :; do
             PREVIOUS_COUNT=$COUNT
         fi
         log "  document count: $COUNT / $EXPECTED_COUNT (stable polls: $STABLE/$STABILITY_POLLS)"
-        (( STABLE >= STABILITY_POLLS && COUNT >= EXPECTED_COUNT )) && break
+        # OSIS writes are idempotent (deterministic _id), so anything short of
+        # an exact match after stabilizing means documents were dropped.
+        (( STABLE >= STABILITY_POLLS && COUNT == EXPECTED_COUNT )) && break
     else
         log "  count poll failed; retrying"
     fi

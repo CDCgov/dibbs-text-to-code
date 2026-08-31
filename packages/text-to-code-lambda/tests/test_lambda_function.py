@@ -94,6 +94,18 @@ class TestHandler:
         # means every cache key misses.
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
+        selected_result: OpenSearchHit = OpenSearchHit(
+            _index="ttc_index",
+            _id="rbLli5wBhppl0u9qtwLN",
+            _score=0.88,
+            _source=OpenSearchHitSource(
+                id=1,
+                loinc_code="82041-5",
+                loinc_name_type="Short Name",
+                description="Weed Allerg Mix3 IgE Qn",
+                loinc_type="Order",
+            ),
+        )
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7127664685249329},
             {
@@ -106,8 +118,8 @@ class TestHandler:
             },
         ]
         mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
-            return_value=ranked_results,
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(selected_result, ranked_results),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -567,9 +579,9 @@ class TestHandler:
         )
 
         retriever_embed_mock = mocker.patch.object(lambda_function, "embed_batch")
-        reranker_mock = mocker.patch.object(
+        select_opensearch_candidate_mock = mocker.patch.object(
             lambda_function,
-            "rerank",
+            "select_opensearch_candidate",
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -585,7 +597,7 @@ class TestHandler:
         )
 
         retriever_embed_mock.assert_not_called()
-        reranker_mock.assert_not_called()
+        select_opensearch_candidate_mock.assert_not_called()
         assert mock_opensearch.search.call_count == 0
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
@@ -634,9 +646,9 @@ class TestHandler:
             return_value=empty_opensearch_scores,
         )
 
-        reranker_mock = mocker.patch.object(
+        select_opensearch_candidate_mock = mocker.patch.object(
             lambda_function,
-            "rerank",
+            "select_opensearch_candidate",
             return_value=[],
         )
 
@@ -653,7 +665,7 @@ class TestHandler:
         )
 
         assert mock_opensearch.search.call_count == 0
-        assert reranker_mock.call_count == 0
+        assert select_opensearch_candidate_mock.call_count == 0
 
         ttc_output = _get_serialized_object(f"{TTC_OUTPUT_PREFIX}{mock_aws_setup.persistence_id}")
         snapshot.assert_match(ttc_output, "no_opensearch_hits_ttc_output.json")
@@ -729,10 +741,25 @@ class TestHandler:
         embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
         embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
 
+        selected_result: OpenSearchHit = OpenSearchHit(
+            _index="ttc_index",
+            _id="rbLli5wBhppl0u9qtwLN",
+            _score=0.88,
+            _source=OpenSearchHitSource(
+                id=1,
+                loinc_code="82041-5",
+                loinc_name_type="Short Name",
+                description="Weed Allerg Mix3 IgE Qn",
+                loinc_type="Order",
+            ),
+        )
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
         ]
-        mocker.patch("text_to_code_lambda.lambda_function.rerank", return_value=ranked_results)
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(selected_result, ranked_results),
+        )
         put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
         metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
         save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
@@ -812,11 +839,24 @@ class TestHandler:
         embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
         embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
 
+        selected_result: OpenSearchHit = OpenSearchHit(
+            _index="ttc_index",
+            _id="rbLli5wBhppl0u9qtwLN",
+            _score=0.88,
+            _source=OpenSearchHitSource(
+                id=1,
+                loinc_code="82041-5",
+                loinc_name_type="Short Name",
+                description="Weed Allerg Mix3 IgE Qn",
+                loinc_type="Order",
+            ),
+        )
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
         ]
         rerank_mock = mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank", return_value=ranked_results
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(selected_result, ranked_results),
         )
         put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
         metric_mock = mocker.patch("text_to_code_lambda.lambda_function._record_cache_metric")
@@ -1002,8 +1042,8 @@ class TestHandler:
         mocker.patch("text_to_code_lambda.lambda_function.get_cached_results", return_value={})
 
         mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
-            return_value=[],
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(None, []),
         )
 
         resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
@@ -1335,12 +1375,24 @@ class TestAutoMapping:
         embed_batch_mock = mocker.patch.object(lambda_function, "embed_batch")
         embed_batch_mock.return_value = [mocker.MagicMock(tolist=lambda: [0.1, 0.2])]
 
+        selected_result: OpenSearchHit = OpenSearchHit(
+            _index="ttc_index",
+            _id="rbLli5wBhppl0u9qtwLN",
+            _score=0.88,
+            _source=OpenSearchHitSource(
+                id=1,
+                loinc_code="82041-5",
+                loinc_name_type="Short Name",
+                description="Weed Allerg Mix3 IgE Qn",
+                loinc_type="Order",
+            ),
+        )
         ranked_results: list[ScoredResult] = [
             {"code_string": "Weed Allerg Mix3 IgE Qn", "score": 0.7}
         ]
         rerank_mock = mocker.patch(
-            "text_to_code_lambda.lambda_function.rerank",
-            return_value=ranked_results,
+            "text_to_code_lambda.lambda_function.select_opensearch_candidate",
+            return_value=(selected_result, ranked_results),
         )
         put_cached_mock = mocker.patch("text_to_code_lambda.lambda_function.put_new_cached_result")
         save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
