@@ -1,38 +1,38 @@
-name: "Scan GHCR Images for Vulnerabilities"
+name: 'Scan GHCR Images for Vulnerabilities'
 
 on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Image tag to scan (e.g., latest, main, 1.0.0)"
+        description: 'Image tag to scan (e.g., latest, main, 1.0.0)'
         required: false
-        default: "latest"
+        default: 'latest'
       severity_level:
-        description: "Vulnerability severity threshold"
+        description: 'Vulnerability severity threshold'
         required: false
-        default: "CRITICAL,HIGH,MEDIUM,LOW"
+        default: 'CRITICAL,HIGH,MEDIUM,LOW'
         type: choice
         options:
-          - "CRITICAL,HIGH,MEDIUM,LOW"
-          - "CRITICAL,HIGH,MEDIUM"
-          - "CRITICAL,HIGH"
-          - "CRITICAL"
+          - 'CRITICAL,HIGH,MEDIUM,LOW'
+          - 'CRITICAL,HIGH,MEDIUM'
+          - 'CRITICAL,HIGH'
+          - 'CRITICAL'
       send_slack_notification:
-        description: "Send Slack notification"
+        description: 'Send Slack notification'
         required: false
         default: false
         type: boolean
   schedule:
     # Run once daily at 2 PM UTC
-    - cron: "0 14 * * *"
+    - cron: '0 14 * * *'
 
 permissions:
   contents: read
   security-events: write
 
 env:
-  DEFAULT_SEVERITY: "CRITICAL,HIGH,MEDIUM,LOW"
-  DEFAULT_TAG: "latest"
+  DEFAULT_SEVERITY: 'CRITICAL,HIGH,MEDIUM,LOW'
+  DEFAULT_TAG: 'latest'
 
 jobs:
   scan-images:
@@ -83,35 +83,35 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.check.outputs.image }}
-          format: "sarif"
-          output: "trivy-${{ matrix.image }}-results.sarif"
+          format: 'sarif'
+          output: 'trivy-${{ matrix.image }}-results.sarif'
           severity: ${{ steps.params.outputs.severity }}
           ignore-unfixed: true
-          timeout: "10m"
+          timeout: '10m'
 
       - name: Run Trivy vulnerability scanner (JSON)
         if: steps.check.outputs.exists == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.check.outputs.image }}
-          format: "json"
-          output: "trivy-${{ matrix.image }}-results.json"
+          format: 'json'
+          output: 'trivy-${{ matrix.image }}-results.json'
           severity: ${{ steps.params.outputs.severity }}
           ignore-unfixed: true
-          timeout: "10m"
+          timeout: '10m'
 
       - name: Display Trivy results as table
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.check.outputs.image }}
-          format: "table"
+          format: 'table'
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: steps.check.outputs.exists == 'true'
         uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
-          sarif_file: "trivy-${{ matrix.image }}-results.sarif"
-          category: "vulnerability-scan-${{ matrix.image }}"
+          sarif_file: 'trivy-${{ matrix.image }}-results.sarif'
+          category: 'vulnerability-scan-${{ matrix.image }}'
 
       - name: Upload JSON results as artifact
         if: steps.check.outputs.exists == 'true'
