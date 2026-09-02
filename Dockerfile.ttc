@@ -13,6 +13,8 @@ RUN microdnf update -y --releasever=latest \
   && microdnf clean all \
   && rm -f /usr/local/bin/aws-lambda-rie
 
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.0"
+
 # Heavy, rarely-changing layers first so they stay cached across source changes.
 # Install CPU-only PyTorch before any workspace package — a transitive pin
 # could otherwise pull the full CUDA wheel before our override lands.

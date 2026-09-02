@@ -19,6 +19,7 @@ RUN mkdir -p "${LAMBDA_TASK_ROOT}/src/index_lambda"
 RUN microdnf update -y --releasever=latest \
     && microdnf clean all \
     && rm -f /usr/local/bin/aws-lambda-rie
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.0"
 
 # Copy over just the pyproject.toml file and install the dependencies doing this
 # before copying the rest of the code allows for caching of the dependencies
