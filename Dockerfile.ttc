@@ -57,6 +57,7 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda" \
   && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
 # Clean up package source copies
+RUN python -m pip uninstall -y pip
 RUN rm -rf ${LAMBDA_TASK_ROOT}/shared-models ${LAMBDA_TASK_ROOT}/utils ${LAMBDA_TASK_ROOT}/lambda-handler ${LAMBDA_TASK_ROOT}/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 
 ENV RETRIEVER_MODEL_PATH="/opt/retriever_model"
