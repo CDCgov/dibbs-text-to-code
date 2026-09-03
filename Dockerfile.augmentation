@@ -43,6 +43,7 @@ RUN python -c "from validation import validate_eicr; validate_eicr('<ClinicalDoc
 COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda" \
     && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
+RUN python -m pip uninstall -y pip
 
 # Copy over the rest of the code
 COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/src

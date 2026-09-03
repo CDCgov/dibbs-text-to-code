@@ -36,6 +36,8 @@ COPY ./packages/index-lambda ${LAMBDA_TASK_ROOT}/index-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/index-lambda" \
     && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
 
+RUN python -m pip uninstall -y pip
+
 # Copy over the rest of the code
 COPY ./packages/index-lambda/src ${LAMBDA_TASK_ROOT}/src
 COPY README.md ${LAMBDA_TASK_ROOT}/README.md
