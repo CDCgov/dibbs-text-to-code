@@ -3,6 +3,7 @@
 **System:** DIBBs Text-to-Code (TTC) Lambda — `ttc-lambda` ECR image
 **Date submitted:** 2026-05-21
 **Requested review-by date:** 2026-06-20 (30-day HIGH remediation window)
+**Status (2026-09-15):** Closed. AWS Inspector no longer reports any of the three CVEs below on the current `ttc-lambda` images (`torch` moved to 2.12.x and the other packages were bumped through routine dependency updates). Kept for reference and as a template for future exception requests. See `docs/runbooks/image-vulnerability-scan.md` for how scan findings are handled today.
 
 ## Summary
 

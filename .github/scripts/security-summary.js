@@ -137,7 +137,12 @@ function formatGitHubComment(scanResults, repoOwner, repoName) {
 /**
  * Format results as Slack message for scheduled scans
  */
-function formatSlackMessage(scanResults, repoUrl, branch = 'main') {
+function formatSlackMessage(
+  scanResults,
+  repoUrl,
+  branch = 'main',
+  rebuildDispatched = false
+) {
   const {
     totalCritical,
     totalHigh,
@@ -221,6 +226,17 @@ function formatSlackMessage(scanResults, repoUrl, branch = 'main') {
     });
   }
 
+  // Note when the scan kicked off an automatic no-cache rebuild
+  if (rebuildDispatched) {
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '🔄 Fixable findings detected, a no-cache image rebuild was dispatched. The rebuilt images are rescanned automatically; a follow-up message means findings remain.',
+      },
+    });
+  }
+
   // Add link to GitHub Security tab
   blocks.push({
     type: 'section',
@@ -243,8 +259,19 @@ function formatSlackMessage(scanResults, repoUrl, branch = 'main') {
 /**
  * Send notification to Slack
  */
-async function sendSlackNotification(scanResults, repoUrl, branch, webhookUrl) {
-  const payload = formatSlackMessage(scanResults, repoUrl, branch);
+async function sendSlackNotification(
+  scanResults,
+  repoUrl,
+  branch,
+  webhookUrl,
+  rebuildDispatched = false
+) {
+  const payload = formatSlackMessage(
+    scanResults,
+    repoUrl,
+    branch,
+    rebuildDispatched
+  );
 
   const response = await fetch(webhookUrl, {
     method: 'POST',
@@ -350,8 +377,16 @@ async function generateScheduledSummary(github, context, core) {
     try {
       const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
       const branch = context.ref.replace('refs/heads/', '');
+      // Set by the auto-rebuild job in scan.yml when it dispatched a rebuild.
+      const rebuildDispatched = process.env.REBUILD_DISPATCHED === 'true';
 
-      await sendSlackNotification(scanResults, repoUrl, branch, slackWebhook);
+      await sendSlackNotification(
+        scanResults,
+        repoUrl,
+        branch,
+        slackWebhook,
+        rebuildDispatched
+      );
     } catch (error) {
       console.error('Failed to send Slack notification:', error);
       core.setFailed(`Slack notification failed: ${error.message}`);
