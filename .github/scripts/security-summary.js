@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require('fs');
 
 /**
  * Parse Trivy scan results and count vulnerabilities
@@ -13,7 +13,7 @@ function parseScanResults(images) {
   for (const image of images) {
     try {
       const results = JSON.parse(
-        fs.readFileSync(`trivy-${image}-results.json`, "utf8"),
+        fs.readFileSync(`trivy-${image}-results.json`, 'utf8')
       );
 
       let imageCritical = 0,
@@ -26,16 +26,16 @@ function parseScanResults(images) {
           if (result.Vulnerabilities) {
             for (const vuln of result.Vulnerabilities) {
               switch (vuln.Severity) {
-                case "CRITICAL":
+                case 'CRITICAL':
                   imageCritical++;
                   break;
-                case "HIGH":
+                case 'HIGH':
                   imageHigh++;
                   break;
-                case "MEDIUM":
+                case 'MEDIUM':
                   imageMedium++;
                   break;
-                case "LOW":
+                case 'LOW':
                   imageLow++;
                   break;
               }
@@ -128,8 +128,8 @@ function formatGitHubComment(scanResults, repoOwner, repoName) {
   message += `**View detailed results**: [Security tab](https://github.com/${repoOwner}/${repoName}/security/code-scanning)\n`;
   message += `*Last updated: ${new Date()
     .toISOString()
-    .replace("T", " ")
-    .replace(/\.\d{3}Z$/, " UTC")}*`;
+    .replace('T', ' ')
+    .replace(/\.\d{3}Z$/, ' UTC')}*`;
 
   return message;
 }
@@ -137,7 +137,12 @@ function formatGitHubComment(scanResults, repoOwner, repoName) {
 /**
  * Format results as Slack message for scheduled scans
  */
-function formatSlackMessage(scanResults, repoUrl, branch = "main") {
+function formatSlackMessage(
+  scanResults,
+  repoUrl,
+  branch = 'main',
+  rebuildDispatched = false
+) {
   const {
     totalCritical,
     totalHigh,
@@ -147,56 +152,56 @@ function formatSlackMessage(scanResults, repoUrl, branch = "main") {
     imageResults,
   } = scanResults;
 
-  let color = "good"; // green
-  let emoji = "✅";
-  let statusText = "No vulnerabilities found";
+  let color = 'good'; // green
+  let emoji = '✅';
+  let statusText = 'No vulnerabilities found';
 
   if (totalCritical > 0) {
-    color = "danger"; // red
-    emoji = "🔴";
+    color = 'danger'; // red
+    emoji = '🔴';
     statusText = `${totalCritical} Critical vulnerabilities detected!`;
   } else if (totalHigh > 0) {
-    color = "warning"; // yellow
-    emoji = "🟠";
+    color = 'warning'; // yellow
+    emoji = '🟠';
     statusText = `${totalHigh} High vulnerabilities detected`;
   } else if (totalVulns > 0) {
-    color = "#808080"; // gray
-    emoji = "ℹ️";
+    color = '#808080'; // gray
+    emoji = 'ℹ️';
     statusText = `${totalVulns} Medium/Low vulnerabilities`;
   }
 
   const blocks = [
     {
-      type: "header",
+      type: 'header',
       text: {
-        type: "plain_text",
+        type: 'plain_text',
         text: `${emoji} Security Scan: ${branch}`,
       },
     },
     {
-      type: "section",
+      type: 'section',
       text: {
-        type: "mrkdwn",
+        type: 'mrkdwn',
         text: `*${statusText}*`,
       },
     },
     {
-      type: "section",
+      type: 'section',
       fields: [
         {
-          type: "mrkdwn",
+          type: 'mrkdwn',
           text: `🔴 *Critical:* ${totalCritical}`,
         },
         {
-          type: "mrkdwn",
+          type: 'mrkdwn',
           text: `🟠 *High:* ${totalHigh}`,
         },
         {
-          type: "mrkdwn",
+          type: 'mrkdwn',
           text: `🟡 *Medium:* ${totalMedium}`,
         },
         {
-          type: "mrkdwn",
+          type: 'mrkdwn',
           text: `⚪ *Low:* ${totalLow}`,
         },
       ],
@@ -207,25 +212,36 @@ function formatSlackMessage(scanResults, repoUrl, branch = "main") {
   const imageFields = imageResults
     .filter((r) => !r.error)
     .map((r) => {
-      const icon = r.total === 0 ? "✅" : "⚠️";
+      const icon = r.total === 0 ? '✅' : '⚠️';
       return {
-        type: "mrkdwn",
+        type: 'mrkdwn',
         text: `${icon} *${r.name}:* ${r.critical}C / ${r.high}H / ${r.medium}M / ${r.low}L`,
       };
     });
 
   if (imageFields.length > 0) {
     blocks.push({
-      type: "section",
+      type: 'section',
       fields: imageFields,
+    });
+  }
+
+  // Note when the scan kicked off an automatic no-cache rebuild
+  if (rebuildDispatched) {
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '🔄 Fixable findings detected, a no-cache image rebuild was dispatched. The rebuilt images are rescanned automatically; a follow-up message means findings remain.',
+      },
     });
   }
 
   // Add link to GitHub Security tab
   blocks.push({
-    type: "section",
+    type: 'section',
     text: {
-      type: "mrkdwn",
+      type: 'mrkdwn',
       text: `<${repoUrl}/security/code-scanning|View detailed results in GitHub Security tab>`,
     },
   });
@@ -243,20 +259,31 @@ function formatSlackMessage(scanResults, repoUrl, branch = "main") {
 /**
  * Send notification to Slack
  */
-async function sendSlackNotification(scanResults, repoUrl, branch, webhookUrl) {
-  const payload = formatSlackMessage(scanResults, repoUrl, branch);
+async function sendSlackNotification(
+  scanResults,
+  repoUrl,
+  branch,
+  webhookUrl,
+  rebuildDispatched = false
+) {
+  const payload = formatSlackMessage(
+    scanResults,
+    repoUrl,
+    branch,
+    rebuildDispatched
+  );
 
   const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    console.error("Failed to send Slack notification:", await response.text());
+    console.error('Failed to send Slack notification:', await response.text());
     throw new Error(`Slack notification failed: ${response.status}`);
   } else {
-    console.log("Slack notification sent successfully");
+    console.log('Slack notification sent successfully');
   }
 }
 
@@ -267,14 +294,14 @@ async function postGitHubComment(scanResults, github, context) {
   const prNumber = context.payload.pull_request?.number;
 
   if (!prNumber) {
-    console.log("Not a PR, skipping GitHub comment");
+    console.log('Not a PR, skipping GitHub comment');
     return;
   }
 
   const message = formatGitHubComment(
     scanResults,
     context.repo.owner,
-    context.repo.repo,
+    context.repo.repo
   );
 
   const comments = await github.rest.issues.listComments({
@@ -285,8 +312,8 @@ async function postGitHubComment(scanResults, github, context) {
 
   const botComment = comments.data.find(
     (comment) =>
-      comment.user.login === "github-actions[bot]" &&
-      comment.body.includes("Security Scan Results"),
+      comment.user.login === 'github-actions[bot]' &&
+      comment.body.includes('Security Scan Results')
   );
 
   if (botComment) {
@@ -296,7 +323,7 @@ async function postGitHubComment(scanResults, github, context) {
       repo: context.repo.repo,
       body: message,
     });
-    console.log("Updated existing security scan comment");
+    console.log('Updated existing security scan comment');
   } else {
     await github.rest.issues.createComment({
       issue_number: prNumber,
@@ -304,7 +331,7 @@ async function postGitHubComment(scanResults, github, context) {
       repo: context.repo.repo,
       body: message,
     });
-    console.log("Created new security scan comment");
+    console.log('Created new security scan comment');
   }
 }
 
@@ -312,7 +339,7 @@ async function postGitHubComment(scanResults, github, context) {
  * For PR scans - posts comment to PR
  */
 async function generatePRSummary(github, context, core) {
-  const images = ["index", "ttc", "augmentation"];
+  const images = ['index', 'ttc', 'augmentation'];
 
   // Parse all scan results
   const scanResults = parseScanResults(images);
@@ -320,7 +347,7 @@ async function generatePRSummary(github, context, core) {
   // Warn if critical or high vulnerabilities found
   if (scanResults.totalCritical > 0 || scanResults.totalHigh > 0) {
     core.warning(
-      `Found ${scanResults.totalCritical} critical and ${scanResults.totalHigh} high severity vulnerabilities`,
+      `Found ${scanResults.totalCritical} critical and ${scanResults.totalHigh} high severity vulnerabilities`
     );
   }
 
@@ -332,7 +359,7 @@ async function generatePRSummary(github, context, core) {
  * For scheduled scans - sends Slack notification
  */
 async function generateScheduledSummary(github, context, core) {
-  const images = ["index", "ttc", "augmentation"];
+  const images = ['index', 'ttc', 'augmentation'];
 
   // Parse all scan results
   const scanResults = parseScanResults(images);
@@ -340,7 +367,7 @@ async function generateScheduledSummary(github, context, core) {
   // Warn if critical or high vulnerabilities found
   if (scanResults.totalCritical > 0 || scanResults.totalHigh > 0) {
     core.warning(
-      `Found ${scanResults.totalCritical} critical and ${scanResults.totalHigh} high severity vulnerabilities`,
+      `Found ${scanResults.totalCritical} critical and ${scanResults.totalHigh} high severity vulnerabilities`
     );
   }
 
@@ -349,15 +376,23 @@ async function generateScheduledSummary(github, context, core) {
   if (slackWebhook) {
     try {
       const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
-      const branch = context.ref.replace("refs/heads/", "");
+      const branch = context.ref.replace('refs/heads/', '');
+      // Set by the auto-rebuild job in scan.yml when it dispatched a rebuild.
+      const rebuildDispatched = process.env.REBUILD_DISPATCHED === 'true';
 
-      await sendSlackNotification(scanResults, repoUrl, branch, slackWebhook);
+      await sendSlackNotification(
+        scanResults,
+        repoUrl,
+        branch,
+        slackWebhook,
+        rebuildDispatched
+      );
     } catch (error) {
-      console.error("Failed to send Slack notification:", error);
+      console.error('Failed to send Slack notification:', error);
       core.setFailed(`Slack notification failed: ${error.message}`);
     }
   } else {
-    console.log("SLACK_WEBHOOK_URL not configured, skipping notification");
+    console.log('SLACK_WEBHOOK_URL not configured, skipping notification');
   }
 }
 

@@ -6,8 +6,12 @@ on:
 
   schedule:
     # Weekly rebuild so AWS-published base-image patches land without
-    # waiting for a code change. Mondays 10:00 UTC (6 AM ET / 3 AM PT).
-    - cron: '0 10 * * 1'
+    # waiting for a code change. Tuesdays 10:00 UTC (6 AM ET / 3 AM PT):
+    # Amazon Linux advisories tend to publish Monday afternoon UTC, so a
+    # Monday-morning rebuild missed them by a few hours more than once.
+    # The daily scan (scan.yml) also dispatches this workflow on demand when
+    # it finds fixable CRITICAL/HIGH findings.
+    - cron: '0 10 * * 2'
 
   workflow_dispatch:
     inputs:
