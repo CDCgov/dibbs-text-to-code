@@ -9,6 +9,10 @@ updates:
       interval: 'weekly'
       day: 'wednesday'
       time: '12:00'
+    groups:
+      github-codeql-actions:
+        patterns:
+          - 'github/codeql-action*'
   - package-ecosystem: 'uv'
     directory: '/'
     open-pull-requests-limit: 2
