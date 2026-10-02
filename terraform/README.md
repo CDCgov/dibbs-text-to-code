@@ -273,6 +273,30 @@ Terraform state is stored remotely in **AWS S3** with DynamoDB locking:
 
 The backend resources are created by the bootstrap configuration in `bootstrap/`.
 
+### Running a second stack in the same account
+
+Account-unique names that are not set by their own variable (IAM roles, ECR repositories, security groups, SNS/SQS names, CloudFront functions and origin access controls) are built from `name_prefix` (default `ttc`). To stand up a second copy of the stack alongside the main one, give it its own state key and override the prefix along with the other name variables, for example:
+
+```sh
+terraform init -reconfigure -backend-config=key=ttc2/terraform.tfstate
+terraform plan \
+  -var name_prefix=ttc2 \
+  -var opensearch_domain_name=ttc2-os-domain \
+  -var lambda_function_name=ttc2-lambda \
+  -var index_lambda_function_name=ttc2-index-lambda \
+  -var augmentation_lambda_function_name=ttc2-augmentation-lambda \
+  -var api_lambda_function_name=ttc2-api-lambda \
+  -var ingestion_pipeline_name=ttc2-ingestion-pipeline \
+  -var osis_trigger_queue_name=ttc2-osis-trigger-queue \
+  -var s3_bucket=dibbs-ttc2-data \
+  -var demo_frontend_bucket_name=dibbs-ttc2-demo-frontend
+```
+
+Two resources cannot be shared between stacks:
+
+- **Slack channel configuration**: `configuration_name` must be unique in the account, so a second stack needs a different name or the resource removed.
+- **Demo domain**: only one CloudFront distribution can hold `ttc.dibbs.tools`, and CloudFront refuses the alias while the `ttc` record in Azure DNS still points at another distribution. Moving the domain between stacks means removing the old distribution, deleting the `ttc` CNAME, creating the new distribution, then recreating the CNAME.
+
 ## Local Terraform Commands
 
 The repository's root `justfile` exposes Terraform through a generic wrapper that runs commands with `terraform/` as the working directory:
