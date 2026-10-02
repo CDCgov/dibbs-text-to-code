@@ -11,9 +11,9 @@
 
 # API Lambda Role
 resource "aws_iam_role" "ttc_api_lambda_role" {
-  name               = "ttc-api-lambda-role"
+  name               = "${var.name_prefix}-api-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = { Name = "ttc-api-lambda-role" }
+  tags               = { Name = "${var.name_prefix}-api-lambda-role" }
 }
 
 resource "aws_iam_role_policy_attachment" "api_cloudwatch_logs" {
@@ -22,7 +22,7 @@ resource "aws_iam_role_policy_attachment" "api_cloudwatch_logs" {
 }
 
 resource "aws_iam_role_policy" "api_lambda_opensearch_policy" {
-  name = "ttc-api-lambda-opensearch-inline-policy"
+  name = "${var.name_prefix}-api-lambda-opensearch-inline-policy"
   role = aws_iam_role.ttc_api_lambda_role.id
 
   policy = jsonencode({
@@ -103,7 +103,7 @@ resource "aws_lambda_permission" "cloudfront_invoke_api_function" {
 # hot), so interactive requests respond in seconds.
 #############
 resource "aws_cloudwatch_event_rule" "api_lambda_warmer" {
-  name                = "ttc-api-lambda-warmer"
+  name                = "${var.name_prefix}-api-lambda-warmer"
   description         = "Keeps the demo API lambda warm so requests fit CloudFront's 60s origin timeout"
   schedule_expression = "rate(4 minutes)"
 }
@@ -204,7 +204,7 @@ resource "aws_acm_certificate" "demo" {
     create_before_destroy = true
   }
 
-  tags = { Name = "ttc-demo-cert" }
+  tags = { Name = "${var.name_prefix}-demo-cert" }
 }
 
 resource "aws_acm_certificate_validation" "demo" {
@@ -231,7 +231,7 @@ locals {
 }
 
 resource "aws_cloudfront_function" "demo_basic_auth" {
-  name    = "ttc-demo-basic-auth"
+  name    = "${var.name_prefix}-demo-basic-auth"
   runtime = "cloudfront-js-2.0"
   comment = "Basic auth gate for the TTC demo distribution"
   publish = true
@@ -257,7 +257,7 @@ resource "aws_cloudfront_function" "demo_basic_auth" {
 }
 
 resource "aws_cloudfront_origin_access_control" "demo_s3" {
-  name                              = "ttc-demo-s3-oac"
+  name                              = "${var.name_prefix}-demo-s3-oac"
   description                       = "OAC for the demo frontend bucket"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -265,7 +265,7 @@ resource "aws_cloudfront_origin_access_control" "demo_s3" {
 }
 
 resource "aws_cloudfront_origin_access_control" "demo_lambda" {
-  name                              = "ttc-demo-lambda-oac"
+  name                              = "${var.name_prefix}-demo-lambda-oac"
   description                       = "OAC for the demo API lambda Function URL"
   origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"

@@ -36,7 +36,7 @@ locals {
 # ECR Repository
 #############
 resource "aws_ecr_repository" "ttc_lambda" {
-  name         = "ttc-lambda"
+  name         = "${var.name_prefix}-lambda"
   force_delete = true
 
   image_scanning_configuration {
@@ -47,7 +47,7 @@ resource "aws_ecr_repository" "ttc_lambda" {
 }
 
 resource "aws_ecr_repository" "index_lambda" {
-  name         = "ttc-index-lambda"
+  name         = "${var.name_prefix}-index-lambda"
   force_delete = true
 
   image_scanning_configuration {
@@ -58,7 +58,7 @@ resource "aws_ecr_repository" "index_lambda" {
 }
 
 resource "aws_ecr_repository" "augmentation_lambda" {
-  name         = "ttc-augmentation-lambda"
+  name         = "${var.name_prefix}-augmentation-lambda"
   force_delete = true
 
   image_scanning_configuration {
@@ -99,7 +99,7 @@ resource "aws_vpc_endpoint" "s3_endpoint" {
   route_table_ids = module.vpc.private_route_table_ids
 
   tags = {
-    Name = "ttc-s3-endpoint"
+    Name = "${var.name_prefix}-s3-endpoint"
   }
 }
 
@@ -114,12 +114,12 @@ resource "aws_vpc_security_group_egress_rule" "lambda_all_egress" {
 }
 
 resource "aws_security_group" "lambda_sg" {
-  name        = "ttc-lambda-sg"
+  name        = "${var.name_prefix}-lambda-sg"
   description = "Security group for TTC Lambda function"
   vpc_id      = module.vpc.vpc_id
 
   tags = {
-    Name = "ttc-lambda-sg"
+    Name = "${var.name_prefix}-lambda-sg"
   }
 }
 
@@ -143,11 +143,11 @@ resource "aws_vpc_security_group_ingress_rule" "opensearch_https_from_lambda" {
 
 
 resource "aws_security_group" "opensearch_sg" {
-  name        = "ttc-opensearch-sg"
+  name        = "${var.name_prefix}-opensearch-sg"
   description = "Security group for TTC OpenSearch domain to allow HTTPS access from Lambda"
   vpc_id      = module.vpc.vpc_id
 
-  tags = { Name = "ttc-opensearch-sg" }
+  tags = { Name = "${var.name_prefix}-opensearch-sg" }
 
 }
 
@@ -347,14 +347,14 @@ data "aws_iam_policy_document" "ttc_reingestion_github_assume_role" {
 }
 
 resource "aws_iam_role" "ttc_reingestion_ci_role" {
-  name                 = "ttc-reingestion-ci-role"
+  name                 = "${var.name_prefix}-reingestion-ci-role"
   assume_role_policy   = data.aws_iam_policy_document.ttc_reingestion_github_assume_role.json
   max_session_duration = 7200
   tags                 = local.tags
 }
 
 resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
-  name = "ttc-reingestion-ci-inline-policy"
+  name = "${var.name_prefix}-reingestion-ci-inline-policy"
   role = aws_iam_role.ttc_reingestion_ci_role.id
 
   policy = jsonencode({
@@ -459,9 +459,9 @@ resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
 
 # TTC Lambda Role
 resource "aws_iam_role" "ttc_lambda_role" {
-  name               = "ttc-lambda-role"
+  name               = "${var.name_prefix}-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = { Name = "ttc-lambda-role" }
+  tags               = { Name = "${var.name_prefix}-lambda-role" }
 }
 
 resource "aws_iam_role_policy_attachment" "ttc_vpc_access" {
@@ -475,7 +475,7 @@ resource "aws_iam_role_policy_attachment" "ttc_cloudwatch_logs" {
 }
 
 resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
-  name = "ttc-lambda-s3-inline-policy"
+  name = "${var.name_prefix}-lambda-s3-inline-policy"
   role = aws_iam_role.ttc_lambda_role.id
 
   policy = jsonencode({
@@ -504,7 +504,7 @@ resource "aws_iam_role_policy" "ttc_lambda_s3_policy" {
 }
 
 resource "aws_iam_role_policy" "ttc_lambda_opensearch_policy" {
-  name = "ttc-lambda-opensearch-inline-policy"
+  name = "${var.name_prefix}-lambda-opensearch-inline-policy"
   role = aws_iam_role.ttc_lambda_role.id
 
   policy = jsonencode({
@@ -521,9 +521,9 @@ resource "aws_iam_role_policy" "ttc_lambda_opensearch_policy" {
 
 # Index Lambda Role
 resource "aws_iam_role" "index_lambda_role" {
-  name               = "ttc-index-lambda-role"
+  name               = "${var.name_prefix}-index-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = { Name = "ttc-index-lambda-role" }
+  tags               = { Name = "${var.name_prefix}-index-lambda-role" }
 }
 
 resource "aws_iam_role_policy_attachment" "index_vpc_access" {
@@ -554,9 +554,9 @@ resource "aws_iam_role_policy" "index_lambda_opensearch_policy" {
 
 # Augmentation Lambda Role
 resource "aws_iam_role" "augmentation_lambda_role" {
-  name               = "ttc-augmentation-lambda-role"
+  name               = "${var.name_prefix}-augmentation-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = { Name = "ttc-augmentation-lambda-role" }
+  tags               = { Name = "${var.name_prefix}-augmentation-lambda-role" }
 }
 
 resource "aws_iam_role_policy_attachment" "augmentation_vpc_access" {
@@ -640,7 +640,7 @@ resource "aws_lambda_function" "lambda" {
 
 # IAM Role for OpenSearch Ingestion Pipeline
 resource "aws_iam_role" "os_ingestion_pipeline_role" {
-  name = "ttc-os-ingestion-pipeline-role"
+  name = "${var.name_prefix}-os-ingestion-pipeline-role"
 
   # Trust policy for pipeline service
   assume_role_policy = jsonencode(
@@ -661,7 +661,7 @@ resource "aws_iam_role" "os_ingestion_pipeline_role" {
 }
 
 resource "aws_iam_role_policy" "os_ingestion_pipeline_policy" {
-  name = "ttc-os-ingestion-pipeline-inline-policy"
+  name = "${var.name_prefix}-os-ingestion-pipeline-inline-policy"
   role = aws_iam_role.os_ingestion_pipeline_role.id
   policy = jsonencode(
     {
@@ -979,13 +979,13 @@ resource "aws_lambda_function" "augmentation_lambda" {
 }
 
 resource "aws_sns_topic" "dlq_alarm_notifications" {
-  name = "ttc-dlq-alarm-notifications"
+  name = "${var.name_prefix}-dlq-alarm-notifications"
 
   tags = local.tags
 }
 
 resource "aws_sqs_queue" "dlq_alarm_notifications_queue" {
-  name                      = "ttc-dlq-alarm-notifications-queue"
+  name                      = "${var.name_prefix}-dlq-alarm-notifications-queue"
   message_retention_seconds = 1209600
 
   tags = local.tags
@@ -1030,7 +1030,7 @@ data "aws_iam_policy_document" "dlq_alarm_chatbot_assume_role" {
 }
 
 resource "aws_iam_role" "dlq_alarm_chatbot_role" {
-  name               = "ttc-dlq-alarm-chatbot-role"
+  name               = "${var.name_prefix}-dlq-alarm-chatbot-role"
   assume_role_policy = data.aws_iam_policy_document.dlq_alarm_chatbot_assume_role.json
 
   tags = local.tags
@@ -1042,7 +1042,7 @@ resource "aws_iam_role_policy_attachment" "dlq_alarm_chatbot_cloudwatch_read_onl
 }
 
 resource "aws_chatbot_slack_channel_configuration" "dlq_alarm_slack" {
-  configuration_name    = "proj-cdc-dibbs-text-to-code-engineering"
+  configuration_name    = "proj-cdc-dibbs-core-engineering"
   iam_role_arn          = aws_iam_role.dlq_alarm_chatbot_role.arn
   slack_channel_id      = var.slack_channel_id
   slack_team_id         = var.slack_team_id
@@ -1294,7 +1294,7 @@ resource "aws_lambda_event_source_mapping" "ttc_input_sqs" {
 }
 
 resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
-  name = "ttc-input-sqs-inline-policy"
+  name = "${var.name_prefix}-input-sqs-inline-policy"
   role = aws_iam_role.ttc_lambda_role.id
 
   policy = jsonencode({
