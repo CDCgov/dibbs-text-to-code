@@ -55,7 +55,7 @@ output "osis_trigger_queue_url" {
 
 output "demo_url" {
   value       = "https://${var.demo_domain_name}"
-  description = "The URL of the TTC demo (Basic auth required)"
+  description = "The URL of the TTC demo (login required)"
 }
 
 output "demo_cloudfront_url" {
