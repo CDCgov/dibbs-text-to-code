@@ -1042,7 +1042,7 @@ resource "aws_iam_role_policy_attachment" "dlq_alarm_chatbot_cloudwatch_read_onl
 }
 
 resource "aws_chatbot_slack_channel_configuration" "dlq_alarm_slack" {
-  configuration_name    = "proj-cdc-dibbs-text-to-code-engineering"
+  configuration_name    = "proj-cdc-dibbs-core-engineering"
   iam_role_arn          = aws_iam_role.dlq_alarm_chatbot_role.arn
   slack_channel_id      = var.slack_channel_id
   slack_team_id         = var.slack_team_id

@@ -42,6 +42,10 @@ async function fetchTTC(inputs, dataField) {
     headers["x-amz-content-sha256"] = await sha256Hex(body);
   }
   const resp = await fetch(API_BASE + "/text-to-code", { method: "POST", headers, body });
+  if (!IS_LOCAL && resp.status === 401) {
+    // The demo session cookie expired; CloudFront only lets signed-in requests through.
+    location.href = "/login.html";
+  }
   if (!resp.ok) throw new Error("HTTP " + resp.status);
   const data = await resp.json();
   return data.results || [];

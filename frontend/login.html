@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Text-to-Code · DIBBs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Merriweather:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .login-body { max-width: 24rem; }
+    .login-error { display: none; margin-top: 1.5rem; border-color: var(--error); background: var(--error-light); }
+    .login-error.visible { display: flex; }
+  </style>
+</head>
+<body>
+
+  <header class="usa-header">
+    <div class="usa-header__inner">
+      <div class="usa-logo">
+        <span class="usa-logo__mark" aria-hidden="true">TTC</span>
+        <span>
+          <em class="usa-logo__text">Text-to-Code</em>
+          <span class="usa-logo__sub">DIBBs · Data Modernization Initiative</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-intro">
+      <div class="grid-container">
+        <p class="kicker">Text-to-Code · Demo</p>
+        <h1>Sign in</h1>
+        <p class="lead">Enter the demo credentials you were given to continue.</p>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      <form id="login-form" class="login-body">
+        <div class="usa-alert login-error" id="login-error" role="alert">
+          <p id="login-error-text"></p>
+        </div>
+        <div class="form-section">
+          <label class="section-label" for="username">Username</label>
+          <input class="usa-input" type="text" id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+        </div>
+        <div class="form-section">
+          <label class="section-label" for="password">Password</label>
+          <input class="usa-input" type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <div class="form-section">
+          <button class="usa-button usa-button--block" type="submit" id="login-btn">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // The CloudFront login function hashes this exact encoding: base64 of the
+    // UTF-8 bytes of "user:pass", matching Terraform's base64encode().
+    function encodeCredentials(user, pass) {
+      const bytes = new TextEncoder().encode(user + ":" + pass);
+      return btoa(String.fromCharCode(...bytes));
+    }
+
+    function showError(message) {
+      document.getElementById("login-error-text").textContent = message;
+      document.getElementById("login-error").classList.add("visible");
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("login-btn");
+      btn.disabled = true;
+      document.getElementById("login-error").classList.remove("visible");
+      try {
+        const resp = await fetch("/auth", {
+          headers: {
+            "x-ttc-demo-login": encodeCredentials(
+              document.getElementById("username").value,
+              document.getElementById("password").value,
+            ),
+          },
+          cache: "no-store",
+        });
+        if (resp.status === 204) {
+          location.replace("/");
+          return;
+        }
+        showError(resp.status === 401
+          ? "Incorrect username or password."
+          : "Sign-in failed (HTTP " + resp.status + "). Please try again.");
+      } catch (err) {
+        showError("Could not reach the sign-in service. Please try again.");
+      }
+      btn.disabled = false;
+    });
+  </script>
+
+</body>
+</html>

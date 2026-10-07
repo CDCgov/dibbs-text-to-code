@@ -1,0 +1,107 @@
+// Login gate for the TTC demo distribution (viewer-request, both behaviors).
+//
+// Rendered by templatefile() in demo.tf. Avoid JS template literals here: their
+// interpolation syntax collides with Terraform's.
+//
+// Flow:
+//   GET /auth with x-ttc-demo-login: base64("user:pass")
+//     -> 204 + signed session cookie, or 401
+//   valid session cookie -> pass through (cookie stripped before the origin)
+//   otherwise -> login page assets pass through, the API gets a 401, and
+//     everything else redirects to /login.html
+//
+// No response ever carries WWW-Authenticate: some managed browsers (e.g. with
+// the AuthSchemes policy limited to ntlm,negotiate) refuse Basic auth outright,
+// which is why the demo no longer uses it.
+
+var crypto = require('crypto');
+
+var CREDENTIALS_HASH = '${credentials_hash}';
+var SESSION_KEY = '${session_key}';
+var SESSION_MAX_AGE = ${session_max_age};
+var COOKIE_NAME = 'ttc_demo_session';
+var PUBLIC_PATHS = ['/login.html', '/styles.css'];
+
+function sign(exp) {
+  return crypto.createHmac('sha256', SESSION_KEY).update(String(exp)).digest('hex');
+}
+
+function hasValidSession(request) {
+  var cookie = request.cookies[COOKIE_NAME];
+  if (!cookie) {
+    return false;
+  }
+  var parts = cookie.value.split('.');
+  if (parts.length !== 2) {
+    return false;
+  }
+  var exp = parseInt(parts[0], 10);
+  if (!(exp > Math.floor(Date.now() / 1000))) {
+    return false;
+  }
+  return parts[1] === sign(exp);
+}
+
+function jsonResponse(statusCode, statusDescription, body) {
+  return {
+    statusCode: statusCode,
+    statusDescription: statusDescription,
+    headers: {
+      'content-type': { value: 'application/json' },
+      'cache-control': { value: 'no-store' }
+    },
+    body: JSON.stringify(body)
+  };
+}
+
+function login(request) {
+  var header = request.headers['x-ttc-demo-login'];
+  // The header is base64("user:pass"); Terraform hashes the same encoding.
+  var given = header ? crypto.createHash('sha256').update(header.value).digest('hex') : '';
+  if (given !== CREDENTIALS_HASH) {
+    return jsonResponse(401, 'Unauthorized', { error: 'invalid credentials' });
+  }
+  var exp = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE;
+  return {
+    statusCode: 204,
+    statusDescription: 'No Content',
+    headers: { 'cache-control': { value: 'no-store' } },
+    cookies: {
+      ttc_demo_session: {
+        value: exp + '.' + sign(exp),
+        attributes: 'Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=' + SESSION_MAX_AGE
+      }
+    }
+  };
+}
+
+function handler(event) {
+  var request = event.request;
+
+  if (request.uri === '/auth') {
+    return login(request);
+  }
+
+  if (hasValidSession(request)) {
+    // Origins have no use for the session cookie; keep it out of the lambda request.
+    delete request.cookies[COOKIE_NAME];
+    return request;
+  }
+
+  if (PUBLIC_PATHS.indexOf(request.uri) !== -1) {
+    return request;
+  }
+
+  if (request.uri === '/text-to-code') {
+    return jsonResponse(401, 'Unauthorized', { error: 'login required' });
+  }
+
+  return {
+    statusCode: 302,
+    statusDescription: 'Found',
+    headers: {
+      location: { value: '/login.html' },
+      'cache-control': { value: 'no-store' }
+    }
+  };
+}
