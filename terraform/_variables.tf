@@ -249,13 +249,13 @@ variable "demo_frontend_bucket_name" {
 variable "demo_auth_username" {
   type        = string
   default     = "dibbs"
-  description = "Username for the Basic auth prompt on the demo CloudFront distribution"
+  description = "Username for the login page on the demo CloudFront distribution"
 }
 
 variable "demo_auth_password" {
   type        = string
   sensitive   = true
-  description = "Password for the Basic auth prompt on the demo CloudFront distribution. No default; set via TF_VAR_demo_auth_password (in CI, from the DEMO_AUTH_PASSWORD GitHub secret)."
+  description = "Password for the login page on the demo CloudFront distribution. No default; set via TF_VAR_demo_auth_password (in CI, from the DEMO_AUTH_PASSWORD GitHub secret)."
 }
 
 ### Debug Access Variables (temporary — revert when done)

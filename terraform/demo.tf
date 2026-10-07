@@ -4,9 +4,9 @@
 # A single CloudFront distribution serves the static demo frontend (frontend/)
 # from a private S3 bucket and routes POST /text-to-code to a second lambda
 # built from the same container image as the batch TTC lambda, with the CMD
-# overridden to the Function URL handler. A CloudFront Function enforces Basic
-# auth on every request, and Origin Access Controls keep both origins
-# unreachable except through the distribution.
+# overridden to the Function URL handler. A CloudFront Function gates every
+# request behind a login page and signed session cookie, and Origin Access
+# Controls keep both origins unreachable except through the distribution.
 #############
 
 # API Lambda Role
@@ -169,6 +169,7 @@ resource "aws_s3_bucket_policy" "demo_frontend" {
 locals {
   demo_frontend_files = {
     "index.html" = "text/html"
+    "login.html" = "text/html"
     "app.js"     = "text/javascript"
     "styles.css" = "text/css"
   }
@@ -224,36 +225,31 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
 }
 
 locals {
-  demo_basic_auth_token = base64encode("${var.demo_auth_username}:${var.demo_auth_password}")
+  # The login page sends base64("user:pass"); the function compares its sha256
+  # against this, so the credential itself never appears in the function code.
+  demo_credentials_hash = sha256(base64encode("${var.demo_auth_username}:${var.demo_auth_password}"))
+  # HMAC key for session cookies. Derived from the credential, so rotating the
+  # password also invalidates every outstanding session.
+  demo_session_key     = sha256("ttc-demo-session:${var.demo_auth_username}:${var.demo_auth_password}")
+  demo_session_max_age = 7 * 24 * 60 * 60
   # The Function URL is "https://<id>.lambda-url.<region>.on.aws/"; CloudFront
   # origins take the bare hostname.
   api_function_url_domain = replace(replace(aws_lambda_function_url.api.function_url, "https://", ""), "/", "")
 }
 
-resource "aws_cloudfront_function" "demo_basic_auth" {
-  name    = "${var.name_prefix}-demo-basic-auth"
+# Deliberately not HTTP Basic auth: managed browsers whose AuthSchemes policy
+# excludes Basic never show the credential prompt, so the gate is a plain HTML
+# login page (frontend/login.html) plus a signed session cookie.
+resource "aws_cloudfront_function" "demo_auth" {
+  name    = "${var.name_prefix}-demo-auth"
   runtime = "cloudfront-js-2.0"
-  comment = "Basic auth gate for the TTC demo distribution"
+  comment = "Login page and session cookie gate for the TTC demo distribution"
   publish = true
-  code    = <<-EOT
-    function handler(event) {
-      var request = event.request;
-      var auth = request.headers.authorization;
-      if (!auth || auth.value !== "Basic ${local.demo_basic_auth_token}") {
-        return {
-          statusCode: 401,
-          statusDescription: "Unauthorized",
-          headers: {
-            "www-authenticate": { value: 'Basic realm="TTC demo", charset="UTF-8"' }
-          }
-        };
-      }
-      // The viewer Authorization header must not reach the origin: the lambda
-      // OAC has to set its own SigV4 Authorization header when signing.
-      delete request.headers.authorization;
-      return request;
-    }
-  EOT
+  code = templatefile("${path.module}/functions/demo_auth.js.tftpl", {
+    credentials_hash = local.demo_credentials_hash
+    session_key      = local.demo_session_key
+    session_max_age  = local.demo_session_max_age
+  })
 }
 
 resource "aws_cloudfront_origin_access_control" "demo_s3" {
@@ -313,7 +309,7 @@ resource "aws_cloudfront_distribution" "demo" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.demo_basic_auth.arn
+      function_arn = aws_cloudfront_function.demo_auth.arn
     }
   }
 
@@ -327,10 +323,10 @@ resource "aws_cloudfront_distribution" "demo" {
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
 
-    # The Basic auth gate applies to the API path too, not just the pages.
+    # The login gate applies to the API path too, not just the pages.
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.demo_basic_auth.arn
+      function_arn = aws_cloudfront_function.demo_auth.arn
     }
   }
 
