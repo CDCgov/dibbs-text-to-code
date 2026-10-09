@@ -1,3 +1,4 @@
+from os import getenv
 from typing import TypedDict
 
 from aws_lambda_powertools import Logger
@@ -79,7 +80,7 @@ def handler(event: dict, context: LambdaContext) -> dict:
     - "clear_result_cache": As above, but for the Result Cache index rather than
       the Vector Search index.
     - "create_index" (default): Creates the index only if it doesn't exist,
-      and self-heals incorrect mappings.
+      and self-heals incorrect mappings. Syncs the replica count on an existing index.
     - "create_result_cache": As above, but for the Result Cache index.
     - "set_slowlog": Changes logging parameters for AWS across multiple types
       of logging information.
@@ -100,12 +101,14 @@ def handler(event: dict, context: LambdaContext) -> dict:
     ):
         logger.info("Index Lambda started", status="processing")
 
+        number_of_replicas = _number_of_replicas()
+        index_mapping = _with_replicas(INDEX_MAPPING, number_of_replicas)
+        result_cache_mapping = _with_replicas(RESULT_CACHE_INDEX_MAPPING, number_of_replicas)
+
         if action == "clear_index":
-            result = _clear_index(os_client, index_name, INDEX_MAPPING, action)
+            result = _clear_index(os_client, index_name, index_mapping, action)
         elif action == "clear_result_cache":
-            result = _clear_index(
-                os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING, action
-            )
+            result = _clear_index(os_client, result_cache_index_name, result_cache_mapping, action)
         elif action == "set_slowlog":
             result = _set_slowlog(os_client, index_name, event.get("threshold_ms", 0), action)
         elif action == "set_result_cache_slowlog":
@@ -113,15 +116,72 @@ def handler(event: dict, context: LambdaContext) -> dict:
                 os_client, result_cache_index_name, event.get("threshold_ms", 0), action
             )
         elif action == "create_index":
-            result = _create_index(os_client, index_name, INDEX_MAPPING)
+            result = _create_index(os_client, index_name, index_mapping)
         elif action == "create_result_cache":
-            result = _create_index(os_client, result_cache_index_name, RESULT_CACHE_INDEX_MAPPING)
+            result = _create_index(os_client, result_cache_index_name, result_cache_mapping)
         else:
             raise ValueError(f"Received unknown action: {action!r}")
 
         logger.info("Index Lambda completed", status="success")
 
         return result
+
+
+def _number_of_replicas() -> int:
+    """Read the replica count for both indices from OPENSEARCH_NUMBER_OF_REPLICAS.
+
+    A single-node domain cannot allocate replicas, so Terraform sets this to 0
+    there; otherwise the cluster sits in yellow health. Defaults to 1.
+    """
+    return int(getenv("OPENSEARCH_NUMBER_OF_REPLICAS", "1"))
+
+
+def _with_replicas(
+    index_mapping: OpenSearchIndexMapping, number_of_replicas: int
+) -> OpenSearchIndexMapping:
+    """Return a copy of the mapping with number_of_replicas overridden.
+
+    :param index_mapping: The base mapping for the index.
+    :param number_of_replicas: The replica count to apply.
+    """
+    index_settings = {
+        **index_mapping["settings"]["index"],
+        "number_of_replicas": number_of_replicas,
+    }
+    return OpenSearchIndexMapping(
+        settings={**index_mapping["settings"], "index": index_settings},
+        mappings=index_mapping["mappings"],
+    )
+
+
+def _sync_number_of_replicas(
+    os_client: OpenSearch, index_name: str, index_mapping: OpenSearchIndexMapping
+) -> None:
+    """Update an existing index's replica count if it differs from the mapping.
+
+    number_of_replicas is a dynamic setting, so this applies in place when the
+    domain's node count changes.
+
+    :param os_client: The OpenSearch client.
+    :param index_name: The name of the index.
+    :param index_mapping: The mapping holding the desired replica count.
+    """
+    desired = index_mapping["settings"]["index"]["number_of_replicas"]
+    settings = os_client.indices.get_settings(index=index_name)
+    current = next(iter(settings.values()))["settings"]["index"].get("number_of_replicas")
+    if current is not None and int(current) == desired:
+        return
+
+    os_client.indices.put_settings(
+        index=index_name, body={"index": {"number_of_replicas": desired}}
+    )
+    logger.info(
+        "OpenSearch index replica count updated",
+        index_name=index_name,
+        previous_number_of_replicas=current,
+        number_of_replicas=desired,
+        status="success",
+    )
 
 
 def _clear_index(
@@ -201,7 +261,9 @@ def _set_slowlog(os_client: OpenSearch, index_name: str, threshold_ms: int, acti
 def _create_index(
     os_client: OpenSearch, index_name: str, index_mapping: OpenSearchIndexMapping
 ) -> dict:
-    """Create the index if it doesn't exist; otherwise return the current settings and mappings.
+    """Create the index if it doesn't exist; otherwise sync its replica count.
+
+    Returns the current settings and mappings either way.
 
     :param os_client: The OpenSearch client.
     :param index_name: The name of the index.
@@ -212,6 +274,8 @@ def _create_index(
         os_client.indices.create(index=index_name, body=index_mapping)
         logger.info("OpenSearch index created", index_name=index_name, status="success")
         created = True
+    else:
+        _sync_number_of_replicas(os_client, index_name, index_mapping)
 
     status = os_client.indices.exists(index=index_name)
 

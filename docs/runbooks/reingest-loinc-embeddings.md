@@ -2,7 +2,7 @@
 
 **Audience:** APHL operators running a model-update re-ingestion via the GitLab CI/CD pipeline.
 **Linked design:** [`docs/spikes/502-reingestion-pause.md`](../spikes/502-reingestion-pause.md)
-**Estimated wall-clock:** 25–35 min from pipeline start to pipeline success.
+**Estimated wall-clock:** 30–45 min from pipeline start to pipeline success.
 **When to use:** After the model team has produced new LOINC embeddings (NDJSON) that need to replace the current index contents.
 
 > [!WARNING]
@@ -48,6 +48,14 @@ In the GitLab UI: **CI/CD → Pipelines → Run pipeline** for the re-ingestion 
 The pipeline runs the 7 steps below.
 
 ## What the pipeline does
+
+### Before step 1: Start the OSIS pipeline
+
+**Expected duration:** 5–10 min. Hard cap 20 min.
+
+The OSIS ingestion pipeline (`ttc-ingestion-pipeline`) is kept stopped between runs because it bills per hour while running, even when idle. The pipeline starts it with `aws osis start-pipeline --pipeline-name ttc-ingestion-pipeline` (skipped if it's already `ACTIVE` or `STARTING`) and waits for `ACTIVE`. This happens before the halt, so OSIS startup doesn't lengthen the TTC outage.
+
+**If it is `STOPPING` or `UPDATING`, or doesn't reach `ACTIVE` in time:** the pipeline fails before anything changes. Wait for `aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline` to settle, then re-run.
 
 ### Step 1 — Halt TTC
 
@@ -146,6 +154,8 @@ Completion criteria (both must hold):
 - Count is stable across `STABILITY_POLLS` consecutive polls (default 3 → 90 s).
 - Count equals `EXPECTED_DOC_COUNT` exactly. The OSIS sink assigns each document a deterministic `_id` (`loinc_code|loinc_name_type`), so bulk retries and SQS redeliveries overwrite in place instead of duplicating.
 
+Once both hold, the pipeline calls `aws osis stop-pipeline --pipeline-name ttc-ingestion-pipeline` without waiting for it to finish stopping. A failure there is logged as a warning and does not fail the run, since TTC is still halted at this point; stop the OSIS pipeline by hand afterwards.
+
 **Watch:**
 
 - OpenSearch console → Indices → `ttc-index` doc count climbing.
@@ -183,12 +193,13 @@ The pipeline:
 
 | Phase                 | Time                      |
 | --------------------- | ------------------------- |
+| OSIS pipeline start   | 5–10 min (before halt)    |
 | Halt + drain          | 0–20 min (typically 5–10) |
 | Drop + recreate index | < 1 min                   |
 | S3 swap               | < 2 min                   |
 | OSIS ingest           | 10–15 min                 |
 | Resume + verify       | < 2 min                   |
-| **Total**             | **~25–35 min**            |
+| **Total**             | **~30–45 min**            |
 
 ## Manual rollback
 
@@ -215,13 +226,19 @@ aws lambda invoke \
 # 2. Restore the previous embeddings
 aws s3 sync s3://<bucket>/ingestion-backup-<ts>/ s3://<bucket>/ingestion/
 
-# 3. Wait for OSIS to repopulate
+# 3. Wait for OSIS to repopulate. The OSIS pipeline must be ACTIVE; if it
+#    isn't, start it (queued S3 events are processed once it is up).
+aws osis get-pipeline --pipeline-name ttc-ingestion-pipeline --query Pipeline.Status
+aws osis start-pipeline --pipeline-name ttc-ingestion-pipeline
 
 # 4. Resume TTC
 aws lambda update-event-source-mapping --uuid <esm-uuid> --enabled
 aws lambda put-function-concurrency \
   --function-name ttc-lambda \
   --reserved-concurrent-executions <captured-value>
+
+# 5. Stop the OSIS pipeline once the count is back
+aws osis stop-pipeline --pipeline-name ttc-ingestion-pipeline
 ```
 
 ## Recovery — pipeline failed partway
@@ -235,6 +252,8 @@ aws lambda put-function-concurrency \
 | Step 5      | OSIS not catching up. Investigate first; rollback is the same as for step 4.                                               |
 | Step 6      | **TTC is stuck halted.** Run the two AWS CLI commands manually and page on-call.                                           |
 | Step 7      | Smoke test failed but TTC is running. Investigate logs; do not auto-rollback.                                              |
+
+A run that fails at or before step 5 leaves the OSIS pipeline running, so recovery can use it. Once recovery is done, stop it: `aws osis stop-pipeline --pipeline-name ttc-ingestion-pipeline`.
 
 ### Redriving DLQ messages
 

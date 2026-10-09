@@ -34,6 +34,7 @@ jobs:
       TTC_EVENT_SOURCE_MAPPING_UUID: ${{ vars.TTC_EVENT_SOURCE_MAPPING_UUID }}
       TTC_INPUT_QUEUE_URL: ${{ vars.TTC_INPUT_QUEUE_URL }}
       TTC_INPUT_DLQ_URL: ${{ vars.TTC_INPUT_DLQ_URL }}
+      TTC_INGESTION_PIPELINE_NAME: ttc-ingestion-pipeline
       TTC_S3_BUCKET: dibbs-text-to-code
       TTC_INGESTION_PREFIX: ingestion/
       TTC_REINGESTION_PREFIX: reingestion/

@@ -24,6 +24,7 @@ class MockIndices:
         }
         self.delete_calls: dict[str, list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
         self.create_calls: dict[str, list[str]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
+        self.create_bodies: dict[str, list[dict]] = {INDEX_NAME: [], RESULT_CACHE_INDEX_NAME: []}
         self.put_settings_calls: dict[str, list[tuple[str, dict]]] = {
             INDEX_NAME: [],
             RESULT_CACHE_INDEX_NAME: [],
@@ -41,6 +42,7 @@ class MockIndices:
     def create(self, index: str, body: dict) -> None:
         """Mock create method that tracks calls."""
         self.create_calls[index].append(index)
+        self.create_bodies[index].append(body)
 
     def delete(self, index: str) -> None:
         """Mock delete method that tracks calls."""
@@ -325,3 +327,53 @@ class TestHandler:
                 )
             ],
         }
+
+    def test_handler_clear_index_uses_configured_replicas(self, monkeypatch, mock_lambda_context):
+        """Test clear_index creates the index with the replica count from the environment."""
+        monkeypatch.setenv("OPENSEARCH_NUMBER_OF_REPLICAS", "0")
+        mock_client = patch_lambda_handler(monkeypatch, description_vector_type="knn_vector")
+
+        lambda_function.handler({"action": "clear_index"}, mock_lambda_context)
+
+        (body,) = mock_client.indices.create_bodies[INDEX_NAME]
+        assert body["settings"]["index"]["number_of_replicas"] == 0
+        assert body["settings"]["index"]["knn"] is True
+        assert lambda_function.INDEX_MAPPING["settings"]["index"]["number_of_replicas"] == 1
+
+    def test_handler_create_index_syncs_replicas_on_existing_index(
+        self, monkeypatch, mock_lambda_context
+    ):
+        """Test create_index lowers the replica count of an existing index to the configured value."""
+        monkeypatch.setenv("OPENSEARCH_NUMBER_OF_REPLICAS", "0")
+        mock_client = patch_lambda_handler(
+            monkeypatch, description_vector_type="knn_vector", index_initially_exists=True
+        )
+        monkeypatch.setattr(
+            mock_client.indices,
+            "get_settings",
+            lambda index: {index: {"settings": {"index": {"number_of_replicas": "1"}}}},
+        )
+
+        resp = lambda_function.handler({"action": "create_index"}, mock_lambda_context)
+
+        assert resp["ran_index_creation"] is False
+        assert mock_client.indices.create_calls[INDEX_NAME] == []
+        assert mock_client.indices.put_settings_calls[INDEX_NAME] == [
+            (INDEX_NAME, {"index": {"number_of_replicas": 0}})
+        ]
+
+    def test_handler_create_index_leaves_matching_replicas_alone(
+        self, monkeypatch, mock_lambda_context
+    ):
+        """Test create_index does not touch settings when the replica count already matches."""
+        monkeypatch.setenv("OPENSEARCH_NUMBER_OF_REPLICAS", "0")
+        mock_client = patch_lambda_handler(monkeypatch, result_cache_initially_exists=True)
+        monkeypatch.setattr(
+            mock_client.indices,
+            "get_settings",
+            lambda index: {index: {"settings": {"index": {"number_of_replicas": "0"}}}},
+        )
+
+        lambda_function.handler({"action": "create_result_cache"}, mock_lambda_context)
+
+        assert mock_client.indices.put_settings_calls[RESULT_CACHE_INDEX_NAME] == []
