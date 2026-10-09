@@ -22,11 +22,13 @@ S3 Bucket (dibbs-text-to-code)
     └── TTC Lambda (ttc-lambda, container image from ECR)
 ```
 
-All components live inside a private VPC (no NAT gateway, no internet gateway). Lambda and OpenSearch communicate over a VPC endpoint; S3 is accessed via a Gateway VPC endpoint (no internet required).
+The OpenSearch domain has a **public HTTPS endpoint**. Access is controlled by the domain's IAM access policy (SigV4-signed requests from the principals listed under [OpenSearch](#opensearch-maintf)), not by network placement. The Lambdas are not attached to a VPC and reach OpenSearch, S3, and SQS over the regional AWS endpoints. The domain was moved out of the VPC in #475 to make access and debugging easier, and has stayed public by choice.
 
 ## Resources
 
 ### Networking (`main.tf`)
+
+The stack still creates the VPC, S3 Gateway endpoint, and security groups below, but nothing is attached to them: neither the OpenSearch domain nor any Lambda has a `vpc_options`/`vpc_config` block. They are kept so the domain can move back into the VPC without rebuilding the network.
 
 - **VPC** (`module.vpc`): A private-only VPC (`10.0.0.0/16`) with three private subnets across three availability zones (`us-east-2a/b/c`). No NAT gateway or internet gateway is created by the VPC module.
 - **S3 VPC Endpoint** (`aws_vpc_endpoint.s3_endpoint`): Gateway endpoint attached to the private route tables for S3 access without requiring a NAT gateway.
@@ -35,7 +37,8 @@ All components live inside a private VPC (no NAT gateway, no internet gateway). 
 
 ### OpenSearch (`main.tf`)
 
-- **OpenSearch Domain** (`aws_opensearch_domain.os`): A 3-node `r5.large.search` cluster with zone awareness across all three AZs. Configured with:
+- **OpenSearch Domain** (`aws_opensearch_domain.os`): `opensearch_instance_count` data nodes of `opensearch_instance_type`, defaulting to a single `r5.large.search` node. One node runs without zone awareness, and every index has 0 replicas (a lone node cannot allocate them, so the cluster would otherwise stay yellow). Above one node, zone awareness spans 2 AZs (3 AZs from 3 nodes up) and each index gets 1 replica. The replica count reaches the index Lambda as `OPENSEARCH_NUMBER_OF_REPLICAS`. Configured with:
+  - Public HTTPS endpoint (no `vpc_options`); the access policy below is the only gate
   - Encryption at rest and node-to-node encryption
   - HTTPS enforced with TLS 1.2+
   - Engine version `OpenSearch_3.1` (minimum required for KNN vector queries)
@@ -69,13 +72,13 @@ Each Lambda function and ingestion workflow has its own IAM role scoped to the A
   - Inline S3 policy — `s3:PutObject` on `AugmentationEICRV2/` and `AugmentationMetadataV2/` prefixes (no OpenSearch access needed)
 - **Ingestion Pipeline IAM Role** (`aws_iam_role.os_ingestion_pipeline_role`): Assumed by the OSIS pipeline service. Grants S3 `ListBucket`/`GetBucketLocation`/`GetObject` on the data bucket, consume access (receive/delete/visibility) on the pipeline's trigger queue, and full OpenSearch HTTP access on the domain.
 
-- **TTC Re-ingestion CI Role** (`aws_iam_role.ttc_reingestion_ci_role`): Assumed by GitHub Actions through OIDC. The default subject allowlist restricts assumption to the repository's `main` branch. Its inline policy allows only the operations required by the re-ingestion workflow: managing the TTC event source mapping and reserved concurrency, invoking the index Lambda, moving objects among the ingestion/re-ingestion/backup prefixes, reading the OpenSearch document count, performing the smoke query, reading TTC queue attributes, starting/canceling/listing TTC DLQ redrive tasks, and publishing critical alerts to the shared SNS topic.
+- **TTC Re-ingestion CI Role** (`aws_iam_role.ttc_reingestion_ci_role`): Assumed by GitHub Actions through OIDC. The default subject allowlist restricts assumption to the repository's `main` branch. Its inline policy allows only the operations required by the re-ingestion workflow: managing the TTC event source mapping and reserved concurrency, starting and stopping the OSIS ingestion pipeline, invoking the index Lambda, moving objects among the ingestion/re-ingestion/backup prefixes, reading the OpenSearch document count, performing the smoke query, reading TTC queue attributes, starting/canceling/listing TTC DLQ redrive tasks, and publishing critical alerts to the shared SNS topic.
 
 ### Lambda Functions (`main.tf`, `demo.tf`)
 
 #### Index Bootstrap Lambda (`ttc-index-lambda`, `packages/index-lambda`)
 
-Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN Index and the OpenSearch Result Cache Index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created.
+Deployed as a **container image** from ECR (`package_type = "Image"`) using `Dockerfile.index` at repo root. Responsible for creating the OpenSearch KNN Index and the OpenSearch Result Cache Index at deploy time. It is **invoked by Terraform** (`aws_lambda_invocation.index_bootstrap`) during `terraform apply`, before the ingestion pipeline is created. Terraform invokes it again whenever the replica count changes; `create_index` then updates `number_of_replicas` on the existing indices in place.
 
 The first Index it creates–the Vector Search Index–has LOINC-specific field mappings including `description_vector` (1024-dimension `knn_vector` using HNSW/faiss/cosine), `loinc_type`, `loinc_code`, `loinc_name_type`, and other LOINC metadata fields. Uses the `lambda_handler` shared utilities and reads `OPENSEARCH_ENDPOINT_URL` from its environment.
 
@@ -108,7 +111,7 @@ At runtime, the Lambda processes augmentation requests containing eICR XML and n
 3. Updates document headers (ID, effectiveTime, setId, versionNumber) and adds author/provenance metadata
 4. Writes the augmented eICR XML and metadata JSON to S3
 
-The augmentation Lambda uses only the Lambda security group (not the OpenSearch security group) since it does not require OpenSearch access. It is configured with lower memory (512 MB) and timeout (300s) defaults compared to the TTC Lambda, as it does not load ML models.
+The augmentation Lambda does not query OpenSearch, so its role has no OpenSearch permissions. It is configured with lower memory (512 MB) and timeout (300s) defaults compared to the TTC Lambda, as it does not load ML models.
 
 Environment variables injected at deploy time: `S3_BUCKET`, `AUGMENTED_EICR_PREFIX`, `AUGMENTATION_METADATA_PREFIX`, `REGION`.
 
@@ -209,6 +212,7 @@ An **AWS OpenSearch Ingestion Service (OSIS)** pipeline (`aws_osis_pipeline.ttc_
 - Uses its dedicated IAM role to read S3/SQS input and write documents to OpenSearch
 - Logs audit events to CloudWatch Logs (`/aws/vendedlogs/OpenSearchIngestion/ttc-ingestion-pipeline/audit-logs`, 14-day retention)
 - Scales between 1 and 4 OCUs (OpenSearch Compute Units)
+- Is **kept stopped between ingests**. A running pipeline bills for at least 1 OCU around the clock even when idle, and ingestion only happens during re-ingestion and terminology updates. Both workflows start the pipeline and stop it when they finish. For any other upload to `ingestion/`, run `aws osis start-pipeline --pipeline-name ttc-ingestion-pipeline` first and `aws osis stop-pipeline` once the documents are in. While it is stopped, S3 events wait on the trigger queue for up to 14 days.
 
 The pipeline **depends on** the index bootstrap invocation completing first, ensuring the KNN-enabled index and the Result Cache Index exist before any data is loaded (wiping and refilling the Result Cache index as well as the normal Index for vector embeddings ensures that previously computed hashes do not survive either LOINC updates or model updates).
 
@@ -222,11 +226,11 @@ Events reach the queue through **EventBridge** (`aws_cloudwatch_event_rule.osis_
 - **`visibility_duplication_protection: true`, `maximum_messages: 1`.** The deterministic `_id` makes a redelivered object idempotent, but these settings still avoid the wasted re-read. Batch size 1 sidesteps [data-prepper#4812](https://github.com/opensearch-project/data-prepper/issues/4812) and costs nothing at `workers: 1`.
 - **`ttc-osis-trigger-queue-dlq`** takes events that fail three times, alarming to the same Slack channel as the Lambda DLQs.
 
-Only objects created **after** the pipeline starts polling are ingested — files already sitting in `ingestion/` are not (see [Prerequisites](#prerequisites)). The Terminology Updates workflow also writes here, so its deltas now land within minutes instead of waiting for the next scan.
+Only objects created **after** the pipeline starts polling are ingested; files already sitting in `ingestion/` are not (see [Prerequisites](#prerequisites)). The Terminology Updates workflow also writes here; it starts the pipeline before uploading its deltas, waits for the trigger queue to drain, then stops the pipeline.
 
 Third-party deployers should ensure the following:
 
-- Networking and endpoint configuration appropriate for the target environment; this stack provisions a private VPC, private subnets, and an S3 Gateway VPC endpoint
+- Networking and endpoint configuration appropriate for the target environment; this stack exposes OpenSearch on a public endpoint gated by its IAM access policy (it also creates a VPC, private subnets, and an S3 Gateway endpoint, currently unused)
 - An OpenSearch domain compatible with this stack’s engine version, node layout, encryption, and TLS settings
 - IAM permissions for the deployer, Lambda, and ingestion pipeline to create and access OpenSearch resources
 - The index bootstrap step that runs before ingestion begins
@@ -240,7 +244,14 @@ The manual `TTC reingestion` GitHub Actions workflow rebuilds the TTC OpenSearch
 
 The workflow assumes `ttc-reingestion-ci-role` through GitHub OIDC and invokes `scripts/ttc-reingestion-embeddings.sh`. At a high level, the re-ingestion process:
 
-1. Temporarily prevents the TTC Lambda from consuming new queue messages while the search index is unavailable.2. Waits for in-flight TTC work to settle before rebuilding the index.3. Invokes the index Lambda to clear/recreate the vector search index and result-cache index.4. Promotes the staged embedding objects from `reingestion/` into `ingestion/`, which emits fresh S3 events and drives OSIS ingestion.5. Polls OpenSearch until the document count reaches `expected_count` and remains stable for the configured number of polls.6. Runs an OpenSearch smoke query before restoring TTC processing.7. Re-enables TTC consumption and can redrive messages from the TTC DLQ after the index is healthy again.
+1. Starts the OSIS ingestion pipeline and waits for it to become `ACTIVE`, before touching TTC.
+2. Temporarily prevents the TTC Lambda from consuming new queue messages while the search index is unavailable.
+3. Waits for in-flight TTC work to settle before rebuilding the index.
+4. Invokes the index Lambda to clear/recreate the vector search index and result-cache index.
+5. Promotes the staged embedding objects from `reingestion/` into `ingestion/`, which emits fresh S3 events and drives OSIS ingestion.
+6. Polls OpenSearch until the document count reaches `expected_count` and remains stable for the configured number of polls, then stops the OSIS pipeline.
+7. Runs an OpenSearch smoke query before restoring TTC processing.
+8. Re-enables TTC consumption and can redrive messages from the TTC DLQ after the index is healthy again.
 
 The TTC Lambda's OpenSearch availability guard is a second line of defense during this process. If an invocation reaches the Lambda while the index is missing or empty, the Lambda raises instead of acknowledging the SQS record as a no-match result, allowing the queue/DLQ retry path to preserve the message.
 
@@ -250,15 +261,16 @@ Re-ingestion is an operator-triggered runtime maintenance operation. It is not p
 
 Terraform manages dependency ordering automatically, but conceptually the sequence is:
 
-1. VPC, private subnets, security groups, and S3 Gateway endpoint created
+1. VPC, private subnets, security groups, and S3 Gateway endpoint created (currently unused; see [Networking](#networking-maintf))
 2. ECR repositories created (TTC lambda, index lambda, augmentation lambda)
 3. Docker images built and pushed to ECR by CI/CD with both commit-SHA and `latest` tags before the full apply
 4. OpenSearch domain and CloudWatch log publishing configured
 5. Lambda, ingestion pipeline, and re-ingestion CI IAM roles created
 6. Index bootstrap Lambda deployed and **immediately invoked** — creates the KNN index and the Result Cache index in OpenSearch
-7. OSIS trigger queue, DLQ, EventBridge rule, and ingestion pipeline deployed — the pipeline begins polling the queue
+7. OSIS trigger queue, DLQ, EventBridge rule, and ingestion pipeline deployed. A newly created pipeline starts out running and begins polling the queue; stop it once the initial load is in (see [Prerequisites](#prerequisites))
 8. Main TTC Lambda, TTC input queue/DLQ, EventBridge rule, redrive allow policy, and SQS event source mapping deployed
-9. Augmentation Lambda, augmentation queue/DLQ, EventBridge rule, and event source mapping deployed10. Shared DLQ alarms/SNS-to-Slack notification resources and the demo API/frontend resources deployed
+9. Augmentation Lambda, augmentation queue/DLQ, EventBridge rule, and event source mapping deployed
+10. Shared DLQ alarms/SNS-to-Slack notification resources and the demo API/frontend resources deployed
 
 The separate TTC re-ingestion workflow runs only after this infrastructure exists and temporarily operates the TTC event source mapping, index Lambda, S3 prefixes, OpenSearch verification endpoints, and TTC DLQ redrive path.
 
@@ -323,6 +335,8 @@ Before running `terraform apply`:
    aws s3 cp s3://dibbs-text-to-code/ingestion/ s3://dibbs-text-to-code/ingestion/ \
      --recursive --metadata-directive REPLACE
    ```
+
+   Once the document count settles, stop the pipeline so it doesn't bill while idle: `aws osis stop-pipeline --pipeline-name ttc-ingestion-pipeline`.
 
 3. **Docker**: CI/CD builds all container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda, `Dockerfile.augmentation` for augmentation lambda) automatically. For local development, Docker must be available to build the images.
 
