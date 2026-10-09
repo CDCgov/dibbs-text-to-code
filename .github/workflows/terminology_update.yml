@@ -14,10 +14,19 @@ permissions:
   id-token: write
   contents: read
 
+# Shares the reingestion workflow's group: both start and stop the OSIS
+# pipeline, so one must not stop it while the other is ingesting.
+concurrency:
+  group: ttc-reingestion
+  cancel-in-progress: false
+
 jobs:
   update_terminologies:
     name: Update Terminologies
     runs-on: ubuntu-latest
+    env:
+      OSIS_PIPELINE_NAME: ttc-ingestion-pipeline
+      OSIS_TRIGGER_QUEUE_NAME: ttc-osis-trigger-queue
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,6 +53,16 @@ jobs:
       - name: Run UV
         run: uv sync --all-packages --locked --all-extras --dev
 
+      # The pipeline is kept stopped between ingests. S3 events queue up on the
+      # trigger queue while it starts, so there's no need to wait here.
+      - name: Start OSIS ingestion pipeline
+        run: |
+          status="$(aws osis get-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" --query Pipeline.Status --output text)"
+          echo "OSIS pipeline status: $status"
+          if [[ "$status" == "STOPPED" ]]; then
+            aws osis start-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" >/dev/null
+          fi
+
       - name: Terminology Maintenance
         id: terminology-update
         env:
@@ -52,3 +71,34 @@ jobs:
           LOINC_USERNAME: ${{ secrets.LOINC_USER_ID }}
           LOINC_PWD: ${{ secrets.LOINC_PWD }}
         run: uv run python .github/scripts/terminology_maintenance.py
+
+      # Runs even if maintenance failed partway, so any files it did upload are
+      # still ingested. Stops the pipeline only once it is ACTIVE and the
+      # trigger queue has stayed empty for two consecutive polls; on timeout it
+      # leaves the pipeline running and fails so someone looks.
+      - name: Stop OSIS ingestion pipeline once its queue drains
+        if: always()
+        run: |
+          queue_url="$(aws sqs get-queue-url --queue-name "$OSIS_TRIGGER_QUEUE_NAME" --query QueueUrl --output text)"
+          deadline=$(( SECONDS + 3600 ))
+          empty_polls=0
+          while :; do
+            status="$(aws osis get-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" --query Pipeline.Status --output text)"
+            read -r visible in_flight < <(aws sqs get-queue-attributes --queue-url "$queue_url" \
+              --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible \
+              --query 'Attributes.[ApproximateNumberOfMessages, ApproximateNumberOfMessagesNotVisible]' --output text)
+            echo "OSIS pipeline: $status; trigger queue: $visible visible, $in_flight in flight"
+            if [[ "$status" == "ACTIVE" && "$visible" == "0" && "$in_flight" == "0" ]]; then
+              empty_polls=$(( empty_polls + 1 ))
+              (( empty_polls >= 2 )) && break
+            else
+              empty_polls=0
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "::error::Trigger queue did not drain within 60 min; leaving $OSIS_PIPELINE_NAME running. Stop it with 'aws osis stop-pipeline' once ingestion finishes."
+              exit 1
+            fi
+            sleep 30
+          done
+          aws osis stop-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" >/dev/null
+          echo "Stopped $OSIS_PIPELINE_NAME"

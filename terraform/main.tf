@@ -212,16 +212,25 @@ data "aws_iam_policy_document" "opensearch_access_policy" {
   }
 }
 
+locals {
+  # A single node cannot allocate replicas (the cluster would stay yellow), so
+  # the index lambda creates and syncs indices with this count.
+  opensearch_number_of_replicas = var.opensearch_instance_count > 1 ? 1 : 0
+}
+
 resource "aws_opensearch_domain" "os" {
   domain_name    = var.opensearch_domain_name
   engine_version = var.opensearch_engine_version
 
   cluster_config {
-    instance_type          = "r5.large.search"
-    instance_count         = 3
-    zone_awareness_enabled = true
-    zone_awareness_config {
-      availability_zone_count = 3
+    instance_type          = var.opensearch_instance_type
+    instance_count         = var.opensearch_instance_count
+    zone_awareness_enabled = var.opensearch_instance_count > 1
+    dynamic "zone_awareness_config" {
+      for_each = var.opensearch_instance_count > 1 ? [1] : []
+      content {
+        availability_zone_count = var.opensearch_instance_count >= 3 ? 3 : 2
+      }
     }
   }
 
@@ -378,6 +387,16 @@ resource "aws_iam_role_policy" "ttc_reingestion_ci_policy" {
           "lambda:DeleteFunctionConcurrency"
         ]
         Resource = aws_lambda_function.lambda.arn
+      },
+      {
+        Sid    = "StartStopTtcIngestionPipeline"
+        Effect = "Allow"
+        Action = [
+          "osis:GetPipeline",
+          "osis:StartPipeline",
+          "osis:StopPipeline"
+        ]
+        Resource = aws_osis_pipeline.ttc_ingestion_pipeline.pipeline_arn
       },
       {
         Sid      = "InvokeTtcIndexLambda"
@@ -774,6 +793,9 @@ resource "aws_cloudwatch_metric_alarm" "osis_trigger_dlq_visible_messages" {
 resource "aws_sqs_queue" "osis_trigger_queue" {
   name                       = var.osis_trigger_queue_name
   visibility_timeout_seconds = var.osis_trigger_visibility_timeout
+  # The pipeline is stopped between ingestion runs; keep S3 events queued for
+  # the 14-day maximum instead of the 4-day default so none expire meanwhile.
+  message_retention_seconds = 1209600
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.osis_trigger_dlq.arn
@@ -920,6 +942,12 @@ resource "aws_lambda_invocation" "index_bootstrap" {
     index  = var.index_name
   })
 
+  # Re-invoke when the replica count changes so create_index syncs it onto the
+  # existing index.
+  triggers = {
+    number_of_replicas = local.opensearch_number_of_replicas
+  }
+
   depends_on = [aws_lambda_function.index_lambda]
 }
 
@@ -929,6 +957,10 @@ resource "aws_lambda_invocation" "result_cache_index_bootstrap" {
     action = "create_result_cache"
     index  = var.result_cache_index_name
   })
+
+  triggers = {
+    number_of_replicas = local.opensearch_number_of_replicas
+  }
 
   depends_on = [aws_lambda_function.index_lambda]
 }
@@ -942,11 +974,12 @@ resource "aws_lambda_function" "index_lambda" {
 
   environment {
     variables = {
-      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
-      REGION                  = var.region
-      INDEX_NAME              = var.index_name
-      RESULT_CACHE_INDEX_NAME = var.result_cache_index_name
-      S3_BUCKET               = var.s3_bucket
+      OPENSEARCH_ENDPOINT_URL       = "https://${aws_opensearch_domain.os.endpoint}"
+      OPENSEARCH_NUMBER_OF_REPLICAS = local.opensearch_number_of_replicas
+      REGION                        = var.region
+      INDEX_NAME                    = var.index_name
+      RESULT_CACHE_INDEX_NAME       = var.result_cache_index_name
+      S3_BUCKET                     = var.s3_bucket
     }
   }
 

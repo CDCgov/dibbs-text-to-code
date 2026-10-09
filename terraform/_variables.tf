@@ -28,6 +28,23 @@ variable "opensearch_engine_version" {
   description = "The version of the OpenSearch engine; must be >= 3.1 to support OpenSearch KNN queries which are used for vector search in the main TTC lambda function"
 }
 
+variable "opensearch_instance_type" {
+  type        = string
+  default     = "r5.large.search"
+  description = "Instance type for the OpenSearch data nodes"
+}
+
+variable "opensearch_instance_count" {
+  type        = number
+  default     = 1
+  description = "Number of OpenSearch data nodes. 1 suits the demo; above 1 enables zone awareness (2 AZs, or 3 from 3 nodes up) and gives each index one replica. Keep counts above 2 a multiple of 3 so nodes spread evenly across AZs"
+
+  validation {
+    condition     = var.opensearch_instance_count >= 1 && floor(var.opensearch_instance_count) == var.opensearch_instance_count
+    error_message = "opensearch_instance_count must be a positive whole number."
+  }
+}
+
 ### VPC Variables
 variable "vpc_cidr" {
   type    = string

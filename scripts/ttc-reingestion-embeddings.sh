@@ -2,12 +2,13 @@
 #
 # TTC reingestion: replace the LOINC embeddings behind the deployed pipeline.
 #
-# Halts the TTC lambda (reserved concurrency 0 + event source mapping
+# Starts the OSIS pipeline (it is kept stopped between runs to save cost),
+# halts the TTC lambda (reserved concurrency 0 + event source mapping
 # disabled), waits for in-flight work to drain, drops and recreates both
 # OpenSearch indices via the index lambda, swaps s3://<bucket>/reingestion/
 # into ingestion/ (backing the old set up to ingestion-backup-<ts>/, the
 # rollback source), waits for OSIS to repopulate the index to the expected
-# document count, then resumes TTC.
+# document count, stops the OSIS pipeline, then resumes TTC.
 #
 # Runs in CI under ttc-reingestion-ci-role, invoked by
 # .github/workflows/ttc_reingestion.yml. Operator procedure, watchpoints,
@@ -24,7 +25,7 @@
 set -euo pipefail
 
 usage() {
-    sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit 1
 }
 
@@ -36,6 +37,7 @@ command -v jq >/dev/null || { echo "This script requires jq." >&2; exit 1; }
 ESM_POLL_SECONDS=5    ESM_CAP_SECONDS=120
 DRAIN_POLL_SECONDS=15 DRAIN_CAP_SECONDS=1200
 OSIS_POLL_SECONDS=30  OSIS_CAP_SECONDS=1800
+PIPELINE_POLL_SECONDS=30 PIPELINE_CAP_SECONDS=1200
 EMBEDDING_DIMENSION=1024  # must match INDEX_MAPPING in packages/index-lambda
 
 REQUIRED_ENV_VARS=(
@@ -45,6 +47,7 @@ REQUIRED_ENV_VARS=(
     TTC_EVENT_SOURCE_MAPPING_UUID
     TTC_INPUT_QUEUE_URL
     TTC_INPUT_DLQ_URL
+    TTC_INGESTION_PIPELINE_NAME
     TTC_S3_BUCKET
     TTC_INGESTION_PREFIX
     TTC_REINGESTION_PREFIX
@@ -132,6 +135,22 @@ wait_for_esm_state() {
     done
 }
 
+pipeline_status() {
+    aws osis get-pipeline --pipeline-name "$TTC_INGESTION_PIPELINE_NAME" \
+        --query Pipeline.Status --output text
+}
+
+wait_for_pipeline_status() {
+    local target="$1" deadline=$(( SECONDS + PIPELINE_CAP_SECONDS )) status
+    while :; do
+        status="$(pipeline_status)" || status="unknown"
+        log "  OSIS pipeline status: $status"
+        [[ "$status" == "$target" ]] && return 0
+        (( SECONDS < deadline )) || return 1
+        sleep "$PIPELINE_POLL_SECONDS"
+    done
+}
+
 alert_resume_failure() {
     log "CRITICAL: $* — TTC is still halted. Run the manual resume in" >&2
     log "docs/runbooks/reingest-loinc-embeddings.md and page on-call." >&2
@@ -158,6 +177,18 @@ FIRST_REINGESTION_KEY="$(aws s3api list-objects-v2 \
 DLQ_BASELINE="$(queue_attr "$TTC_INPUT_DLQ_URL" ApproximateNumberOfMessages)"
 log "Preflight ok: reingestion/ is populated, DLQ baseline is $DLQ_BASELINE message(s)"
 log "Target: >= $EXPECTED_COUNT docs, stable for $STABILITY_POLLS consecutive ${OSIS_POLL_SECONDS}s polls"
+
+# The OSIS pipeline is stopped between runs. Start it before halting TTC so
+# its startup time doesn't lengthen the outage.
+PIPELINE_STATUS="$(pipeline_status)"
+log "Starting OSIS pipeline $TTC_INGESTION_PIPELINE_NAME (currently $PIPELINE_STATUS; cap $(( PIPELINE_CAP_SECONDS / 60 )) min)"
+case "$PIPELINE_STATUS" in
+    ACTIVE|STARTING) ;;
+    STOPPED) aws osis start-pipeline --pipeline-name "$TTC_INGESTION_PIPELINE_NAME" >/dev/null ;;
+    *) die "OSIS pipeline is $PIPELINE_STATUS. Nothing destructive has happened; re-run once it is STOPPED or ACTIVE." ;;
+esac
+wait_for_pipeline_status ACTIVE \
+    || die "OSIS pipeline did not become ACTIVE within $(( PIPELINE_CAP_SECONDS / 60 )) min. Nothing destructive has happened; re-run once it is ACTIVE."
 
 # ── step 1: halt TTC ──────────────────────────────────────────────────────────
 log "Step 1/7 — halting TTC"
@@ -227,6 +258,12 @@ while :; do
         || die "index did not reach $EXPECTED_COUNT stable documents within $(( OSIS_CAP_SECONDS / 60 )) min. TTC stays halted; investigate OSIS, then recover per the runbook's step 5 row."
     sleep "$OSIS_POLL_SECONDS"
 done
+
+# Every document is indexed, so the OSIS pipeline sits idle until the next
+# run. Don't wait for STOPPED, and don't die on failure: TTC is still halted.
+log "  stopping OSIS pipeline $TTC_INGESTION_PIPELINE_NAME"
+aws osis stop-pipeline --pipeline-name "$TTC_INGESTION_PIPELINE_NAME" >/dev/null \
+    || log "WARNING: stopping the OSIS pipeline failed; it keeps billing until stopped manually (see runbook)." >&2
 
 # ── step 6: resume TTC ────────────────────────────────────────────────────────
 log "Step 6/7 — resuming TTC"
