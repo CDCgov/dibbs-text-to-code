@@ -53,12 +53,19 @@ jobs:
       - name: Run UV
         run: uv sync --all-packages --locked --all-extras --dev
 
-      # The pipeline is kept stopped between ingests. S3 events queue up on the
-      # trigger queue while it starts, so there's no need to wait here.
+      # The pipeline is kept stopped between ingests. A run queued behind this
+      # concurrency group can find it still STOPPING, so wait that out first.
+      # S3 events queue up on the trigger queue while it starts, so there's no
+      # need to wait for ACTIVE here.
       - name: Start OSIS ingestion pipeline
         run: |
-          status="$(aws osis get-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" --query Pipeline.Status --output text)"
-          echo "OSIS pipeline status: $status"
+          deadline=$(( SECONDS + 900 ))
+          while :; do
+            status="$(aws osis get-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" --query Pipeline.Status --output text)"
+            echo "OSIS pipeline status: $status"
+            [[ "$status" == "STOPPING" && $SECONDS -lt $deadline ]] || break
+            sleep 30
+          done
           if [[ "$status" == "STOPPED" ]]; then
             aws osis start-pipeline --pipeline-name "$OSIS_PIPELINE_NAME" >/dev/null
           fi
