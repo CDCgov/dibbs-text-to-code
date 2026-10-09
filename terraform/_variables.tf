@@ -11,6 +11,12 @@ variable "owner" {
   default     = "skylight"
 }
 
+variable "name_prefix" {
+  description = "Prefix for account-unique resource names that are not set by their own variable (IAM roles, ECR repositories, security groups, queues, CloudFront functions). Change it, along with the *_name variables and bucket names, to run a second stack in the same account."
+  type        = string
+  default     = "ttc"
+}
+
 variable "region" {
   type    = string
   default = "us-east-2"
