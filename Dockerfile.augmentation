@@ -16,6 +16,16 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 RUN microdnf update -y --releasever=latest \
     && microdnf clean all \
     && rm -f /usr/local/bin/aws-lambda-rie
+
+# AL2023's ca-certificates still ships two roots distrusted after the eMudhra CA
+# key compromise: emSign ECC Root CA - G3 and Comodo's AAA Certificate Services.
+# Drop them from the trust source and re-extract every bundle. This is a no-op
+# once AL2023 ships a fixed package.
+RUN gawk -i inplace -v RS= -v ORS='\n\n' \
+    '!/\nlabel: "(emSign ECC Root CA - G3|Comodo AAA Services root)"\n/' \
+    /usr/share/pki/ca-trust-source/ca-bundle.trust.p11-kit \
+    && update-ca-trust extract
+
 RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.0"
 
 # Copy and install workspace packages in dependency order
@@ -42,8 +52,26 @@ RUN python -c "from validation import validate_eicr; validate_eicr('<ClinicalDoc
 
 COPY ./packages/augmentation-lambda ${LAMBDA_TASK_ROOT}/augmentation-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda" \
-    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0"
+    && pip install --no-cache-dir --upgrade "urllib3>=2.7.0" "certifi>=2026.10.19"
+
+# grpcio (pulled in by opensearch-py) vendors its own roots and no release has
+# dropped emSign yet. Entries are blank-line separated and start with the cert's
+# SHA-256, so remove the two distrusted roots by fingerprint.
+RUN gawk -i inplace -v RS= -v ORS='\n\n' \
+    '!/^# (86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b|d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4)\n/' \
+    /var/lang/lib/python3.14/site-packages/grpc/_cython/_credentials/roots.pem
 RUN python -m pip uninstall -y pip
+
+# Fail the build if either distrusted root is left in any CA bundle, whether from
+# the OS or vendored by a Python package. Each pattern is one line of a root's
+# base64 body (emSign ECC Root CA - G3, then AAA Certificate Services), so it
+# matches however a bundle labels the certificate. grep exits 1 only when
+# nothing matched.
+RUN grep -rlF \
+    -e 'CUfvO6wIBHxcmbHtRwfSAjEAnbpV/KlK6O3t5nYBQnvI+GDZjVGLVTv7jHvrZQnD' \
+    -e 'l2D4kF501KKaU73yqWjgom7C12yxow+ev+to51byrvLjKzg6CYG1a4XXvi3tPxq3' \
+    /etc /usr /var; \
+    test $? -eq 1
 
 # Copy over the rest of the code
 COPY ./packages/augmentation-lambda/src ${LAMBDA_TASK_ROOT}/src
