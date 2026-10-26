@@ -25,3 +25,5 @@ load_test_runs
 packages/data-curation/assets
 scripts
 terraform
+models
+*.tgz

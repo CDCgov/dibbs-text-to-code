@@ -1,0 +1,52 @@
+FROM python:3.14-slim
+
+LABEL org.opencontainers.image.source=https://github.com/CDCgov/dibbs-text-to-code
+LABEL org.opencontainers.image.licenses=Apache-2.0
+
+# Update OS packages for CVE fixes.
+RUN apt-get update \
+  && apt-get upgrade -y \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.0"
+
+# Install CUDA PyTorch before any workspace package so a transitive torch requirement is
+# already satisfied. The host supplies the NVIDIA driver (ECS Managed Instances GPU
+# instances ship it preinstalled); the wheel bundles the CUDA runtime. CUDA 12.6 wheels
+# include native kernels for the L4 (sm_89) and need only a 12.x-era driver, while the
+# default PyPI wheel targets CUDA 13 and needs driver 580+.
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cu126
+RUN pip install --no-cache-dir "torch==2.14.*" --index-url "${TORCH_INDEX_URL}"
+
+# Torch's build environment can leave behind an older setuptools that shadows
+# the workspace pin and trips CVE-2025-47273. Upgrade explicitly.
+RUN pip install --no-cache-dir --upgrade 'setuptools>=78.1.1'
+
+# Workspace packages (change frequently) come after the heavy layers. Model weights are
+# not baked in: the service downloads them from RETRIEVER_MODEL_URI/RERANKER_MODEL_URI at
+# startup so models can be swapped without rebuilding this image.
+WORKDIR /opt/build
+COPY ./packages/shared-models ./shared-models
+COPY ./packages/inference-service ./inference-service
+RUN pip install --no-cache-dir ./shared-models ./inference-service \
+  && pip install --no-cache-dir --upgrade "urllib3>=2.7.0" "certifi>=2026.10.19" \
+  && cd / \
+  && rm -rf /opt/build \
+  && python -m pip uninstall -y pip
+
+RUN useradd --system --create-home --uid 10001 inference \
+  && mkdir -p /models \
+  && chown inference /models
+USER inference
+WORKDIR /home/inference
+
+ENV MODEL_CACHE_DIR=/models
+ENV PORT=8080
+# Models load from MODEL_CACHE_DIR after download; skip Hub metadata checks.
+ENV HF_HUB_DISABLE_TELEMETRY=1
+EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=300s --retries=3 \
+  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=4)"]
+
+CMD ["python", "-m", "inference_service"]

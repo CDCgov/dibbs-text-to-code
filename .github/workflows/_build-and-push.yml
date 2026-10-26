@@ -73,6 +73,8 @@ jobs:
             dockerfile: Dockerfile.ttc
           - name: augmentation
             dockerfile: Dockerfile.augmentation
+          # Dockerfile.inference (GPU inference service) is deliberately not released yet:
+          # it only runs in the Skylight dev stack (deploy.yaml) until APHL adopts it.
 
     steps:
       - name: Checkout

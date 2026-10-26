@@ -1,13 +1,16 @@
+import functools
 import json
 import os
 from dataclasses import dataclass
 from enum import StrEnum
 from io import BytesIO
 
+import boto3
 from aws_lambda_powertools import Logger, Metrics, single_metric
 from aws_lambda_powertools.metrics import MetricUnit
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, SQSRecord, event_source
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from botocore.client import BaseClient
 from opensearchpy import OpenSearch
 
 import lambda_handler
@@ -27,6 +30,7 @@ from text_to_code.models.schematron import SchematronErrorDetail
 from text_to_code.services import eicr_processor, evaluator, schematron_processor
 from text_to_code.services.auto_mapping import convert_known_code
 from text_to_code.services.embedder import RETRIEVER_MODEL_INFO, embed_batch
+from text_to_code.services.inference_client import InferenceServiceUnavailableError
 from text_to_code.services.query import QueryBuilder
 from text_to_code.services.reranker import (
     RERANKER_MODEL_INFO,
@@ -55,6 +59,8 @@ S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
 OPENSEARCH_ENDPOINT_URL = os.getenv("OPENSEARCH_ENDPOINT_URL")
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "ttc-index")
 RESULT_CACHE_INDEX = os.getenv("RESULT_CACHE_INDEX", "ttc-result-cache")
+# How soon a message is retried after the inference service failed to come up in time.
+INFERENCE_RETRY_VISIBILITY_SECONDS = int(os.getenv("INFERENCE_RETRY_VISIBILITY_SECONDS") or 60)
 
 
 class HitValue(StrEnum):
@@ -112,6 +118,26 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
                         "status": "processed",
                     }
                 )
+        except InferenceServiceUnavailableError as e:
+            # The GPU service is still starting. Retry the message instead of passing the
+            # eICR through uncoded.
+            logger.exception(
+                "Inference service unavailable; returning record for retry",
+                error=str(e),
+                message_id=record.message_id,
+                status="inference_unavailable",
+            )
+            _release_for_retry(record)
+            batch_item_failures.append({"itemIdentifier": record.message_id})
+            failures.append(
+                {
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "message_id": record.message_id,
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            )
         except Exception as e:
             logger.exception(
                 "Error processing record",
@@ -170,6 +196,35 @@ def handler(event: SQSEvent, context: LambdaContext) -> dict:
     )
 
     return response
+
+
+@functools.cache
+def _sqs_client() -> BaseClient:
+    return boto3.client("sqs")
+
+
+def _release_for_retry(record: SQSRecord) -> None:
+    """Shorten a failed message's visibility timeout so it is retried soon.
+
+    The queue's visibility timeout is several times the Lambda timeout, which would
+    otherwise hold the message for 90 minutes. Errors are logged and swallowed: the
+    message is still retried, just later.
+
+    :param record: The SQS record to release.
+    """
+    try:
+        _, _, _, region, account, queue_name = record.event_source_arn.split(":")
+        _sqs_client().change_message_visibility(
+            QueueUrl=f"https://sqs.{region}.amazonaws.com/{account}/{queue_name}",
+            ReceiptHandle=record.receipt_handle,
+            VisibilityTimeout=INFERENCE_RETRY_VISIBILITY_SECONDS,
+        )
+    except Exception as e:
+        logger.warning(
+            "Unable to shorten visibility timeout for retry",
+            error=str(e),
+            message_id=record.message_id,
+        )
 
 
 def _write_ttc_exception_passthrough_output(record: SQSRecord, error: Exception) -> bool:

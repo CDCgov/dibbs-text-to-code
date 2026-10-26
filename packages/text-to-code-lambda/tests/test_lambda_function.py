@@ -16,6 +16,7 @@ from lambda_handler.models import (
 from shared_models import Code, DataField
 from text_to_code.models import Candidate, LabXPaths, OpenSearchResultCacheSource
 from text_to_code.models.schematron import SchematronErrorDetail
+from text_to_code.services.inference_client import InferenceServiceUnavailableError
 from text_to_code.services.reranker import ScoredResult
 from text_to_code.services.utils import compute_cache_key
 from text_to_code_lambda import lambda_function
@@ -523,6 +524,45 @@ class TestHandler:
             "handler_returns_failure_when_ttc_exception_passthrough_write_fails_result.json",
         )
         assert mock_opensearch.search.call_count == 0
+
+    def test_handler_retries_record_when_inference_service_unavailable(
+        self,
+        example_sqs_event,
+        mocker,
+        mock_opensearch,
+        mock_lambda_context,
+    ):
+        """A cold inference service retries the message instead of passing the eICR through."""
+        mocker.patch(
+            "text_to_code_lambda.lambda_function.process_record",
+            side_effect=InferenceServiceUnavailableError("not ready"),
+        )
+        save_outputs_mock = mocker.patch("text_to_code_lambda.lambda_function._save_outputs")
+        sqs = mocker.patch("text_to_code_lambda.lambda_function._sqs_client").return_value
+
+        resp = lambda_function.handler(example_sqs_event, mock_lambda_context)
+
+        message_id = example_sqs_event["Records"][0]["messageId"]
+        assert resp == _expected_handler_response(
+            batch_item_failures=[{"itemIdentifier": message_id}],
+            failures=[
+                {
+                    "error": "not ready",
+                    "error_type": "InferenceServiceUnavailableError",
+                    "message_id": message_id,
+                    "passthrough_written": False,
+                    "sqs_retry": True,
+                }
+            ],
+            successes=[],
+            status="partial_failure",
+        )
+        save_outputs_mock.assert_not_called()
+        sqs.change_message_visibility.assert_called_once_with(
+            QueueUrl="https://sqs.us-east-1.amazonaws.com/123456789012/queue-name",
+            ReceiptHandle="test-receipt-handle",
+            VisibilityTimeout=lambda_function.INFERENCE_RETRY_VISIBILITY_SECONDS,
+        )
 
     def test_handler_returns_failure_when_record_exception_has_empty_body(
         self,

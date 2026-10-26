@@ -51,3 +51,7 @@ docs/spikes/embedding-variability/outputs/
 
 # Load test corpora and results (scripts/load_test.sh)
 load_test_runs/
+
+# Local model weights (upload to S3 with `just inference upload-model`)
+models/
+*.tgz

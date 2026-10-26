@@ -7,6 +7,8 @@
 
 > [!WARNING]
 > Run during an off-hours window when possible. SQS will accumulate a backlog during the halt — that's expected and drained automatically once TTC resumes.
+>
+> In the Skylight dev stack, a queued backlog also wakes the GPU inference service and keeps it running (and billing) until the queue drains. See [inference-service-dev.md](inference-service-dev.md).
 
 ## Pre-flight checklist
 

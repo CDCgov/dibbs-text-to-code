@@ -72,19 +72,24 @@ resource "aws_ecr_repository" "augmentation_lambda" {
 # VPC
 # Note: If APHL wants to use their own VPC without this module, they will need to provide
 # the VPC ID, private subnet IDs, and replace the calls to this module.
+#
+# Workloads run in the private subnets. A single NAT gateway in one public subnet gives
+# them outbound access: the TTC Lambda reaches the public OpenSearch endpoint through it,
+# and the GPU inference instances reach ECS, ECR, and CloudWatch Logs. Nothing is
+# reachable from the internet.
 #############
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.16.0"
+  version = "6.7.3"
 
-  name            = local.vpc_name
-  cidr            = var.vpc_cidr
-  azs             = var.availability_zones
-  private_subnets = var.private_subnet_cidrs
-  # if internal is true, then the VPC will not have a NAT or internet gateway
-  enable_nat_gateway = false
-  single_nat_gateway = false
-  create_igw         = false
+  name               = local.vpc_name
+  cidr               = var.vpc_cidr
+  azs                = var.availability_zones
+  private_subnets    = var.private_subnet_cidrs
+  public_subnets     = var.public_subnet_cidrs
+  create_igw         = true
+  enable_nat_gateway = true
+  single_nat_gateway = true
   tags               = local.tags
 }
 
@@ -629,19 +634,30 @@ resource "aws_lambda_function" "lambda" {
   timeout       = var.lambda_timeout
   memory_size   = 3008
 
+  # In the VPC so it can reach the inference service; OpenSearch is reached via the NAT.
+  vpc_config {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
   environment {
-    variables = {
-      OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
-      OPENSEARCH_INDEX        = var.index_name
-      RESULT_CACHE_INDEX      = var.result_cache_index_name
-      REGION                  = var.region
-      RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
-      RERANKER_MODEL_PATH     = "/opt/reranker_model"
-      SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
-      TTC_INPUT_PREFIX        = var.ttc_input_prefix
-      TTC_OUTPUT_PREFIX       = var.ttc_output_prefix
-      TTC_METADATA_PREFIX     = var.ttc_metadata_prefix
-    }
+    # The inference variables (inference.tf) override the baked-in model paths when the
+    # GPU service is enabled.
+    variables = merge(
+      {
+        OPENSEARCH_ENDPOINT_URL = "https://${aws_opensearch_domain.os.endpoint}"
+        OPENSEARCH_INDEX        = var.index_name
+        RESULT_CACHE_INDEX      = var.result_cache_index_name
+        REGION                  = var.region
+        RETRIEVER_MODEL_PATH    = "/opt/retriever_model"
+        RERANKER_MODEL_PATH     = "/opt/reranker_model"
+        SCHEMATRON_ERROR_PREFIX = var.schematron_error_prefix
+        TTC_INPUT_PREFIX        = var.ttc_input_prefix
+        TTC_OUTPUT_PREFIX       = var.ttc_output_prefix
+        TTC_METADATA_PREFIX     = var.ttc_metadata_prefix
+      },
+      local.inference_lambda_environment,
+    )
   }
 
   reserved_concurrent_executions = -1
@@ -1321,6 +1337,14 @@ resource "aws_lambda_event_source_mapping" "ttc_input_sqs" {
   function_response_types = ["ReportBatchItemFailures"]
   enabled                 = true
 
+  # Caps how many Lambdas wait on a cold GPU at once, and the load on the single GPU.
+  dynamic "scaling_config" {
+    for_each = var.ttc_max_concurrency == null ? [] : [var.ttc_max_concurrency]
+    content {
+      maximum_concurrency = scaling_config.value
+    }
+  }
+
   lifecycle {
     ignore_changes = [enabled]
   }
@@ -1339,6 +1363,8 @@ resource "aws_iam_role_policy" "ttc_input_sqs_policy" {
           "sqs:ReceiveMessage",
           "sqs:DeleteMessage",
           "sqs:GetQueueAttributes",
+          # Retry soon (not after the full visibility timeout) when the GPU is still starting.
+          "sqs:ChangeMessageVisibility",
         ]
         Resource = aws_sqs_queue.ttc_input_queue.arn
       }
