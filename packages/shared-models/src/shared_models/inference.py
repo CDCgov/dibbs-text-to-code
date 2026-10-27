@@ -32,7 +32,12 @@ class RankRequest(FrozenBaseModel):
 
 
 class RankItem(FrozenBaseModel):
-    """The reranker score for one document, identified by its index in the request."""
+    """The reranker score for one document.
+
+    ``corpus_id`` is the document's index in ``RankRequest.documents``, matching
+    ``CrossEncoder.rank``. It is not an OpenSearch document ID or a position in the
+    retriever results.
+    """
 
     corpus_id: int
     score: float
