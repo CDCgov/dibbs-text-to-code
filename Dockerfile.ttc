@@ -61,9 +61,12 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/lambda-handler"
 COPY ./packages/text-to-code ${LAMBDA_TASK_ROOT}/text-to-code
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code"
 
+# filelock arrives with torch from the PyTorch CPU index, which lags PyPI
+# (3.32.x there), and later installs see it as satisfied. Upgrade it from PyPI
+# for CVE-2026-112940 (fixed in 4.2.1).
 COPY ./packages/text-to-code-lambda ${LAMBDA_TASK_ROOT}/text-to-code-lambda
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/text-to-code-lambda" \
-  && pip install --no-cache-dir --upgrade "urllib3>=2.7.0" "certifi>=2026.10.19"
+  && pip install --no-cache-dir --upgrade "urllib3>=2.7.0" "certifi>=2026.10.19" "filelock>=4.2.1"
 
 # grpcio (pulled in by opensearch-py) vendors its own roots and no release has
 # dropped emSign yet. Entries are blank-line separated and start with the cert's
