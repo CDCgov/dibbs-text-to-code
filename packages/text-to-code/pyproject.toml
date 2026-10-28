@@ -7,7 +7,7 @@ dependencies = [
   "lxml>=6.0.2",
   "pydantic>=2.12.5",
   "requests>=2.32",
-  "sentence-transformers==6.0.0",
+  "sentence-transformers==6.2.0",
   "shared-models",
   "torch",
 ]
