@@ -17,9 +17,19 @@ from text_to_code.models.registry import (
     MINIMUM_HITS_WITHIN_MARGIN,
     TTC_RERANKER,
 )
+from text_to_code.services.inference_client import RemoteCrossEncoder, get_inference_client
 from text_to_code.services.utils import get_model_info
 
-_RERANKER = CrossEncoder(TTC_RERANKER)
+
+def _load_reranker() -> CrossEncoder | RemoteCrossEncoder:
+    """Returns the inference service client if configured, else the in-process model."""
+    client = get_inference_client()
+    if client is not None:
+        return RemoteCrossEncoder(client)
+    return CrossEncoder(TTC_RERANKER)
+
+
+_RERANKER = _load_reranker()
 RERANKER_MODEL_INFO = get_model_info(TTC_RERANKER)
 
 

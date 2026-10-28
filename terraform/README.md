@@ -20,19 +20,22 @@ S3 Bucket (dibbs-text-to-code)
     │               ▲
     │               │ KNN queries
     └── TTC Lambda (ttc-lambda, container image from ECR)
+            │  in the private subnets; embed + rerank over HTTP
+            ▼
+        GPU inference service (ttc-inference, ECS Managed Instances, scales to zero)
 ```
 
-The OpenSearch domain has a **public HTTPS endpoint**. Access is controlled by the domain's IAM access policy (SigV4-signed requests from the principals listed under [OpenSearch](#opensearch-maintf)), not by network placement. The Lambdas are not attached to a VPC and reach OpenSearch, S3, and SQS over the regional AWS endpoints. The domain was moved out of the VPC in #475 to make access and debugging easier, and has stayed public by choice.
+The OpenSearch domain has a **public HTTPS endpoint**. Access is controlled by the domain's IAM access policy (SigV4-signed requests from the principals listed under [OpenSearch](#opensearch-maintf)), not by network placement. The domain was moved out of the VPC in #475 to make access and debugging easier, and has stayed public by choice. The main TTC Lambda runs in the VPC's private subnets so it can reach the [GPU inference service](#gpu-inference-service-inferencetf), and reaches OpenSearch and the other AWS APIs through the NAT gateway (S3 goes through the gateway endpoint). The other Lambdas are not attached to the VPC.
 
 ## Resources
 
 ### Networking (`main.tf`)
 
-The stack still creates the VPC, S3 Gateway endpoint, and security groups below, but nothing is attached to them: neither the OpenSearch domain nor any Lambda has a `vpc_options`/`vpc_config` block. They are kept so the domain can move back into the VPC without rebuilding the network.
+The main TTC Lambda (`vpc_config`) and the GPU inference service run in the private subnets. The OpenSearch domain is not in the VPC (no `vpc_options`); the OpenSearch security group is kept so it can move back without rebuilding the network.
 
-- **VPC** (`module.vpc`): A private-only VPC (`10.0.0.0/16`) with three private subnets across three availability zones (`us-east-2a/b/c`). No NAT gateway or internet gateway is created by the VPC module.
+- **VPC** (`module.vpc`): A `10.0.0.0/16` VPC with three private subnets across three availability zones (`us-east-2a/b/c`) and one public subnet (`public_subnet_cidrs`) that holds only a single NAT gateway. Private workloads egress through the NAT (about $33/month plus data processing); nothing in the VPC accepts inbound internet traffic.
 - **S3 VPC Endpoint** (`aws_vpc_endpoint.s3_endpoint`): Gateway endpoint attached to the private route tables for S3 access without requiring a NAT gateway.
-- **Lambda Security Group** (`aws_security_group.lambda_sg`): Defines unrestricted outbound traffic and no inbound rules.
+- **Lambda Security Group** (`aws_security_group.lambda_sg`): Attached to the TTC Lambda. Unrestricted outbound traffic and no inbound rules.
 - **OpenSearch Security Group** (`aws_security_group.opensearch_sg`): Defines inbound HTTPS (port 443) from the Lambda security group and unrestricted outbound traffic.
 
 ### OpenSearch (`main.tf`)
@@ -52,6 +55,16 @@ The stack still creates the VPC, S3 Gateway endpoint, and security groups below,
 - **ECR Repository** (`aws_ecr_repository.ttc_lambda`): Stores the Docker container image shared by the main TTC Lambda and demo API Lambda. The image installs all workspace Python packages (`shared-models`, `lambda-handler`, `text-to-code`, `text-to-code-lambda`) and bakes in the SentenceTransformer model (`intfloat/e5-large-v2`) at build time. CI creates the ECR repositories first, builds and pushes both commit-SHA and `latest` tags, then runs the full Terraform apply with the commit SHA passed as `ttc_lambda_image_tag`.
 - **ECR Repository** (`aws_ecr_repository.index_lambda`): Stores the Docker container image for the index bootstrap Lambda, built from `Dockerfile.index` at repo root.
 - **ECR Repository** (`aws_ecr_repository.augmentation_lambda`): Stores the Docker container image for the augmentation Lambda, built from `Dockerfile.augmentation` at repo root.
+
+### GPU Inference Service (`inference.tf`)
+
+Serves the retriever and reranker models over HTTP so model size is no longer bounded by the Lambda image limit. Built from `Dockerfile.inference` and `packages/inference-service`. Operating it (model swaps, waking it for testing, parity checks) is covered in [`docs/runbooks/inference-service-dev.md`](../docs/runbooks/inference-service-dev.md).
+
+- **Compute**: an ECS cluster (`ttc-inference`) with an ECS Managed Instances capacity provider limited to one `inference_instance_type` (default `g6.xlarge`, one NVIDIA L4). AWS provisions, patches, and replaces the instance; the NVIDIA driver comes preinstalled.
+- **Service**: one task (`desired_count` owned by autoscaling) with the GPU, registered in Cloud Map as `inference.ttc.internal:8080`. The security group only admits the TTC Lambda. Deploys stop the old task before starting the new one so there is never a second GPU instance.
+- **Models**: downloaded at task start from `inference_retriever_model_uri` / `inference_reranker_model_uri` (default `s3://<s3_bucket>/models/ttc-{retriever,reranker}-v1.0/`). Changing either variable rolls the task; no image rebuild.
+- **Scale to zero**: CloudWatch alarms on the TTC input queue depth (visible plus in flight) drive Application Auto Scaling. Any queued message sets the desired count to 1; `inference_idle_minutes` (15) of an empty queue sets it to 0, and ECS terminates the idle instance after `inference_instance_idle_seconds` (600). A cold start takes about 6.5 minutes with the v1.0 models.
+- **TTC Lambda wiring**: with `ttc_use_inference_service = true` (the default) the Lambda gets `INFERENCE_SERVICE_URL` and waits up to `inference_ready_timeout_seconds` for a cold service. If it is still not ready, the message goes back on the queue for a retry about a minute later instead of being passed through uncoded. `ttc_max_concurrency` (10) caps concurrent invocations from the queue. Set `ttc_use_inference_service = false` to fall back to the models baked into the Lambda image. The demo API Lambda always uses its baked-in models.
 
 ### IAM (`main.tf`)
 
@@ -261,8 +274,8 @@ Re-ingestion is an operator-triggered runtime maintenance operation. It is not p
 
 Terraform manages dependency ordering automatically, but conceptually the sequence is:
 
-1. VPC, private subnets, security groups, and S3 Gateway endpoint created (currently unused; see [Networking](#networking-maintf))
-2. ECR repositories created (TTC lambda, index lambda, augmentation lambda)
+1. VPC, private and public subnets, NAT gateway, security groups, and S3 Gateway endpoint created
+2. ECR repositories created (TTC lambda, index lambda, augmentation lambda, inference service)
 3. Docker images built and pushed to ECR by CI/CD with both commit-SHA and `latest` tags before the full apply
 4. OpenSearch domain and CloudWatch log publishing configured
 5. Lambda, ingestion pipeline, and re-ingestion CI IAM roles created
@@ -271,6 +284,7 @@ Terraform manages dependency ordering automatically, but conceptually the sequen
 8. Main TTC Lambda, TTC input queue/DLQ, EventBridge rule, redrive allow policy, and SQS event source mapping deployed
 9. Augmentation Lambda, augmentation queue/DLQ, EventBridge rule, and event source mapping deployed
 10. Shared DLQ alarms/SNS-to-Slack notification resources and the demo API/frontend resources deployed
+11. GPU inference cluster, capacity provider, Cloud Map service, ECS service (at 0 tasks), and scale-to-zero alarms deployed
 
 The separate TTC re-ingestion workflow runs only after this infrastructure exists and temporarily operates the TTC event source mapping, index Lambda, S3 prefixes, OpenSearch verification endpoints, and TTC DLQ redrive path.
 
@@ -323,9 +337,9 @@ just terraform console
 just terraform state list
 ```
 
-For local `plan` and `apply`, the wrapper reads the currently deployed TTC, index, and augmentation Lambda image tags from AWS and passes them as Terraform variables. This avoids local plans proposing an unintended rollback from the deployed commit-SHA image tags to `latest`. The demo API shares `ttc_lambda_image_tag` with the main TTC Lambda, so it rolls forward with the same TTC image.
+For local `plan` and `apply`, the wrapper reads the currently deployed TTC, index, and augmentation Lambda image tags and the inference service's task definition image tag from AWS and passes them as Terraform variables. This avoids local plans proposing an unintended rollback from the deployed commit-SHA image tags to `latest`. The demo API shares `ttc_lambda_image_tag` with the main TTC Lambda, so it rolls forward with the same TTC image.
 
-CI remains the deployment source of truth for image updates: the deployment workflow builds/pushes images tagged with `${{ github.sha }}` and `latest`, then runs Terraform with the commit SHA supplied through `ttc_lambda_image_tag`, `index_lambda_image_tag`, and `augmentation_lambda_image_tag`.
+CI remains the deployment source of truth for image updates: the deployment workflow builds/pushes images tagged with `${{ github.sha }}` and `latest`, then runs Terraform with the commit SHA supplied through `ttc_lambda_image_tag`, `index_lambda_image_tag`, `augmentation_lambda_image_tag`, and `inference_image_tag`.
 
 Terraform state is shared with CI and protected by DynamoDB locking. If a local command reports that CI currently holds an `OperationTypeApply` lock, wait for the CI apply to finish. Do not bypass an active lock with `-lock=false`; use `terraform force-unlock` only after confirming the reported lock is stale and no other Terraform operation is running.
 
@@ -339,13 +353,14 @@ terraform/
 ├── _variables.tf                 # All input variables with defaults
 ├── main.tf                       # All AWS resources
 ├── demo.tf                       # Demo frontend + synchronous API (CloudFront, S3 site bucket, API lambda)
+├── inference.tf                  # GPU inference service (ECS Managed Instances, Cloud Map, scale to zero)
 ├── s3.tf                         # S3 bucket for ingestion data
 ├── README.md                     # This file
 ├── bootstrap/                    # One-time setup for S3 state backend + DynamoDB lock table
 │   ├── main.tf
 │   ├── _variables.tf
 │   └── _outputs.tf
-└── (no lambda/ subdirectory — Dockerfiles live at repo root as Dockerfile.ttc and Dockerfile.index)
+└── (no lambda/ subdirectory; Dockerfiles live at repo root as Dockerfile.ttc, Dockerfile.index, Dockerfile.augmentation, and Dockerfile.inference)
 ```
 
 ## Prerequisites
@@ -362,7 +377,8 @@ Before running `terraform apply`:
 
    Once the document count settles, stop the pipeline so it doesn't bill while idle: `aws osis stop-pipeline --pipeline-name ttc-ingestion-pipeline`.
 
-3. **Docker**: CI/CD builds all container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda, `Dockerfile.augmentation` for augmentation lambda) automatically. For local development, Docker must be available to build the images.
+3. **Docker**: CI/CD builds all container images (`Dockerfile.ttc` for TTC lambda, `Dockerfile.index` for index lambda, `Dockerfile.augmentation` for augmentation lambda, `Dockerfile.inference` for the GPU inference service) automatically.
+4. **Inference models**: Upload the retriever and reranker to `s3://<s3_bucket>/models/` before the service first starts (`just inference upload-model NAME DIR`), and check that the account's "Running On-Demand G and VT instances" vCPU quota is at least 4. For local development, Docker must be available to build the images.
 
 > **Note:** The SentenceTransformer model and heavy Python dependencies (sentence-transformers, torch) are baked into the Lambda container image at build time via the Dockerfile. The Dockerfile installs the real `text-to-code-lambda` package and all its workspace dependencies.
 

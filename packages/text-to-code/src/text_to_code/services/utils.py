@@ -58,6 +58,11 @@ def get_model_info(model: str) -> ModelInfo:
         logger.info("Model '%s' is a local path; skipping Hugging Face Hub lookup.", model)
         return ModelInfo(id=model, author=None, created_at=None, last_modified=None)
 
+    # Models served by the inference service are identified by their S3 URI.
+    if "://" in model:
+        logger.info("Model '%s' is a URI; skipping Hugging Face Hub lookup.", model)
+        return ModelInfo(id=model, author=None, created_at=None, last_modified=None)
+
     try:
         full_info = model_info(model)
     # If the model doesn't exist or is inaccessible, model_info will return a 400 error

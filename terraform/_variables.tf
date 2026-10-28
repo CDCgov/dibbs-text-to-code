@@ -62,6 +62,12 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
+variable "public_subnet_cidrs" {
+  description = "Public subnets. Only the NAT gateway lives here; one subnet is enough for a single NAT."
+  type        = list(string)
+  default     = ["10.0.101.0/24"]
+}
+
 variable "availability_zones" {
   type        = list(string)
   default     = ["us-east-2a", "us-east-2b", "us-east-2c"]
@@ -293,4 +299,97 @@ variable "terminology_prefix" {
   type        = string
   default     = "Terminologies"
   description = "The prefix for the terminologies extract and update pipeline 'folder' in the s3 bucket. Files added to this prefix will be used for keeping ther terminolgies and hence embeddings up to date."
+}
+
+### Inference Service Variables
+variable "inference_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The tag of the GPU inference service image in its ECR repository"
+}
+
+variable "ttc_use_inference_service" {
+  type        = bool
+  default     = true
+  description = "Whether the SQS-triggered TTC Lambda calls the GPU inference service. When false it runs the models baked into its image. The demo API Lambda always runs in-process."
+}
+
+variable "inference_retriever_model_uri" {
+  type        = string
+  default     = null
+  description = "S3 prefix (or Hugging Face repo id) of the retriever the inference service loads. Defaults to s3://<s3_bucket>/models/ttc-retriever-v1.0/. Changing the retriever also requires a matching OpenSearch index; see docs/runbooks/inference-service-dev.md."
+}
+
+variable "inference_reranker_model_uri" {
+  type        = string
+  default     = null
+  description = "S3 prefix (or Hugging Face repo id) of the reranker the inference service loads. Defaults to s3://<s3_bucket>/models/ttc-reranker-v1.0/."
+}
+
+variable "inference_model_dtype" {
+  type        = string
+  default     = "float32"
+  description = "Torch dtype the inference service loads models in"
+
+  validation {
+    condition     = contains(["float32", "float16", "bfloat16"], var.inference_model_dtype)
+    error_message = "inference_model_dtype must be float32, float16, or bfloat16."
+  }
+}
+
+variable "inference_instance_type" {
+  type        = string
+  default     = "g6.xlarge"
+  description = "GPU instance type for the inference service (one NVIDIA GPU)"
+}
+
+variable "inference_capacity_option_type" {
+  type        = string
+  default     = "ON_DEMAND"
+  description = "Purchasing option for the GPU instance: ON_DEMAND or SPOT"
+
+  validation {
+    condition     = contains(["ON_DEMAND", "SPOT"], var.inference_capacity_option_type)
+    error_message = "inference_capacity_option_type must be ON_DEMAND or SPOT."
+  }
+}
+
+variable "inference_idle_minutes" {
+  type        = number
+  default     = 15
+  description = "Minutes the TTC input queue must be empty before the inference service scales to zero"
+}
+
+variable "inference_instance_idle_seconds" {
+  type        = number
+  default     = 600
+  description = "Seconds ECS keeps a GPU instance with no tasks before terminating it (0-3600)"
+
+  validation {
+    condition     = var.inference_instance_idle_seconds >= 0 && var.inference_instance_idle_seconds <= 3600
+    error_message = "inference_instance_idle_seconds must be between 0 and 3600."
+  }
+}
+
+variable "inference_ready_timeout_seconds" {
+  type        = number
+  default     = 720
+  description = "How long the TTC Lambda waits for a cold inference service before returning the message for retry. Must be less than lambda_timeout."
+
+  validation {
+    condition     = var.inference_ready_timeout_seconds > 0 && var.inference_ready_timeout_seconds < var.lambda_timeout
+    error_message = "inference_ready_timeout_seconds must be positive and less than lambda_timeout."
+  }
+}
+
+variable "ttc_max_concurrency" {
+  type        = number
+  default     = 10
+  nullable    = true
+  description = "Maximum concurrent TTC Lambda invocations from the SQS queue (null for no limit, otherwise at least 2). Raise it for load tests."
+
+  validation {
+    condition     = var.ttc_max_concurrency == null || try(var.ttc_max_concurrency >= 2, false)
+    error_message = "ttc_max_concurrency must be null or at least 2."
+  }
 }

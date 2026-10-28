@@ -70,7 +70,7 @@ jobs:
       - name: Create ECR repositories
         if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
-        run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda -target=aws_ecr_repository.augmentation_lambda
+        run: terraform apply -auto-approve -target=aws_ecr_repository.index_lambda -target=aws_ecr_repository.ttc_lambda -target=aws_ecr_repository.augmentation_lambda -target=aws_ecr_repository.inference
 
       - name: Login to Amazon ECR
         if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
@@ -88,6 +88,16 @@ jobs:
           echo "ecr_url=$ECR_URL" >> "$GITHUB_OUTPUT"
           AUG_ECR_URL=$(terraform output -raw augmentation_ecr_repository_url)
           echo "aug_ecr_url=$AUG_ECR_URL" >> "$GITHUB_OUTPUT"
+          INFERENCE_ECR_URL=$(terraform output -raw inference_ecr_repository_url)
+          echo "inference_ecr_url=$INFERENCE_ECR_URL" >> "$GITHUB_OUTPUT"
+
+      # The CUDA inference image plus the TTC image (which bakes in models) don't fit in the
+      # runner's default free disk, so drop preinstalled toolchains this job never uses.
+      - name: Free disk space
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
 
       - name: Set up Buildx
         if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
@@ -145,6 +155,24 @@ jobs:
           cache-from: type=gha,scope=augmentation
           cache-to: type=gha,mode=max,scope=augmentation
 
+      # Cached in ECR rather than the GitHub Actions cache: the CUDA layers alone would
+      # evict the other images' caches from the 10 GB GHA cache.
+      - name: Build and push Inference Docker image
+        if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile.inference
+          pull: true
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          tags: |
+            ${{ steps.ecr-url.outputs.inference_ecr_url }}:${{ github.sha }}
+            ${{ steps.ecr-url.outputs.inference_ecr_url }}:latest
+          cache-from: type=registry,ref=${{ steps.ecr-url.outputs.inference_ecr_url }}:buildcache
+          cache-to: type=registry,ref=${{ steps.ecr-url.outputs.inference_ecr_url }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
+
       - name: Terraform Plan
         if: ${{ !inputs.apply && !inputs.destroy || !(github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
@@ -153,7 +181,7 @@ jobs:
       - name: Terraform Apply
         if: ${{ inputs.apply && !inputs.destroy || (github.event_name == 'push' && github.ref_name == 'main') }}
         working-directory: terraform
-        run: terraform apply -auto-approve -var="index_lambda_image_tag=${{ github.sha }}" -var="ttc_lambda_image_tag=${{ github.sha }}" -var="augmentation_lambda_image_tag=${{ github.sha }}"
+        run: terraform apply -auto-approve -var="index_lambda_image_tag=${{ github.sha }}" -var="ttc_lambda_image_tag=${{ github.sha }}" -var="augmentation_lambda_image_tag=${{ github.sha }}" -var="inference_image_tag=${{ github.sha }}"
 
       - name: Terraform Destroy
         if: ${{ inputs.destroy }}

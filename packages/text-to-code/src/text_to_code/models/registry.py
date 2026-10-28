@@ -23,6 +23,12 @@ TTC_RERANKER: str = (
     os.getenv("RERANKER_MODEL_PATH") or f"NCHS/ttc-reranker-v{RERANKER_MODEL_VERSION}"
 )
 
+# When set, the retriever and reranker run in the GPU inference service at this URL
+# instead of in-process.
+INFERENCE_SERVICE_URL: str | None = os.getenv("INFERENCE_SERVICE_URL") or None
+# How long a call waits for the inference service to come up (it scales to zero when idle)
+# before failing so the message is retried later. Keep below the Lambda timeout.
+INFERENCE_READY_TIMEOUT_SECONDS: float = float(os.getenv("INFERENCE_READY_TIMEOUT_SECONDS") or 720)
 
 # The threshold for automatically accepting a top retriever result without sending to the reranker.
 AUTO_ACCEPT_THRESHOLD: float = float(os.getenv("AUTO_ACCEPT_THRESHOLD") or 0.95)

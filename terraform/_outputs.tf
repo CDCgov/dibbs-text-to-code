@@ -103,3 +103,28 @@ output "dlq_alarm_notifications_topic_arn" {
   value       = aws_sns_topic.dlq_alarm_notifications.arn
   description = "SNS topic ARN used for critical TTC re-ingestion notifications"
 }
+
+output "inference_ecr_repository_url" {
+  value       = aws_ecr_repository.inference.repository_url
+  description = "The URL of the ECR repository for the GPU inference service image"
+}
+
+output "inference_cluster_name" {
+  value       = aws_ecs_cluster.inference.name
+  description = "The ECS cluster running the GPU inference service"
+}
+
+output "inference_service_name" {
+  value       = aws_ecs_service.inference.name
+  description = "The ECS service for the GPU inference service"
+}
+
+output "inference_service_url" {
+  value       = local.inference_url
+  description = "The in-VPC URL the TTC Lambda uses to reach the inference service"
+}
+
+output "nat_public_ips" {
+  value       = module.vpc.nat_public_ips
+  description = "Public IPs of the NAT gateway that VPC workloads egress through"
+}

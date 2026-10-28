@@ -4,11 +4,21 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from text_to_code.models.registry import TTC_RETRIEVER
+from text_to_code.services.inference_client import RemoteSentenceTransformer, get_inference_client
 from text_to_code.services.utils import get_model_info
 
 logger = logging.getLogger(__name__)
 
-_RETRIEVER = SentenceTransformer(TTC_RETRIEVER)
+
+def _load_retriever() -> SentenceTransformer | RemoteSentenceTransformer:
+    """Returns the inference service client if configured, else the in-process model."""
+    client = get_inference_client()
+    if client is not None:
+        return RemoteSentenceTransformer(client)
+    return SentenceTransformer(TTC_RETRIEVER)
+
+
+_RETRIEVER = _load_retriever()
 RETRIEVER_MODEL_INFO = get_model_info(TTC_RETRIEVER)
 
 

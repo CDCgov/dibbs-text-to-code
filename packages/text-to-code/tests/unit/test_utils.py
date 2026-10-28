@@ -58,6 +58,20 @@ class TestGetModelInfo:
         spy.assert_not_called()
         assert info == ModelInfo(id=str(tmp_path), author=None, created_at=None, last_modified=None)
 
+    def test_get_model_info_skips_hub_lookup_for_uri(self, mocker):
+        # Models served by the inference service are identified by their S3 URI.
+        spy = mocker.patch("text_to_code.services.utils.model_info")
+
+        info = get_model_info("s3://bucket/models/ttc-retriever-v1.0/")
+
+        spy.assert_not_called()
+        assert info == ModelInfo(
+            id="s3://bucket/models/ttc-retriever-v1.0/",
+            author=None,
+            created_at=None,
+            last_modified=None,
+        )
+
     def test_get_model_info_degrades_for_invalid_repo_id(self, mocker):
         # A value that is neither a local path nor a valid repo id should degrade
         # to just the id rather than raise and crash startup.
