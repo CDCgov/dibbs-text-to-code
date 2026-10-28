@@ -1,29 +1,97 @@
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-# Times are UTC. "12:00" UTC corresponds to 07:00/08:00 EST/EDT
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# Shared DIBBs conventions: every ecosystem runs weekly on Monday at 12:00 UTC
+# (07:00/08:00 US Eastern), minor and patch version updates are grouped into one
+# PR per ecosystem, majors get their own PRs, and version updates wait out a
+# 5-day cooldown. Security updates are not grouped or delayed.
 version: 2
 updates:
-  - package-ecosystem: 'github-actions'
-    directory: '/'
-    open-pull-requests-limit: 2
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'wednesday'
-      time: '12:00'
+      interval: "weekly"
+      day: "monday"
+      time: "12:00"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
-      github-codeql-actions:
-        patterns:
-          - 'github/codeql-action*'
-  - package-ecosystem: 'uv'
-    directory: '/'
-    open-pull-requests-limit: 2
+      actions-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "uv"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'wednesday'
-      time: '12:00'
-  - package-ecosystem: 'docker'
-    directory: '/'
-    open-pull-requests-limit: 2
+      interval: "weekly"
+      day: "monday"
+      time: "12:00"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    groups:
+      python-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'wednesday'
-      time: '12:00'
+      interval: "weekly"
+      day: "monday"
+      time: "12:00"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      docker-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "12:00"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      docker-compose-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+
+  # Terraform updates only scan the listed directories, not subdirectories,
+  # so every directory with .tf files is listed explicitly.
+  - package-ecosystem: "terraform"
+    directories:
+      - "/terraform"
+      - "/terraform/bootstrap"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "12:00"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      terraform-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
