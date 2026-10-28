@@ -1,7 +1,7 @@
 import logging
 import os
 import threading
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 
 import numpy as np
@@ -55,7 +55,7 @@ def create_app(
             on_load_failure()
 
     @asynccontextmanager
-    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
         threading.Thread(target=load, name="model-loader", daemon=True).start()
         yield
 
