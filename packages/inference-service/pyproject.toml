@@ -6,7 +6,7 @@ dependencies = [
   "boto3>=1.43.117",
   "fastapi>=0.141.1",
   "huggingface-hub",
-  "sentence-transformers==6.0.0",
+  "sentence-transformers==6.2.0",
   "shared-models",
   "torch",
   "uvicorn>=0.30.0",
