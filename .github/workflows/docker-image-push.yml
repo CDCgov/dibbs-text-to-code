@@ -76,3 +76,24 @@ jobs:
       # cached `microdnf update` layer silently skips — so bust the cache on
       # schedule and (by default) on manual dispatch. Push builds stay cached.
       no_cache: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.no_cache != 'false') }}
+
+  notify-failure:
+    # A failed build leaves the previous :latest in place, so scan findings
+    # persist with no other signal. Alert on every failed build of main,
+    # including the no-cache rebuilds that scan.yml dispatches.
+    runs-on: ubuntu-latest
+    needs: [detect-bump, build]
+    if: failure() && github.ref_name == 'main'
+    steps:
+      - name: Post build failure to Slack
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":x: Image build failed on main (${{ github.event_name }}). Until a build succeeds, :latest keeps its current images and any scan findings. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":x: Image build failed on main (${{ github.event_name }}). Until a build succeeds, :latest keeps its current images and any scan findings. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
