@@ -56,10 +56,12 @@ RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/augmentation-lambda" \
 
 # grpcio (pulled in by opensearch-py) vendors its own roots and no release has
 # dropped emSign yet. Entries are blank-line separated and start with the cert's
-# SHA-256, so remove the two distrusted roots by fingerprint.
+# SHA-256, so remove the two distrusted roots by fingerprint. The path is resolved
+# from the installed package so a Python minor-version bump in the base image
+# does not break the build.
 RUN gawk -i inplace -v RS= -v ORS='\n\n' \
     '!/^# (86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b|d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4)\n/' \
-    /var/lang/lib/python3.15/site-packages/grpc/_cython/_credentials/roots.pem
+    "$(python -c 'import grpc, os; print(os.path.dirname(grpc.__file__))')/_cython/_credentials/roots.pem"
 RUN python -m pip uninstall -y pip
 
 # Fail the build if either distrusted root is left in any CA bundle, whether from
