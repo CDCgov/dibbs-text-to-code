@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
-from saxonche import PySaxonProcessor  # ty: ignore[unresolved-import]
+from saxonche import PySaxonProcessor  # ty: ignore[import-not-found]
 
 from shared_models import FrozenBaseModel
 
