@@ -261,6 +261,14 @@ resource "aws_opensearch_domain" "os" {
     enforce_https       = true
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
+
+  # Let AWS apply service software updates (which carry JDK fixes such as
+  # CVE-2026-114938) during the off-peak window instead of waiting on a manual
+  # start-service-software-update.
+  software_update_options {
+    auto_software_update_enabled = true
+  }
+
   access_policies = data.aws_iam_policy_document.opensearch_access_policy.json
 
   log_publishing_options {

@@ -16,7 +16,9 @@ services:
       - node.name=opensearch-node
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      # -XX:-UseBASE64Intrinsics mitigates CVE-2026-114938 (JDK Base64 intrinsic
+      # overflow). Remove it once the image ships a patched JDK.
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m -XX:-UseBASE64Intrinsics
       - DISABLE_SECURITY_PLUGIN=true # Disable security for local dev
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PWD-TEST_PSWD!} # Required for 2.12+, may need to store this as a secret and pull from there
     ulimits:
