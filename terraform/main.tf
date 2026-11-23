@@ -80,7 +80,7 @@ resource "aws_ecr_repository" "augmentation_lambda" {
 #############
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.7.3"
+  version = "6.8.0"
 
   name               = local.vpc_name
   cidr               = var.vpc_cidr
